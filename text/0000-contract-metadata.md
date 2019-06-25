@@ -32,18 +32,66 @@ More specifically, every method is by default a change method, unless annotated 
 the json serialization is of the form `{"name": <method_name>, "parameters": [{<param1>: <type1>, .. }], "returnType": <return_type>}`.
 The overall serialization is of the form `{"view_methods": [{<method_name>: <method_metadata>, .. }], "change_methods": [{<method_name>: <method_metadata>, .. }]}`. 
 
-As an concrete example, suppose we have a contract where `main.ts` is as follows:
+As an concrete example, suppose we have a contract that maintains a counter on chain:
 
 ```typescript
 import { context, storage, near } from "./near";
 
+export function incrementCounter(): void {
+  let newCounter = storage.get<i32>("counter") + 1;
+  storage.set<i32>("counter", newCounter)
+  near.log("Counter is now: " + newCounter.toString());
+}
+
+export function decrementCounter(): void {
+  let newCounter = storage.get<i32>("counter") - 1;
+  storage.set<i32>("counter", newCounter)
+  near.log("Counter is now: " + newCounter.toString());
+}
+
 @view_method
-export function hello(): string {
-    return "Hello, world";
+export function getCounter(): i32 {
+  return storage.get<i32>("counter");
 }
 ```
 
-Then the generated `metadata` method will return `{"view_methods": [{"hello": {"name": "hello", "parameters": [], "returnType": "string"}}], "change_methods": []}`
+This contract has two change methods, `incrementCounter` and `decrementCounter`, as well as one view method, `getCounter`.
+In this case, the metadata we want looks like 
+```json
+{
+  "view_methods": [
+    {
+      "getCounter": {
+        "name": "getCounter",
+        "parameters": [],
+        "returnType": "i32"
+      }
+    }
+  ],
+  "change_methods": [
+    {
+      "incrementCounter": {
+        "name": "incrementCounter",
+        "parameters": [],
+        "returnType": "void"
+      }
+    },
+    {
+      "decrementCounter": {
+        "name": "decrementCounter",
+        "parameters": [],
+        "returnType": "void"
+      }
+    }
+  ]
+}
+```
+and the generated `metadata` method looks like:
+```typescript
+export function metadata(): string {
+    return "{\"view_methods\": [{\"getCounter\": {\"name\": \"getCounter\", \"parameters\": [], \"returnType\": \"i32\"}],\"change_methods\": [{\"incrementCounter\": {\"name\": \"incrementCounter\", \"parameters\": [], \"returnType\": \"void\"}}, {\"decrementCounter\": {\"name\": \"decrementCounter\", \"parameters\": [], \"returnType\": \"void\"}}]}"
+}
+```
 
 # Reference-level explanation
 [reference-level-explanation]: #reference-level-explanation
