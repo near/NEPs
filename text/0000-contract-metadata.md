@@ -1,7 +1,6 @@
 - Proposal Name: `contract_metadata`
 - Start Date: (fill me in with today's date, YYYY-MM-DD)
-- NEP PR: [nearprotocol/neps#0000](https://github.com/nearprotocol/neps/pull/0000)
-- Issue(s): link to relevant issues in relevant repos (not required).
+- NEP PR: [nearprotocol/neps#0003](https://github.com/nearprotocol/NEPs/pull/3)
 
 # Summary
 [summary]: #summary
