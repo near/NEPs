@@ -28,8 +28,8 @@ For developers, there will be two main changes:
 they will instead annotate the methods of a contract by decorators.
 More specifically, every method is by default a change method, unless annotated by `@view_method`.
 - Every contract will have a `metadata` method that returns a json that serializes the contract methods. For each method,
-the json serialization is of the form `{"name": <method_name>, "parameters": [{<param1>: <type1>, .. }], "returnType": <return_type>}`.
-The overall serialization is of the form `{"view_methods": [{<method_name>: <method_metadata>, .. }], "change_methods": [{<method_name>: <method_metadata>, .. }]}`. 
+the json serialization is of the form `{"name": <method_name>, "parameters": {<param1>: <type1>, .. }, "returnType": <return_type>}`.
+The overall serialization is of the form `{"view_methods": {<method_name>: <method_metadata>, .. }, "change_methods": {<method_name>: <method_metadata>, .. }}`. 
 
 As an concrete example, suppose we have a contract that maintains a counter on chain:
 
@@ -58,37 +58,33 @@ This contract has two change methods, `incrementCounter` and `decrementCounter`,
 In this case, the metadata we want looks like 
 ```json
 {
-  "view_methods": [
-    {
+  "view_methods": 
+  {
       "getCounter": {
         "name": "getCounter",
         "parameters": [],
         "returnType": "i32"
       }
-    }
-  ],
-  "change_methods": [
-    {
+  },
+  "change_methods": 
+  {
       "incrementCounter": {
         "name": "incrementCounter",
         "parameters": [],
         "returnType": "void"
-      }
-    },
-    {
+      },
       "decrementCounter": {
         "name": "decrementCounter",
         "parameters": [],
         "returnType": "void"
       }
-    }
-  ]
+  }
 }
 ```
 and the generated `metadata` method looks like:
 ```typescript
 export function metadata(): string {
-    return "{\"view_methods\": [{\"getCounter\": {\"name\": \"getCounter\", \"parameters\": [], \"returnType\": \"i32\"}],\"change_methods\": [{\"incrementCounter\": {\"name\": \"incrementCounter\", \"parameters\": [], \"returnType\": \"void\"}}, {\"decrementCounter\": {\"name\": \"decrementCounter\", \"parameters\": [], \"returnType\": \"void\"}}]}"
+    return "{\"view_methods\": {\"getCounter\": {\"name\": \"getCounter\", \"parameters\": {}, \"returnType\": \"i32\"},\"change_methods\": {\"incrementCounter\": {\"name\": \"incrementCounter\", \"parameters\": {}, \"returnType\": \"void\"}}, {\"decrementCounter\": {\"name\": \"decrementCounter\", \"parameters\": {}, \"returnType\": \"void\"}}}"
 }
 ```
 
