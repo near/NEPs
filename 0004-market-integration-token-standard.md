@@ -46,29 +46,30 @@ For user-facing NEPs this section should focus on user stories.
 The NEAR marketplace-integrated token standard
 
 Template for smart contract.
-Note that as of this writing, interfaces are unimplemented in AssemblyScript
+Note that as of this writing, interfaces are unimplemented in AssemblyScript.
 
 ```TypeScript
 class MarketStandardToken {
   getTokenTypes():TokenType[]
   getToken(tokenId:string):Token
   getTokensByOwner(ownerId:string):Token[]
-  getCount(owner:string, tokenType: TokenType) // This is equivalent of balanceOf
-  getTokenValue(tokenId:string)
-  getTokenData(tokenId:string)
+
+  // getCount is equivalent of balanceOf
+  getCount(tokenType: TokenType, ownerId: string)
+  getTokenValue(tokenId:string):u64
+  getTokenData(tokenId:string):bytes
 
   // It's up to the developer of a token to decide how tokens are generated.
   // Minting should return the Token with a unique ID attached.
   mintToken(token:Token):Token
 
-  transfer()
+  // Note that transferring can be done on 1 or more tokens
+  transfer(recipientId:string, ownerId:string, tokenIds:string[]):void
 
-  // Researching these
-  lockToken(token)
-
+  //*** Researching the following methods ***//
+  lockToken(tokenId:string):void;
   // Permissioned setting of value
   private setValue(tokenId:string, value:u64)
-
 }
 ```
 
@@ -86,6 +87,7 @@ class Token {
 class TokenType {
   id: string;
   name: string;
+  totalSupply: u64;
 }
 
 ```
