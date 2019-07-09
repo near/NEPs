@@ -19,72 +19,140 @@ ERC-20 standard: https://eips.ethereum.org/EIPS/eip-20
 ERC-721 standard: https://eips.ethereum.org/EIPS/eip-721
 ERC-1155 standard: https://eips.ethereum.org/EIPS/eip-1155
 
-
 # Guide-level explanation
 [guide-level-explanation]: #guide-level-explanation
 
-Example of minting a token
+## Example of minting a token
 
 ```TypeScript
-[...]
+
 let corgiToken = generateRandomCorgiToken(tokenDetails);
-// corgiToken.id === null 
+near.log(corgiToken.id)
+// null
+
 let mintedCorgiToken = mintToken(corgiToken);
+near.log(corgiToken.id)
+// "2134aa-adsf34-asd23a-1qwera" or simply "1"
+// id generation can be randomized or incremental
+
 near.log(mintedCorgiToken.tokenType.name);
 // "CorgiToken"
 
-getTokenValue(corgiToken.id)
-// In most cases, value should be determined by market, however there are cases where it is important that value be set by the developer.
+  const sender = context.sender;
+  const recipient = "new.owner";
+  const tokenId = ["1"];
+
 
 ```
-  
-For user-facing NEPs this section should focus on user stories.
 
 # Reference-level explanation
 [reference-level-explanation]: #reference-level-explanation
 
-The NEAR marketplace-integrated token standard
+## Template for smart contract in AssemblyScript
 
-Template for smart contract.
-Note that as of this writing, interfaces are unimplemented in AssemblyScript.
+At time of writing, this standard is established with several constraints found in AssemblyScript. The first is that interfaces are not an implemented feature of AssemblyScript, and the second is that classes are not exported in the conversion from AssemblyScript to WASM. This means that the entire contract could be implemented as a class, which might be better for code organization, but it would be deceiving in function.
 
 ```TypeScript
-class MarketStandardToken {
-  getTokenTypes():TokenType[]
-  getToken(tokenId:string):Token
-  getTokensByOwner(ownerId:string):Token[]
+  function unimplemented():void {
+    near.log("Function not implemented");
+  }
 
-  // getCount is equivalent of balanceOf
-  getCount(tokenType: TokenType, ownerId: string)
-  getTokenValue(tokenId:string):u64
-  getTokenData(tokenId:string):bytes
+  export function init():void {
+    unimplemented();
+  }
 
-  // It's up to the developer of a token to decide how tokens are generated.
-  // Minting should return the Token with a unique ID attached.
-  mintToken(token:Token):Token
+  export function mintToken(ownerId:string, token:Token):Token {
+    unimplemented();
+  }
 
-  // Note that transferring can be done on 1 or more tokens
-  transfer(recipientId:string, ownerId:string, tokenIds:string[]):void
+  export function getToken(tokenId:string):Token {
+    unimplemented();
+  }
+
+  export function getTokenOwner(tokenId:string):string {
+    unimplemented();
+  }
+
+  export function getTokenTypes():TokenType[] {
+    unimplemented();
+  }
+  
+  export function getTokensByOwner(ownerId:string, startTokenId:string = null, limit:u32 = 10):Token[] {
+    unimplemented();
+  }
+
+  export function getCountByOwner(tokenType: TokenType, ownerId: string) {
+    unimplemented();
+  }
+  
+  export function getTokenData(tokenId:string):bytes {
+    unimplemented();
+  }
+
+  export function transfer(recipientId:string, tokenIds:string[], onTransfer:PayloadCallback = null):void {
+    unimplemented();
+  }
+
+  class OnTransferArgs {
+    ownerId: string;
+    recipientId: string;
+    tokenIds: string[];
+    payload: string;
+  }
+
+  class PayloadCallback {
+    contractId:string;
+    methodName:string;
+    payload: string;
+  }
 
   //*** Researching the following methods ***//
-  lockToken(tokenId:string):void;
-  // Permissioned setting of value
-  private setValue(tokenId:string, value:u64)
-}
+  function lockToken(tokenId:string):void {
+    unimplemented();
+  }
+  
+  function unlockToken(tokenId:string):void {
+    unimplemented();
+  }
+
+  // The concept of escrow that the standard knows about is optimizing for multiple NFT exchanges
+  export function checkEscrow(escrowId:string, tokenIds:string[]) {
+    unimplemented();
+  }
+
+  export function approveEscrow(escrowId:string, tokenIds:string[]):void {
+    unimplemented();
+  }
+
+  export function cancelEscrow(escrowId:string, tokenIds:string[]):void {
+    unimplemented();
+  }
 ```
 
-Models
+### Comments
+
+`unimplemented` is included as a convenience for those who wish to copy this directly into a project.
+
+`getCount` is the equivalent of `balanceOf` if you're familiar with ERC token standards. The idea of a balance is not as transferrable to non-fungible items as it is to currency where it originated.
+
+`mintToken` - It's up to the developer of a token to decide how tokens are generated. Minting should return the Token with a unique ID attached.
+
+`transfer` - A straightforward transfer between two 
+
+needs collections
+  tokens
+  tokensByOwner
+
+## Models for AssemblyScript contract
 
 ```TypeScript
-
-class Token {
+export class Token {
   id: string;
   tokenType: TokenType;
-  supply: u64;
   data: bytes;
 }
 
-class TokenType {
+export class TokenType {
   id: string;
   name: string;
   totalSupply: u64;
@@ -95,8 +163,6 @@ class TokenType {
 # Drawbacks
 [drawbacks]: #drawbacks
 
-Why should we *not* do this?
-
 ### TODO
 
 # Rationale and alternatives
@@ -105,6 +171,8 @@ Why should we *not* do this?
 - Why is this design the best in the space of possible designs?
 - What other designs have been considered and what is the rationale for not choosing them?
 - What is the impact of not doing this?
+
+Considering multi-token standard
 
 ### TODO
 
