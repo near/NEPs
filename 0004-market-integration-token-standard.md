@@ -10,7 +10,7 @@ A standard interface for non-fungible tokens allowing for ownership and transfer
 # Motivation
 [motivation]: #motivation
 
-Non-fungible tokens (NFTs) have been described in many ways: digital goods, collectible items, unique online assets etc. The current core use case for NFTs is speculating on value and trading unique items. The use case of trading NFTs should natively supported for this emerging market. 
+Non-fungible tokens (NFTs) have been described in many ways: digital goods, collectible items, unique online assets etc. The current core use case for NFTs is speculating on value and trading unique items. The use case of trading NFTs should natively supported for this emerging market.
 
 The idea of a marketplace-integrated NFT is to make it as easy as possible to merge new services with existing tokens that use the standard. Existing NFT standards still require some customization on the part of third party integrators, which becomes a burden with each NFT integrated.  This standard will allow anyone to build a marketplace on top of any number of tokens, not just allowing but promoting trading and extension. These marketplaces can be built into games and apps that use the specific metadata in whatever way they choose.
 
@@ -22,27 +22,42 @@ ERC-1155 standard: https://eips.ethereum.org/EIPS/eip-1155
 # Guide-level explanation
 [guide-level-explanation]: #guide-level-explanation
 
+## Documenting functionality
+
+- mint tokens with metadata
+- transfer tokens to new users
+- allow users to trade tokens
+- allow users to sell tokens (in market)
+- I want to craft tokens
+- I want to see all tokens
+- I want to look at all the types of tokens
+- I want to have different kinds of tokens in one contract
+- I want to see a user's tokens
+- I want to see a token's owner
+- I want to see how many tokens of a type exist (are minted)
+- I want to see the rarity of a token (total supply)
+
 ## Example of minting a token
 
 ```TypeScript
+let tokenTypeId = mintTokenType("Corgi Token", 1000);
+near.log(tokenTypeId);
+// 0
 
-let corgiToken = generateRandomCorgiToken(tokenDetails);
-near.log(corgiToken.id)
+// This should be done with a constructor, but is done here with attributes illustratively
+let corgiToken = {};
+corgiToken.name = "Winnifred";
+corgiToken.tokenTypeId = tokenTypeId;
+corgiToken.data = "{\"url\":\"corgi name\"}";
+
+// At this point, corgi doesn't have an id because it hasn't been minted yet
+near.log(corgiToken.id);
 // null
 
+// id generation should be incremental and unique across all tokens
 let mintedCorgiToken = mintToken(corgiToken);
 near.log(corgiToken.id)
-// "2134aa-adsf34-asd23a-1qwera" or simply "1"
-// id generation can be randomized or incremental
-
-near.log(mintedCorgiToken.tokenType.name);
-// "CorgiToken"
-
-  const sender = context.sender;
-  const recipient = "new.owner";
-  const tokenId = ["1"];
-
-
+// 0
 ```
 
 # Reference-level explanation
@@ -65,38 +80,43 @@ At time of writing, this standard is established with several constraints found 
     unimplemented();
   }
 
-  export function getToken(tokenId:string):Token {
+  // returns TokenTypeID, which is also an index
+  export function mintTokenType(name:string, totalSupply:u64):u32 {
     unimplemented();
   }
 
-  export function getTokenOwner(tokenId:string):string {
+  export function getToken(tokenId:u64):Token {
     unimplemented();
   }
 
-  export function getTokenTypes():TokenType[] {
-    unimplemented();
-  }
-  
-  export function getTokensByOwner(ownerId:string, startTokenId:string = null, limit:u32 = 10):Token[] {
+  export function getTokenType(tokenTypeId:u32) {
     unimplemented();
   }
 
-  export function getCountByOwner(tokenType: TokenType, ownerId: string) {
-    unimplemented();
-  }
-  
-  export function getTokenData(tokenId:string):bytes {
+  export function getTokenOwner(tokenId:u64):string {
     unimplemented();
   }
 
-  export function transfer(recipientId:string, tokenIds:string[], onTransfer:PayloadCallback = null):void {
+  export function getAllTokenTypes():TokenType[] {
+    unimplemented();
+  }
+
+  export function getTokensByOwner(ownerId:string, startTokenId:u64 = 0, limit:u32 = 10):Token[] {
+    unimplemented();
+  }
+
+  export function getCountByOwner(ownerId: string):u64 {
+    unimplemented();
+  }
+
+  export function transfer(recipientId:string, tokenIds:u64[], onTransfer:PayloadCallback = null):void {
     unimplemented();
   }
 
   class OnTransferArgs {
     ownerId: string;
     recipientId: string;
-    tokenIds: string[];
+    tokenIds: u64[];
     payload: string;
   }
 
@@ -107,24 +127,24 @@ At time of writing, this standard is established with several constraints found 
   }
 
   //*** Researching the following methods ***//
-  function lockToken(tokenId:string):void {
+  function lockToken(tokenId:u64):void {
     unimplemented();
   }
-  
-  function unlockToken(tokenId:string):void {
+
+  function unlockToken(tokenId:u64):void {
     unimplemented();
   }
 
   // The concept of escrow that the standard knows about is optimizing for multiple NFT exchanges
-  export function checkEscrow(escrowId:string, tokenIds:string[]) {
+  export function checkEscrow(escrowId:string, tokenIds:u64[]) {
     unimplemented();
   }
 
-  export function approveEscrow(escrowId:string, tokenIds:string[]):void {
+  export function approveEscrow(escrowId:string, tokenIds:u64[]):void {
     unimplemented();
   }
 
-  export function cancelEscrow(escrowId:string, tokenIds:string[]):void {
+  export function cancelEscrow(escrowId:string, tokenIds:u64[]):void {
     unimplemented();
   }
 ```
@@ -137,25 +157,28 @@ At time of writing, this standard is established with several constraints found 
 
 `mintToken` - It's up to the developer of a token to decide how tokens are generated. Minting should return the Token with a unique ID attached.
 
-`transfer` - A straightforward transfer between two 
+`transfer` - A straightforward transfer between two
 
-needs collections
+## Collections
+```TypeScript
   tokens
   tokensByOwner
+```
 
 ## Models for AssemblyScript contract
 
 ```TypeScript
 export class Token {
-  id: string;
-  tokenType: TokenType;
-  data: bytes;
+  id:u64;
+  tokenTypeId:u32;
+  // serialized json
+  data:string;
 }
 
 export class TokenType {
-  id: string;
-  name: string;
+  id: u32;
   totalSupply: u64;
+  data:string;
 }
 
 ```
