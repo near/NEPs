@@ -29,21 +29,21 @@ they will instead annotate the methods of a contract by decorators.
 More specifically, every method is by default a change method, unless annotated by `@view_method`.
 - Every contract will have a `metadata` method that returns a json that serializes the contract methods. For each method,
 the json serialization is of the form `{"parameters": {<param1>: <type1>, .. }, "returnType": <return_type>}`.
-The overall serialization is of the form `{"view_methods": {<method_name>: <method_metadata>, .. }, "change_methods": {<method_name>: <method_metadata>, .. }}`. 
+The overall serialization is of the form `{"viewMethods": {<method_name>: <method_metadata>, .. }, "changeMethods": {<method_name>: <method_metadata>, .. }}`. 
 
 As an concrete example, suppose we have a contract that maintains a counter on chain:
 
 ```typescript
 import { context, storage, near } from "./near";
 
-export function incrementCounter(): void {
-  let newCounter = storage.get<i32>("counter") + 1;
+export function incrementCounterBy(amount: i32 = 1): void {
+  let newCounter = storage.get<i32>("counter") + amount;
   storage.set<i32>("counter", newCounter)
   near.log("Counter is now: " + newCounter.toString());
 }
 
-export function decrementCounter(): void {
-  let newCounter = storage.get<i32>("counter") - 1;
+export function decrementCounterBy(amount: i32 = 1): void {
+  let newCounter = storage.get<i32>("counter") - amount;
   storage.set<i32>("counter", newCounter)
   near.log("Counter is now: " + newCounter.toString());
 }
@@ -58,21 +58,21 @@ This contract has two change methods, `incrementCounter` and `decrementCounter`,
 In this case, the metadata we want looks like 
 ```json
 {
-  "view_methods": 
+  "viewMethods": 
   {
       "getCounter": {
-        "parameters": [],
+        "parameters": {"amount": "i32"},
         "returnType": "i32"
       }
   },
-  "change_methods": 
+  "changeMethods": 
   {
-      "incrementCounter": {
-        "parameters": [],
+      "incrementCounterBy": {
+        "parameters": {"amount": "i32"},
         "returnType": "void"
       },
-      "decrementCounter": {
-        "parameters": [],
+      "decrementCounterBy": {
+        "parameters": {},
         "returnType": "void"
       }
   }
@@ -81,7 +81,7 @@ In this case, the metadata we want looks like
 and the generated `metadata` method looks like:
 ```typescript
 export function metadata(): string {
-    return "{\"view_methods\": {\"getCounter\": {\"parameters\": {}, \"returnType\": \"i32\"},\"change_methods\": {\"incrementCounter\": {\"parameters\": {}, \"returnType\": \"void\"}}, {\"decrementCounter\": {\"parameters\": {}, \"returnType\": \"void\"}}}"
+    return "{\"viewMethods\": {\"getCounter\": {\"parameters\": {}, \"returnType\": \"i32\"},\"changeMethods\": {\"incrementCounterBy\": {\"parameters\": {\"amount\": \"i32\"}, \"returnType\": \"void\"}}, {\"decrementCounterBy\": {\"parameters\": {\"amount\": \"i32\"}, \"returnType\": \"void\"}}}"
 }
 ```
 
