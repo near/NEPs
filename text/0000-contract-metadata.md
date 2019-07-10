@@ -28,7 +28,7 @@ For developers, there will be two main changes:
 they will instead annotate the methods of a contract by decorators.
 More specifically, every method is by default a change method, unless annotated by `@view_method`.
 - Every contract will have a `metadata` method that returns a json that serializes the contract methods. For each method,
-the json serialization is of the form `{"name": <method_name>, "parameters": {<param1>: <type1>, .. }, "returnType": <return_type>}`.
+the json serialization is of the form `{"parameters": {<param1>: <type1>, .. }, "returnType": <return_type>}`.
 The overall serialization is of the form `{"view_methods": {<method_name>: <method_metadata>, .. }, "change_methods": {<method_name>: <method_metadata>, .. }}`. 
 
 As an concrete example, suppose we have a contract that maintains a counter on chain:
@@ -61,7 +61,6 @@ In this case, the metadata we want looks like
   "view_methods": 
   {
       "getCounter": {
-        "name": "getCounter",
         "parameters": [],
         "returnType": "i32"
       }
@@ -69,12 +68,10 @@ In this case, the metadata we want looks like
   "change_methods": 
   {
       "incrementCounter": {
-        "name": "incrementCounter",
         "parameters": [],
         "returnType": "void"
       },
       "decrementCounter": {
-        "name": "decrementCounter",
         "parameters": [],
         "returnType": "void"
       }
@@ -84,7 +81,7 @@ In this case, the metadata we want looks like
 and the generated `metadata` method looks like:
 ```typescript
 export function metadata(): string {
-    return "{\"view_methods\": {\"getCounter\": {\"name\": \"getCounter\", \"parameters\": {}, \"returnType\": \"i32\"},\"change_methods\": {\"incrementCounter\": {\"name\": \"incrementCounter\", \"parameters\": {}, \"returnType\": \"void\"}}, {\"decrementCounter\": {\"name\": \"decrementCounter\", \"parameters\": {}, \"returnType\": \"void\"}}}"
+    return "{\"view_methods\": {\"getCounter\": {\"parameters\": {}, \"returnType\": \"i32\"},\"change_methods\": {\"incrementCounter\": {\"parameters\": {}, \"returnType\": \"void\"}}, {\"decrementCounter\": {\"parameters\": {}, \"returnType\": \"void\"}}}"
 }
 ```
 
@@ -117,4 +114,5 @@ needs to be done given that it is not yet stabilized.
 # Future possibilities
 [future-possibilities]: #future-possibilities
 
-TBD
+Under the framework proposed in this NEP, it is also not difficult to add annotations to methods in natural language.
+We can also add contract-level annotation as part of the contract metadata json.
