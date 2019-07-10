@@ -27,9 +27,8 @@ For developers, there will be two main changes:
 - Instead of annotating view and change methods in the `initContract` function in `main.js`,
 they will instead annotate the methods of a contract by decorators.
 More specifically, every method is by default a change method, unless annotated by `@view_method`.
-- Every contract will have a `metadata` method that returns a json that serializes the contract methods. For each method,
-the json serialization is of the form `{"parameters": {<param1>: <type1>, .. }, "returnType": <return_type>}`.
-The overall serialization is of the form `{"viewMethods": {<method_name>: <method_metadata>, .. }, "changeMethods": {<method_name>: <method_metadata>, .. }}`. 
+- Every contract will have a `metadata` method that returns a json that serializes the contract methods in an array.
+For each method, the json serialization is of the form `{"name": <name>, "parameters": [{"name": <param_name1>, "type": <param_type1>, ..}, .. ], "returnType": <return_type>}`.
 
 As an concrete example, suppose we have a contract that maintains a counter on chain:
 
@@ -57,31 +56,31 @@ export function getCounter(): i32 {
 This contract has two change methods, `incrementCounter` and `decrementCounter`, as well as one view method, `getCounter`.
 In this case, the metadata we want looks like 
 ```json
-{
-  "viewMethods": 
+[
   {
-      "getCounter": {
-        "parameters": {"amount": "i32"},
-        "returnType": "i32"
-      }
+    "name": "getCounter",
+    "parameters": [{"name": "amount", "type": "i32"}],
+    "returnType": "i32",
+    "methodType": "view"
   },
-  "changeMethods": 
   {
-      "incrementCounterBy": {
-        "parameters": {"amount": "i32"},
-        "returnType": "void"
-      },
-      "decrementCounterBy": {
-        "parameters": {},
-        "returnType": "void"
-      }
+    "name": "incrementCounterBy",
+    "parameters": [{"name": "amount", "type": "i32"}],
+    "returnType": "i32",
+    "methodType": "change"
+  },
+  {
+    "name": "decrementCounterBy",
+    "parameters": [{"name": "amount", "type": "i32"}],
+    "returnType": "void",
+    "methodType": "change"
   }
-}
+]
 ```
 and the generated `metadata` method looks like:
 ```typescript
 export function metadata(): string {
-    return "{\"viewMethods\": {\"getCounter\": {\"parameters\": {}, \"returnType\": \"i32\"},\"changeMethods\": {\"incrementCounterBy\": {\"parameters\": {\"amount\": \"i32\"}, \"returnType\": \"void\"}}, {\"decrementCounterBy\": {\"parameters\": {\"amount\": \"i32\"}, \"returnType\": \"void\"}}}"
+    return '[{"name": "getCounter", "parameters": [{"name": "amount", "type": "i32"}], "returnType": "i32", "methodType": "view"}, {"name": "incrementCounterBy", "parameters": [{"name": "amount", "type": "i32"}], "returnType": "i32", "methodType": "change"}, {"name": "decrementCounterBy", "parameters": [{"name": "amount", "type": "i32"}], "returnType": "void", "returnType": "void"}]'
 }
 ```
 
