@@ -30,24 +30,33 @@ Here are proposed changes for the AccessKey and Account structs.
 /// `account_id,public_key` is a key in the state
 struct AccessKey {
   /// The nonce for this.
-  pub nonce: Nonce(u64),
+  pub nonce: Nonce,  // u64 
+  
+  /// Defines permissions for the AccessKey 
+  pub permission: AccessKeyPermission,
+}
 
+/// Defines permissions for AccessKey 
+pub enum AccessKeyPermission {
+  /// Restricts AccessKey to only be used for function calls.
+  FunctionCall(FunctionCallPermission),
+
+  /// Gives full access to the account.
+  /// NOTE: It's used to replace account-level public keys.
+  FullAccess,
+}
+
+pub struct FunctionCallPermission {
   /// The amount that can be spent for transaction fees by this access key from the account balance.
   /// When used, both account balance and the allowance is decreased.
-  pub allowance: Balance(u128),
+  pub allowance: Balance,  // u128
 
-  // Permissions (WORK IN PROGRESS)
-  
   /// The AccountID of the receiver of the transaction. The access key will restrict transactions to
-  /// only this receiver, unless full_access is set to true.
-  pub receiver_id: AccountId(String),
+  /// only this receiver.
+  pub receiver_id: AccountId,  // String
   
   /// If not None, the access key would be restricted to call only the given method name.
-  /// Unless the full_access is set to true.
   pub method_name: Option<String>,
-  
-  /// Turns this access key into a full permissions public key, that is similar to the account-level public keys.
-  pub full_access: bool,
 }
 
 /// NOTE: This change removes account-level nonce and public keys.
@@ -70,19 +79,13 @@ If an AccessKey has the full access to the account and the allowance set to be t
 it essentially acts as an account-level public key. Which means we can remove account-level
 public keys from the account struct and rely only on access keys.
 
-An access key example from user `vasya.near` with full access (using TBD `full_access` permission field):
+An access key example from user `vasya.near` with full access:
 ```rust
 /// vasya.near,a123bca2
 AccessKey {
     nonce: 0,
     
-    allowance: 340282366920938463463374607431768211455,
-    
-    receiver_id: "vasya.near",
-    
-    method_name: None,
-    
-    full_access: true,
+    permission: AccessKeyPermission::FullAccess,
 }
 ```
 
@@ -91,53 +94,70 @@ AccessKey {
 
 This is a simple example where a user wants to use some dApp. The user has to authorize this dApp within their wallet, so the dApp knows who the user is, and also can issue simple function call transactions on behalf of this user.
 
-To create such AccessKey a dApp generates a new key pair and passes the new public key to the user's wallet in a URL. Then the wallet asks the user to create a new AccessKey with
-that points to the dApp. User has to explicitly confirm this in the wallet for AccessKey to be created.
+To create such AccessKey a dApp generates a new key pair and passes the new public key to the user's wallet in a URL.
+Then the wallet asks the user to create a new AccessKey with that points to the dApp.
+User has to explicitly confirm this in the wallet for AccessKey to be created.
+
 The new access key is restricted to be only used for the app’s contract_id, but is not restricted for any method name.
-The user also selects the allowance to some reasonable amount, enough for the application to issue transactions. The application might hint the user about this allowance.
+The user also selects the allowance to some reasonable amount, enough for the application to issue regular transactions.
+The application might also hint the user about this desired allowance in some way.
+
 Now the app can issue function call transactions on behalf of the user’s account towards the app’s contract without requiring the user to sign each transaction.
 
-An access key example for chess app from user `vasya.near` (using old permissions model):
+An access key example for chess app from user `vasya.near`:
 ```rust
 /// vasya.near,c5d312f3
 AccessKey {
     nonce: 0,
     
-    allowance: 1_000_000_000,
-    
-    receiver_id: "chess.app",
-    
-    method_name: None,
-    
-    full_access: false,
+    permission: AccessKeyPermission::FunctionCall(FunctionCallPermission {
+        // Since the access key is stored on the Chess app front-end, the user has
+        // limited the spending amount to some reasonable, but large enough number.
+        // NOTE: It's needs to be multiplied to decimals, e.g. 10^-18 
+        allowance: 1_000_000_000,
+        
+        // This access key restricts access to `chess.app` contract.
+        receiver_id: "chess.app",
+
+        // Any method name on the `chess.app` contract can be called.  
+        method_name: None,
+    }),
 }
 ```
 
 #### AccessKey issued by a dApp
 
-This is an example where the dApp wants to pay for the user, or it doesn't want to go through the user's sign-in flow. For whatever reason the dApp decided to issue an access key directly for their account.
+This is an example where the dApp wants to pay for the user, or it doesn't want to go through the user's sign-in flow.
+For whatever reason the dApp decided to issue an access key directly for their account.
 
 For this to work there should be one account with funds (that dApp controls on the backend) which creates access keys for the users.
-The difference from the example above is there is only one account that creates multiple access keys (one per user) towards one other contract.
-So for the contract to differentiate users, the contract has to use the public key of the access key instead of sender's account ID.
+The difference from the example above is there is only one account (the same for all users) that creates multiple access keys (one per user) towards one other contract (app's contract).
+To differentiate users the contract has to use the public key of the access key instead of sender's account ID.
+
+If the access key wants to support user's identity from the account ID. The contract can provide a public method that links user's account ID with a given public key.
+Once this is done, a user can request a new access key with the linked public key (sponsored by the app), but it is linked to the user's account ID.
 
 There are some caveats with this approach:
-- The dApp is required to have a backend and to have some sybil resistance for users. It's to prevent abuse by bots.
-- Writing contract is more complicated, since the contract now needs to handle both real users through common transactions and the ephemeral users through the access keys (by mapping their public keys to user names).
+- The dApp is required to have a backend and to have some sybil resistance for users. It's needed to prevent abuse by bots.
+- Writing the contract is slightly more complicated, since the contract now needs to handle mapping of the public keys to the account IDs.
 
-An access key example for chess app paid by the chess app from `chess.funds` account (using old permissions model):
+An access key example for chess app paid by the chess app from `chess.funds` account:
 ```rust
 /// chess.funds,2bc2b3b
 AccessKey {
     nonce: 0,
     
-    allowance: 5_000_000,
-    
-    receiver_id: "chess.app",
-    
-    method_name: None,
+    permission: AccessKeyPermission::FunctionCall(FunctionCallPermission {
+        // Since the access key is given to the user, the developer wants to limit the
+        // the spending amount to some conservative number, since a user might try to drain it.
+        allowance: 5_000_000,
+        
+        // This access key restricts access to `chess.app` contract.
+        receiver_id: "chess.app",
 
-    full_access: false,
+        // Any method name on the `chess.app` contract can be called (but some methods might just ignore this key).
+        method_name: None,
+    }),
 }
 ```
 
@@ -182,20 +202,24 @@ An example of an access key limited to `proxy` function:
 AccessKey {
     nonce: 0,
     
-    allowance: 1_000_000_000,
-    
-    receiver_id: "vasya.near",
-    
-    method_name: Some("proxy"),
+    permission: AccessKeyPermission::FunctionCall(FunctionCallPermission {
+        // Allowance can be large enough, since the user is likely trusting the app. 
+        allowance: 1_000_000_000,
+        
+        // This access key restricts access to user's account `vasya.near` contract.
+        // Most likely, the contract code can be deployed and upgraded directly from the wallet.
+        receiver_id: "vasya.near",
 
-    full_access: false,
+        // The method is restricted to proxy, which does all the security checks.
+        method_name: Some("proxy"),
+    }),
 }
 ```
 
 # Reference-level explanation
 [reference-level-explanation]: #reference-level-explanation
 
-- Access keys are going to be stored with the `account_id` prefix and the `public_key` suffix.
+- Access keys are stored with the `account_id,public_key` key. Where `account_id` and `public_key` are actual Account ID and public keys, and `,` is a separator.
 They should be stored on the same shard as the account.
 - Access keys storage rent should be accounted and paid from the account directly without affecting the allowance.
 - Access keys allowance can exceed the account balance.
@@ -225,7 +249,7 @@ It also prevented sharing of the account balance between access keys.
 #### Permissions
 
 Almost all desired use-cases of access keys can be achieved by using the old permissions model.
-It restricts allows access keys to only issue function call with no attached tokens.
+It restricts access keys to only issue function call with no attached tokens.
 The function calls are restricted to the selected `receiver_id` and potentially restricted to a single `method_name`.
 Anything non-trivial can be done by the contract that receives this call, e.g. through `proxy` function.
 
@@ -236,10 +260,13 @@ In the example above I used a field `full_access` to allow the unlimited access.
 # Drawbacks
 [drawbacks]: #drawbacks
 
-`full_access` field looks like a hack and we should figure out better permissions solution before doing it.
+Currently the permission model is quite limited to either a function call with one or any method names, or a full access key.
+But we may add more permissions in the future in order to handle this issue. 
 
 # Rationale and alternatives
 [rationale-and-alternatives]: #rationale-and-alternatives
+
+## Alternatives
 
 #### More permissions directly on the access key
 
@@ -273,8 +300,8 @@ We can potentially use `None` to mean unlimited key, and require user to explici
 
 #### Permissions
 
-- One unresolved question is permissions model. Right now I'm still sceptical about the `full_access` flag. 
-- It's also not clear whether a single pair of `receiver_id`/`method_name` is enough to cover all use-cases.
+Not clear whether a single pair of `receiver_id`/`method_name` is enough to cover all use-cases at the moment.
+E.g. if I want to use my account that already has some code on it, e.g. vesting locked account. I can't deploy a new code on it, so I can't use a `proxy` method.
 
 # Future possibilities
 [future-possibilities]: #future-possibilities
