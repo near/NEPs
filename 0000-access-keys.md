@@ -29,7 +29,9 @@ Here are proposed changes for the AccessKey and Account structs.
 ```rust
 /// `account_id,public_key` is a key in the state
 struct AccessKey {
-  /// The nonce for this.
+  /// The nonce for this access key.
+  /// It makes sense for nonce to not start from 0, in case the access key is recreated
+  /// with the same public key, to avoid replaying of old transactions.
   pub nonce: Nonce,  // u64 
   
   /// Defines permissions for the AccessKey 
@@ -47,9 +49,12 @@ pub enum AccessKeyPermission {
 }
 
 pub struct FunctionCallPermission {
-  /// The amount that can be spent for transaction fees by this access key from the account balance.
+  /// `Some` amount that can be spent for transaction fees by this access key from the account balance.
   /// When used, both account balance and the allowance is decreased.
-  pub allowance: Balance,  // u128
+  /// To change or increase the allowance, the access key can be replaced using SwapKey.
+  /// NOTE: If you reuse the public key, make sure to keep the nonce from the old AccessKey.
+  /// `None` means unlimited allowance.
+  pub allowance: Option<Balance>,  // u128
 
   /// The AccountID of the receiver of the transaction. The access key will restrict transactions to
   /// only this receiver.
@@ -114,7 +119,7 @@ AccessKey {
         // Since the access key is stored on the Chess app front-end, the user has
         // limited the spending amount to some reasonable, but large enough number.
         // NOTE: It's needs to be multiplied to decimals, e.g. 10^-18 
-        allowance: 1_000_000_000,
+        allowance: Some(1_000_000_000),
         
         // This access key restricts access to `chess.app` contract.
         receiver_id: "chess.app",
@@ -150,7 +155,7 @@ AccessKey {
     permission: AccessKeyPermission::FunctionCall(FunctionCallPermission {
         // Since the access key is given to the user, the developer wants to limit the
         // the spending amount to some conservative number, since a user might try to drain it.
-        allowance: 5_000_000,
+        allowance: Some(5_000_000),
         
         // This access key restricts access to `chess.app` contract.
         receiver_id: "chess.app",
@@ -203,8 +208,8 @@ AccessKey {
     nonce: 0,
     
     permission: AccessKeyPermission::FunctionCall(FunctionCallPermission {
-        // Allowance can be large enough, since the user is likely trusting the app. 
-        allowance: 1_000_000_000,
+        // Allowance can be large enough, since the user is likely trusting the app.
+        allowance: Some(1_000_000_000),
         
         // This access key restricts access to user's account `vasya.near` contract.
         // Most likely, the contract code can be deployed and upgraded directly from the wallet.
@@ -224,7 +229,7 @@ They should be stored on the same shard as the account.
 - Access keys storage rent should be accounted and paid from the account directly without affecting the allowance.
 - Access keys allowance can exceed the account balance.
 - To validate a transaction signed with the AccessKey, we need to first validate the signature, then fetch the Account and the AccessKey, validate that we have enough funds and verify permissions. 
-- Account creation should now create a full permission access keys with MAX allowance, instead of public keys within the account.
+- Account creation should now create a full access permission access key, instead of public keys within the account.
 - SwapKey transaction should just replace the old access key with the given new access key.
 
 ### Technical changes
@@ -237,13 +242,30 @@ With a single nonce on the account level, there is a high probability that 2 app
 
 Previously we were ordering transactions by nonce and rejecting transactions with a duplicated or lower nonce.
 With the access key nonce, we still need to order transactions by nonce, but now we need to group them by `account_id,public_key` key instead of just account_id.
+To prevent one access key from having a priority on other access keys, we should order transactions by hash when determining which transactions should be added to the block.
+
+The suggestion from @nearmax:
+
+"
+We need to spec out here how transactions from different access keys are going to be ordered with respect to each other. For example:
+3 access keys (A,B,C) issue 3 transactions each:
+A1, A2, A3; B1,B2,B3; C1, C2, C3;
+All these transactions operate on the same state so they need to have an order. First transaction to execute is one of {A1,B1,C1} that has lowest hash, let's say it is B1. Second transaction to execute is one of {A1,B2,C1} with lowest hash, etc.
+"
+
+We should also restrict the nonce of the next transaction to be exactly the previous nonce incremented by 1.
+It will help us with ordering transactions.
+
+The transaction ordering should be a separate topic which should also include security for transactions expiration and fork selection.
 
 #### `allowance` field
 
 Allowance is the amount of tokens the AccessKey can spend from the account balance.
 When some amount is spent, it's subtracted from both the allowance of the access key and from the account balance.
+If in some case the user wants to have unlimited allowance for this key, then we have a `None` allowance option.
 
-NOTE: In the previous iteration of access keys, we used balance instead of the allowance. But it required to sum up all access keys balances to get the the total account balance.
+NOTE: In the previous iteration of access keys, we used balance instead of the allowance.
+But it required to sum up all access keys balances to get the the total account balance.
 It also prevented sharing of the account balance between access keys.
 
 #### Permissions
@@ -253,9 +275,16 @@ It restricts access keys to only issue function call with no attached tokens.
 The function calls are restricted to the selected `receiver_id` and potentially restricted to a single `method_name`.
 Anything non-trivial can be done by the contract that receives this call, e.g. through `proxy` function.
 
-If we want to remove public keys from the account, we also need to add a new permission that allows unlimited access to the account.
-In the example above I used a field `full_access` to allow the unlimited access.
+To remove public keys from the account, we added a new permission that full access to the account and not limited by the allowance.
 
+#### How is `storage_usage` computed?
+
+If we use protobuf size to compute the `storage_usage` value, then protobuf might compress `u128` value and it would affect storage usage every time the `allowance` is modified.
+
+The best option would be is to change `storage_usage` only when the access key is created or removed.
+So that changes to the `allowance` value shouldn't change the `storage_usage` value.
+For this to work, we might need to update the storage computation formula for the access key, e.g. the one that ignores the compressed size of the `allowance` and instead just relies on the 16 bytes of `u128` size.
+Especially, because we currently don't use the proto size for the storage_usage for the account itself.
 
 # Drawbacks
 [drawbacks]: #drawbacks
