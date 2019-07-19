@@ -60,7 +60,8 @@ pub struct FunctionCallPermission {
   /// only this receiver.
   pub receiver_id: AccountId,  // String
   
-  /// If not None, the access key would be restricted to call only the given method name.
+  /// If `Some`, the access key would be restricted to calling only the given method name.
+  /// `None` means it's restricted to calling the receiver_id contract, but any method name.   
   pub method_name: Option<String>,
 }
 
@@ -176,6 +177,7 @@ Let's say a user wants to:
 - select which methods name can be called and which can't
 - transfer funds from the account up to a certain limit 
 - stake from the account, but prevent withdrawing funds
+
 
 To make it work, we need to have a custom logic at every call.
 We can achieve this by running a portion of a smart contract code before any action.
@@ -326,6 +328,11 @@ We can potentially use `None` to mean unlimited key, and require user to explici
 
 # Unresolved questions
 [unresolved-questions]: #unresolved-questions
+
+#### Transactions ordering and nonce restrictions
+
+That question is still unresolved. Whether we should restrict TX nonce to be +1 or not restricting.
+It's not a blocking change, but it would make sense to do this change with other SignedTransaction security features such as minimum hash of a block header and block expiration.
 
 #### Permissions
 
