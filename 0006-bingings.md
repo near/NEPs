@@ -6,10 +6,12 @@
 [summary]: #summary
 
 Wasm bindings, a.k.a imports, are functions that the host exposes to the Wasm code running on the virtual machine.
-These functions are the most difficult thing to change, maybe in our entire ecosystem, after we have contracts running on our blockchain,
+These functions are arguably the most difficult thing to change in our entire ecosystem, after we have contracts running on our blockchain,
 since once the bindings change the old smart contracts will not be able to run on the new nodes.
-Additionally, the behavior of the existing functions is not specified, for instance it is not clear what range iterator
-over trie would do if we provide it with empty or inverted range.
+Additionally, we need a highly detailed specification of the bindings to be able to write unit tests for our contracts,
+since currently we only allow integration tests. Currently, writing unit tests is not possible since we cannot have
+a precise mock of the host in the smart contract unit tests, e.g. we don't know how to mock the range iterator (what does it do
+when given an empty or inverted range?).
 
 In this proposal we give a detailed specification of the functions that we will be relying on for many months to come.
 
@@ -32,13 +34,16 @@ now consider splitting attached balance into two.
 # Specification
 
 ## Scratch Buffer
-We extract the scratch buffer implementation from the existing `data_read`. Benefits:
+Scratch buffer allows the host function to return the data into a buffer located inside the host oppose to the buffer
+located on the client. A special operation can be used to copy the content of the buffer into the host. Memory pointers
+can then be used to point either to the memory on the guest or the memory on the host, see below. Benefits:
 * We can have functions that return values that are not necessarily used, e.g. inserting key-value into a trie can
 also return the preempted old value, which might not be necessarily used. Previously, if we returned something we
 would have to pass the blob from host into the guest, even if it is not used;
 * We can pass blobs of data between host functions without going through the guest, e.g. we can remove the value
 from the storage and insert it into under a different key;
 * It makes API cleaner, because we don't need to pass `buffer_len` and `buffer_ptr` as arguments to other functions;
+* It allows merging certain functions together, see `storage_iter_next`;
 * This is consistent with other APIs that were created for high performance, e.g. allegedly Ewasm have implemented
 SNARK-like computations in Wasm by exposing a bignum library through stack-like interface to the guest. The guest
 can manipulate then with the stack of 256-bit numbers that is located on the host.
@@ -63,8 +68,8 @@ memory of the guest starting with `ptr`.
 ---
 `register_len(register_id: u64) -> u64` -- returns the size of the blob stored in the given register.
 ###### Normal operation
-* If register is not empty, then returns the size, which can potentially be zero;
-* If register is empty, returns `u64::MAX`
+* If register is used, then returns the size, which can potentially be zero;
+* If register is not used, returns `u64::MAX`
 
 ## Trie API
 
@@ -78,16 +83,15 @@ not follow the specification are considered to be bugs that need to be fixed.
 * If key is in use it inserts the key-value and copies the old value into the `register_id`.
 
 ###### Panics
-* If `key_len + key_ptr` or `value_len + value_ptr` exceeds the memory container or points to an unused register it panics.
-In Wasmer, it returns `MemoryAccessViolation` error message;
-* If returning the preempted value into the scratch buffer exceeds the memory container it panics.
-In Wasmer, it returns `MemoryAccessViolation` error message;
+* If `key_len + key_ptr` or `value_len + value_ptr` exceeds the memory container or points to an unused register it panics
+with `MemoryAccessViolation`. (When we say that something panics with the given error we mean that we use Wasmer API to
+create this error and terminate the execution of VM. For mocks of the host that would only cause a non-name panic.)
+* If returning the preempted value into the scratch buffer exceeds the memory container it panics with `MemoryAccessViolation`;
 
 ###### Current bugs
 *  `External::storage_set` trait can return an error which is then converted to a generic non-descriptive
    `StorageUpdateError`, [here](https://github.com/nearprotocol/nearcore/blob/942bd7bdbba5fb3403e5c2f1ee3c08963947d0c6/runtime/wasm/src/runtime.rs#L210)
    however the actual implementation does not return error at all, [see](https://github.com/nearprotocol/nearcore/blob/4773873b3cd680936bf206cebd56bdc3701ddca9/runtime/runtime/src/ext.rs#L95);
-* Uses `u32` instead of `u64`;
 * Does not return into the  scratch buffer.
 
 ---
@@ -101,10 +105,8 @@ In Wasmer, it returns `MemoryAccessViolation` error message;
 This allows to disambiguate two cases: when key-value is not present vs when key-value is present but value is zero bytes.
 
 ###### Panics
-* If `key_len + key_ptr` exceeds the memory container or points to an unused register it panics.
-In Wasmer, it returns `MemoryAccessViolation` error message;
-* If returning the preempted value into the scratch buffer exceeds the memory container it panics.
-In Wasmer, it returns `MemoryAccessViolation` error message;
+* If `key_len + key_ptr` exceeds the memory container or points to an unused register it panics with `MemoryAccessViolation`;
+* If returning the preempted value into the scratch buffer exceeds the memory container it panics with `MemoryAccessViolation`;
 
 ###### Current bugs
 * This function currently does not exist.
@@ -113,16 +115,14 @@ In Wasmer, it returns `MemoryAccessViolation` error message;
 `storage_remove(key_len: u64, key_ptr: u64, register_id: u64)` -- removes the value stored under the given key.
 ###### Normal operation
 Very similar to `storage_read`:
-* If key is used, removes the key-value from the try and copies the content of the value into the `register_id`, even if the content is zero bytes.
+* If key is used, removes the key-value from the trie and copies the content of the value into the `register_id`, even if the content is zero bytes.
   The respective register is then considered to be used, i.e. `register_len(register_id)` will not return `u64::MAX`.
 * If key is not present then `register_id` is emptied, i.e. `register_len(register_id)` returns `u64::MAX` after this
   operation.
 
 ###### Panics
-* If `key_len + key_ptr` exceeds the memory container or points to an unused register it panics.
-In Wasmer, it returns `MemoryAccessViolation` error message;
-* If returning the preempted value into the scratch buffer exceeds the memory container it panics.
-In Wasmer, it returns `MemoryAccessViolation` error message;
+* If `key_len + key_ptr` exceeds the memory container or points to an unused register it panics with `MemoryAccessViolation`;
+* If returning the preempted value into the scratch buffer exceeds the memory container it panics with `MemoryAccessViolation`;
 
 
 ###### Current bugs
@@ -135,8 +135,7 @@ In Wasmer, it returns `MemoryAccessViolation` error message;
 * Otherwise returns `0`.
 
 ###### Panics
-* If `key_len + key_ptr` exceeds the memory container it panics.
-In Wasmer, it returns `MemoryAccessViolation` error message;
+* If `key_len + key_ptr` exceeds the memory container it panics with `MemoryAccessViolation`;
 
 ---
 `storage_iter_prefix(prefix_len: u64, prefix_ptr: u64) -> u64` -- creates an iterator object inside the host.
@@ -146,8 +145,7 @@ created.
 * It iterates over the keys that have the provided prefix. The order of iteration is defined by the lexicographic
 order of the bytes in the keys. If there are no keys, it creates an empty iterator, see below on empty iterators;
 ###### Panics
-* If `prefix_len + prefix_ptr` exceeds the memory container it panics.
-In Wasmer, it returns `MemoryAccessViolation` error message;
+* If `prefix_len + prefix_ptr` exceeds the memory container it panics with `MemoryAccessViolation`;
 
 ---
 `storage_iter_range(start_len: u64, start_ptr: u64, end_len: u64, end_ptr: u64) -> u64` -- similarly to `storage_iter_prefix`
@@ -159,8 +157,7 @@ Iterates over all key-values such that keys are between `start` and `end`, where
 Note, this definition allows to either `start` or `end` keys to not actually exist on the given trie.
 
 ###### Panics:
-* If `start_len + start_ptr` or `end_len + end_ptr` exceeds the memory container or points to an unused register it panics.
-In Wasmer, it returns `MemoryAccessViolation` error message;
+* If `start_len + start_ptr` or `end_len + end_ptr` exceeds the memory container or points to an unused register it panics with `MemoryAccessViolation`;
 
 ---
 `storage_iter_next(iterator_id: u64, key_register_id: u64, value_register_id: u64) -> u64` -- advances iterator and saves the next key and value in the register.
@@ -171,12 +168,16 @@ In Wasmer, it returns `MemoryAccessViolation` error message;
 This allows us to iterate over the keys that have zero bytes stored in values.
 
 ###### Panics
-* If `key_register_id == value_register_id`. In Wasmer, it returns `MemoryAccessViolation` error message;
-* If `iterator_id` does not correspond to an existing iterator. In Wasmer, it returns `InvalidIteratorId` error message;
-* If between the creation of the iterator and calling `storage_iter_next` the range over each it iterates was modified.
+* If `key_register_id == value_register_id` panics with `MemoryAccessViolation`;
+* If `iterator_id` does not correspond to an existing iterator panics with  `InvalidIteratorId`
+* If between the creation of the iterator and calling `storage_iter_next` the range over each it iterates was modified panics with `IteratorWasInvalidated`.
 Specifically, if `storage_write` or `storage_remove` was invoked on the key `key` such that:
   * in case of `storage_iter_prefix`. `key` has the given prefix;
   * in case of `storage_iter_range`. `start<=key<end`.
+
+###### Current bugs
+* Not implemented, currently we have `storage_iter_next` and `data_read` + `DATA_TYPE_STORAGE_ITER` that together fulfill
+the purpose, but have unspecified behavior.
 
 # Drawbacks
 [drawbacks]: #drawbacks
