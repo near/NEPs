@@ -112,20 +112,20 @@ At time of writing, this standard is established with several constraints found 
     unimplemented();
   }
 
-  export function transfer(recipientId:string, tokenIds:TokenId[], onTransfer:PayloadCallback = null):void {
+  export function transfer(ownerId:string, recipientId:string, tokenIds:TokenId[], onTransfer:PayloadCallback = null):void {
     unimplemented();
+  }
+
+  class PayloadCallback {
+    contractId:string;
+    methodName:string;
+    payload: string;
   }
 
   class OnTransferArgs {
     ownerId: string;
     recipientId: string;
     tokenIds:TokenId[];
-    payload: string;
-  }
-
-  class PayloadCallback {
-    contractId:string;
-    methodName:string;
     payload: string;
   }
 
@@ -170,12 +170,12 @@ export class TokenType {
 
 `getTokensByOwner` - Allows for the retrieval of tokens from owner in batches based the indices of the tokens.
 
-`transfer` - This is a transfer between two parties, but has the extensibility of a conditional transfer with the onTransfer arg allowing arbitrary methods, arguments and payload. By default, multiple tokens can be transferred as an array of IDs.
+`transfer` - This is a transfer between two parties, but has the extensibility of a conditional transfer with `onTransfer` allowing for arbitrary contract code to be called on another contract, be it escrow or marketplace. By default, multiple tokens can be transferred as an array of IDs. `onTransfer` should be called before the transfer occurs, as it may contain a predicate that prevents a transfer from happening. `PayloadCallback` might need a better name, since it acts as a callback and as a condition checker in other contracts.
 
 # Drawbacks
 [drawbacks]: #drawbacks
 
-The major design choice to not use a system of approvals for escrow in favor of performance means that it is up to implementors of markets to decide how they manage escrow themselves. This is a dilemma because it increases freedom, while increasing risk of making a mistake on the market side. Ultimately, it will be up to markets and their users to find the best solution to escrow, and we don't believe that approvals is the way to do it. This allows for that solution to be discovered.
+The major design choice to not use a system of approvals for escrow in favor of performance means that it is up to implementors of markets to decide how they manage escrow themselves. This is a dilemma because it increases freedom, while increasing risk of making a mistake on the market side. Ultimately, it will be up to markets and their users to find the best solution to escrow, and we don't believe that approvals is the way to do it. This allows for that solution to be discovered with trail and error. The standard for the market will change, but not the token itself.
 There are some things that have been in contention in the design of this standard. Namely, the tokenId system relies on uniques indices to function. This might cause a problem with use cases that need the `lock` and `unlock` functionality.
 
 # Rationale and alternatives
