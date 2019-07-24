@@ -6,7 +6,7 @@
 # Summary
 [summary]: #summary
 
-Refactor signed transactions and receipts to support batched atomic transactions.
+Refactor signed transactions and receipts to support batched atomic transactions and data dependency.
 
 # Motivation
 [motivation]: #motivation
@@ -23,8 +23,12 @@ Alternative to this is to execute multiple simple transactions in a batch within
 It has to be done in a raw without any commits to the state until the entire batch is completed.
 We propose to support this type of transaction batching to simplify the runtime.
 
+This change
+
 # Guide-level explanation
 [guide-level-explanation]: #guide-level-explanation
+
+### New transaction and receipts
 
 Previously, in the runtime to produce a block we first executed new signed transactions and then executed received receipts. It resulted in duplicated code that might be shared across similar actions, e.g. function calls for async calls, callbacks and self-calls.
 It also increased the complexity of the runtime implementation.
@@ -33,10 +37,12 @@ This NEP proposes changing it by first converting all signed transactions into r
 To achieve this, NEP introduces a new message `Action` that represents one of atomic actions, e.g. a function call.
 `TransactionBody` is now called just `Transaction`. It contains the list of actions that needs to be performed in a single batch and the information shared across these actions.
 
-The information consists of:
-- `originator_id` and `public_key` to identify the account and the access key of the account which issues and signs the transaction.
-- `nonce` is used to dedup transactions.
+`Transaction` contains the following fields
+- `originator_id` is an account ID of the transaction originator.
+- `public_key` is to identify the access key used to signs the transaction.
+- `nonce` is used to deduplicate and order transactions.
 - `receiver_id` is where the transaction has to be routed.
+- `action` is the list of actions to perform.
 
 An `Action` can be of the following:
 - `CreateAccount` creates a new account. It has to be the first action, and the receiver has to be a new account. The action will fail if the account already exists.
@@ -49,38 +55,126 @@ An `Action` can be of the following:
 - `AddKey` adds a new given `AccessKey` identified by a new given `public_key` to the account. Fails if an access key with the given public key already exists. We removed `SwapKeyTransaction`, because it can be replaced with 2 batched actions - delete an old key and add a new key.
 
 The new `Receipt` contains the shared information and either one of the receipt actions or a list of actions:
-- `originator_id` the account ID of the originator, who signed the transaction.
 - `sender_id` the account ID of the immediate previous sender of this receipt. It can be different from the `originator_id` in some cases.
 - `receiver_id` the account ID of the current account, on which we need to perform action(s).
-- `nonce` is a hash of this receipt, that was generated from either the signed transaction or the parent receipt.
+- `receipt_id` is a hash of this receipt (previously was called `nonce`). It's generated from either the signed transaction or the parent receipt.
+- `receipt` is can be one of 2 types:
+  - `ActionReceipt` is used to perform some actions on the receiver.
+  - `DataReceipt` is used when some data needs to be passed from the sender to the receiver, e.g. an execution result.
+
+To support promises and callbacks we introduce a concept of cross-shard data sharing with dependencies. Each `ActionReceipt` may have a list of input `data_id`. The execution will not start until all required inputs are received. Once the execution completes and if there is `output_data_id`, it produces a `DataReceipt` that will be routed to the `output_receiver_id`.
+ 
+`ActionReceipt` contains the following fields:
+- `originator_id` the account ID of the originator, who signed the transaction.
 - `originator_public_key` the public key that the originator used to sign the original signed transaction.
 - `refund_account_id` the account ID where to send the refund in case the transaction fails and/or there are remaining fees.
-- `callback_info` the information where to send the result of the execution of this receipt. Each receipt would generate a callback result in case the callback info is provided.
+- `output_data_id` is the data ID to create DataReceipt. If it's absent, then the `DataReceipt` is not created.
+- `output_receiver_id` is the account ID of the data receiver. It's needed to route `DataReceipt`. It's absent if the DataReceipt is not needed.
+- `input_data_id` is the list of data IDs that are required for the execution of the `ActionReceipt`. If some of data IDs is not available when the receipt is received, then the `ActionReceipt` is postponed until all data is available. Once the last `DataReceipt` for the required input data arrives, the action receipt execution is triggered.
+- `action` is the list of actions to execute. The execution doesn't need to validate permissions of the actions, but need to fail in some cases. E.g. when the receiver's account doesn't exist and the action acts on the account, or when the action is a function call and the code is not present.
 
-    PublicKey originator_public_key = 5;
-    string refund_account_id = 6;
-    // Where to route the callback
-    CallbackInfo callback_info = 7;
+`DataReceipt` contains the following fields:
+- `data_id` is the data ID to be used as an input.
+- `success` is true if the `ActionReceipt` that generated this `DataReceipt` finished the execution without any failures.
+- `data` is the binary data that is returned from the last action of the `ActionReceipt`. Right now, it's empty for all actions except for function calls. For function calls the data is the result of the code execution. But in the future we might introduce non-contract state reads.
 
-    oneof receipt {
-        repeated Action action = 8;
-        ReceiptAction receipt_action = 9;
+Data should be stored at the same shard as the receiver's account, even if the receiver's account doesn't exist.
+
+### Examples
+
+#### Account Creation
+
+To create a new account we can create a new `Transaction`:
+
+```json
+{
+    originator_id: "vasya.near",
+    public_key: ...,
+    nonce: 42,
+    receiver_id: "vitalik.vasya.near",
+
+    action: [
+        {
+            create_account: {
+            }
+        },
+        {
+            transfer: {
+                amount: "19231293123"
+            }
+        },
+        {
+            deploy_contract: {
+                code: ...
+            }
+        },
+        {
+            add_key: {
+                public_key: ...,
+                access_key: ...
+            }
+        },
+        {
+            function_call: {
+                method_name: "init",
+                args: ...,
+                fee: "100010101",
+                amount: "0"
+            }
+        }
+    ]
+}
+```
+
+This transaction is sent from `vasya.near` signed with a `public_key`.
+The receiver is `vitalik.vasya.near`, which is a new account id.
+The transaction contains a batch of actions.
+First we create the account, then we transaction a few tokens on the new account, then we deploy code on the new account, add a new access key with some given public key, and as a final action initializing the deployed code by calling a method `init` with some arguments.
+
+For this transaction to work `vasya.near` needs to have enough balance to cover all actions at once.
+Every action has some associated transaction fee with it, plus `transfer` and `function_call` needs additional amounts and fees.
+
+Once we validated and subtracted the total fees+amounts from `vasya.near` account, this transaction will be transformed into a `Receipt`:
+
+```json
+{
+    sender_id: "vasya.near",
+    receiver_id: "vitalik.vasya.near",
+    receipt_id: ...,
+
+    action: {
+        originator_id: "vasya.near",
+        originator_public_key: ...,
+        refund_account_id: "vasya.near",
+        
+        output_data_id: null,
+        output_receiver_id: null,
+
+        input_data_id: [],
+        
+        action: [...]
     }
 }
+```
 
-Explain the proposal as if it was already implemented and you were teaching it to another developer. That generally means:
+This receipt will be sent to `vitalik.vasya.near`'s shard to be executed.
+In case the `vitalik.vasya.near` account already exists, the execution will fail and some amount will be refunded back to `vasya.near` account with a new `ActionReceipt` with a single transfer action.
+BTW, if the refund fails (e.g. if `vasya.near` deletes his account in between), then the next `refund_account_id` will be `system`, which means the tokens are going to be burned and no receipts are generated.
+If the account creation receipt succeeds, it wouldn't create a `DataReceipt`, because `output_data_id` is `null`.
+But it will generate a refund receipt for the unused portion of function call `fee`. 
 
-- Introducing new named concepts.
-- Explaining the feature largely in terms of examples.
-- If feature introduces new abstractions, explaining how users and/or developers should *think* about it;
-- If applicable, describe the differences between the existing functionality.
+#### TODO: Deploy code example
 
-For user-facing NEPs this section should focus on user stories.
+#### TODO: Promises and callbacks
+
+#### TODO: Swap Key example
+
 
 # Reference-level explanation
 [reference-level-explanation]: #reference-level-explanation
 
-### Updated protos
+
+### Updated protobufs
 
 signed_transaction.proto
 ```
@@ -149,61 +243,48 @@ message SignedTransaction {
 
 receipt.proto
 ```
-message CallbackInfo {
-    bytes id = 1;
-    string receiver_id = 2;
-}
+message DataReceipt {
+    bytes data_id = 1;
+    bool success = 2;
+    bytes data = 3;
+ }
 
-message ReceiptAction {
-    message CallbackResult {
-        CallbackInfo info = 1;
-        bool success = 2;
-        bytes result = 3;
-    }
+message ActionReceipt {
+    string originator_id = 1;
+    PublicKey originator_public_key = 2;
+    string refund_account_id = 3;
 
-    message Refund {
-        Uint128 amount = 1;
-    }
+    bytes output_data_id = 4;
+    string output_receiver_id = 5;
 
-    message CallbackDescription {
-        // Ordered list of ID for callback results.
-        repeated bytes callback_id = 1;
-        TransactionBody.FunctionCall function_call = 2;
-    }
+    // Ordered list of data ID to provide as input results.
+    repeated bytes input_data_id = 6;
 
-    oneof action {
-        CallbackDescription callback_description = 1;
-        CallbackResult callback_result = 2;
-        Refund refund = 3;
-    }
+    repeated Action action = 7;
 }
 
 message Receipt {
-    string originator_id = 1;
-    string sender_id = 2;
-    string receiver_id = 3;
-    bytes nonce = 4;
-
-    PublicKey originator_public_key = 5;
-    string refund_account_id = 6;
-    // Where to route the callback
-    CallbackInfo callback_info = 7;
+    string sender_id = 1;
+    string receiver_id = 2;
+    bytes receipt_id = 3;
 
     oneof receipt {
-        repeated Action action = 8;
-        ReceiptAction receipt_action = 9;
+        ActionReceipt action = 4;
+        DataReceipt data = 5;
     }
 }
 
 ```
 
-This is the technical portion of the NEP. Explain the design in sufficient detail that:
+TODO: How to generate DataReceipt
 
-- Its interaction with other features is clear.
-- It is reasonably clear how the feature would be implemented.
-- Corner cases are dissected by example.
+TODO: Data storage
 
-The section should return to the examples given in the previous section, and explain more fully how the detailed proposal makes those examples work.
+TODO: Batch verification in a transaction
+
+TODO: Security considerations
+
+# THE REST BELOW IS TODO
 
 # Drawbacks
 [drawbacks]: #drawbacks
