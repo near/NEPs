@@ -23,7 +23,7 @@ Alternative to this is to execute multiple simple transactions in a batch within
 It has to be done in a raw without any commits to the state until the entire batch is completed.
 We propose to support this type of transaction batching to simplify the runtime.
 
-This change
+Currently callbacks are handled differently from async calls, this NEP simplifies data dependencies and callbacks by unifying them.
 
 # Guide-level explanation
 [guide-level-explanation]: #guide-level-explanation
@@ -41,23 +41,23 @@ To achieve this, NEP introduces a new message `Action` that represents one of at
 - `originator_id` is an account ID of the transaction originator.
 - `public_key` is to identify the access key used to signs the transaction.
 - `nonce` is used to deduplicate and order transactions.
-- `receiver_id` is where the transaction has to be routed.
+- `receiver_id` is the account ID of the destination of this transaction. It's where the generated receipt will be routed for execution.
 - `action` is the list of actions to perform.
 
 An `Action` can be of the following:
-- `CreateAccount` creates a new account. It has to be the first action, and the receiver has to be a new account. The action will fail if the account already exists.
+- `CreateAccount` creates a new account. It has to be the first action, and the receiver has to be a new account. Until we have the account deletion, it doesn't make sense for trying to create an account after some other action. The action will fail if the account already exists.
 `CreateAccount` also grants permission for all subsequent batched action for the newly created account. For example, deploying code on the new account.
 - `DeployContract` deploys given binary wasm code on the account. Either the `receiver_id` equals to the `originator_id`, or the batch of actions has started with `CreateAccount`, which granted that permission.
 - `FunctionCall` executes a function call on the last deployed contract. E.g. if the previous action was `DeployContract`, then the code to execute will be the new deployed contract. `FunctionCall` has `method_name` and `args` to identify method with arguments to call. It also has `fee` and the `amount`. `fee` is the transaction fee that is prepaid for this call to be spent on gas. `amount` is the attached amount of NEAR tokens that the contract can spend, e.g. 10 tokens to pay for a crypto-corgi.
 - `Transfer` transfers the given amount of tokens from the originator to the receiver.
-- `Stake` stakes the new total amount which is given in the `amount` field with the given `public_key`. The difference in stake is taken from the account's balance at the moment when this action is executed, so it's not prepaid. There is no particular reason to stake on behalf of a newly created account, so we may disallow it.
+- `Stake` stakes the new total amount which is given in the `amount` field with the given `public_key`. The difference in stake is taken from the account's balance (if the new stake is greater than the current one) at the moment when this action is executed, so it's not prepaid. There is no particular reason to stake on behalf of a newly created account, so we may disallow it.
 - `DeleteKey` deletes an old `AccessKey` identified by the given `public_key` from the account. Fails if the access key with the given public key doesn't exist. All next batched actions will continue to execute, even if the public key that authorized that transaction was removed.
 - `AddKey` adds a new given `AccessKey` identified by a new given `public_key` to the account. Fails if an access key with the given public key already exists. We removed `SwapKeyTransaction`, because it can be replaced with 2 batched actions - delete an old key and add a new key.
 
 The new `Receipt` contains the shared information and either one of the receipt actions or a list of actions:
 - `sender_id` the account ID of the immediate previous sender of this receipt. It can be different from the `originator_id` in some cases.
 - `receiver_id` the account ID of the current account, on which we need to perform action(s).
-- `receipt_id` is a hash of this receipt (previously was called `nonce`). It's generated from either the signed transaction or the parent receipt.
+- `receipt_id` is a unique ID of this receipt (previously was called `nonce`). It's generated from either the signed transaction or the parent receipt.
 - `receipt` is can be one of 2 types:
   - `ActionReceipt` is used to perform some actions on the receiver.
   - `DataReceipt` is used when some data needs to be passed from the sender to the receiver, e.g. an execution result.
@@ -88,38 +88,38 @@ To create a new account we can create a new `Transaction`:
 
 ```json
 {
-    originator_id: "vasya.near",
-    public_key: ...,
-    nonce: 42,
-    receiver_id: "vitalik.vasya.near",
+    "originator_id": "vasya.near",
+    "public_key": ...,
+    "nonce": 42,
+    "receiver_id": "vitalik.vasya.near",
 
-    action: [
+    "action": [
         {
-            create_account: {
+            "create_account": {
             }
         },
         {
-            transfer: {
-                amount: "19231293123"
+            "transfer": {
+                "amount": "19231293123"
             }
         },
         {
-            deploy_contract: {
-                code: ...
+            "deploy_contract": {
+                "code": ...
             }
         },
         {
-            add_key: {
-                public_key: ...,
-                access_key: ...
+            "add_key": {
+                "public_key": ...,
+                "access_key": ...
             }
         },
         {
-            function_call: {
-                method_name: "init",
-                args: ...,
-                fee: "100010101",
-                amount: "0"
+            "function_call": {
+                "method_name": "init",
+                "args": ...,
+                "fee": "100010101",
+                "amount": "0"
             }
         }
     ]
@@ -138,21 +138,21 @@ Once we validated and subtracted the total fees+amounts from `vasya.near` accoun
 
 ```json
 {
-    sender_id: "vasya.near",
-    receiver_id: "vitalik.vasya.near",
-    receipt_id: ...,
+    "sender_id": "vasya.near",
+    "receiver_id": "vitalik.vasya.near",
+    "receipt_id": ...,
 
-    action: {
-        originator_id: "vasya.near",
-        originator_public_key: ...,
-        refund_account_id: "vasya.near",
+    "action": {
+        "originator_id": "vasya.near",
+        "originator_public_key": ...,
+        "refund_account_id": "vasya.near",
         
-        output_data_id: null,
-        output_receiver_id: null,
+        "output_data_id": null,
+        "output_receiver_id": null,
 
-        input_data_id: [],
+        "input_data_id": [],
         
-        action: [...]
+        "action": [...]
     }
 }
 ```
@@ -177,7 +177,7 @@ But it will generate a refund receipt for the unused portion of function call `f
 ### Updated protobufs
 
 signed_transaction.proto
-```
+```proto
 message Action {
     message CreateAccount {
         // empty
@@ -242,7 +242,7 @@ message SignedTransaction {
 ```
 
 receipt.proto
-```
+```proto
 message DataReceipt {
     bytes data_id = 1;
     bool success = 2;
