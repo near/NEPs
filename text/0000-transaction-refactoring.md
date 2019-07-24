@@ -163,11 +163,192 @@ BTW, if the refund fails (e.g. if `vasya.near` deletes his account in between), 
 If the account creation receipt succeeds, it wouldn't create a `DataReceipt`, because `output_data_id` is `null`.
 But it will generate a refund receipt for the unused portion of function call `fee`. 
 
-#### TODO: Deploy code example
+#### Deploy code example
 
-#### TODO: Promises and callbacks
+Deploying code with initialization is pretty similar to creating account, except you can't deploy code on someone else account. So the transaction's `receiver_id` has to be the same as the `originator_id`.
 
-#### TODO: Swap Key example
+#### Simple promise with callback
+
+Let's say the transaction contained a single action which is a function call to `a.contract.near`.
+It created a new promise `b.contract.near` and added a callback to itself.
+Once the execution completes it will result in the following new receipts:
+
+The receipt for the new promise towards `b.contract.near`
+```json
+{
+    "sender_id": "a.contract.near",
+    "receiver_id": "b.contract.near",
+    "receipt_id": ...,
+
+    "action": {
+        "originator_id": "vasya.near",
+        "originator_public_key": ...,
+        "refund_account_id": "vasya.near",
+        
+        "output_data_id": "data_123_1",
+        "output_receiver_id": "a.contract.near",
+
+        "input_data_id": [],
+        
+        "action": [
+            {
+                "function_call": {
+                    "method_name": "sum",
+                    "args": ...,
+                    "fee": "123123",
+                    "amount": "0"
+                }
+            }
+        ]
+    }
+}
+```
+Interesting details:
+- `originator_id` and `refund_account_id` is still `vasya.near`, because it's the account that initialized the transaction, but not the creator of the promise.
+- `output_data_id` contains some unique data ID. In this example we used `data_123_1`.
+- `output_receiver_id` indicates where to route the result of the execution.
+
+
+The other receipt is for the callback which will stay in the same shard.
+```json
+{
+    "sender_id": "a.contract.near",
+    "receiver_id": "a.contract.near",
+    "receipt_id": ...,
+
+    "action": {
+        "originator_id": "vasya.near",
+        "originator_public_key": ...,
+        "refund_account_id": "vasya.near",
+        
+        "output_data_id": null,
+        "output_receiver_id": null,
+
+        "input_data_id": ["data_123_1"],
+        
+        "action": [
+            {
+                "function_call": {
+                    "method_name": "process_sum",
+                    "args": ...,
+                    "fee": "123321",
+                    "amount": "0"
+                }
+            }
+        ]
+    }
+}
+```
+It looks very similar to the new promise, but instead of `output_data_id` it has an `input_data_id`.
+This action receipt will be postponed until the other receipt is routed, executed and generated a data receipt.
+
+Once the new promise receipt is successfully executed, it will generate the following receipt:
+```json
+{
+    "sender_id": "b.contract.near",
+    "receiver_id": "a.contract.near",
+    "receipt_id": ...,
+
+    "data": {
+        "data_id": "data_123_1",
+        "success": true,
+        "data": ...
+    }
+}
+```
+It contains the data ID `data_123_1` and routed to the `a.contract.near`.
+
+Let's say the callback receipt was processed and postponed, then this data receipt will trigger execution of the callback receipt, because the all input data is now available.
+
+#### Remote callback with 2 joined promises, with a callback on itself
+
+Let's say `a.contract.near` wants to call `b.contract.near` and `c.contract.near`, and send the result to `d.contract.near` for joining before processing the result on itself.
+It will generate 2 receipts for new promises, 1 receipt for the remote callback and 1 receipt for the callback on itself.
+
+Part of the receipt (#1) for the promise towards `b.contract.near`:
+```
+...
+"output_data_id": "data_123_b",
+"output_receiver_id": "d.contract.near",
+
+"input_data_id": [],
+...
+```
+
+Part of the receipt (#2) for the promise towards `c.contract.near`:
+```
+...
+"output_data_id": "data_321_c",
+"output_receiver_id": "d.contract.near",
+
+"input_data_id": [],
+...
+```
+
+The receipt (#3) for the remote callback that has to be executed on `d.contract.near` with data from `b.contract.near` and `c.contract.near`:
+```json
+{
+    "sender_id": "a.contract.near",
+    "receiver_id": "d.contract.near",
+    "receipt_id": ...,
+
+    "action": {
+        "originator_id": "vasya.near",
+        "originator_public_key": ...,
+        "refund_account_id": "vasya.near",
+        
+        "output_data_id": "bla_543",
+        "output_receiver_id": "a.contract.near",
+
+        "input_data_id": ["data_123_b", "data_321_c"],
+        
+        "action": [
+            {
+                "function_call": {
+                    "method_name": "join_data",
+                    "args": ...,
+                    "fee": "123321",
+                    "amount": "0"
+                }
+            }
+        ]
+    }
+}
+```
+It also has the `output_data_id` and `output_receiver_id` that is specified back towards `a.contract.near`.
+
+And finally the part of the receipt (#4) for the local callback on `a.contract.near`:
+```
+...
+"output_data_id": null,
+"output_receiver_id": null,
+
+"input_data_id": ["bla_543"],
+...
+```
+
+For all of this to execute the first 3 receipts needs to go to the corresponding shards and be processed.
+If for some reason the data arrived before the corresponding action receipt, then this data will be hold there until the action receipt arrives.
+An example for this is if the receipt #3 is delayed for some reason, while the receipt #2 was processed and generated a data receipt towards `d.contract.near` which arrived before #3. 
+
+Also if any of the function calls fail, the receipt still going to generate a new `DataReceipt` because it has `output_data_id` and `output_receiver_id`. Here is an example of a DataReceipt for a failed execution:
+```json
+{
+    "sender_id": "b.contract.near",
+    "receiver_id": "d.contract.near",
+    "receipt_id": ...,
+
+    "data": {
+        "data_id": "data_123_b",
+        "success": false,
+        "data": null
+    }
+}
+```
+
+#### Swap Key example
+
+Since there are no swap key action, we can just batch 2 actions together. One for adding a new key and one for deleting the old key. The actual order is not important if the public keys are different, but if the public key is the same then you need to first delete the old key and only after this add a new key.
 
 
 # Reference-level explanation
