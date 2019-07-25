@@ -201,7 +201,7 @@ This allows us to iterate over the keys that have zero bytes stored in values.
 * If `key_register_id == value_register_id` panics with `MemoryAccessViolation`;
 * If the registers exceed the memory limit panics with `MemoryAccessViolation`;
 * If `iterator_id` does not correspond to an existing iterator panics with  `InvalidIteratorId`
-* If between the creation of the iterator and calling `storage_iter_next` the range over each it iterates was modified panics with `IteratorWasInvalidated`.
+* If between the creation of the iterator and calling `storage_iter_next` the range over which it iterates was modified panics with `IteratorWasInvalidated`.
 Specifically, if `storage_write` or `storage_remove` was invoked on the key `key` such that:
   * in case of `storage_iter_prefix`. `key` has the given prefix;
   * in case of `storage_iter_range`. `start<=key<end`.
