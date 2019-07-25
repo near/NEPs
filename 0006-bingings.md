@@ -185,7 +185,7 @@ creates an iterator object inside the host.
 Unless lexicographically `start < end`, it creates empty an iterator.
 Iterates over all key-values such that keys are between `start` and `end`, where `start` is inclusive and `end` is exclusive.
 
-Note, this definition allows to either `start` or `end` keys to not actually exist on the given trie.
+Note, this definition allows for `start` or `end` keys to not actually exist on the given trie.
 
 ###### Panics:
 * If `start_len + start_ptr` or `end_len + end_ptr` exceeds the memory container or points to an unused register it panics with `MemoryAccessViolation`;
