@@ -182,7 +182,7 @@ storage_iter_range(start_len: u64, start_ptr: u64, end_len: u64, end_ptr: u64) -
 Similarly to `storage_iter_prefix`
 creates an iterator object inside the host.
 ###### Normal operation
-Unless lexicographically `start < end`, it creates empty an iterator.
+Unless lexicographically `start < end`, it creates an empty iterator.
 Iterates over all key-values such that keys are between `start` and `end`, where `start` is inclusive and `end` is exclusive.
 
 Note, this definition allows for `start` or `end` keys to not actually exist on the given trie.
