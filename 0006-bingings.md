@@ -313,46 +313,25 @@ invocation. This includes:
 * The bytes needed to store the account protobuf and the access keys of the given account.
 
 ## Economics API
-Accounts own certain balance; and each transaction and each receipt have certain amount of balance attached to them.
+Accounts own certain balance; and each transaction and each receipt have certain amount of balance and prepaid fee
+attached to them.
 During the contract execution, the contract has access to the following `u128` values:
-* `account_balance` -- the balance attached to the given account;
-* `attached_balance` -- the balance that was attached to the receipt:
-  * If this receipt is a direct result of a transaction that does function call then the balance attached to the
-    transaction is reduced by the transaction fee amount and attached to the receipt;
-  * If this receipt is a result of cross-contract call then the code has to explicitly specify how much is attached to
-    the cross-contract call.
-* `remaining_balance` -- the balance that the contract code uses for:
-  * Calling `deposit`;
-  * Wasm execution fees, like cost of operations, growth of stack, etc.
-  * Fees for calling host functions, including fees for creating promises, **including balance attached to these promises.**
-  
-  This balance can be refilled by calling `withdraw` function.
-* `burnt_balance` -- the balance that the contract already used for:
-  * Wasm exeuction fees;
-  * Fees for calling host functions, including fees for creating promises, **excluding balance attached to these promises.**
-  
-  This balance cannot be recovered, if the contract execution fails.
-  
-When contract execution fails the following happens to the balances:
-* First we compute `deficit = all_withdrawals - all_deposits`;
-* If `deficit > 0` (we have withdrawn from account more than we deposited to it):
-  * If `burnt_balance <= attached_balance` then we deposit `deficit` back to the `account_balance` and issue
-    a refund of `attached_balance - burnt_balance` if this value is not zero.
-  * If `attached_balance < burnt_balance <= attached_balance + deficit` then we deposit
-  `attached_balance + deficit - burnt_balance` back to the `account_balance` and do not issue a refund;
-* If `deficit <= 0` (we have deposited to the account more than what we have withdrawn) we withdraw `abs(deficit)`
-  from the `account_balance` and issue a refund of `attached_balance - burnt_balance`.
-  
-Note, for both cases above, `burnt_balanace` is never greater than `attached_balance + deficit` at any point in the program. This
-might require a formal proof later.
+* `account_balance` -- the balance attached to the given account. This includes the `attached_deposit` that was attached
+  to the transaction;
+* `attached_deposit` -- the balance that was attached to the call that will be immediately deposited before
+  the contract execution starts;
+* `prepaid_fee` -- the tokens attached to the call that can be used to pay for the fees;
+* `used_fee` -- the fees that have already incurred during the contract execution (cannot exceed `prepaid_fee`);
 
----
+If contract execution fails `prepaid_fee - used_fee` is refunded back to `signer_account_id` and `attached_balance`
+is refunded back to `predecessor_account_id`.
+
 The following spec is the same for all functions:
 ```
 account_balance(balance_ptr: u64)
-attached_balance(balance_ptr: u64)
-remaining_balance(balance_ptr: u64)
-burnt_balance(balance_ptr: u64)
+attached_deposit(balance_ptr: u64)
+prepaid_fee(balance_ptr: u64)
+used_fee(balance_ptr: u64)
 ```
  -- writes the value into the `u128` variable pointed by `balance_ptr`.
 
@@ -361,30 +340,6 @@ burnt_balance(balance_ptr: u64)
 
 ###### Current bugs
 * Use a different name;
-* Unclear how they behave with the callbacks.
-
----
-```rust
-deposit(min_amount_ptr: u64, max_amount_ptr: u64, result_ptr: u64)
-```
-Moves balance from `attached_balance` to `account_balance`.
-If `min_amount <= attached_balance` moves `min(max_amount, max(min_amount, attached_balance))`. The moved amount is
-saved into `u128` variable pointed by `result_ptr`. `min_amount_ptr` and `max_amount_ptr` point to `u128` variables.
-
-###### Panics
-* If `min_amount_ptr + 16` or `max_amount_ptr + 16` or `result_ptr + 16` point outside the memory of the guest with `MemoryAccessViolation`;
-
----
-
-```rust
-withdraw(min_amount_ptr: u64, max_amount_ptr: u64, result_ptr: u64)
-```
-Moves balance from `account_balance` to `attached_balance`.
-If `min_amount <= attached_balance` moves `min(max_amount, max(min_amount, account_balance))`. The moved amount is
-saved into `u128` variable pointed by `result_ptr`. `min_amount_ptr` and `max_amount_ptr` point to `u128` variables.
-
-###### Panics
-* If `min_amount_ptr + 16` or `max_amount_ptr + 16` or `result_ptr + 16` point outside the memory of the guest with `MemoryAccessViolation`;
 
 ## Math
 
