@@ -496,12 +496,15 @@ or `amount_ptr + 8` points outside the memory of the guest or host, with `Memory
 
 ---
 ```rust
-promise_and(promise_id1: u64, promise_id2: u64) -> u64
+promise_and(promise_idx_ptr: u64, promise_idx_count: u64) -> u64
 ```
-Creates a new promise which completes at the same time both promises complete.
+Creates a new promise which completes when time all promises passed as arguments complete. Cannot be used with registers.
+`promise_idx_ptr` points to an array of `u64` elements, with `promise_idx_count` denoting the number of elements.
+The array contains indices of promises that need to be waited on jointly.
 
 ###### Panics
-* If `promise_idx1` or `promise_idx2` do not correspond to existing promises panics with `InvalidPromiseIndex`.
+* If `promise_ids_ptr + 8 * promise_idx_count` extend outside the guest memory with `MemoryAccessViolation`;
+* If any of the promises in the array do not correspond to existing promises panics with `InvalidPromiseIndex`.
 
 ###### Returns
 * Index of the new promise that uniquely identifies it within the current execution of the method.
