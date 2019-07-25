@@ -395,13 +395,12 @@ saved into `u128` variable pointed by `result_ptr`. `min_amount_ptr` and `max_am
 ## Math
 
 ```rust
-random_buf(buf_len: u64, buf_ptr: u64)
+random_buf(len: u64, register_id: u64)
 ```
-Writes random bytes in the given memory location on the guest. Does not
-work with scratch buffer.
+Writes random bytes in the given register.
 
 ###### Panics
-* If `buf_len + buf_ptr` points outside the memory of the guest with `MemoryAccessViolation`;
+* If the size of the registers exceed the set limit `MemoryAccessViolation`;
 
 ---
 ```rust
