@@ -5,7 +5,7 @@
 # Summary
 [summary]: #summary
 
-Wasm bindings, a.k.a imports, are functions that the host exposes to the Wasm code running on the virtual machine.
+Wasm bindings, a.k.a imports, are functions that the runtime (a.k.a host) exposes to the Wasm code (a.k.a guest) running on the virtual machine.
 These functions are arguably the most difficult thing to change in our entire ecosystem, after we have contracts running on our blockchain,
 since once the bindings change the old smart contracts will not be able to run on the new nodes.
 Additionally, we need a highly detailed specification of the bindings to be able to write unit tests for our contracts,
@@ -19,9 +19,9 @@ In this proposal we give a detailed specification of the functions that we will 
 [motivation]: #motivation
 
 The current imports have the following issues:
-* **Trie API.** The behavior of trie API is currently unspecified. Many questions are unclear: what happens when we try
+* **Trie API.** The behavior of trie API is currently unspecified. Many things are unclear: what happens when we try
 iterating over an empty range, what happens if we try accessing a non-existent key, etc. Having a trie API specification
-is important for being able to creating a testing framework for Rust and AssemblyScript smart contracts, since in unit
+is important for being able to create a testing framework for Rust and AssemblyScript smart contracts, since in unit
 tests the contracts will be running on a mocked implementation of the host;
 * **Promise API.** Recently we have discussed the changes to our promise mechanics. The schema does not need to change,
 but the specification now needs to be clarified;
@@ -122,6 +122,7 @@ Very similar to `storage_read`:
 
 ###### Panics
 * If `key_len + key_ptr` exceeds the memory container or points to an unused register it panics with `MemoryAccessViolation`;
+* If the scratch buffer size exceeds the limit panics with `MemoryAccessViolation`;
 * If returning the preempted value into the scratch buffer exceeds the memory container it panics with `MemoryAccessViolation`;
 
 
@@ -169,6 +170,7 @@ This allows us to iterate over the keys that have zero bytes stored in values.
 
 ###### Panics
 * If `key_register_id == value_register_id` panics with `MemoryAccessViolation`;
+* If the scratch buffer size exceeds the limit panics with `MemoryAccessViolation`;
 * If `iterator_id` does not correspond to an existing iterator panics with  `InvalidIteratorId`
 * If between the creation of the iterator and calling `storage_iter_next` the range over each it iterates was modified panics with `IteratorWasInvalidated`.
 Specifically, if `storage_write` or `storage_remove` was invoked on the key `key` such that:
@@ -179,42 +181,338 @@ Specifically, if `storage_write` or `storage_remove` was invoked on the key `key
 * Not implemented, currently we have `storage_iter_next` and `data_read` + `DATA_TYPE_STORAGE_ITER` that together fulfill
 the purpose, but have unspecified behavior.
 
-# Drawbacks
-[drawbacks]: #drawbacks
+## Context API
+Context API mostly provides read-only functions that access current information about the blockchain, the accounts
+(that originally initiated the chain of cross-contract calls, the immediate contract that called the current one, the account of the current contract),
+other important information like storage usage.
 
-Why should we *not* do this?
+Many of the below functions are currently implemented through `data_read` which allows to read generic context data.
+However, there is no reason to have `data_read` instead of the specific functions:
+* `data_read` does not solve forward compatibility. If later we want to add another context function, e.g. `executed_operations`
+we can just declare it as a new function, instead of encoding it as `DATA_TYPE_EXECUTED_OPERATIONS = 42` which is passed
+as the first argument to `data_read`;
+* `data_read` does not help with renaming. If later we decide to rename `initiator_id` to `originator_id` then one could
+argue that contracts that rely on `data_read` would not break, while contracts relying on `initiator_id()` would. However
+the name change often means the change of the semantics, which means the contracts using this function are no longer safe to
+execute anyway.
 
-# Rationale and alternatives
-[rationale-and-alternatives]: #rationale-and-alternatives
+However there is one reason to not have `data_read` -- it makes `API` more human-like which is a general direction Wasm APIs, like WASI are moving towards to.
 
-- Why is this design the best in the space of possible designs?
-- What other designs have been considered and what is the rationale for not choosing them?
-- What is the impact of not doing this?
+---
+`initiator_id(register_id: u64)`. All contract calls are a result of some transaction that was signed by some account using
+some access key and submitted into a memory pool (either through the wallet using RPC or by a node itself). This function returns the id of that account.
 
-# Unresolved questions
-[unresolved-questions]: #unresolved-questions
+###### Normal operation
+* Saves the bytes of the initiator account id into the register.
 
-- What parts of the design do you expect to resolve through the NEP process before this gets merged?
-- What parts of the design do you expect to resolve through the implementation of this feature before stabilization?
-- What related issues do you consider out of scope for this NEP that could be addressed in the future independently of the solution that comes out of this NEP?
+###### Panics
+* If the scratch buffer size exceeds the limit panics with `MemoryAccessViolation`;
 
-# Future possibilities
-[future-possibilities]: #future-possibilities
+###### Current bugs
+* Currently we conflate `originator_id` and `sender_id` in our code base.
 
-Think about what the natural extension and evolution of your proposal would
-be and how it would affect the project as a whole in a holistic
-way. Try to use this section as a tool to more fully consider all possible
-interactions with the project in your proposal.
-Also consider how the this all fits into the roadmap for the project
-and of the relevant sub-team.
+---
+`initiator_key(register_id: u64)` -- saves JSON-serialized access key that was used by the initiator into the register.
+In rare situations smart contract might want to know the exact access key that was used to send the original transaction,
+e.g. to increase the allowance or manipulate with the public key.
 
-This is also a good place to "dump ideas", if they are out of scope for the
-NEP you are writing but otherwise related.
+###### Normal operation
+* Saves the JSON-serialized access key into the buffer.
 
-If you have tried and cannot think of any future possibilities,
-you may simply state that you cannot think of anything.
+###### Panics
+* If the scratch buffer size exceeds the limit panics with `MemoryAccessViolation`;
 
-Note that having something written down in the future-possibilities section
-is not a reason to accept the current or a future NEP. Such notes should be
-in the section on motivation or rationale in this or subsequent NEPs.
-The section merely provides additional information.
+
+###### Current bugs
+* Not implemented.
+
+---
+`caller_id(register_id: u64)`. All contract calls are a result of a receipt, this receipt might be created by a transaction
+that does function invocation on the contract or another contract as a result of cross-contract call.
+
+###### Normal operation
+* Saves the bytes of the caller account id into the register.
+
+###### Panics
+* If the scratch buffer size exceeds the limit panics with `MemoryAccessViolation`;
+
+###### Current bugs
+* Not implemented.
+
+---
+`refund_id(register_id: u64)` -- the account to which the refund will be issued.
+
+###### Normal operation
+* Saves the bytes of the caller account id into the register.
+
+###### Panics
+* If the scratch buffer size exceeds the limit panics with `MemoryAccessViolation`;
+
+###### Current bugs
+* Not implemented.
+
+---
+`input(register_id: u64)` -- reads input to the contract call into the register. Input is expected to be in JSON-format.
+
+###### Normal operation
+* If input is provided saves the bytes (potentially zero) of input into register.
+* If input is not provided makes the register "not used", i.e. `register_len` now returns `u64::MAX`.
+
+###### Panics
+* If the scratch buffer size exceeds the limit panics with `MemoryAccessViolation`;
+
+###### Current bugs
+* Implemented as part of `data_read`. However there is no reason to have one unified function, like `data_read` that can
+be used to read all
+
+---
+`block_index() -> u64` -- returns the current block index.
+
+---
+`storage_usage() -> u64` -- returns the number of bytes used by the contract if it was saved to the trie as of the
+invocation. This includes:
+* The data written with `storage_*` functions during current and previous execution;
+* The bytes needed to store the account protobuf and the access keys of the given account.
+
+## Economics API
+Accounts own certain balance; and each transaction and each receipt have certain amount of balance attached to them.
+During the contract execution, the contract has access to the following `u128` values:
+* `account_balance` -- the balance attached to the given account;
+* `attached_balance` -- the balance that was attached to the receipt:
+  * If this receipt is a direct result of a transaction that does function call then the balance attached to the
+    transaction is reduced by the transaction fee amount and attached to the receipt;
+  * If this receipt is a result of cross-contract call then the code has to explicitly specify how much is attached to
+    the cross-contract call.
+* `remaining_balance` -- the balance that the contract code uses for:
+  * Calling `deposit`;
+  * Wasm execution fees, like cost of operations, growth of stack, etc.
+  * Fees for calling host functions, including fees for creating promises, **including balance attached to these promises.**
+  
+  This balance can be refilled by calling `withdraw` function.
+* `burnt_balance` -- the balance that the contract already used for:
+  * Wasm exeuction fees;
+  * Fees for calling host functions, including fees for creating promises, **excluding balance attached to these promises.**
+  
+  This balance cannot be recovered, if the contract execution fails.
+  
+When contract execution fails the following happens to the balances:
+* First we compute `deficit = all_withdrawals - all_deposits`;
+* If `deficit > 0` (we have withdrawn from account more than we deposited to it):
+  * If `burnt_balance <= attached_balance` then we deposit `deficit` back to the `account_balance` and issue
+    a refund of `attached_balance - burnt_balance` if this value is not zero.
+  * If `attached_balance < burnt_balance <= attached_balance + deficit` then we deposit
+  `attached_balance + deficit - burnt_balance` back to the `account_balance` and do not issue a refund;
+* If `deficit <= 0` (we have deposited to the account more than what we have withdrawn) we withdraw `abs(deficit)`
+  from the `account_balance` and issue a refund of `attached_balance - burnt_balance`.
+  
+Note, for both cases above, `burnt_balanace` is never greater than `attached_balance + deficit` at any point in the program. This
+might require a formal proof later.
+
+---
+The following spec is the same for all functions:
+```
+account_balance(balance_ptr: u64)
+attached_balance(balance_ptr: u64)
+remaining_balance(balance_ptr: u64)
+burnt_balance(balance_ptr: u64)
+```
+ -- writes the value into the `u128` variable pointed by `balance_ptr`.
+
+###### Panics
+* If `balance_ptr + 16` points outside the memory of the guest with `MemoryAccessViolation`;
+
+###### Current bugs
+* Use a different name;
+* Unclear how they behave with the callbacks.
+
+---
+`deposit(min_amount_ptr: u64, max_amount_ptr: u64, result_ptr: u64)` -- moves balance from `attached_balance` to `account_balance`.
+If `min_amount <= attached_balance` moves `min(max_amount, max(min_amount, attached_balance))`. The moved amount is
+saved into `u128` variable pointed by `result_ptr`. `min_amount_ptr` and `max_amount_ptr` point to `u128` variables.
+
+###### Panics
+* If `min_amount_ptr + 16` or `max_amount_ptr + 16` or `result_ptr + 16` point outside the memory of the guest with `MemoryAccessViolation`;
+
+---
+
+`withdraw(min_amount_ptr: u64, max_amount_ptr: u64, result_ptr: u64)` -- moves balance from `account_balance` to `attached_balance`.
+If `min_amount <= attached_balance` moves `min(max_amount, max(min_amount, account_balance))`. The moved amount is
+saved into `u128` variable pointed by `result_ptr`. `min_amount_ptr` and `max_amount_ptr` point to `u128` variables.
+
+###### Panics
+* If `min_amount_ptr + 16` or `max_amount_ptr + 16` or `result_ptr + 16` point outside the memory of the guest with `MemoryAccessViolation`;
+
+## Math
+
+`random_buf(buf_len: u64, buf_ptr: u64)` -- writes random bytes in the given memory location on the guest. Does not
+work with scratch buffer.
+
+###### Panics
+* If `buf_len + buf_ptr` points outside the memory of the guest with `MemoryAccessViolation`;
+
+---
+`random_u64() -> u64` -- returns a random `u64` variable.
+
+---
+`sha256(value_len: u64, value_ptr: u64, register_id: u64)` -- hashes the random sequence of bytes using sha256 and
+returns it into `register_id`.
+###### Panics
+* If `value_len + value_ptr` points outside the memory or scratch buffer uses more memory than the limit with `MemoryAccessViolation`.
+
+###### Current bugs
+* Current name `hash` is not specific to what hash is being used.
+* We have `hash32` that largely duplicates the mechanics of `hash` because it returns the first 4 bytes only.
+
+---
+```rust
+check_ethash(block_number_ptr: u64,
+             header_hash_ptr: u64,
+             nonce: u64,
+             mix_hash_ptr: u64,
+             difficulty_ptr: u64) -> u64
+```
+-- verifies hash of the header that we created using [Ethash](https://en.wikipedia.org/wiki/Ethash). Parameters are:
+* `block_number` -- `u256`/`[u64; 4]`, number of the block on Ethereum blockchain. We use the pointer to the slice of 32 bytes on guest memory;
+* `header_hash` -- `h256`/`[u8; 32]`, hash of the header on Ethereum blockchain. We use the pointer to the slice of 32 bytes on guest memory;
+* `nonce` -- `u64`/`h64`/`[u8; 8]`, nonce that was used to find the correct hash, passed as `u64` without pointers;
+* `mix_hash` -- `h256`/`[u8; 32]`, special hash that avoid griefing attack. We use the pointer to the slice of 32 bytes on guest memory;
+* `difficulty` -- `u256`/`[u64; 4]`, the difficulty of mining the block. We use the pointer to the slice of 32 bytes on guest memory;
+
+###### Returns
+* `1` if the Ethash is valid;
+* `0` otherwise.
+
+###### Panics
+* If `block_number_ptr + 32` or `header_hash_ptr + 32` or `mix_hash_ptr + 32` or `difficulty_ptr + 32` point outside the memory or scratch buffer uses more memory than the limit with `MemoryAccessViolation`.
+
+###### Current bugs
+* `block_number` and `difficulty` are currently exposed as `u64` which are casted to `u256` which breaks Ethereum compatibility;
+* Currently, we also pass the length together with `header_hash_ptr` and `mix_hash_ptr` which is not necessary since
+we know their length.
+
+## Promises API
+
+```rust
+promise_create(account_id_len: u64,
+               account_id_ptr: u64,
+               method_name_len: u64,
+               method_name_ptr: u64,
+               arguments_len: u64,
+               arguments_ptr: u64,
+               amount_ptr: u64) -> u64
+```
+Creates a promise that will execute a method on account with given arguments and attaches the given amount.
+`amount_ptr` points to a slice of bytes representing `u128`.
+
+###### Panics
+* If `account_id_len + account_id_ptr` or `method_name_len + method_name_ptr` or `arguments_len + arguments_ptr`
+or `amount_ptr + 8` points outside the memory of the guest or host, with `MemoryAccessViolation`.
+
+###### Returns
+* Index of the new promise that uniquely identifies it within the current execution of the method.
+
+---
+
+```rust
+promise_then(promise_idx: u64,
+             account_id_len: u64,
+             account_id_ptr: u64,
+             method_name_len: u64,
+             method_name_ptr: u64,
+             arguments_len: u64,
+             arguments_ptr: u64,
+             amount_ptr: u64) -> u64            
+```
+Attaches the callback that is executed after promise pointed by `promise_idx` is complete.
+
+###### Panics
+* If `promise_idx` does not correspond to an existing promise panics with `InvalidPromiseIndex`.
+* If `account_id_len + account_id_ptr` or `method_name_len + method_name_ptr` or `arguments_len + arguments_ptr`
+or `amount_ptr + 8` points outside the memory of the guest or host, with `MemoryAccessViolation`.
+
+###### Returns
+* Index of the new promise that uniquely identifies it within the current execution of the method.
+
+---
+```rust
+promise_and(promise_id1: u64, promise_id2: u64) -> u64
+```
+Creates a new promise which completes at the same time both promises complete.
+
+###### Panics
+* If `promise_idx1` or `promise_idx2` do not correspond to existing promises panics with `InvalidPromiseIndex`.
+
+###### Returns
+* Index of the new promise that uniquely identifies it within the current execution of the method.
+
+---
+```rust
+promise_results_count() -> u64
+```
+If the current function is invoked by a callback we can access the execution results of the promises that
+caused the callback. This function returns the number of complete and incomplete callbacks.
+
+Note, we are only going to have incomplete callbacks once we have `promise_or` combinator.
+###### Normal execution
+* If there is only one callback `promise_results_count()` returns `1`;
+* If there are multiple callbacks (e.g. created through `promise_and`) `promise_results_count()` returns their number.
+* If the function was called not through the callback `promise_results_count()` returns `0`.
+
+
+---
+```rust
+promise_result(promise_idx: u64, register_id: u64)
+```
+If the current function is invoked by a callback we can access the execution results of the promises that
+caused the callback. This function returns the result in blob format and places it into the register.
+
+###### Normal execution
+* If promise result is complete copies its blob into the register;
+* If promise result is incomplete makes the register "unused".
+
+###### Panics
+* If `promise_idx` does not correspond to an existing promise panics with `InvalidPromiseIndex`.
+* If copying the blob exhausts the memory limit it panics with `MemoryAccessViolation`.
+
+###### Current bugs
+* We currently have two separate functions to check for result completion and copy it.
+
+---
+```rust
+promise_return(promise_idx: u64)
+```
+When promise `promise_idx` finishes executing its result is considered to be the result of the current function.
+
+###### Panics
+* If `promise_idx` does not correspond to an existing promise panics with `InvalidPromiseIndex`.
+
+###### Current bugs
+* The current name `return_promise` is inconsistent with the naming convention of Promise API.
+
+## Miscellaneous API
+`return_value(value_len: u64, value_ptr: u64)` -- sets the blob of data as the return value of the contract.
+
+##### Panics
+* If `value_len + value_ptr` exceeds the memory container or points to an unused register it panics with `MemoryAccessViolation`;
+
+---
+`panic()` -- terminates the execution of the program with panic `GuestPanic`.
+
+---
+`log_utf8(ptr: u64, len: u64)` -- logs the UTF-8 encoded string. See https://stackoverflow.com/a/5923961 that explains
+that null termination is not defined through encoding.
+
+###### Normal behavior
+If `len == u64::MAX` then treats the string as null-terminated with character `'\0'`;
+
+###### Panics
+* If string extends outside the memory of the guest with `MemoryAccessViolation`;
+
+---
+`log_utf16(ptr: u64, len: u64)` -- logs the UTF-16 encoded string.
+
+###### Normal behavior
+If `len == u64::MAX` then treats the string as null-terminated with two-byte sequence of `0x00 0x00`.
+
+###### Panics
+* If string extends outside the memory of the guest with `MemoryAccessViolation`;
