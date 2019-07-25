@@ -20,7 +20,7 @@ To be able to do this now, we need to have a `CreateAccount` transaction with al
 Then we need to handle it in one operation in a runtime code, which might have duplicated code for executing some WASM code with the rollback conditions.
 
 Alternative to this is to execute multiple simple transactions in a batch within the same block.
-It has to be done in a raw without any commits to the state until the entire batch is completed.
+It has to be done in a row without any commits to the state until the entire batch is completed.
 We propose to support this type of transaction batching to simplify the runtime.
 
 Currently callbacks are handled differently from async calls, this NEP simplifies data dependencies and callbacks by unifying them.
@@ -58,7 +58,7 @@ The new `Receipt` contains the shared information and either one of the receipt 
 - `sender_id` the account ID of the immediate previous sender of this receipt. It can be different from the `originator_id` in some cases.
 - `receiver_id` the account ID of the current account, on which we need to perform action(s).
 - `receipt_id` is a unique ID of this receipt (previously was called `nonce`). It's generated from either the signed transaction or the parent receipt.
-- `receipt` is can be one of 2 types:
+- `receipt` can be one of 2 types:
   - `ActionReceipt` is used to perform some actions on the receiver.
   - `DataReceipt` is used when some data needs to be passed from the sender to the receiver, e.g. an execution result.
 
