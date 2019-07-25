@@ -242,14 +242,11 @@ some access key and submitted into a memory pool (either through the wallet usin
 
 ---
 ```rust
-initiator_key(register_id: u64)
+initiator_pk(register_id: u64)
 ```
-Saves JSON-serialized access key that was used by the initiator into the register.
+Saves the public key fo the access key that was used by the initiator into the register.
 In rare situations smart contract might want to know the exact access key that was used to send the original transaction,
 e.g. to increase the allowance or manipulate with the public key.
-
-###### Normal operation
-* Saves the JSON-serialized access key into the buffer.
 
 ###### Panics
 * If the scratch buffer size exceeds the limit panics with `MemoryAccessViolation`;
