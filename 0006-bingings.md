@@ -521,17 +521,22 @@ Note, we are only going to have incomplete callbacks once we have `promise_or` c
 
 ---
 ```rust
-promise_result(result_idx: u64, register_id: u64)
+promise_result(result_idx: u64, register_id: u64) -> u64
 ```
 If the current function is invoked by a callback we can access the execution results of the promises that
 caused the callback. This function returns the result in blob format and places it into the register.
 
 ###### Normal execution
-* If promise result is complete copies its blob into the register;
-* If promise result is incomplete makes the register "unused".
+* If promise result is complete and successful copies its blob into the register;
+* If promise result is complete and failed or incomplete keeps register unused;
+
+###### Returns
+* If promise result is not complete returns `0`;
+* If promise result is complete and successful returns `1`;
+* If promise result is complete and failed returns `2`.
 
 ###### Panics
-* If `result_idx` does not correspond to an exising result panics with `InvalidResultIndex`.
+* If `result_idx` does not correspond to an existing result panics with `InvalidResultIndex`.
 * If copying the blob exhausts the memory limit it panics with `MemoryAccessViolation`.
 
 ###### Current bugs
