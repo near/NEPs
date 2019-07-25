@@ -207,8 +207,12 @@ This allows us to iterate over the keys that have zero bytes stored in values.
 * If `iterator_id` does not correspond to an existing iterator panics with  `InvalidIteratorId`
 * If between the creation of the iterator and calling `storage_iter_next` the range over which it iterates was modified panics with `IteratorWasInvalidated`.
 Specifically, if `storage_write` or `storage_remove` was invoked on the key `key` such that:
-  * in case of `storage_iter_prefix`. `key` has the given prefix;
-  * in case of `storage_iter_range`. `start<=key<end`.
+  * in case of `storage_iter_prefix`. `key` has the given prefix and:
+    * Iterator was not called `next` yet.
+    * `next` was already called on the iterator and it is currently pointing at the key `curr` such that `curr <= key`.
+  * in case of `storage_iter_range`. `start<=key<end` and:
+    * Iterator was not called `next` yet.
+    * `next` was already called on the iterator and it is currently pointing at the key `curr` such that `curr<=key<end`.
 
 ###### Current bugs
 * Not implemented, currently we have `storage_iter_next` and `data_read` + `DATA_TYPE_STORAGE_ITER` that together fulfill
