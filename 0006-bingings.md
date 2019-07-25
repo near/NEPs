@@ -196,8 +196,8 @@ storage_iter_next(iterator_id: u64, key_register_id: u64, value_register_id: u64
 ```
 Advances iterator and saves the next key and value in the register.
 ###### Normal operation
-* If iterator is not empty, copies the next key into `key_register_id` and value into `value_register_id` and returns the length of the copied value;
-* If iterator is empty returns `u64::MAX`.
+* If iterator is not empty (after calling next it points to a key-value), copies the key into `key_register_id` and value into `value_register_id` and `1`;
+* If iterator is empty returns `0`.
 
 This allows us to iterate over the keys that have zero bytes stored in values.
 
