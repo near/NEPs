@@ -48,7 +48,7 @@ from the storage and insert it into under a different key;
 SNARK-like computations in Wasm by exposing a bignum library through stack-like interface to the guest. The guest
 can manipulate then with the stack of 256-bit numbers that is located on the host.
 
-##### Host → host blob passing
+#### Host → host blob passing
 The scratch buffer can be used to pass the blobs between host functions. For any function that
 takes a pair of arguments `*_len: u64, *_ptr: u64` this pair is pointing to a region of memory either on the guest or
 the host:
@@ -59,14 +59,19 @@ For example:
 `storage_write(u64::MAX, 0, u64::MAX, 1, 2)` -- insert key-value into storage, where key is read from register 0,
 value is read from register 1, and result is saved to register 2.
 
-##### Specification
-`read_register(register_id: u64, ptr: u64)` -- writes the entire content from the scratch buffer `register_id` into the
-memory of the guest starting with `ptr`.
+#### Specification
+```rust
+read_register(register_id: u64, ptr: u64)
+```
+Writes the entire content from the scratch buffer `register_id` into the memory of the guest starting with `ptr`.
 ###### Panics
 * If the content extends outside the memory allocated to the guest. In Wasmer, it returns `MemoryAccessViolation` error message;
 
 ---
-`register_len(register_id: u64) -> u64` -- returns the size of the blob stored in the given register.
+```rust
+register_len(register_id: u64) -> u64
+``` 
+Returns the size of the blob stored in the given register.
 ###### Normal operation
 * If register is used, then returns the size, which can potentially be zero;
 * If register is not used, returns `u64::MAX`
@@ -77,7 +82,10 @@ Here we provide a specification of trie API. After this NEP is merged, the cases
 not follow the specification are considered to be bugs that need to be fixed.
 
 ---
-`storage_write(key_len: u64, key_ptr: u64, value_len: u64, value_ptr: u64, register_id: u64)` -- writes key-value into storage.
+```rust
+storage_write(key_len: u64, key_ptr: u64, value_len: u64, value_ptr: u64, register_id: u64)
+```
+Writes key-value into storage.
 ###### Normal operation
 * If key is not in use it inserts the key-value pair;
 * If key is in use it inserts the key-value and copies the old value into the `register_id`.
@@ -95,7 +103,10 @@ create this error and terminate the execution of VM. For mocks of the host that 
 * Does not return into the  scratch buffer.
 
 ---
-`storage_read(key_len: u64, key_ptr: u64, register_id: u64)` -- reads the value stored under the given key.
+```rust
+storage_read(key_len: u64, key_ptr: u64, register_id: u64)
+``` 
+Reads the value stored under the given key.
 ###### Normal operation
 * If key is used copies the content of the value into the `register_id`, even if the content is zero bytes.
   The respective register is then considered to be used, i.e. `register_len(register_id)` will not return `u64::MAX`.
@@ -112,7 +123,10 @@ This allows to disambiguate two cases: when key-value is not present vs when key
 * This function currently does not exist.
 
 ---
-`storage_remove(key_len: u64, key_ptr: u64, register_id: u64)` -- removes the value stored under the given key.
+```rust
+storage_remove(key_len: u64, key_ptr: u64, register_id: u64)
+```
+Removes the value stored under the given key.
 ###### Normal operation
 Very similar to `storage_read`:
 * If key is used, removes the key-value from the trie and copies the content of the value into the `register_id`, even if the content is zero bytes.
@@ -130,7 +144,10 @@ Very similar to `storage_read`:
 * Does not return into the scratch buffer.
 
 ---
-`storage_has_key(key_len: u64, key_ptr: u64) -> u64` -- checks if there is a key-value pair.
+```rust
+storage_has_key(key_len: u64, key_ptr: u64) -> u64
+``` 
+Checks if there is a key-value pair.
 ###### Normal operation
 * If key is used returns `1`, even if the value is zero bytes;
 * Otherwise returns `0`.
@@ -139,7 +156,10 @@ Very similar to `storage_read`:
 * If `key_len + key_ptr` exceeds the memory container it panics with `MemoryAccessViolation`;
 
 ---
-`storage_iter_prefix(prefix_len: u64, prefix_ptr: u64) -> u64` -- creates an iterator object inside the host.
+```rust
+storage_iter_prefix(prefix_len: u64, prefix_ptr: u64) -> u64
+```
+Creates an iterator object inside the host.
 Returns the identifier that uniquely differentiates the given iterator from other iterators that can be simultaneously
 created.
 ###### Normal operation
@@ -149,7 +169,10 @@ order of the bytes in the keys. If there are no keys, it creates an empty iterat
 * If `prefix_len + prefix_ptr` exceeds the memory container it panics with `MemoryAccessViolation`;
 
 ---
-`storage_iter_range(start_len: u64, start_ptr: u64, end_len: u64, end_ptr: u64) -> u64` -- similarly to `storage_iter_prefix`
+```rust
+storage_iter_range(start_len: u64, start_ptr: u64, end_len: u64, end_ptr: u64) -> u64
+```
+Similarly to `storage_iter_prefix`
 creates an iterator object inside the host.
 ###### Normal operation
 Unless lexicographically `start < end`, it creates empty an iterator.
@@ -161,7 +184,10 @@ Note, this definition allows to either `start` or `end` keys to not actually exi
 * If `start_len + start_ptr` or `end_len + end_ptr` exceeds the memory container or points to an unused register it panics with `MemoryAccessViolation`;
 
 ---
-`storage_iter_next(iterator_id: u64, key_register_id: u64, value_register_id: u64) -> u64` -- advances iterator and saves the next key and value in the register.
+```rust
+storage_iter_next(iterator_id: u64, key_register_id: u64, value_register_id: u64) -> u64
+```
+Advances iterator and saves the next key and value in the register.
 ###### Normal operation
 * If iterator is not empty, copies the next key into `key_register_id` and value into `value_register_id` and returns the length of the copied value;
 * If iterator is empty returns `u64::MAX`.
@@ -199,7 +225,10 @@ execute anyway.
 However there is one reason to not have `data_read` -- it makes `API` more human-like which is a general direction Wasm APIs, like WASI are moving towards to.
 
 ---
-`initiator_id(register_id: u64)`. All contract calls are a result of some transaction that was signed by some account using
+```rust
+initiator_id(register_id: u64)
+```
+All contract calls are a result of some transaction that was signed by some account using
 some access key and submitted into a memory pool (either through the wallet using RPC or by a node itself). This function returns the id of that account.
 
 ###### Normal operation
@@ -212,7 +241,10 @@ some access key and submitted into a memory pool (either through the wallet usin
 * Currently we conflate `originator_id` and `sender_id` in our code base.
 
 ---
-`initiator_key(register_id: u64)` -- saves JSON-serialized access key that was used by the initiator into the register.
+```rust
+initiator_key(register_id: u64)
+```
+Saves JSON-serialized access key that was used by the initiator into the register.
 In rare situations smart contract might want to know the exact access key that was used to send the original transaction,
 e.g. to increase the allowance or manipulate with the public key.
 
@@ -227,7 +259,10 @@ e.g. to increase the allowance or manipulate with the public key.
 * Not implemented.
 
 ---
-`caller_id(register_id: u64)`. All contract calls are a result of a receipt, this receipt might be created by a transaction
+```rust
+caller_id(register_id: u64)
+```
+All contract calls are a result of a receipt, this receipt might be created by a transaction
 that does function invocation on the contract or another contract as a result of cross-contract call.
 
 ###### Normal operation
@@ -240,7 +275,10 @@ that does function invocation on the contract or another contract as a result of
 * Not implemented.
 
 ---
-`refund_id(register_id: u64)` -- the account to which the refund will be issued.
+```rust
+refund_id(register_id: u64)
+```
+The account to which the refund will be issued.
 
 ###### Normal operation
 * Saves the bytes of the caller account id into the register.
@@ -252,7 +290,10 @@ that does function invocation on the contract or another contract as a result of
 * Not implemented.
 
 ---
-`input(register_id: u64)` -- reads input to the contract call into the register. Input is expected to be in JSON-format.
+```rust
+input(register_id: u64)
+```
+Reads input to the contract call into the register. Input is expected to be in JSON-format.
 
 ###### Normal operation
 * If input is provided saves the bytes (potentially zero) of input into register.
@@ -266,10 +307,16 @@ that does function invocation on the contract or another contract as a result of
 be used to read all
 
 ---
-`block_index() -> u64` -- returns the current block index.
+```rust
+block_index() -> u64
+```
+Returns the current block index.
 
 ---
-`storage_usage() -> u64` -- returns the number of bytes used by the contract if it was saved to the trie as of the
+```rust
+storage_usage() -> u64
+``` 
+Returns the number of bytes used by the contract if it was saved to the trie as of the
 invocation. This includes:
 * The data written with `storage_*` functions during current and previous execution;
 * The bytes needed to store the account protobuf and the access keys of the given account.
@@ -326,7 +373,10 @@ burnt_balance(balance_ptr: u64)
 * Unclear how they behave with the callbacks.
 
 ---
-`deposit(min_amount_ptr: u64, max_amount_ptr: u64, result_ptr: u64)` -- moves balance from `attached_balance` to `account_balance`.
+```rust
+deposit(min_amount_ptr: u64, max_amount_ptr: u64, result_ptr: u64)
+```
+Moves balance from `attached_balance` to `account_balance`.
 If `min_amount <= attached_balance` moves `min(max_amount, max(min_amount, attached_balance))`. The moved amount is
 saved into `u128` variable pointed by `result_ptr`. `min_amount_ptr` and `max_amount_ptr` point to `u128` variables.
 
@@ -335,7 +385,10 @@ saved into `u128` variable pointed by `result_ptr`. `min_amount_ptr` and `max_am
 
 ---
 
-`withdraw(min_amount_ptr: u64, max_amount_ptr: u64, result_ptr: u64)` -- moves balance from `account_balance` to `attached_balance`.
+```rust
+withdraw(min_amount_ptr: u64, max_amount_ptr: u64, result_ptr: u64)
+```
+Moves balance from `account_balance` to `attached_balance`.
 If `min_amount <= attached_balance` moves `min(max_amount, max(min_amount, account_balance))`. The moved amount is
 saved into `u128` variable pointed by `result_ptr`. `min_amount_ptr` and `max_amount_ptr` point to `u128` variables.
 
@@ -344,18 +397,26 @@ saved into `u128` variable pointed by `result_ptr`. `min_amount_ptr` and `max_am
 
 ## Math
 
-`random_buf(buf_len: u64, buf_ptr: u64)` -- writes random bytes in the given memory location on the guest. Does not
+```rust
+random_buf(buf_len: u64, buf_ptr: u64)
+```
+Writes random bytes in the given memory location on the guest. Does not
 work with scratch buffer.
 
 ###### Panics
 * If `buf_len + buf_ptr` points outside the memory of the guest with `MemoryAccessViolation`;
 
 ---
-`random_u64() -> u64` -- returns a random `u64` variable.
+```rust
+random_u64() -> u64
+``` 
+Returns a random `u64` variable.
 
 ---
-`sha256(value_len: u64, value_ptr: u64, register_id: u64)` -- hashes the random sequence of bytes using sha256 and
-returns it into `register_id`.
+```rust
+sha256(value_len: u64, value_ptr: u64, register_id: u64)
+```
+Hashes the random sequence of bytes using sha256 and returns it into `register_id`.
 ###### Panics
 * If `value_len + value_ptr` points outside the memory or scratch buffer uses more memory than the limit with `MemoryAccessViolation`.
 
@@ -490,16 +551,25 @@ When promise `promise_idx` finishes executing its result is considered to be the
 * The current name `return_promise` is inconsistent with the naming convention of Promise API.
 
 ## Miscellaneous API
-`return_value(value_len: u64, value_ptr: u64)` -- sets the blob of data as the return value of the contract.
+```rust
+return_value(value_len: u64, value_ptr: u64)
+```
+Sets the blob of data as the return value of the contract.
 
 ##### Panics
 * If `value_len + value_ptr` exceeds the memory container or points to an unused register it panics with `MemoryAccessViolation`;
 
 ---
-`panic()` -- terminates the execution of the program with panic `GuestPanic`.
+```rust
+panic()
+```
+Terminates the execution of the program with panic `GuestPanic`.
 
 ---
-`log_utf8(ptr: u64, len: u64)` -- logs the UTF-8 encoded string. See https://stackoverflow.com/a/5923961 that explains
+```rust
+log_utf8(ptr: u64, len: u64)
+```
+Logs the UTF-8 encoded string. See https://stackoverflow.com/a/5923961 that explains
 that null termination is not defined through encoding.
 
 ###### Normal behavior
@@ -509,7 +579,10 @@ If `len == u64::MAX` then treats the string as null-terminated with character `'
 * If string extends outside the memory of the guest with `MemoryAccessViolation`;
 
 ---
-`log_utf16(ptr: u64, len: u64)` -- logs the UTF-16 encoded string.
+```rust
+log_utf16(ptr: u64, len: u64)
+```
+Logs the UTF-16 encoded string.
 
 ###### Normal behavior
 If `len == u64::MAX` then treats the string as null-terminated with two-byte sequence of `0x00 0x00`.
