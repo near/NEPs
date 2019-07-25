@@ -70,6 +70,10 @@ Writes the entire content from the register `register_id` into the memory of the
 ###### Panics
 * If the content extends outside the memory allocated to the guest. In Wasmer, it returns `MemoryAccessViolation` error message;
 
+###### Undefined Behavior
+* If the content of register extends outside the preallocated memory on the host side, or the pointer points to a
+wrong location this function will overwrite memory that it is not supposed to overwrite causing an undefined behavior.
+
 ---
 ```rust
 register_len(register_id: u64) -> u64
