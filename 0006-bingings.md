@@ -217,8 +217,8 @@ However, there is no reason to have `data_read` instead of the specific function
 * `data_read` does not solve forward compatibility. If later we want to add another context function, e.g. `executed_operations`
 we can just declare it as a new function, instead of encoding it as `DATA_TYPE_EXECUTED_OPERATIONS = 42` which is passed
 as the first argument to `data_read`;
-* `data_read` does not help with renaming. If later we decide to rename `initiator_id` to `originator_id` then one could
-argue that contracts that rely on `data_read` would not break, while contracts relying on `initiator_id()` would. However
+* `data_read` does not help with renaming. If later we decide to rename `signer_account_id` to `originator_id` then one could
+argue that contracts that rely on `data_read` would not break, while contracts relying on `signer_account_id()` would. However
 the name change often means the change of the semantics, which means the contracts using this function are no longer safe to
 execute anyway.
 
@@ -226,13 +226,22 @@ However there is one reason to not have `data_read` -- it makes `API` more human
 
 ---
 ```rust
-initiator_id(register_id: u64)
+current_account_id(register_id: u64)
+```
+Saves the account id of the current contract that we execute into the register.
+
+###### Panics
+* If the scratch buffer size exceeds the limit panics with `MemoryAccessViolation`;
+
+---
+```rust
+signer_account_id(register_id: u64)
 ```
 All contract calls are a result of some transaction that was signed by some account using
 some access key and submitted into a memory pool (either through the wallet using RPC or by a node itself). This function returns the id of that account.
 
 ###### Normal operation
-* Saves the bytes of the initiator account id into the register.
+* Saves the bytes of the signer account id into the register.
 
 ###### Panics
 * If the scratch buffer size exceeds the limit panics with `MemoryAccessViolation`;
@@ -242,9 +251,9 @@ some access key and submitted into a memory pool (either through the wallet usin
 
 ---
 ```rust
-initiator_pk(register_id: u64)
+signer_account_pk(register_id: u64)
 ```
-Saves the public key fo the access key that was used by the initiator into the register.
+Saves the public key fo the access key that was used by the signer into the register.
 In rare situations smart contract might want to know the exact access key that was used to send the original transaction,
 e.g. to increase the allowance or manipulate with the public key.
 
@@ -257,28 +266,13 @@ e.g. to increase the allowance or manipulate with the public key.
 
 ---
 ```rust
-caller_id(register_id: u64)
+predecessor_account_id(register_id: u64)
 ```
 All contract calls are a result of a receipt, this receipt might be created by a transaction
 that does function invocation on the contract or another contract as a result of cross-contract call.
 
 ###### Normal operation
-* Saves the bytes of the caller account id into the register.
-
-###### Panics
-* If the scratch buffer size exceeds the limit panics with `MemoryAccessViolation`;
-
-###### Current bugs
-* Not implemented.
-
----
-```rust
-refund_id(register_id: u64)
-```
-The account to which the refund will be issued.
-
-###### Normal operation
-* Saves the bytes of the caller account id into the register.
+* Saves the bytes of the predecessor account id into the register.
 
 ###### Panics
 * If the scratch buffer size exceeds the limit panics with `MemoryAccessViolation`;
