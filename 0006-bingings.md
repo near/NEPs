@@ -59,6 +59,9 @@ For example:
 `storage_write(u64::MAX, 0, u64::MAX, 1, 2)` -- insert key-value into storage, where key is read from register 0,
 value is read from register 1, and result is saved to register 2.
 
+Note, if some function takes `register_id` then it means this function can copy some data into this register. If
+`register_id == u64::MAX` then the copying does not happen. This allows some micro-optimizations in the future.
+
 Note, we allow multiple registers on the host, identified with `u64` number. The guest does not have to use them in
 order and can for instance save some blob in register `5000` and another value in register `1`.
 
