@@ -519,7 +519,7 @@ When promise `promise_idx` finishes executing its result is considered to be the
 
 ## Miscellaneous API
 ```rust
-return_value(value_len: u64, value_ptr: u64)
+value_return(value_len: u64, value_ptr: u64)
 ```
 Sets the blob of data as the return value of the contract.
 
