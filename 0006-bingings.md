@@ -33,8 +33,8 @@ now consider splitting attached balance into two.
 
 # Specification
 
-## Scratch Buffer
-Scratch buffer allows the host function to return the data into a buffer located inside the host oppose to the buffer
+## Registers
+Registers allow the host function to return the data into a buffer located inside the host oppose to the buffer
 located on the client. A special operation can be used to copy the content of the buffer into the host. Memory pointers
 can then be used to point either to the memory on the guest or the memory on the host, see below. Benefits:
 * We can have functions that return values that are not necessarily used, e.g. inserting key-value into a trie can
@@ -49,7 +49,7 @@ SNARK-like computations in Wasm by exposing a bignum library through stack-like 
 can manipulate then with the stack of 256-bit numbers that is located on the host.
 
 #### Host → host blob passing
-The scratch buffer can be used to pass the blobs between host functions. For any function that
+The registers can be used to pass the blobs between host functions. For any function that
 takes a pair of arguments `*_len: u64, *_ptr: u64` this pair is pointing to a region of memory either on the guest or
 the host:
 * If `*_len != u64::MAX` it points to the memory on the guest;
@@ -59,11 +59,14 @@ For example:
 `storage_write(u64::MAX, 0, u64::MAX, 1, 2)` -- insert key-value into storage, where key is read from register 0,
 value is read from register 1, and result is saved to register 2.
 
+Note, we allow multiple registers on the host, identified with `u64` number. The guest does not have to use them in
+order and can for instance save some blob in register `5000` and another value in register `1`.
+
 #### Specification
 ```rust
 read_register(register_id: u64, ptr: u64)
 ```
-Writes the entire content from the scratch buffer `register_id` into the memory of the guest starting with `ptr`.
+Writes the entire content from the register `register_id` into the memory of the guest starting with `ptr`.
 ###### Panics
 * If the content extends outside the memory allocated to the guest. In Wasmer, it returns `MemoryAccessViolation` error message;
 
@@ -94,13 +97,13 @@ Writes key-value into storage.
 * If `key_len + key_ptr` or `value_len + value_ptr` exceeds the memory container or points to an unused register it panics
 with `MemoryAccessViolation`. (When we say that something panics with the given error we mean that we use Wasmer API to
 create this error and terminate the execution of VM. For mocks of the host that would only cause a non-name panic.)
-* If returning the preempted value into the scratch buffer exceeds the memory container it panics with `MemoryAccessViolation`;
+* If returning the preempted value into the registers exceed the memory container it panics with `MemoryAccessViolation`;
 
 ###### Current bugs
 *  `External::storage_set` trait can return an error which is then converted to a generic non-descriptive
    `StorageUpdateError`, [here](https://github.com/nearprotocol/nearcore/blob/942bd7bdbba5fb3403e5c2f1ee3c08963947d0c6/runtime/wasm/src/runtime.rs#L210)
    however the actual implementation does not return error at all, [see](https://github.com/nearprotocol/nearcore/blob/4773873b3cd680936bf206cebd56bdc3701ddca9/runtime/runtime/src/ext.rs#L95);
-* Does not return into the  scratch buffer.
+* Does not return into the registers.
 
 ---
 ```rust
@@ -117,7 +120,7 @@ This allows to disambiguate two cases: when key-value is not present vs when key
 
 ###### Panics
 * If `key_len + key_ptr` exceeds the memory container or points to an unused register it panics with `MemoryAccessViolation`;
-* If returning the preempted value into the scratch buffer exceeds the memory container it panics with `MemoryAccessViolation`;
+* If returning the preempted value into the registers exceed the memory container it panics with `MemoryAccessViolation`;
 
 ###### Current bugs
 * This function currently does not exist.
@@ -136,12 +139,12 @@ Very similar to `storage_read`:
 
 ###### Panics
 * If `key_len + key_ptr` exceeds the memory container or points to an unused register it panics with `MemoryAccessViolation`;
-* If the scratch buffer size exceeds the limit panics with `MemoryAccessViolation`;
-* If returning the preempted value into the scratch buffer exceeds the memory container it panics with `MemoryAccessViolation`;
+* If the registers exceed the memory limit panics with `MemoryAccessViolation`;
+* If returning the preempted value into the registers exceed the memory container it panics with `MemoryAccessViolation`;
 
 
 ###### Current bugs
-* Does not return into the scratch buffer.
+* Does not return into the registers.
 
 ---
 ```rust
@@ -196,7 +199,7 @@ This allows us to iterate over the keys that have zero bytes stored in values.
 
 ###### Panics
 * If `key_register_id == value_register_id` panics with `MemoryAccessViolation`;
-* If the scratch buffer size exceeds the limit panics with `MemoryAccessViolation`;
+* If the registers exceed the memory limit panics with `MemoryAccessViolation`;
 * If `iterator_id` does not correspond to an existing iterator panics with  `InvalidIteratorId`
 * If between the creation of the iterator and calling `storage_iter_next` the range over each it iterates was modified panics with `IteratorWasInvalidated`.
 Specifically, if `storage_write` or `storage_remove` was invoked on the key `key` such that:
@@ -231,7 +234,7 @@ current_account_id(register_id: u64)
 Saves the account id of the current contract that we execute into the register.
 
 ###### Panics
-* If the scratch buffer size exceeds the limit panics with `MemoryAccessViolation`;
+* If the registers exceed the memory limit panics with `MemoryAccessViolation`;
 
 ---
 ```rust
@@ -244,7 +247,7 @@ some access key and submitted into a memory pool (either through the wallet usin
 * Saves the bytes of the signer account id into the register.
 
 ###### Panics
-* If the scratch buffer size exceeds the limit panics with `MemoryAccessViolation`;
+* If the registers exceed the memory limit panics with `MemoryAccessViolation`;
 
 ###### Current bugs
 * Currently we conflate `originator_id` and `sender_id` in our code base.
@@ -258,7 +261,7 @@ In rare situations smart contract might want to know the exact access key that w
 e.g. to increase the allowance or manipulate with the public key.
 
 ###### Panics
-* If the scratch buffer size exceeds the limit panics with `MemoryAccessViolation`;
+* If the registers exceed the memory limit panics with `MemoryAccessViolation`;
 
 
 ###### Current bugs
@@ -275,7 +278,7 @@ that does function invocation on the contract or another contract as a result of
 * Saves the bytes of the predecessor account id into the register.
 
 ###### Panics
-* If the scratch buffer size exceeds the limit panics with `MemoryAccessViolation`;
+* If the registers exceed the memory limit panics with `MemoryAccessViolation`;
 
 ###### Current bugs
 * Not implemented.
@@ -291,7 +294,7 @@ Reads input to the contract call into the register. Input is expected to be in J
 * If input is not provided makes the register "not used", i.e. `register_len` now returns `u64::MAX`.
 
 ###### Panics
-* If the scratch buffer size exceeds the limit panics with `MemoryAccessViolation`;
+* If the registers exceed the memory limit panics with `MemoryAccessViolation`;
 
 ###### Current bugs
 * Implemented as part of `data_read`. However there is no reason to have one unified function, like `data_read` that can
@@ -363,7 +366,7 @@ sha256(value_len: u64, value_ptr: u64, register_id: u64)
 ```
 Hashes the random sequence of bytes using sha256 and returns it into `register_id`.
 ###### Panics
-* If `value_len + value_ptr` points outside the memory or scratch buffer uses more memory than the limit with `MemoryAccessViolation`.
+* If `value_len + value_ptr` points outside the memory or the registers use more memory than the limit with `MemoryAccessViolation`.
 
 ###### Current bugs
 * Current name `hash` is not specific to what hash is being used.
@@ -389,7 +392,7 @@ check_ethash(block_number_ptr: u64,
 * `0` otherwise.
 
 ###### Panics
-* If `block_number_ptr + 32` or `header_hash_ptr + 32` or `mix_hash_ptr + 32` or `difficulty_ptr + 32` point outside the memory or scratch buffer uses more memory than the limit with `MemoryAccessViolation`.
+* If `block_number_ptr + 32` or `header_hash_ptr + 32` or `mix_hash_ptr + 32` or `difficulty_ptr + 32` point outside the memory or registers use more memory than the limit with `MemoryAccessViolation`.
 
 ###### Current bugs
 * `block_number` and `difficulty` are currently exposed as `u64` which are casted to `u256` which breaks Ethereum compatibility;
