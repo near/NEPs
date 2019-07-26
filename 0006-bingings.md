@@ -72,6 +72,7 @@ read_register(register_id: u64, ptr: u64)
 Writes the entire content from the register `register_id` into the memory of the guest starting with `ptr`.
 ###### Panics
 * If the content extends outside the memory allocated to the guest. In Wasmer, it returns `MemoryAccessViolation` error message;
+* If `register_id` is pointing to unused register returns `InvalidRegisterId` error message.
 
 ###### Undefined Behavior
 * If the content of register extends outside the preallocated memory on the host side, or the pointer points to a
@@ -327,25 +328,25 @@ invocation. This includes:
 * The bytes needed to store the account protobuf and the access keys of the given account.
 
 ## Economics API
-Accounts own certain balance; and each transaction and each receipt have certain amount of balance and prepaid fee
+Accounts own certain balance; and each transaction and each receipt have certain amount of balance and prepaid gas
 attached to them.
 During the contract execution, the contract has access to the following `u128` values:
 * `account_balance` -- the balance attached to the given account. This includes the `attached_deposit` that was attached
   to the transaction;
 * `attached_deposit` -- the balance that was attached to the call that will be immediately deposited before
   the contract execution starts;
-* `prepaid_fee` -- the tokens attached to the call that can be used to pay for the fees;
-* `used_fee` -- the fees that have already incurred during the contract execution (cannot exceed `prepaid_fee`);
+* `prepaid_gas` -- the tokens attached to the call that can be used to pay for the gas;
+* `used_gas` -- the gas that was already burnt during the contract execution (cannot exceed `prepaid_gas`);
 
-If contract execution fails `prepaid_fee - used_fee` is refunded back to `signer_account_id` and `attached_balance`
+If contract execution fails `prepaid_gas - used_gas` is refunded back to `signer_account_id` and `attached_balance`
 is refunded back to `predecessor_account_id`.
 
 The following spec is the same for all functions:
 ```
 account_balance(balance_ptr: u64)
 attached_deposit(balance_ptr: u64)
-prepaid_fee(balance_ptr: u64)
-used_fee(balance_ptr: u64)
+prepaid_gas(balance_ptr: u64)
+used_gas(balance_ptr: u64)
 ```
  -- writes the value into the `u128` variable pointed by `balance_ptr`.
 
@@ -419,14 +420,15 @@ promise_create(account_id_len: u64,
                method_name_ptr: u64,
                arguments_len: u64,
                arguments_ptr: u64,
-               amount_ptr: u64) -> u64
+               amount_ptr: u64,
+               gas_ptr: u64) -> u64
 ```
 Creates a promise that will execute a method on account with given arguments and attaches the given amount.
-`amount_ptr` points to a slice of bytes representing `u128`.
+`amount_ptr` and `gas_ptr` point to slices of bytes representing `u128`.
 
 ###### Panics
 * If `account_id_len + account_id_ptr` or `method_name_len + method_name_ptr` or `arguments_len + arguments_ptr`
-or `amount_ptr + 8` points outside the memory of the guest or host, with `MemoryAccessViolation`.
+or `amount_ptr + 8` or `gas_ptr + 8` point outside the memory of the guest or host, with `MemoryAccessViolation`.
 
 ###### Returns
 * Index of the new promise that uniquely identifies it within the current execution of the method.
@@ -441,14 +443,15 @@ promise_then(promise_idx: u64,
              method_name_ptr: u64,
              arguments_len: u64,
              arguments_ptr: u64,
-             amount_ptr: u64) -> u64            
+             amount_ptr: u64,
+             gas_ptr: u64) -> u64            
 ```
 Attaches the callback that is executed after promise pointed by `promise_idx` is complete.
 
 ###### Panics
 * If `promise_idx` does not correspond to an existing promise panics with `InvalidPromiseIndex`.
 * If `account_id_len + account_id_ptr` or `method_name_len + method_name_ptr` or `arguments_len + arguments_ptr`
-or `amount_ptr + 8` points outside the memory of the guest or host, with `MemoryAccessViolation`.
+or `amount_ptr + 8` or `gas_ptr + 8` point outside the memory of the guest or host, with `MemoryAccessViolation`.
 
 ###### Returns
 * Index of the new promise that uniquely identifies it within the current execution of the method.
