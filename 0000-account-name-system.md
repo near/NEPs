@@ -5,8 +5,8 @@
 # Summary
 [summary]: #summary
 
-The Account Name System is a hierarchical and decentralized naming system for accounts, contracts and applications running on the NEAR blockchain.
-It describes rules with which a new account names can be registered.
+The Account Name System is a hierarchical and decentralized naming system for accounts, contracts, and applications running on the NEAR blockchain.
+It describes rules with which new account names can be registered.
 
 # Motivation
 [motivation]: #motivation
@@ -44,11 +44,16 @@ Here, important to note that `CreateAccount` is created by some other account.
 
 The next rules apply for relationship between `originator_id` and `new_account_id`:
 
-- `new_account_id` can only contain characters from the [a-z0-9@._-] set. And be 5-32 characters long.
-- If `new_account_id` is suppose to be TLA, it can not contain any separators (e.g. `@._-`).
-- If `new_account_id` is not suppose to be TLA, it's suffix must contain `'.' + originator_id`. For example, if `originator_id` is `'com'`, then this account can register `google.com` or `facebook.com` but can not register `googlecom` or `facebook@com`.
+- `new_account_id` can only contain characters from the [a-z0-9.@_-] set. And be 2-32 characters long. Where if the length is less than 5, `new_account_id` can not contain '.' separator (e.g. can only be TLA).
+- If `new_account_id` is suppose to be a TLA, it can not contain any separators (e.g. `@._-`).
+- If `new_account_id` is not suppose to be a TLA, it's suffix must contain `'.' + originator_id` and the prefix can not contain '.'s. For example, if `originator_id` is `'com'`:
+    - can register `google.com` or `facebook.com` 
+    - can not register `googlecom` or `facebook@com`.
+    - can not directly register `abc.google.com`.
 
-Because TLAs are important as backbone of naming system, we require that `CreateAccount` transaction that creates TLA domain attach an extra `X` NEAR tokens which will be burned by the system. Where `X` is the function of length of the TLA name.
+Generally the shorter name the more desirable it is. To prevent squatting of this names without using it provide crucial services. To make squatting an expensive procedure, we define additional storage price for account names:
+- if `account_id.length > 10`, storage price is equal to regular byte storage price based on the length of `account_id`.
+- otherwise, rounded down `1,000 / (3 ^ (account_id.length - 2))` of NEAR tokens per year.
 
 We can also describe for example an account name registrars that operates only via smart contract (vs a user facing registrars like wallets and exchanges). For example a `com` TLA can be contract based registrars that requires some extra payment can now provide service to users to register sub-names at this TLA via next contract:
 
@@ -86,7 +91,7 @@ Next changes must be made:
 
 There may be issues with ppl squatting TLAs by just getting them at the beginning of the protocol when prices will be naturally cheaper. 
 
-To limit this, we want to pre-register a set of names in the genesis and provide them to community leaders as well as 
+To limit this, we want to pre-register a set of names in the genesis and provide them to community leaders as well as a set of initial users and developers.
 
 # Rationale and alternatives
 [rationale-and-alternatives]: #rationale-and-alternatives
@@ -103,8 +108,6 @@ Other possibility include:
 [unresolved-questions]: #unresolved-questions
 
 Pricing of the registration of TLA should be reasonable for names with reasonable length independent of the price of the underlaying token.
-
-Right now sub-registrars by default can register any name including with separators. Which means that an account `blah.com` doesn't own `*.blah.com` namespace. We may need to restrict usage of `'.'` on system level to allow that easily.
 
 # Future possibilities
 [future-possibilities]: #future-possibilities
