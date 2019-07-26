@@ -38,36 +38,34 @@ To achieve this, NEP introduces a new message `Action` that represents one of at
 `TransactionBody` is now called just `Transaction`. It contains the list of actions that needs to be performed in a single batch and the information shared across these actions.
 
 `Transaction` contains the following fields
-- `originator_id` is an account ID of the transaction originator.
-- `public_key` is to identify the access key used to signs the transaction.
-- `nonce` is used to deduplicate and order transactions.
+- `signer_id` is an account ID of the transaction signer.
+- `public_key` is a public key used to identify the access key and to sign the transaction.
+- `nonce` is used to deduplicate and order transactions (per access key).
 - `receiver_id` is the account ID of the destination of this transaction. It's where the generated receipt will be routed for execution.
 - `action` is the list of actions to perform.
 
 An `Action` can be of the following:
-- `CreateAccount` creates a new account. It has to be the first action, and the receiver has to be a new account. Until we have the account deletion, it doesn't make sense for trying to create an account after some other action. The action will fail if the account already exists.
-`CreateAccount` also grants permission for all subsequent batched action for the newly created account. For example, deploying code on the new account.
-- `DeployContract` deploys given binary wasm code on the account. Either the `receiver_id` equals to the `originator_id`, or the batch of actions has started with `CreateAccount`, which granted that permission.
-- `FunctionCall` executes a function call on the last deployed contract. E.g. if the previous action was `DeployContract`, then the code to execute will be the new deployed contract. `FunctionCall` has `method_name` and `args` to identify method with arguments to call. It also has `fee` and the `amount`. `fee` is the transaction fee that is prepaid for this call to be spent on gas. `amount` is the attached amount of NEAR tokens that the contract can spend, e.g. 10 tokens to pay for a crypto-corgi.
-- `Transfer` transfers the given amount of tokens from the originator to the receiver.
-- `Stake` stakes the new total amount which is given in the `amount` field with the given `public_key`. The difference in stake is taken from the account's balance (if the new stake is greater than the current one) at the moment when this action is executed, so it's not prepaid. There is no particular reason to stake on behalf of a newly created account, so we may disallow it.
+- `CreateAccount` creates a new account with the `receiver_id` account ID. The action fails if the account already exists. `CreateAccount` also grants permission for all subsequent batched action for the newly created account. For example, permission gto deploy code on the new account. Permission details are described in the reference section below. 
+- `DeployContract` deploys given binary wasm code on the account. Either the `receiver_id` equals to the `signer_id`, or the batch of actions has started with `CreateAccount`, which granted that permission.
+- `FunctionCall` executes a function call on the last deployed contract. The action fails if the account or the code doesn't exist. E.g. if the previous action was `DeployContract`, then the code to execute will be the new deployed contract. `FunctionCall` has `method_name` and `args` to identify method with arguments to call. It also has `fee` and the `amount`. `fee` is the transaction fee that is prepaid for this call to be spent on gas. `deposit` is the attached deposit balance of NEAR tokens that the contract can spend, e.g. 10 tokens to pay for a crypto-corgi.
+- `Transfer` transfers the given `deposit` balance of tokens from the predecessor to the receiver.
+- `Stake` stakes the new total `stake` balance with the given `public_key`. The difference in stake is taken from the account's balance (if the new stake is greater than the current one) at the moment when this action is executed, so it's not prepaid. There is no particular reason to stake on behalf of a newly created account, so we may disallow it.
 - `DeleteKey` deletes an old `AccessKey` identified by the given `public_key` from the account. Fails if the access key with the given public key doesn't exist. All next batched actions will continue to execute, even if the public key that authorized that transaction was removed.
 - `AddKey` adds a new given `AccessKey` identified by a new given `public_key` to the account. Fails if an access key with the given public key already exists. We removed `SwapKeyTransaction`, because it can be replaced with 2 batched actions - delete an old key and add a new key.
 
 The new `Receipt` contains the shared information and either one of the receipt actions or a list of actions:
-- `sender_id` the account ID of the immediate previous sender of this receipt. It can be different from the `originator_id` in some cases.
+- `predecessor_id` the account ID of the immediate previous sender (predecessor) of this receipt. It can be different from the `signer_id` in some cases, e.g. for promises.
 - `receiver_id` the account ID of the current account, on which we need to perform action(s).
 - `receipt_id` is a unique ID of this receipt (previously was called `nonce`). It's generated from either the signed transaction or the parent receipt.
 - `receipt` can be one of 2 types:
   - `ActionReceipt` is used to perform some actions on the receiver.
-  - `DataReceipt` is used when some data needs to be passed from the sender to the receiver, e.g. an execution result.
+  - `DataReceipt` is used when some data needs to be passed from the predecessor to the receiver, e.g. an execution result.
 
 To support promises and callbacks we introduce a concept of cross-shard data sharing with dependencies. Each `ActionReceipt` may have a list of input `data_id`. The execution will not start until all required inputs are received. Once the execution completes and if there is `output_data_id`, it produces a `DataReceipt` that will be routed to the `output_receiver_id`.
  
 `ActionReceipt` contains the following fields:
-- `originator_id` the account ID of the originator, who signed the transaction.
-- `originator_public_key` the public key that the originator used to sign the original signed transaction.
-- `refund_account_id` the account ID where to send the refund in case the transaction fails and/or there are remaining fees.
+- `signer_id` the account ID of the signer, who signed the transaction.
+- `signer_public_key` the public key that the signer used to sign the original signed transaction.
 - `output_data_id` is the data ID to create DataReceipt. If it's absent, then the `DataReceipt` is not created.
 - `output_receiver_id` is the account ID of the data receiver. It's needed to route `DataReceipt`. It's absent if the DataReceipt is not needed.
 - `input_data_id` is the list of data IDs that are required for the execution of the `ActionReceipt`. If some of data IDs is not available when the receipt is received, then the `ActionReceipt` is postponed until all data is available. Once the last `DataReceipt` for the required input data arrives, the action receipt execution is triggered.
@@ -80,6 +78,44 @@ To support promises and callbacks we introduce a concept of cross-shard data sha
 
 Data should be stored at the same shard as the receiver's account, even if the receiver's account doesn't exist.
 
+### Refunds
+
+In case an `ActionReceipt` execution fails the runtime can generate a refund.
+We've removed `refund_account_id` from receipts, because the account IDs for refunds can be determined from the `signer_id` and `predecessor_id` in the `ActionReceipt`.
+All the fees (including unused prepaid fee) are always refunded back to the `signer_id`, because fees are always prepaid by the signer.
+While the deposit balances from `FunctionCall` and `Transfer` are refunded back to the `predecessor_id`, because they were deducted from predecessor's account balance.
+It's also important to note that the predecessor for refund receipts is `system`.
+It's done to prevent refund loops, e.g. when the account to receive the refund was deleted before the refund arrives. In this case the refund is burned.
+
+If the function call action with the attached `deposit` fails in the middle of the execution, then 2 refund receipts can be generated, one for the unused fees and one for the deposit.
+The runtime should combine them into one receipt if `signer_id` and `predecessor_id` is the same.
+
+Example of a receipt for a refund of `42000` atto-tokens to `vasya.near`:
+```json
+{
+    "predecessor_id": "system",
+    "receiver_id": "vasya.near",
+    "receipt_id": ...,
+
+    "action": {
+        "signer_id": "vasya.near",
+        "signer_public_key": ...,
+        
+        "output_data_id": null,
+        "output_receiver_id": null,
+
+        "input_data_id": [],
+        
+        "action": [
+            {
+                "transfer": {
+                    "deposit": "42000"
+                }
+            }
+        ]
+    }
+}
+```
 ### Examples
 
 #### Account Creation
@@ -88,7 +124,7 @@ To create a new account we can create a new `Transaction`:
 
 ```json
 {
-    "originator_id": "vasya.near",
+    "signer_id": "vasya.near",
     "public_key": ...,
     "nonce": 42,
     "receiver_id": "vitalik.vasya.near",
@@ -100,7 +136,7 @@ To create a new account we can create a new `Transaction`:
         },
         {
             "transfer": {
-                "amount": "19231293123"
+                "deposit": "19231293123"
             }
         },
         {
@@ -118,8 +154,8 @@ To create a new account we can create a new `Transaction`:
             "function_call": {
                 "method_name": "init",
                 "args": ...,
-                "fee": "100010101",
-                "amount": "0"
+                "prepaid_fee": "100010101",
+                "deposit": "0"
             }
         }
     ]
@@ -132,20 +168,19 @@ The transaction contains a batch of actions.
 First we create the account, then we transaction a few tokens on the new account, then we deploy code on the new account, add a new access key with some given public key, and as a final action initializing the deployed code by calling a method `init` with some arguments.
 
 For this transaction to work `vasya.near` needs to have enough balance to cover all actions at once.
-Every action has some associated transaction fee with it, plus `transfer` and `function_call` needs additional amounts and fees.
+Every action has some associated action fee with it. While `transfer` and `function_call` actions need additional balance for deposits and prepaid fees (for executions and promises).
 
-Once we validated and subtracted the total fees+amounts from `vasya.near` account, this transaction will be transformed into a `Receipt`:
+Once we validated and subtracted the total fees and deposit balances from `vasya.near` account, this transaction is transformed into a `Receipt`:
 
 ```json
 {
-    "sender_id": "vasya.near",
+    "predecessor_id": "vasya.near",
     "receiver_id": "vitalik.vasya.near",
     "receipt_id": ...,
 
     "action": {
-        "originator_id": "vasya.near",
-        "originator_public_key": ...,
-        "refund_account_id": "vasya.near",
+        "signer_id": "vasya.near",
+        "signer_public_key": ...,
         
         "output_data_id": null,
         "output_receiver_id": null,
@@ -158,14 +193,13 @@ Once we validated and subtracted the total fees+amounts from `vasya.near` accoun
 ```
 
 This receipt will be sent to `vitalik.vasya.near`'s shard to be executed.
-In case the `vitalik.vasya.near` account already exists, the execution will fail and some amount will be refunded back to `vasya.near` account with a new `ActionReceipt` with a single transfer action.
-BTW, if the refund fails (e.g. if `vasya.near` deletes his account in between), then the next `refund_account_id` will be `system`, which means the tokens are going to be burned and no receipts are generated.
+In case the `vitalik.vasya.near` account already exists, the execution will fail and some amount of prepaid_fees will be refunded back to `vasya.near`.
 If the account creation receipt succeeds, it wouldn't create a `DataReceipt`, because `output_data_id` is `null`.
-But it will generate a refund receipt for the unused portion of function call `fee`. 
+But it will generate a refund receipt for the unused portion of function call `prepaid_fee`.
 
 #### Deploy code example
 
-Deploying code with initialization is pretty similar to creating account, except you can't deploy code on someone else account. So the transaction's `receiver_id` has to be the same as the `originator_id`.
+Deploying code with initialization is pretty similar to creating account, except you can't deploy code on someone else account. So the transaction's `receiver_id` has to be the same as the `signer_id`.
 
 #### Simple promise with callback
 
@@ -176,14 +210,13 @@ Once the execution completes it will result in the following new receipts:
 The receipt for the new promise towards `b.contract.near`
 ```json
 {
-    "sender_id": "a.contract.near",
+    "predecessor_id": "a.contract.near",
     "receiver_id": "b.contract.near",
     "receipt_id": ...,
 
     "action": {
-        "originator_id": "vasya.near",
-        "originator_public_key": ...,
-        "refund_account_id": "vasya.near",
+        "signer_id": "vasya.near",
+        "signer_public_key": ...,
         
         "output_data_id": "data_123_1",
         "output_receiver_id": "a.contract.near",
@@ -204,7 +237,7 @@ The receipt for the new promise towards `b.contract.near`
 }
 ```
 Interesting details:
-- `originator_id` and `refund_account_id` is still `vasya.near`, because it's the account that initialized the transaction, but not the creator of the promise.
+- `signer_id` is still `vasya.near`, because it's the account that initialized the transaction, but not the creator of the promise.
 - `output_data_id` contains some unique data ID. In this example we used `data_123_1`.
 - `output_receiver_id` indicates where to route the result of the execution.
 
@@ -212,14 +245,13 @@ Interesting details:
 The other receipt is for the callback which will stay in the same shard.
 ```json
 {
-    "sender_id": "a.contract.near",
+    "predecessor_id": "a.contract.near",
     "receiver_id": "a.contract.near",
     "receipt_id": ...,
 
     "action": {
-        "originator_id": "vasya.near",
-        "originator_public_key": ...,
-        "refund_account_id": "vasya.near",
+        "signer_id": "vasya.near",
+        "signer_public_key": ...,
         
         "output_data_id": null,
         "output_receiver_id": null,
@@ -245,7 +277,7 @@ This action receipt will be postponed until the other receipt is routed, execute
 Once the new promise receipt is successfully executed, it will generate the following receipt:
 ```json
 {
-    "sender_id": "b.contract.near",
+    "predecessor_id": "b.contract.near",
     "receiver_id": "a.contract.near",
     "receipt_id": ...,
 
@@ -288,14 +320,13 @@ Part of the receipt (#2) for the promise towards `c.contract.near`:
 The receipt (#3) for the remote callback that has to be executed on `d.contract.near` with data from `b.contract.near` and `c.contract.near`:
 ```json
 {
-    "sender_id": "a.contract.near",
+    "predecessor_id": "a.contract.near",
     "receiver_id": "d.contract.near",
     "receipt_id": ...,
 
     "action": {
-        "originator_id": "vasya.near",
-        "originator_public_key": ...,
-        "refund_account_id": "vasya.near",
+        "signer_id": "vasya.near",
+        "signer_public_key": ...,
         
         "output_data_id": "bla_543",
         "output_receiver_id": "a.contract.near",
@@ -334,7 +365,7 @@ An example for this is if the receipt #3 is delayed for some reason, while the r
 Also if any of the function calls fail, the receipt still going to generate a new `DataReceipt` because it has `output_data_id` and `output_receiver_id`. Here is an example of a DataReceipt for a failed execution:
 ```json
 {
-    "sender_id": "b.contract.near",
+    "predecessor_id": "b.contract.near",
     "receiver_id": "d.contract.near",
     "receipt_id": ...,
 
@@ -357,7 +388,7 @@ Since there are no swap key action, we can just batch 2 actions together. One fo
 
 ### Updated protobufs
 
-signed_transaction.proto
+**signed_transaction.proto**
 ```proto
 message Action {
     message CreateAccount {
@@ -372,17 +403,17 @@ message Action {
     message FunctionCall {
         string method_name = 1;
         bytes args = 2;
-        Uint128 fee = 3;
-        Uint128 amount = 4;
+        Uint128 prepaid_fee = 3;
+        Uint128 deposit = 4;
     }
 
     message Transfer {
-        Uint128 amount = 1;
+        Uint128 deposit = 1;
     }
 
     message Stake {
-        // New total stake amount
-        Uint128 amount = 1;
+        // New total stake
+        Uint128 stake = 1;
         PublicKey public_key = 2;
     }
 
@@ -407,7 +438,7 @@ message Action {
 }
 
 message Transaction {
-    string originator_id = 1;
+    string signer_id = 1;
     PublicKey public_key = 2;
     uint64 nonce = 3;
     string receiver_id = 4;
@@ -422,7 +453,7 @@ message SignedTransaction {
 }
 ```
 
-receipt.proto
+**receipt.proto**
 ```proto
 message DataReceipt {
     bytes data_id = 1;
@@ -431,21 +462,20 @@ message DataReceipt {
  }
 
 message ActionReceipt {
-    string originator_id = 1;
-    PublicKey originator_public_key = 2;
-    string refund_account_id = 3;
+    string signer_id = 1;
+    PublicKey signer_public_key = 2;
 
-    bytes output_data_id = 4;
-    string output_receiver_id = 5;
+    bytes output_data_id = 3;
+    string output_receiver_id = 4;
 
     // Ordered list of data ID to provide as input results.
-    repeated bytes input_data_id = 6;
+    repeated bytes input_data_id = 5;
 
-    repeated Action action = 7;
+    repeated Action action = 6;
 }
 
 message Receipt {
-    string sender_id = 1;
+    string predecessor_id = 1;
     string receiver_id = 2;
     bytes receipt_id = 3;
 
@@ -457,11 +487,148 @@ message Receipt {
 
 ```
 
-TODO: How to generate DataReceipt
+### Validation and Permissions
+
+To validate `SignedTransaction` we need to do the following:
+- verify transaction hash against signature and the given public key
+- verify `signed_id` is a valid account ID
+- verify `receiver_id` is a valid account ID
+- fetch account for the given `signed_id`
+- fetch access key for the given `signed_id` and `public_key`
+- verify access key `nonce`
+- compute total required balance for the transaction, including action fees, deposits and prepaid fees.
+- verify account balance is larger than required balance.
+- verify actions are allowed by the access key permissions, e.g. if the access key only allows function call, then need to verify receiver, method name and allowance.
+
+Before we convert a `Transaction` to a new `ActionReceipt`, we don't need to validate permissions of the actions or their order. It's checked during `ActionReceipt` execution.
+
+`ActionReceipt` doesn't need to be validated before we start executing it.
+The actions in the `ActionReceipt` are executed in given order.
+Each action has to check for the validity before execution.
+
+Since `CreateAccount` gives permissions to perform actions on the new account, like it's your account, we introduce temporary variable `actor_id`.
+At the beginning of the execution `actor_id` is set to the value of `predecessor_id`. 
+
+Validation rules for actions:
+- `CreateAccount`
+  - check the account `receiver_id` doesn't exist
+- `DeployContract`, `Stake`, `AddKey`, `DeleteKey`
+  - check the account `receiver_id` exists
+  - check `actor_id` equals to `receiver_id`
+- `FunctionCall`, `Transfer`
+  - check the account `receiver_id` exists
+
+When `CreateAccount` completes, the `actor_id` changes to `receiver_id`.
+NOTE: When we implement `DeleteAccount` action, its completion will change `actor_id` back to `predecessor_id`.
+
+Once validated, each action might still do some additional checks, e.g. `FunctionCall` might check that the code exists and `method_name` is valid.
+
+### `DataReceipt` generation rules
+
+If `ActionReceipt` doesn't have `output_data_id` and `output_receiver_id`, then `DataReceipt` is not generated.
+Otherwise, `DataReceipt` depends on the last action of `ActionReceipt`. There are 4 different outcomes:
+
+1. Last action is invalid, failed or the execution stopped on some previous action.
+    - `DataReceipt` is generated
+    - `data_id` is set to the value of `output_data_id` from the `ActionReceipt`
+    - `success` is set to `false`
+    - `data` is set to `null`
+2. Last action is valid and finished successfully, but it's not a `FunctionCall`. Or a `FunctionCall`, that returned no value.
+    - `DataReceipt` is generated
+    - `data_id` is set to the value of `output_data_id` from the `ActionReceipt`
+    - `success` is set to `true`
+    - `data` is set to `null`
+3. Last action is `FunctionCall`, and the result of the execution is some value.
+    - `DataReceipt` is generated
+    - `data_id` is set to the value of `output_data_id` from the `ActionReceipt`
+    - `success` is set to `true`
+    - `data` is set to the bytes of the returned value
+4. Last action is `FunctionCall`, and the result of the execution is a promise ID
+    - `DataReceipt` is NOT generated, because we don't have the value for the execution.
+    - Instead we should modify the `ActionReceipt` generated for the returned promise ID.
+    - In this receipt the `output_data_id` should be set to the `output_data_id` of the action receipt that we just finished executed.
+    - `output_receiver_id` is set the same way as `output_data_id` described above.
+
+#### Example for the case #4
+
+A user called contract `a.app`, which called `b.app` and expect a callback to `a.app`. So `a.app` generated 2 receipts:
+Towards `b.app`:
+```
+...
+"receiver_id": "b.app",
+...
+"output_data_id": "data_a",
+"output_receiver_id": "a.app",
+
+"input_data_id": [],
+...
+```
+Towards itself:
+```
+...
+"receiver_id": "a.app",
+...
+"output_data_id": "null",
+"output_receiver_id": "null",
+
+"input_data_id": ["data_a"],
+...
+```
+
+Now let's say `b.app` doesn't actually do the work, but it's just a middleman that charges some fees before redirecting the work to the actual contract `c.app`.
+In this case `b.app` creates a new promise by calling `c.app` and returns it instead of data.
+This triggers the case #4, so it doesn't generate the data receipt yet, instead it creates an action receipt which would look like that:
+```
+...
+"receiver_id": "c.app",
+...
+"output_data_id": "data_a",
+"output_receiver_id": "a.app",
+
+"input_data_id": [],
+...
+```
+Once it completes, it would send a data receipt to `a.app` (unless `c.app` is a middleman as well). 
+
+But let's say `b.app` doesn't want to reveal it's a middleman.
+In this case it would call `c.app`, but instead of returning data directly to `a.app`, `b.app` wants to wrap the result into some nice wrapper.
+Then instead of returning the promise to `c.app`, `b.app` would attach a callback to itself and return the promise ID of that callback. Here is how it would look: 
+Towards `c.app`:
+```
+...
+"receiver_id": "c.app",
+...
+"output_data_id": "data_b",
+"output_receiver_id": "b.app",
+
+"input_data_id": [],
+...
+```
+
+So when the callback receipt first generated, it looks like this:
+```
+...
+"receiver_id": "b.app",
+...
+"output_data_id": "null",
+"output_receiver_id": "null",
+
+"input_data_id": ["data_b"],
+...
+```
+But once, its promise ID is returned with `promise_return`, it is updated to return data towards `a.app`:
+```
+...
+"receiver_id": "b.app",
+...
+"output_data_id": "data_a",
+"output_receiver_id": "a.app",
+
+"input_data_id": ["data_b"],
+...
+```
 
 TODO: Data storage
-
-TODO: Batch verification in a transaction
 
 TODO: Security considerations
 
