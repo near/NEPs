@@ -342,11 +342,10 @@ If contract execution fails `prepaid_gas - used_gas` is refunded back to `signer
 is refunded back to `predecessor_account_id`.
 
 The following spec is the same for all functions:
-```
+```rust
 account_balance(balance_ptr: u64)
 attached_deposit(balance_ptr: u64)
-prepaid_gas(balance_ptr: u64)
-used_gas(balance_ptr: u64)
+
 ```
  -- writes the value into the `u128` variable pointed by `balance_ptr`.
 
@@ -355,6 +354,12 @@ used_gas(balance_ptr: u64)
 
 ###### Current bugs
 * Use a different name;
+
+---
+```rust
+prepaid_gas() -> u64
+used_gas() -> u64
+```
 
 ## Math
 
@@ -421,14 +426,14 @@ promise_create(account_id_len: u64,
                arguments_len: u64,
                arguments_ptr: u64,
                amount_ptr: u64,
-               gas_ptr: u64) -> u64
+               gas: u64) -> u64
 ```
 Creates a promise that will execute a method on account with given arguments and attaches the given amount.
-`amount_ptr` and `gas_ptr` point to slices of bytes representing `u128`.
+`amount_ptr` point to slices of bytes representing `u128`.
 
 ###### Panics
 * If `account_id_len + account_id_ptr` or `method_name_len + method_name_ptr` or `arguments_len + arguments_ptr`
-or `amount_ptr + 8` or `gas_ptr + 8` point outside the memory of the guest or host, with `MemoryAccessViolation`.
+or `amount_ptr + 16` points outside the memory of the guest or host, with `MemoryAccessViolation`.
 
 ###### Returns
 * Index of the new promise that uniquely identifies it within the current execution of the method.
@@ -444,14 +449,14 @@ promise_then(promise_idx: u64,
              arguments_len: u64,
              arguments_ptr: u64,
              amount_ptr: u64,
-             gas_ptr: u64) -> u64            
+             gas: u64) -> u64            
 ```
 Attaches the callback that is executed after promise pointed by `promise_idx` is complete.
 
 ###### Panics
 * If `promise_idx` does not correspond to an existing promise panics with `InvalidPromiseIndex`.
 * If `account_id_len + account_id_ptr` or `method_name_len + method_name_ptr` or `arguments_len + arguments_ptr`
-or `amount_ptr + 8` or `gas_ptr + 8` point outside the memory of the guest or host, with `MemoryAccessViolation`.
+or `amount_ptr + 16` points outside the memory of the guest or host, with `MemoryAccessViolation`.
 
 ###### Returns
 * Index of the new promise that uniquely identifies it within the current execution of the method.
