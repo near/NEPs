@@ -47,7 +47,7 @@ To achieve this, NEP introduces a new message `Action` that represents one of at
 An `Action` can be of the following:
 - `CreateAccount` creates a new account with the `receiver_id` account ID. The action fails if the account already exists. `CreateAccount` also grants permission for all subsequent batched action for the newly created account. For example, permission gto deploy code on the new account. Permission details are described in the reference section below. 
 - `DeployContract` deploys given binary wasm code on the account. Either the `receiver_id` equals to the `signer_id`, or the batch of actions has started with `CreateAccount`, which granted that permission.
-- `FunctionCall` executes a function call on the last deployed contract. The action fails if the account or the code doesn't exist. E.g. if the previous action was `DeployContract`, then the code to execute will be the new deployed contract. `FunctionCall` has `method_name` and `args` to identify method with arguments to call. It also has `fee` and the `amount`. `fee` is the transaction fee that is prepaid for this call to be spent on gas. `deposit` is the attached deposit balance of NEAR tokens that the contract can spend, e.g. 10 tokens to pay for a crypto-corgi.
+- `FunctionCall` executes a function call on the last deployed contract. The action fails if the account or the code doesn't exist. E.g. if the previous action was `DeployContract`, then the code to execute will be the new deployed contract. `FunctionCall` has `method_name` and `args` to identify method with arguments to call. It also has `gas` and the `deposit`. `gas` is a prepaid amount of gas for this call (the price of gas is determined when a signed transaction is converted to a receipt. `deposit` is the attached deposit balance of NEAR tokens that the contract can spend, e.g. 10 tokens to pay for a crypto-corgi.
 - `Transfer` transfers the given `deposit` balance of tokens from the predecessor to the receiver.
 - `Stake` stakes the new total `stake` balance with the given `public_key`. The difference in stake is taken from the account's balance (if the new stake is greater than the current one) at the moment when this action is executed, so it's not prepaid. There is no particular reason to stake on behalf of a newly created account, so we may disallow it.
 - `DeleteKey` deletes an old `AccessKey` identified by the given `public_key` from the account. Fails if the access key with the given public key doesn't exist. All next batched actions will continue to execute, even if the public key that authorized that transaction was removed.
@@ -82,12 +82,12 @@ Data should be stored at the same shard as the receiver's account, even if the r
 
 In case an `ActionReceipt` execution fails the runtime can generate a refund.
 We've removed `refund_account_id` from receipts, because the account IDs for refunds can be determined from the `signer_id` and `predecessor_id` in the `ActionReceipt`.
-All the fees (including unused prepaid fee) are always refunded back to the `signer_id`, because fees are always prepaid by the signer.
-While the deposit balances from `FunctionCall` and `Transfer` are refunded back to the `predecessor_id`, because they were deducted from predecessor's account balance.
-It's also important to note that the predecessor for refund receipts is `system`.
+All unused gas and action fees (also measured in gas) are always refunded back to the `signer_id`, because fees are always prepaid by the signer. The gas is converted into tokens using the `gas_price`.
+The deposit balances from `FunctionCall` and `Transfer` are refunded back to the `predecessor_id`, because they were deducted from predecessor's account balance.
+It's also important to note that the account ID of predecessor for refund receipts is `system`.
 It's done to prevent refund loops, e.g. when the account to receive the refund was deleted before the refund arrives. In this case the refund is burned.
 
-If the function call action with the attached `deposit` fails in the middle of the execution, then 2 refund receipts can be generated, one for the unused fees and one for the deposit.
+If the function call action with the attached `deposit` fails in the middle of the execution, then 2 refund receipts can be generated, one for the unused gas and one for the deposits.
 The runtime should combine them into one receipt if `signer_id` and `predecessor_id` is the same.
 
 Example of a receipt for a refund of `42000` atto-tokens to `vasya.near`:
@@ -100,6 +100,8 @@ Example of a receipt for a refund of `42000` atto-tokens to `vasya.near`:
     "action": {
         "signer_id": "vasya.near",
         "signer_public_key": ...,
+        
+        "gas_price": "3",
         
         "output_data_id": null,
         "output_receiver_id": null,
@@ -154,7 +156,7 @@ To create a new account we can create a new `Transaction`:
             "function_call": {
                 "method_name": "init",
                 "args": ...,
-                "prepaid_fee": "100010101",
+                "gas": 20000,
                 "deposit": "0"
             }
         }
@@ -167,10 +169,10 @@ The receiver is `vitalik.vasya.near`, which is a new account id.
 The transaction contains a batch of actions.
 First we create the account, then we transaction a few tokens on the new account, then we deploy code on the new account, add a new access key with some given public key, and as a final action initializing the deployed code by calling a method `init` with some arguments.
 
-For this transaction to work `vasya.near` needs to have enough balance to cover all actions at once.
-Every action has some associated action fee with it. While `transfer` and `function_call` actions need additional balance for deposits and prepaid fees (for executions and promises).
+For this transaction to work `vasya.near` needs to have enough balance on the account cover gas and deposits for all actions at once.
+Every action has some associated action gas fee with it. While `transfer` and `function_call` actions need additional balance for deposits and gas (for executions and promises).
 
-Once we validated and subtracted the total fees and deposit balances from `vasya.near` account, this transaction is transformed into a `Receipt`:
+Once we validated and subtracted the total amount from `vasya.near` account, this transaction is transformed into a `Receipt`:
 
 ```json
 {
@@ -182,6 +184,8 @@ Once we validated and subtracted the total fees and deposit balances from `vasya
         "signer_id": "vasya.near",
         "signer_public_key": ...,
         
+        "gas_price": "3",
+        
         "output_data_id": null,
         "output_receiver_id": null,
 
@@ -191,11 +195,11 @@ Once we validated and subtracted the total fees and deposit balances from `vasya
     }
 }
 ```
-
+In this example the gas price at the moment when the transaction was processed was 3 per gas.
 This receipt will be sent to `vitalik.vasya.near`'s shard to be executed.
 In case the `vitalik.vasya.near` account already exists, the execution will fail and some amount of prepaid_fees will be refunded back to `vasya.near`.
 If the account creation receipt succeeds, it wouldn't create a `DataReceipt`, because `output_data_id` is `null`.
-But it will generate a refund receipt for the unused portion of function call `prepaid_fee`.
+But it will generate a refund receipt for the unused portion of prepaid function call `gas`.
 
 #### Deploy code example
 
@@ -218,6 +222,8 @@ The receipt for the new promise towards `b.contract.near`
         "signer_id": "vasya.near",
         "signer_public_key": ...,
         
+        "gas_price": "3",
+
         "output_data_id": "data_123_1",
         "output_receiver_id": "a.contract.near",
 
@@ -228,8 +234,8 @@ The receipt for the new promise towards `b.contract.near`
                 "function_call": {
                     "method_name": "sum",
                     "args": ...,
-                    "fee": "123123",
-                    "amount": "0"
+                    "gas": 10000,
+                    "deposit": "0"
                 }
             }
         ]
@@ -253,6 +259,8 @@ The other receipt is for the callback which will stay in the same shard.
         "signer_id": "vasya.near",
         "signer_public_key": ...,
         
+        "gas_price": "3",
+
         "output_data_id": null,
         "output_receiver_id": null,
 
@@ -263,8 +271,8 @@ The other receipt is for the callback which will stay in the same shard.
                 "function_call": {
                     "method_name": "process_sum",
                     "args": ...,
-                    "fee": "123321",
-                    "amount": "0"
+                    "gas": 10000,
+                    "deposit": "0"
                 }
             }
         ]
@@ -328,6 +336,8 @@ The receipt (#3) for the remote callback that has to be executed on `d.contract.
         "signer_id": "vasya.near",
         "signer_public_key": ...,
         
+        "gas_price": "3",
+
         "output_data_id": "bla_543",
         "output_receiver_id": "a.contract.near",
 
@@ -338,8 +348,8 @@ The receipt (#3) for the remote callback that has to be executed on `d.contract.
                 "function_call": {
                     "method_name": "join_data",
                     "args": ...,
-                    "fee": "123321",
-                    "amount": "0"
+                    "gas": 10000,
+                    "deposit": "0"
                 }
             }
         ]
@@ -403,7 +413,7 @@ message Action {
     message FunctionCall {
         string method_name = 1;
         bytes args = 2;
-        Uint128 prepaid_fee = 3;
+        uint64 gas = 3;
         Uint128 deposit = 4;
     }
 
@@ -464,14 +474,18 @@ message DataReceipt {
 message ActionReceipt {
     string signer_id = 1;
     PublicKey signer_public_key = 2;
+    
+    // The price of gas is determined when the original SignedTransaction is
+    // converted into the Receipt. It's used for refunds. 
+    Uint128 gas_price = 3;
 
-    bytes output_data_id = 3;
-    string output_receiver_id = 4;
+    bytes output_data_id = 4;
+    string output_receiver_id = 5;
 
     // Ordered list of data ID to provide as input results.
-    repeated bytes input_data_id = 5;
+    repeated bytes input_data_id = 6;
 
-    repeated Action action = 6;
+    repeated Action action = 7;
 }
 
 message Receipt {
@@ -496,7 +510,8 @@ To validate `SignedTransaction` we need to do the following:
 - fetch account for the given `signed_id`
 - fetch access key for the given `signed_id` and `public_key`
 - verify access key `nonce`
-- compute total required balance for the transaction, including action fees, deposits and prepaid fees.
+- get the current price of gas
+- compute total required balance for the transaction, including action fees (in gas), deposits and prepaid gas.
 - verify account balance is larger than required balance.
 - verify actions are allowed by the access key permissions, e.g. if the access key only allows function call, then need to verify receiver, method name and allowance.
 
@@ -628,48 +643,33 @@ But once, its promise ID is returned with `promise_return`, it is updated to ret
 ...
 ```
 
-TODO: Data storage
+### Data storage
 
-TODO: Security considerations
+We should maintain the following persistent maps per account (`receiver_id`)
+- Received data: `data_id -> (success, data)`
+- Postponed receipts: `receipt_id -> Receipt` 
+- Pending input data: `data_id -> receipt_id`
 
-# THE REST BELOW IS TODO
+When `ActionReceipt` is received, the runtime iterates through the list of `input_data_id`.
+If `input_data_id` is not present in the received data map, then a pair `(input_data_id, receipt_id)` is added to pending input data map and the receipt marked as postponed.
+At the end of the iteration if the receipt is marked as postponed, then it's added to map of postponed receipts keyed by `receipt_id`.
+If all `input_data_id`s are available in the received data, then `ActionReceipt` is executed.
 
-# Drawbacks
-[drawbacks]: #drawbacks
+When `DataReceipt` is received, a pair `(data_id, (success, data))` is added to the received data map.
+Then the runtime checks if `data_id` is present in the pending input data.
+If it's present, then `data_id` is removed from the pending input data and the corresponding `ActionReceipt` is checked again (see above).
 
-Why should we *not* do this?
+NOTE: we can optimize by not storing `data_id` in the received data map when the pending input data is present and it was the final input data item in the receipt.
 
-# Rationale and alternatives
-[rationale-and-alternatives]: #rationale-and-alternatives
+When `ActionReceipt` is executed, the runtime deletes all `input_data_id` from the received data map.
+The `receipt_id` is deleted from the postponed receipts map (if present).  
 
-- Why is this design the best in the space of possible designs?
-- What other designs have been considered and what is the rationale for not choosing them?
-- What is the impact of not doing this?
+### TODO Receipt execution
 
-# Unresolved questions
-[unresolved-questions]: #unresolved-questions
-
-- What parts of the design do you expect to resolve through the NEP process before this gets merged?
-- What parts of the design do you expect to resolve through the implementation of this feature before stabilization?
-- What related issues do you consider out of scope for this NEP that could be addressed in the future independently of the solution that comes out of this NEP?
+- input data is available to all function calls in the batched actions
+- TODODO
 
 # Future possibilities
 [future-possibilities]: #future-possibilities
 
-Think about what the natural extension and evolution of your proposal would
-be and how it would affect the project as a whole in a holistic
-way. Try to use this section as a tool to more fully consider all possible
-interactions with the project in your proposal.
-Also consider how the this all fits into the roadmap for the project
-and of the relevant sub-team.
-
-This is also a good place to "dump ideas", if they are out of scope for the
-NEP you are writing but otherwise related.
-
-If you have tried and cannot think of any future possibilities,
-you may simply state that you cannot think of anything.
-
-Note that having something written down in the future-possibilities section
-is not a reason to accept the current or a future NEP. Such notes should be
-in the section on motivation or rationale in this or subsequent NEPs.
-The section merely provides additional information.
+- We can add `or` based data selector, so data storage can be affected. 
