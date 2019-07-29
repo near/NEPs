@@ -94,12 +94,16 @@ not follow the specification are considered to be bugs that need to be fixed.
 
 ---
 ```rust
-storage_write(key_len: u64, key_ptr: u64, value_len: u64, value_ptr: u64, register_id: u64)
+storage_write(key_len: u64, key_ptr: u64, value_len: u64, value_ptr: u64, register_id: u64) -> u64
 ```
 Writes key-value into storage.
 ###### Normal operation
-* If key is not in use it inserts the key-value pair;
+* If key is not in use it inserts the key-value pair and does not modify the register;
 * If key is in use it inserts the key-value and copies the old value into the `register_id`.
+
+###### Returns
+* If key was not used returns `0`;
+* If key was used returns `1`.
 
 ###### Panics
 * If `key_len + key_ptr` or `value_len + value_ptr` exceeds the memory container or points to an unused register it panics
@@ -115,16 +119,16 @@ create this error and terminate the execution of VM. For mocks of the host that 
 
 ---
 ```rust
-storage_read(key_len: u64, key_ptr: u64, register_id: u64)
+storage_read(key_len: u64, key_ptr: u64, register_id: u64) -> u64
 ``` 
 Reads the value stored under the given key.
 ###### Normal operation
-* If key is used copies the content of the value into the `register_id`, even if the content is zero bytes.
-  The respective register is then considered to be used, i.e. `register_len(register_id)` will not return `u64::MAX`.
-* If key is not present then `register_id` is emptied, i.e. `register_len(register_id)` returns `u64::MAX` after this
-  operation.
+* If key is used copies the content of the value into the `register_id`, even if the content is zero bytes;
+* If key is not present then does not modify the register.
 
-This allows to disambiguate two cases: when key-value is not present vs when key-value is present but value is zero bytes.
+###### Returns
+* If key was not present returns `0`;
+* If key was present returns `1`.
 
 ###### Panics
 * If `key_len + key_ptr` exceeds the memory container or points to an unused register it panics with `MemoryAccessViolation`;
@@ -135,15 +139,17 @@ This allows to disambiguate two cases: when key-value is not present vs when key
 
 ---
 ```rust
-storage_remove(key_len: u64, key_ptr: u64, register_id: u64)
+storage_remove(key_len: u64, key_ptr: u64, register_id: u64) -> u64
 ```
 Removes the value stored under the given key.
 ###### Normal operation
 Very similar to `storage_read`:
 * If key is used, removes the key-value from the trie and copies the content of the value into the `register_id`, even if the content is zero bytes.
-  The respective register is then considered to be used, i.e. `register_len(register_id)` will not return `u64::MAX`.
-* If key is not present then `register_id` is emptied, i.e. `register_len(register_id)` returns `u64::MAX` after this
-  operation.
+* If key is not present then does not modify the register.
+
+###### Returns
+* If key was not present returns `0`;
+* If key was present returns `1`.
 
 ###### Panics
 * If `key_len + key_ptr` exceeds the memory container or points to an unused register it panics with `MemoryAccessViolation`;
@@ -200,7 +206,7 @@ storage_iter_next(iterator_id: u64, key_register_id: u64, value_register_id: u64
 ```
 Advances iterator and saves the next key and value in the register.
 ###### Normal operation
-* If iterator is not empty (after calling next it points to a key-value), copies the key into `key_register_id` and value into `value_register_id` and `1`;
+* If iterator is not empty (after calling next it points to a key-value), copies the key into `key_register_id` and value into `value_register_id` and returns `1`;
 * If iterator is empty returns `0`.
 
 This allows us to iterate over the keys that have zero bytes stored in values.
@@ -303,7 +309,11 @@ Reads input to the contract call into the register. Input is expected to be in J
 
 ###### Normal operation
 * If input is provided saves the bytes (potentially zero) of input into register.
-* If input is not provided makes the register "not used", i.e. `register_len` now returns `u64::MAX`.
+* If input is not provided does not modify the register.
+
+###### Returns
+* If input was not provided returns `0`;
+* If input was provided returns `1`; If input is zero bytes returns `1`, too.
 
 ###### Panics
 * If the registers exceed the memory limit panics with `MemoryAccessViolation`;
