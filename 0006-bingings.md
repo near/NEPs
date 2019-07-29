@@ -542,7 +542,7 @@ Terminates the execution of the program with panic `GuestPanic`.
 
 ---
 ```rust
-log_utf8(ptr: u64, len: u64)
+log_utf8(len: u64, ptr: u64)
 ```
 Logs the UTF-8 encoded string. See https://stackoverflow.com/a/5923961 that explains
 that null termination is not defined through encoding.
@@ -555,7 +555,7 @@ If `len == u64::MAX` then treats the string as null-terminated with character `'
 
 ---
 ```rust
-log_utf16(ptr: u64, len: u64)
+log_utf16(len: u64, ptr: u64)
 ```
 Logs the UTF-16 encoded string.
 
