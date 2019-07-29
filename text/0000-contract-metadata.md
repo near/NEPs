@@ -1,5 +1,5 @@
 - Proposal Name: `contract_metadata`
-- Start Date: (fill me in with today's date, YYYY-MM-DD)
+- Start Date: 2019-06-25
 - NEP PR: [nearprotocol/neps#0003](https://github.com/nearprotocol/NEPs/pull/3)
 
 # Summary
@@ -7,32 +7,46 @@
 
 This NEP introduces contract metadata, which summarizes the content of a given contract in json format.
 Contract metadata allows developers to easily list the methods in a contract and potentially display them to users to
-provide transparency.
+provide transparency. 
+It also provides the ability to generate bindings in different languages for the contract, thanks to the class information
+also contained in the metadata.
 
 # Motivation
 [motivation]: #motivation
 
-Currently there is no direct way for a developer to programmatically list the methods of a contract that is deployed on chain
-because the contract code stored on chain is the compiled wasm code, where the methods name and parameters are already mangled.
+Currently there is no convenient way for a developer to programmatically list the methods of a contract that is deployed on chain
+because the contract code stored on chain is the compiled wasm code, where the parameters and type information are already mangled (even though
+method name is not, it is still cumbersome to extract them from wasm binary).
 As a result, if developers want to display the methods of a contract to an user of the app to provide transparency,
 especially in the case of financial apps, they have no choice but to hardcode them in the front end, which is suboptimal in many ways.
-Furthermore, if developers want to get the list of methods in some contract for some downstream task like data analysis,
-they have no way of doing so. Contract metadata aims to solve the aforementioned problems by providing a convenient way 
+Furthermore, if developers want to get the list of methods in some contract for some downstream task like data analysis, or interacting
+with other contracts, they have no way of doing so.
+Contract metadata aims to solve the aforementioned problems by providing a convenient way 
 for developers to list the methods of contracts.
 
 # Guide-level explanation
 [guide-level-explanation]: #guide-level-explanation
 
-For developers, there will be two main changes:
-- Instead of annotating view and change methods in the `initContract` function in `main.js`,
-they will instead annotate the methods of a contract by decorators.
-More specifically, every method is by default a change method, unless annotated by `@view_method`.
-- Every contract will have a `metadata` method that returns a json that serializes the contract methods in an array.
-For each method, the json serialization is of the form `{"name": <name>, "parameters": [{"name": <param_name1>, "type": <param_type1>, ..}, .. ], "returnType": <return_type>}`.
+With contract metadata, developers, instead of annotating view and change methods in the `initContract` function in `main.js`,
+will instead annotate the methods of a contract by decorators. We propose that view functions be annotated with the `@view` decorator
+and by default functions can change the state. 
+Because functions might take non-primitive types and we want metadata to be easily usable by statically typed langauges, we
+also provide, in addition to function annotations, class annotations, which mainly describe the name of fields in a class and their types.
+Finally, since developers might want to have some contract-level description that provides an overview of what the contract does,
+in metadata we also have contract-level annotation.
+
+More specifically, every contract will have a `metadata` method that returns a json that serializes the aforementioned information.
+The overall format looks like `{"methods": [<method1_info>, ..], "classes": [<class1_info>, ..], "contract": <contract annotation>}`.
+For each method, the json serialization is of the form `{"name": <name>, "parameters": [{"name": <param_name1>, "type": <param_type1>, ..}, .. ], "returnType": <return_type>}`
+where the `returnType` key will only be present for functions that have non-void return types.
+For each class, the json serialization is of the form `{"name": <name>, "fields": [{"name": <field_name>", "type": <field_type>"}, ..]}`.
+
+## Simple Example
 
 As an concrete example, suppose we have a contract that maintains a counter on chain:
 
 ```typescript
+// A contract that maintains a counter with the ability to increase and decrease by the given amount
 import { context, storage, near } from "./near";
 
 export function incrementCounterBy(amount: i32 = 1): void {
@@ -47,7 +61,7 @@ export function decrementCounterBy(amount: i32 = 1): void {
   near.log("Counter is now: " + newCounter.toString());
 }
 
-@view_method
+@view
 export function getCounter(): i32 {
   return storage.get<i32>("counter");
 }
@@ -56,32 +70,119 @@ export function getCounter(): i32 {
 This contract has two change methods, `incrementCounter` and `decrementCounter`, as well as one view method, `getCounter`.
 In this case, the metadata we want looks like 
 ```json
-[
-  {
-    "name": "getCounter",
-    "parameters": [{"name": "amount", "type": "i32"}],
-    "returnType": "i32",
-    "methodType": "view"
-  },
-  {
-    "name": "incrementCounterBy",
-    "parameters": [{"name": "amount", "type": "i32"}],
-    "returnType": "i32",
-    "methodType": "change"
-  },
-  {
-    "name": "decrementCounterBy",
-    "parameters": [{"name": "amount", "type": "i32"}],
-    "returnType": "void",
-    "methodType": "change"
-  }
-]
+{
+  "methods": [
+               {
+                 "name": "getCounter",
+                 "parameters": [{"name": "amount", "type": "i32"}],
+                 "returnType": "i32",
+                 "methodType": "view"
+               },
+               {
+                 "name": "incrementCounterBy",
+                 "parameters": [{"name": "amount", "type": "i32"}],
+                 "methodType": "change"
+               },
+               {
+                 "name": "decrementCounterBy",
+                 "parameters": [{"name": "amount", "type": "i32"}],
+                 "methodType": "change"
+               }
+             ],
+  "classes": [],
+  "contract": "A contract that maintains a counter with the ability to increase and decrease by the given amount"
+}
+
 ```
 and the generated `metadata` method looks like:
 ```typescript
 export function metadata(): string {
-    return '[{"name": "getCounter", "parameters": [{"name": "amount", "type": "i32"}], "returnType": "i32", "methodType": "view"}, {"name": "incrementCounterBy", "parameters": [{"name": "amount", "type": "i32"}], "returnType": "i32", "methodType": "change"}, {"name": "decrementCounterBy", "parameters": [{"name": "amount", "type": "i32"}], "returnType": "void", "returnType": "void"}]'
+    return '{"methods": [{"name": "getCounter", "parameters": [{"name": "amount", "type": "i32"}], "returnType": "i32", "methodType": "view"}, {"name": "incrementCounterBy", "parameters": [{"name": "amount", "type": "i32"}], "methodType": "change"}, {"name": "decrementCounterBy", "parameters": [{"name": "amount", "type": "i32"}], "returnType": "void"}], "classes": [], "contract": "A contract that maintains a counter with the ability to increase and decrease by the given amount"'
 }
+```
+
+## Real-world Example
+Now let's consider a real-world example that involves more features such as class and arrays. 
+Suppose one wants to build a todo list app on blockchain, which is modeled as
+```typescript
+export class Todo {
+  id: string;
+  title: string;
+  completed: bool;
+}
+```
+
+and the contract is as follows
+```typescript
+// a contract that implements a todo list on blockchain
+import { context, storage, near, collections } from "./near";
+
+import { Todo } from "./model.near";
+
+// Map from string key ID to a Todo
+// collections.map is a persistent collection. Any changes to it will
+// be automatically saved in the storage.
+// The parameter to the constructor needs to be unique across a single contract.
+// It will be used as a prefix to all keys required to store data in the storage.
+let todos = collections.map<string, Todo>("todos");
+
+export function setTodo(id: string, todo: Todo): void {
+  near.log("setTodo " + id);
+  todos.set(id, todo);
+}
+
+@view
+export function getTodo(id: string): Todo {
+  return todos.get(id);
+}
+
+@view
+export function getAllTodos(): Array<Todo> {
+  // Map currently doesn't support getting all keys, so we use storage prefix.
+  let allKeys = storage.keys("todos::");
+  near.log("allKeys: " + allKeys.join(", "));
+
+  let loaded = new Array<Todo>(allKeys.length);
+  for (let i = 0; i < allKeys.length; i++) {
+    loaded[i] = Todo.decode(storage.getBytes(allKeys[i]));
+  }
+  return loaded;
+}
+```
+
+For this contract, `setTodo` is a change method while `getTodo` and `getAllTodos` are view methods.
+In this case, the metadata we want looks like 
+```json
+{
+  "methods": [
+               {
+                 "name": "setTodo",
+                 "parameters": [{"name": "id", "type": "string"}, {"name": "todo", "type": "Todo"}],
+                 "returnType": "void",
+                 "methodType": "change"
+               },
+               {
+                 "name": "getTodo",
+                 "parameters": [{"name": "id", "type": "string"}],
+                 "returnType": "Todo",
+                 "methodType": "view"
+               },
+               {
+                 "name": "getAllTodos",
+                 "parameters": [],
+                 "returnType": "Array<Todo>",
+                 "methodType": "view"
+               }
+             ],
+   "classes": [
+                {
+                  "name": "Todo",
+                  "fields": [{"name": "id", "type": "string"}, {"name":  "title", "type": "string"}, {"name": "completed", "type": "bool"}]
+                }
+              ],
+   "contract": "a contract that implements a todo list on blockchain"
+}
+
 ```
 
 # Reference-level explanation
