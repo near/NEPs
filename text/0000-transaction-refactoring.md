@@ -398,8 +398,27 @@ Since there are no swap key action, we can just batch 2 actions together. One fo
 
 ### Updated protobufs
 
+**public_key.proto**
+```proto
+syntax = "proto3";
+
+message PublicKey {
+    enum KeyType {
+        ED25519 = 0;
+    }
+    KeyType key_type = 1;
+    bytes data = 2;
+}
+```
+
 **signed_transaction.proto**
 ```proto
+syntax = "proto3";
+
+import "access_key.proto";
+import "public_key.proto";
+import "uint128.proto";
+
 message Action {
     message CreateAccount {
         // empty
@@ -427,13 +446,18 @@ message Action {
         PublicKey public_key = 2;
     }
 
+    message AddKey {
+        PublicKey public_key = 1;
+        AccessKey access_key = 2;
+    }
+
     message DeleteKey {
         PublicKey public_key = 1;
     }
 
-    message AddKey {
-        PublicKey public_key = 1;
-        AccessKey access_key = 2;
+    message DeleteAccount {
+        // The account ID which would receive the remaining funds.
+        string beneficiary_id = 1;
     }
 
     oneof action {
@@ -444,6 +468,7 @@ message Action {
         Stake stake = 5;
         AddKey add_key = 6;
         DeleteKey delete_key = 7;
+        DeleteAccount delete_account = 8;
     }
 }
 
@@ -453,7 +478,7 @@ message Transaction {
     uint64 nonce = 3;
     string receiver_id = 4;
 
-    repeated Action action = 5;
+    repeated Action actions = 5;
 }
 
 message SignedTransaction {
@@ -461,31 +486,44 @@ message SignedTransaction {
 
     Transaction transaction = 2;
 }
+
 ```
 
 **receipt.proto**
 ```proto
+syntax = "proto3";
+
+import "public_key.proto";
+import "signed_transaction.proto";
+import "uint128.proto";
+import "wrappers.proto";
+
 message DataReceipt {
     bytes data_id = 1;
-    bool success = 2;
-    bytes data = 3;
- }
+    google.protobuf.BytesValue data = 2;
+}
 
 message ActionReceipt {
+    message DataReceiver {
+        bytes data_id = 1;
+        string receiver_id = 2;
+    }
+
     string signer_id = 1;
     PublicKey signer_public_key = 2;
-    
+
     // The price of gas is determined when the original SignedTransaction is
-    // converted into the Receipt. It's used for refunds. 
+    // converted into the Receipt. It's used for refunds.
     Uint128 gas_price = 3;
 
-    bytes output_data_id = 4;
-    string output_receiver_id = 5;
+    // List of data receivers where to route the output data
+    // (e.g. result of execution)
+    repeated DataReceiver output_data_receivers = 4;
 
     // Ordered list of data ID to provide as input results.
-    repeated bytes input_data_id = 6;
+    repeated bytes input_data_ids = 5;
 
-    repeated Action action = 7;
+    repeated Action actions = 6;
 }
 
 message Receipt {
