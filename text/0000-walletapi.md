@@ -42,10 +42,10 @@ Not supporting multiple wallets would make the system a lot simpler, but is very
 
 The url scheme that is live right now is the following, supporting a login operation:
 {configurablewalleturl}/login/?public_key={public_key}&contract_id={contract_id}&success_url={success_url}&failure_url={failure_url}&title={title}
--contract_id param is the id of the contract
--success_url param is the url that the wallet will redirect to on success
--failure_url param is the url that the wallet will redirect to on failure
--title param is going to be deprecated soon. It is the human readable title of the app that is making the request (may need to be localized). This data should be available from contract metadata soon (please see contract metadata NEP)
+- contract_id param is the id of the contract
+- success_url param is the url that the wallet will redirect to on success
+- failure_url param is the url that the wallet will redirect to on failure
+- title param is going to be deprecated soon. It is the human readable title of the app that is making the request (may need to be localized). This data should be available from contract metadata soon (please see contract metadata NEP)
 
 Wallet creates and signs the addKey transaction directly. It appends the following parameters to the success_url
 ?account_id={account_id}&public_key={public_key}
