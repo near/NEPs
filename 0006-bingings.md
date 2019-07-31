@@ -215,14 +215,8 @@ This allows us to iterate over the keys that have zero bytes stored in values.
 * If `key_register_id == value_register_id` panics with `MemoryAccessViolation`;
 * If the registers exceed the memory limit panics with `MemoryAccessViolation`;
 * If `iterator_id` does not correspond to an existing iterator panics with  `InvalidIteratorId`
-* If between the creation of the iterator and calling `storage_iter_next` the range over which it iterates was modified panics with `IteratorWasInvalidated`.
-Specifically, if `storage_write` or `storage_remove` was invoked on the key `key` such that:
-  * in case of `storage_iter_prefix`. `key` has the given prefix and:
-    * Iterator was not called `next` yet.
-    * `next` was already called on the iterator and it is currently pointing at the key `curr` such that `curr <= key`.
-  * in case of `storage_iter_range`. `start<=key<end` and:
-    * Iterator was not called `next` yet.
-    * `next` was already called on the iterator and it is currently pointing at the key `curr` such that `curr<=key<end`.
+* If between the creation of the iterator and calling `storage_iter_next` any modification to storage was done through
+  `storage_write` or `storage_remove` the iterator is invalidated and the error message is `IteratorWasInvalidated`.
 
 ###### Current bugs
 * Not implemented, currently we have `storage_iter_next` and `data_read` + `DATA_TYPE_STORAGE_ITER` that together fulfill
@@ -346,7 +340,7 @@ During the contract execution, the contract has access to the following `u128` v
 * `attached_deposit` -- the balance that was attached to the call that will be immediately deposited before
   the contract execution starts;
 * `prepaid_gas` -- the tokens attached to the call that can be used to pay for the gas;
-* `used_gas` -- the gas that was already burnt during the contract execution (cannot exceed `prepaid_gas`);
+* `used_gas` -- the gas that was already burnt during the contract execution and attached to promises (cannot exceed `prepaid_gas`);
 
 If contract execution fails `prepaid_gas - used_gas` is refunded back to `signer_account_id` and `attached_balance`
 is refunded back to `predecessor_account_id`.
@@ -567,7 +561,7 @@ If `len == u64::MAX` then treats the string as null-terminated with character `'
 ```rust
 log_utf16(len: u64, ptr: u64)
 ```
-Logs the UTF-16 encoded string.
+Logs the UTF-16 encoded string. `len` is the number of bytes in the string.
 
 ###### Normal behavior
 If `len == u64::MAX` then treats the string as null-terminated with two-byte sequence of `0x00 0x00`.
