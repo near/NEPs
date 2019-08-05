@@ -12,10 +12,7 @@ The API needs to support multiple transactions, including but not limited to:
 - sending tokens to other accounts
 - composite transactions that contain several sub-transactions of potentially different types
 
-In order to support this, we want a generic API for signing arbitrary transactions in the wallet. This will be an HTTP GET request on the following url
-{configurablewalleturl}/?transaction={transactiondata}
-configurablewalleturl is a url prefix that can be specified when creating a NEAR connection using nearlib.
-transactiondata transaction object serialized as a url encoded json string, which contains all the data that's necessary to actually process this transaction.
+In order to support this, we want a generic API for signing arbitrary transactions in the wallet.
 
 # Motivation
 [motivation]: #motivation
@@ -24,14 +21,15 @@ We want to support multiple wallet implementations, including those by third par
 Any specific app may prefer to work with a specific wallet that best suits their use case (security requirements, usability, theme, UX, etc), so there must be a way to configure the app easily to use a particular wallet implementation. We also want a flexible system that allows adding new types of
 transactions easily.
 
-# Guide-level explanation
-[guide-level-explanation]: #guide-level-explanation
-
-TBD
 # Reference-level explanation
 [reference-level-explanation]: #reference-level-explanation
 
-TBD
+## Sign transaction with wallet.
+
+App requests wallet to sign transaction by open following URL in browser:
+{configurablewalleturl}/?transaction={transactiondata}
+configurablewalleturl is a url prefix that can be specified when creating a NEAR connection using nearlib.
+transactiondata transaction object serialized as a url encoded json string, which contains all the data that's necessary to actually process this transaction.
 
 # Drawbacks
 [drawbacks]: #drawbacks
