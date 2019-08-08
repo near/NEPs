@@ -368,18 +368,12 @@ used_gas() -> u64
 ## Math
 
 ```rust
-random_buf(len: u64, register_id: u64)
+random_seed(register_id: u64)
 ```
-Writes random bytes in the given register.
+Returns random seed that can be used for pseudo-random number generation in deterministic way.
 
 ###### Panics
 * If the size of the registers exceed the set limit `MemoryAccessViolation`;
-
----
-```rust
-random_u64() -> u64
-``` 
-Returns a random `u64` variable.
 
 ---
 ```rust
