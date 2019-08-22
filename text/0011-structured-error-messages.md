@@ -24,7 +24,7 @@ Currently it requires hardcoding regexps that depend on error mesages (which oft
 All error messages from nearcore should be structured like:
 
 ```
-error.message.code: human readable error message`
+error.message.code: human readable error message
 ```
 
 `error.message.code` is a unique identifier of given error type. Generally can be any valid string without `:` character.
