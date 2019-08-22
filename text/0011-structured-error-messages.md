@@ -1,4 +1,4 @@
-- NEP PR: [nearprotocol/neps#0000](https://github.com/nearprotocol/neps/pull/0000)
+- NEP PR: [nearprotocol/neps#11](https://github.com/nearprotocol/neps/pull/11)
 
 # Summary
 [summary]: #summary
