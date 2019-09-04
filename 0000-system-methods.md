@@ -8,7 +8,7 @@
 
 Adds new ability for contracts to perform some system functions:
 - create new accounts (with possible code deploy and initialization)
-- deploy new code (upgrades)
+- deploy new code (or redeploying code for upgrades)
 - batched function calls
 - transfer money
 - stake
