@@ -23,6 +23,7 @@ Contracts should have the ability to create new accounts, transfer money without
 stake. It will enable full functionality of contract-based accounts.
 
 # Reference
+[reference]: #reference
 
 We introduce additional promise APIs to support batched actions.
 
@@ -35,7 +36,14 @@ of this promise. So the transfer will only deposit tokens if the function call s
 is how we create accounts now using batched actions. To create a new account, we create a transaction with
 the following actions: `create_account`, `transfer`, `add_key`. It creates a new account, deposit some funds on it and the adds a new key.
 
+For more examples see NEP#8: https://github.com/nearprotocol/NEPs/pull/8/files?short_path=15b6752#diff-15b6752ec7d78e7b85b8c7de4a19cbd4
+
+**NOTE: The existing promise API is a special case of the batched promise API.**
+- Calling `promise_batch_create` and then `promise_batch_action_function_call` will produce the same promise as calling `promise_create` directly.
+- Calling `promise_batch_then` and then `promise_batch_action_function_call` will produce the same promise as calling `promise_then` directly.
+
 ## Promises API
+[promises-api]: #promises-api
 
 ```rust
 promise_batch_create(account_id_len: u64, account_id_ptr: u64) -> u64
@@ -101,7 +109,7 @@ promise_batch_action_function_call(promise_idx: u64,
 Appends `FunctionCall` action to the batch of actions for the given promise pointed by `promise_idx`.
 Details for the action: https://github.com/nearprotocol/NEPs/pull/8/files#diff-15b6752ec7d78e7b85b8c7de4a19cbd4R50
 
-*NOTE: Calling `promise_batch_create` and then `promise_batch_append_function_call` will produce the same promise as calling `promise_create` directly.*
+*NOTE: Calling `promise_batch_create` and then `promise_batch_action_function_call` will produce the same promise as calling `promise_create` directly.*
 
 ###### Panics
 * If `promise_idx` does not correspond to an existing promise panics with `InvalidPromiseIndex`.
