@@ -20,40 +20,96 @@ This document should serve as reference for all the clients to implement network
 # Guide-level explanation
 [guide-level-explanation]: #guide-level-explanation
 
-## System description
+## Routing Table
 
-Our system is designed so that each node will have several active connections to other nodes and will maintain a "partial" view of the network to be able to route messages.
-Each node has ID that is ED25519 public key derived from secret key known only to this node and an address of the form (IP,Port).
-Additionally, active participants, such as block producers and other nodes that want to link their account information to the peer information have a string `account_id` and appropriate `public_key` which is associated with this account. Accounts maintained by blockchain itself, and can not be forged without breaking the blockchain itself.
+### API
+Peer Manager should be the only interacting directly with Routing Table API.
 
-### Goals
+- **Find route to PeerID** Find next peer in the path to some PeerID. This PeerID should be known to us. ****
+- **Find route to AccountID** This will only require to store a HashMap
+- **Add PeerID** New node known to us.
+- **Add AccountID** If PeerID associated with this account was not known, it is added.
+- **Add Connection** New connection between two PeerID already known to us.
+- **Remove Connection** Remove connection between two PeerID
+- **Register Neighbor** Add new active neighbor
+- **Unregister Neighbor** Remove active neighbor
+- **Sample Peers** Return sample of peers
 
-- Efficiency in network distribution.
-  - Shard participants should connect among themselves.
-  - Block producer should connect among themselves
-- Low network overhead.
-  - Any extra complexity introduced to sync information should not incur in a severe network overhead.
-- Sybil / Eclipse attack resistant
+**Note:** We should not spend extra CPU on PeerIDs that are not longer in the same connected component as us.
 
-## Storing network information
+### Routing back
 
-A client stores information about other nodes in three data structures. `known_peers` a long-term database, which is stored on disk and persists between reboots. And two short-term databases `active_peers` and `routing table` that start empty.
+- **Store Previous Link** Request Messages are those that expect a response, and a route back is stored. This will expire after some fixed timeout of after a response is delivered. We store hash of the message to identify sender.
+- **Get Previous Link** Find previous Link for a message. We can try to route the message if we don’t have a direct connection to this PeerId any longer.
 
-`known_peers`. The `known_peers` is stored on disk and contains information about each node that client has ever connected or recevied gossip about. There is no limit to the size of the `known_peers`.
-Each entry of `known_peers` is tuple of `<node ID, IP address, TCP port, last_seen, status>`. Where `last_seen` is a timestamp when we received last message from this peer. If this was received from gossip, `last_seen` is 0. Status contains if this peer is currently unknown, connected, disconnected or banned.
+### Broadcast routing API
 
-`active_peers`. The `active_peers` maintains relevant information about currently connected peers. Such as their `<node ID, IP address, TCP port, last_seen, socket>`.
+- [https://www.gsd.inesc-id.pt/~ler/reports/srds07.pdf](https://www.gsd.inesc-id.pt/~ler/reports/srds07.pdf)
 
-`routing_table`. The `routing_table` contains all connections known from the network among connected peers. It will be a graph that will allow to:
+**Multiple source broadcast routing**
+It solves the problem of multiple nodes broadcasting the same messages. When there are multiple sources for the broadcast message it can affect MST topology. To address this, sources will pack their message with special content that allow for every node in the network determine, if the message:
 
-- Add new node.
-- Add new connection between two nodes.
-- Remove connection between two nodes.
-- From node `s` (this node is fixed and represents ourself in the network) all direct connection which belong to a shortest path to node `u`.
+- Was not received before.
+- Was received before from the same source.
+- Was received before from different source.
 
-All routing in the network happens between
+This is relevant since packages received from the same source provide MST edge removal.
 
-## Bootstrapping
+### Details
+
+- Network information will be stored as a graph. Nodes are Peers and edge are active connections between Nodes.
+- Nodes can be added to the network.
+- Edges can be added and removed to the network.
+- For every known peer it keeps which are the active connections that belong to the shortest route to them.
+- This is recalculated periodically based on last change, and how far from us is the affected node.
+
+Round Robin will be used to pick which peer to send a message in case a routed message is needed.
+
+**Recalculation Policy**
+Recalculation is scheduled when needed.
+
+- If an edge is added between nodes two with absolute distance difference less than 1 no recalculation is needed.
+- If an edge is removed between two nodes and distance to them
+
+Recalculation is scheduled based on the distance of the closest affected peer. The closest the node is, the earlier recalculation is scheduled. We should have `MIN_RECALCULATION_IDLE_TIME` to avoid spending a lot of CPU keeping the shortest path to all nodes synced.
+
+## Peer Manager
+
+### API
+
+- **Broadcast Message** (This will use broadcast idea from )
+- **Send Message to PeerID** (Message will be routed to known PeerID) This will use Find route to peer id from routing table. Messages can travel with a TTL, so they get dropped after lurking around the network. This also avoid loops when the view of the graph is not the same to all nodes.
+- **Send Direct Message PeerID** In this case PeerID must be an active peer.
+- **Ban PeerID**
+
+### Storing information
+
+- Active Peers
+- Banned peers
+- Peer information (This is a long term database where we store information of all peers we have ever met).
+
+## Sync Service
+
+This service will handle keeping the network view for every peer up to date using Broadcast mechanism. This will manage MST. When new edge is created this information is propagated through the network.
+
+Also there is a hard sync mechanism for two nodes, that is used when new connection between two nodes is established.  Periodically nodes will run this hard sync to become up to date. The period to hard sync is always large enough so that changes are allowed to get propagated through the spanning tree.
+If view of the network differ by a large margin nodes will send their full view of the graph. Useful when new nodes join for the first time.
+Otherwise they will use bloom filters to find differences.
+
+**AddEdge/RemoveEdge** messages should contains a timestamp/nonce to avoid situations when removal gets to a node before addition (though in practice this should be extremely rare). When adding a new edge, both nodes after having signature from the other peer start broadcasting this new edge. Use multiple source broadcast mechanism.
+
+## Connecting Service
+
+This service will handle active connections.
+
+- It will determine if an incoming connection should be established. When some node is trying to establish a new connection if peers slots is full we will ping peer with latest last message. If ping fails, we drop our connection and establish connection with new peer.
+- It will try to establish new connections in several situations:
+    - Bootstrapping (When joining the network for the first time). Nodes will try to learn new nodes running
+    - Network balancing. We will have high tolerance to support connections to nodes that need to be close to use (same shard or block producers). Though we will have this number capped in case
+    - Low number of outbound connections.
+- Remove some of the active connections if the number of active peer goes over some threshold. We allow number of active peers to be unbound in case we need to establish new connections because lack of outbound connections, or because we becoming part of new shard.
+
+### Bootstrapping
 
 When node starts it have two lists:
 
@@ -80,6 +136,27 @@ In pseudo code, this would look like:
     sleep(wait_time)
 ```
 
+### API
+
+- **Add epoch_hash/height info:** Add information of all validators that belong to the same shard as we do for every epoch.
+- **Start active epoch_hash/height:** Active epoch are usually current and next epoch. When new epoch gets active this service will start to establish connection between peers in that epoch.
+- **Finish active epoch_hash/height:** This epoch_hash already finished so, connections made because of are marked as not important anymore, so can be dropped if the routing table grows
+
+### Policy
+
+- At all moments we should try to have a minimum number of outbound connections.
+- We will accept (or try) connections to other validators in our same shard.
+
+### Removing edges policies
+
+    - Keep connections to node in the active set.
+    - Keep connections to latest `OUTBOUND_PEERS_CONSTANT`
+    - Keep connections to latest `NUM_PEERS_CONSTANT`
+    - Keep connections marked as `IMPORTANT` (This will be used to keep broadcast spanning tree connections, maybe can be used to hardcode some connections).
+    - List all other connections and remove them as long as
+
+## Peer
+
 ### Handshake
 
 When one peer creates outgoing connection to another peer, they send a `Handshake` message.
@@ -96,133 +173,24 @@ Outgoing:
     send(handshake)
 ```
 
-Incoming:
+After connection is consolidated, they will start syncing its network POV and will broadcast the new edge to the network.
 
-```pseudo-code
-```
+### Peer Request/Response
 
-## Peer gossip
+Peers on the network are open to provide information about other peers, even to not connected peers. If some not connected peer try to abuse this we disconnect from it and ban. This will be useful for Peers that are joining the network.
 
-Node that just joined the network might only have bootstrapping nodes. We also expect those nodes to be at the capacity of `max_peers` constantly.
+## Network Types of Messages
 
-A node can send `PeersRequest` message, that peers respond with a subset of the peers that they have.
-Specifically, out of the peers which a `last_known` is no longer than ~X hours. If there is greater number than constant `max_peers_response`, send a random subset of length `max_peers_response` of them. We should cap how much CPU time we are dedicating to this task, since it is with a node which is not an `active_peer`.
-
-### Account gossip
-
-If a nodes have one or more `account_id`s, it will send it as part of the peer gossip. Also (`account_id`, `peer_id`) pair should be announced periodically based on how much time to become a validator again and how much time since last announced.
-In this document we will assume that every `account_id` is connected to exaclty one `peer_id` (though this may change).
-
-## Balancing
-
-**Simple approach**: If a node becomes a validator in epoch X, some time before epoch begins it will start making direct connections to all peers which are also validators in that epoch.
-
-- **Pro**: Network routing penalty become close to zero.
-- **Cons**: This may become infeasible due large number of open connections, if a node is part of several shards at the same time.
-
-**Complex approach**: Only some connections are being built per shard. They agree on some connections (at least k) that should be built among participants. Since validators are well known in advance of every epoch, this subnet can be very efficient in term of it diameter. See this wikipedia page for inspiration of graph architectures.
-
-## Reputation and Ban
-
-The important part of the attacker resilient peer-to-peer protocol is to be able to efficiently remove peers who are misbehaving. Even though we use IDs to identify peers, reputation and banning happens on IP address level. We also note, that IDs are easily switchable compared to IP addresses, but both of them are cheap to forge.
-We expect that some nodes enter the network without being active validators (no staking). This nodes must be able to connect, and have access to fetch blockchain data.
-Since we expect that nodes keep their view of the network synced (all active connections between peers) we should avoid malicious nodes spamming honest nodes with large portions of useless connections that contains links to mostly ghost peer ids.
-
-To address both of these issues we will be using *Reputation* and *Localization*.
-
-### Reputation
-
-Reputation starting epoch `X` is a combination of:
-
-- Reputation starting epoch `X - 1`.
-- Stake on the network on epoch `X`.
-- Some sort of page rank algorithm on top of received endorsements.
-
-Reputation of one node can vary from different points of view. Reputation will be impacted from other factors such as how good does a node behave routing messages to and from other peers. This can be measured using ping/pong like messages. How much time have we been connected to this network. How relevant is information we are receiving from this peer.
-
-#### Ping/Pong
-
-To detect if a route from node `u` to node `w` through direct peer `v` exist we can send ping messages and expect pong message. This can be done on some timeout. This will allow to determine live routes, and can be used to increase/decrease reputation. Pong message will be sent back using routing back mechanism.
-
-### Localization
-
-We maintain a graph with all connections from our point of view. We should build a DAG/Tree (this should be similar to have several routes for some peer) in such a way that every path from us to other nodes is:
-
-- reasonably short.
-- use high reputation nodes.
-
-One idea to localize nodes in the network:
-
-- From our POV we have infinite reputation.
-- Build a directed graph where weight of edge [u -> v] is reputation of node [u].
-- Build a maximum weighted directed spanning tree.
-
-We only care for parts of the graph such that:
-
-- We should be connected right now because we belong to the same shard (same for block producer).
-- We are going to become part of the same shard soon. (same for block producer).
-- They are nodes with high reputation from our POV.
-
-Localization will be useful to determine whether a node/edge is relevant to us and relevant to a connected peer (it cares about). We will only send and accept new connections of relevant node/edges. If some connected peer spam us with irrelevant connections we should take action towards it. This action can be:
-
-- decrease reputation
-- ban
-- notify + expect better behavior + ban otherwise
-
-## Communication
-
-Broadcasted messges:
-
-- *Create connection between two nodes*. We should only broadcast based on [localization]. If a new connection is relevant to us we broadcast to other nodes as an important hop. Note: We can force a maximum depth, so we don't send a connection if its exceed some depth. If we connect to other node this is relevant to us. (This way we keep track of all peer at distance 2 from us).
-
-- *Remove connection between two nodes*. We should not broadcast a removal if we didn't broadcast the creation. If node A receives a Remove connection [A, B] signed by B we should disconnect from B (probably malicious action by B). Also it is expected that nodes disconnect from each other when rebalancing network on epoch changes.
-
-Broadcasting messages at the network level is the main source of network overhead unrelated to blockchain protocol level. We should keep this as low as possible.
-
-### Syncing graphs
-
-When we connect to a new peer we should exchange relevant portions of the network to each other progressively. Portions that involve only high reputable nodes and validators.
-
-Edges are signed from both parties with timestamp. They should expire automatically after some period of time So they are re-broadcasted again. This period of time should be reasonably large so incur in small network overhead penalty.
-
-### Routing
-
-Routing mechanism specification.
-
-- *Routing to*: A peer can only send a message to another peer (target) if it knows a path to it in its current view of the network. It will send a message through shortest path using Round Robin (among all direct peers that have shortest path to target it will pick one).
-
-- *Routing back*: The network design establish that path to reputable nodes are know, so for messages that need to be routed back (to probably some not reputable node) every node in the path should be aware of a message that needs a response and will keep track of this submission hash and predecessor (only predecessor since full route might be unknown). This will allow new nodes to fetch information from other nodes in the network that doesn’t know him (only those who are directly connected should know him).
-
-#### Round Robin details
-
-When routing we will send message through shortests path, and here might be several direct connections that belong to some shortest path. For every direct connection we will keep a counter with how many submissions have we sent through it and always pick smaller number. If there is a new node joining its counter start equals to the current smallest number.
-
-# Reference-level explanation
-[reference-level-explanation]: #reference-level-explanation
-
-This is the technical portion of the NEP. Explain the design in sufficient detail that:
-
-- Its interaction with other features is clear.
-- It is reasonably clear how the feature would be implemented.
-- Corner cases are dissected by example.
-
-The section should return to the examples given in the previous section, and explain more fully how the detailed proposal makes those examples work.
-
-## Types of messages
-
-Where we describe all possible types of messages happening at the networking level. Notice that protocol level messages are wrapped around ProtocolMessage. This specification should be agnostic to the content of such messages.
-
-- Ping
-- Pong
-- Handshake
-- ...
-- ProtocolMessages.
+Where we describe all possible types of messages happening at the networking level. Notice that protocol level messages are wrapped around `ProtocolMessage`. This specification should be agnostic to the content of such messages.
 
 ## Security
 
 Messages exchanged between routed (both direct or routed) are cryptographically signed with sender private key. Nodes ID contains public key of each node that allow other peer to verify this messages. To keep secure communication most of this message requires some nonce/timestamp that forbid a malicious actor reuse a signed message out of context.
 
-While routing messages each intermediate hop should verify that message hash and signatures are valid before routing to next hop.
+In the case of routing messages each intermediate hop should verify that message hash and signatures are valid before routing to next hop.
+
+# Reference-level explanation
+[reference-level-explanation]: #reference-level-explanation
 
 # Drawbacks
 [drawbacks]: #drawbacks
@@ -258,30 +226,15 @@ Kademlia is a distributed hash table (DHT), whose function is mostly to store pi
 # Unresolved questions
 [unresolved-questions]: #unresolved-questions
 
-- What parts of the design do you expect to resolve through the NEP process before this gets merged?
-- What parts of the design do you expect to resolve through the implementation of this feature before stabilization?
-- What related issues do you consider out of scope for this NEP that could be addressed in the future independently of the solution that comes out of this NEP?
+- How can you avoid network spam? (This is sybil attack at the network layer). Malicious actor can forge identities (PeerId/IP/Port) cheaply and inject tons of new nodes to the system. We should be able to allow new comers who are genuinely trying to become part of the network, while disallow ghost identities which are only trying to poison the routing tables. This is an important challenge for our current network design, since every nodes stores the network representation as part of the routing protocol, and this can become harmful as the network grows.
+
+- Nodes that don’t route messages through it are not been detected or punished.
 
 # Future possibilities
 [future-possibilities]: #future-possibilities
 
-Think about what the natural extension and evolution of your proposal would
-be and how it would affect the project as a whole in a holistic
-way. Try to use this section as a tool to more fully consider all possible
-interactions with the project in your proposal.
-Also consider how the this all fits into the roadmap for the project
-and of the relevant sub-team.
+Add a reputation mechanism. Using reputation is somehow easy to design a strategy that effectively avoids both, sybil and eclipse attack; also it can be leveraged to improve network balancing using connections from well known (reputable) nodes. But setting up a reputation mechanism increase notably the complexity of the system, and it is very hard to design it off-chain in such a way that can’t be manipulated by malicious actor. We are still researching in this area,
 
-This is also a good place to "dump ideas", if they are out of scope for the
-NEP you are writing but otherwise related.
-
-If you have tried and cannot think of any future possibilities,
-you may simply state that you cannot think of anything.
-
-Note that having something written down in the future-possibilities section
-is not a reason to accept the current or a future NEP. Such notes should be
-in the section on motivation or rationale in this or subsequent NEPs.
-The section merely provides additional information.
 
 # References
 [references]: #references
