@@ -1,6 +1,6 @@
 - Proposal Code Name: `split_contract_execution`
 - Start Date: 2019-09-13
-- NEP PR: [nearprotocol/neps#0000](https://github.com/nearprotocol/neps/pull/0000)
+- NEP PR: [nearprotocol/neps#00014](https://github.com/nearprotocol/NEPs/pull/14)
 
 # Summary
 [summary]: #summary
