@@ -59,3 +59,11 @@ For specialized cases, like ethash computation we can implement distributed comp
 I was not able to find the alternative approaches by other blockchains. In most cases they solve expensive computation
 by either making a fast host-function or a precompile, which does not help if computation is by itself very slow
 and heavy.
+
+### Preserving the entire Wasm state
+
+It is possible to stop and resume Wasm https://kripken.github.io/blog/wasm/2019/07/16/asyncify.html which could be
+used to perform split execution. We can even first introduce blocking contract calls as an alternative to asynchronous
+contract calls. With blocking calls a contract stop execution while it waits for another contract to finish execution.
+Blocking contract calls then would naturally enable split contract execution.
+
