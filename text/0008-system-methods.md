@@ -1,7 +1,6 @@
 - Proposal Name: System methods in runtime API
 - Start Date: 2019-09-03
-- NEP PR: [nearprotocol/neps#0000](https://github.com/nearprotocol/neps/pull/0000)
-- Issue(s): link to relevant issues in relevant repos (not required).
+- NEP PR: [nearprotocol/neps#0008](https://github.com/nearprotocol/neps/pull/0008)
 
 # Summary
 [summary]: #summary
