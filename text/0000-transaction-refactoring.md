@@ -1,7 +1,6 @@
 - Proposal Name: Batched Transactions
 - Start Date: 2019-07-22
-- NEP PR: [nearprotocol/neps#0000](https://github.com/nearprotocol/neps/pull/0000)
-- Issue(s): 
+- NEP PR: [nearprotocol/neps#0008](https://github.com/nearprotocol/neps/pull/8)
 
 # Summary
 [summary]: #summary
@@ -52,6 +51,7 @@ An `Action` can be of the following:
 - `Stake` stakes the new total `stake` balance with the given `public_key`. The difference in stake is taken from the account's balance (if the new stake is greater than the current one) at the moment when this action is executed, so it's not prepaid. There is no particular reason to stake on behalf of a newly created account, so we may disallow it.
 - `DeleteKey` deletes an old `AccessKey` identified by the given `public_key` from the account. Fails if the access key with the given public key doesn't exist. All next batched actions will continue to execute, even if the public key that authorized that transaction was removed.
 - `AddKey` adds a new given `AccessKey` identified by a new given `public_key` to the account. Fails if an access key with the given public key already exists. We removed `SwapKeyTransaction`, because it can be replaced with 2 batched actions - delete an old key and add a new key.
+- `DeleteAccount` deletes `receiver_id` account if the account doesn't have enough balance to pay the rent, or the `receiver_id` is the `predecessor_id`. Sends the remaining balance to the `beneficiary_id` account.
 
 The new `Receipt` contains the shared information and either one of the receipt actions or a list of actions:
 - `predecessor_id` the account ID of the immediate previous sender (predecessor) of this receipt. It can be different from the `signer_id` in some cases, e.g. for promises.
