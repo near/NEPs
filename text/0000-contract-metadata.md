@@ -8,8 +8,10 @@
 This NEP introduces contract metadata, which summarizes the content of a given contract in json format.
 Contract metadata allows developers to easily list the methods in a contract and potentially display them to users to
 provide transparency. 
-It also provides the ability to generate bindings in different languages for the contract, thanks to the class information
-also contained in the metadata.
+It also provides the ability to validate input data in frontend thanks to the signatures of contract methods provided
+by the contract metadata.
+Contract metadata is similar to contract abi in some other blockchains such as Ethereum or Substrate but is more geared
+towards readability and developer friendliness.
 
 # Motivation
 [motivation]: #motivation
@@ -21,6 +23,8 @@ As a result, if developers want to display the methods of a contract to an user 
 especially in the case of financial apps, they have no choice but to hardcode them in the front end, which is suboptimal in many ways.
 Furthermore, if developers want to get the list of methods in some contract for some downstream task like data analysis, or interacting
 with other contracts, they have no way of doing so.
+In addition, because of the lack of signature of the contract functions, there is no way that the frontend can validate
+that input data is of the right format, which might lead to some spamming attacks.
 Contract metadata aims to solve the aforementioned problems by providing a convenient way 
 for developers to list the methods of contracts.
 
@@ -35,13 +39,75 @@ also provide, in addition to function annotations, class annotations, which main
 Finally, since developers might want to have some contract-level description that provides an overview of what the contract does,
 in metadata we also have contract-level annotation.
 
-More specifically, every contract will have a `metadata` method that returns a json that serializes the aforementioned information.
-The overall format looks like `{"methods": [<method1_info>, ..], "classes": [<class1_info>, ..], "contract": <contract annotation>}`.
-For each method, the json serialization is of the form `{"name": <name>, "parameters": [{"name": <param_name1>, "type": <param_type1>, ..}, .. ], "returnType": <return_type>}`
-where the `returnType` key will only be present for functions that have non-void return types.
-For each class, the json serialization is of the form `{"name": <name>, "fields": [{"name": <field_name>", "type": <field_type>"}, ..]}`.
+The format of contract metadata is similar to [Ethereum json contract abi](https://solidity.readthedocs.io/en/v0.5.3/abi-spec.html#json).
+For each function, the metadata is a json object with the fields:
+* `name`: the name of the function;
+* `parameters`: an array of objects, each of which contains:
+  * `name`: the name of the parameter
+  * `type`: the type of the parameter (more below)
+* `returnType`: The return type of the function. If there is no return value, this field is omitted.
+* `stateMutability`: a string that is either `view` or `change`. It specifies whether the function can mutate state.
 
-## Simple Example
+For types, we try to be as general and language agnostic as possible. Therefore we follow mostly the types that [serde](https://serde.rs/data-model.html)
+ uses. The following types are available:
+* primitive types:
+  * `bool`
+  * `i8`, `i16`, `i32`, `i64`, `i128`
+  * `u8`, `u16`, `u32`, `u64`, `u128`
+  * `string`
+
+* `byteArray`: an array of bytes. In Rust this is `[u8]` whereas in AssemblyScript this is typedarrays.
+* `Option<T>`: Either none or some value. In Rust this is `Option<T>` whereas in AssemblyScript this is `T | null` provided
+that `T` is nullable.
+* `Seq<T>`: A variably sized homogeneous sequence of values, for example `Vec<T>` or `HashSet<T>` in Rust, `Array<T>` in
+AssemblyScript.
+* tuple: A statically sized heterogeneous sequence of values, for example `(u8, string)`. This doesn't apply to AssemblyScript.
+* `Map<K, V>`: A variably sized heterogeneous key-value pairing, for example `BTreeMap<K, V>` in Rust and `Map<K, V>` in AssemblyScript.
+* object: `struct` in Rust or `class` in AssemblyScript. The metadata for an object type is a json object with the fields:
+    * `name`: Name of the class
+    * `fields`: An array of objects each of which contains:
+      * `name`: the name of the parameter
+      * `type`: the type of the parameter
+
+The object types will not be fully unrolled in their json representation. For example, if we have the following classes
+```rust
+pub struct Person {
+  pub name: String,
+  pub address: Address,
+}
+
+pub struct Address {
+  pub city: String,
+  pub street: String,
+  pub zip: u16,
+}
+```
+
+The json representation for `Person` is 
+```json
+{
+  "name": "Person",
+  "fields": 
+    [
+      {"name": "name", "type": "string"},
+      {"name": "address", "type":  "Address"}
+    ]
+}
+```
+
+The type `Address` is not unrolled to avoid repetitive information. Instead, the overall contract metadata also contains
+metadata for each exported class. 
+
+In addition to function metadata and class metadata, the contract metadata also includes information about the contract
+as a whole. To provide this information, a developer can choose to implement a method called `description` in their contract
+which returns a json string that contains `name`, the name of the contract, and `description`, annotation of what the 
+contract does as a whole.
+
+Contract metadata will also have a version associated with it so that it is clear to the developers when the format changes.
+Overall, every contract will have a `metadata` method generated at compile time that returns a json that serializes all the aforementioned information.
+The overall format looks like `{"methods": [<method1_info>, ..], "classes": [<class1_info>, ..], "contract": <contract annotation>, "version": <version>}`.
+
+## A Simple Example
 
 As an concrete example, suppose we have a contract that maintains a counter on chain:
 
@@ -65,9 +131,15 @@ export function decrementCounterBy(amount: i32 = 1): void {
 export function getCounter(): i32 {
   return storage.get<i32>("counter");
 }
+
+@view
+export function description(): string {
+  return '{"name": "Counter", "description": " A contract that maintains a counter with the ability to increase and decrease by the given amount"}';
+} 
 ```
 
-This contract has two change methods, `incrementCounter` and `decrementCounter`, as well as one view method, `getCounter`.
+This contract has two change methods, `incrementCounter` and `decrementCounter`, as well as two view methods, `getCounter`
+and `description`.
 In this case, the metadata we want looks like 
 ```json
 {
@@ -76,33 +148,39 @@ In this case, the metadata we want looks like
                  "name": "getCounter",
                  "parameters": [{"name": "amount", "type": "i32"}],
                  "returnType": "i32",
-                 "methodType": "view"
+                 "stateMutability": "view"
                },
                {
                  "name": "incrementCounterBy",
                  "parameters": [{"name": "amount", "type": "i32"}],
-                 "methodType": "change"
+                 "stateMutability": "change"
                },
                {
                  "name": "decrementCounterBy",
                  "parameters": [{"name": "amount", "type": "i32"}],
-                 "methodType": "change"
+                 "stateMutability": "change"
+               },
+               {
+                 "name": "description",
+                 "parameters": [],
+                 "stateMutability": "view"
                }
              ],
   "classes": [],
-  "contract": "A contract that maintains a counter with the ability to increase and decrease by the given amount"
+  "contract": {"name": "Counter", "description": "A contract that maintains a counter with the ability to increase and decrease by the given amount"},
+  "version": "1.0"
 }
 
 ```
 and the generated `metadata` method looks like:
 ```typescript
 export function metadata(): string {
-    return '{"methods": [{"name": "getCounter", "parameters": [{"name": "amount", "type": "i32"}], "returnType": "i32", "methodType": "view"}, {"name": "incrementCounterBy", "parameters": [{"name": "amount", "type": "i32"}], "methodType": "change"}, {"name": "decrementCounterBy", "parameters": [{"name": "amount", "type": "i32"}], "returnType": "void"}], "classes": [], "contract": "A contract that maintains a counter with the ability to increase and decrease by the given amount"'
+    return '{"methods": [{"name": "getCounter", "parameters": [{"name": "amount", "type": "i32"}], "returnType": "i32", "stateMutability": "view"}, {"name": "incrementCounterBy", "parameters": [{"name": "amount", "type": "i32"}], "stateMutability": "change"}, {"name": "decrementCounterBy", "parameters": [{"name": "amount", "type": "i32"}]}], {"name": "description", "parameters": [], "returnType": "string", "stateMutability": "view"}, "classes": [], "contract": {"name": "Counter", "description": "A contract that maintains a counter with the ability to increase and decrease by the given amount"}, "version": "1.0"}'
 }
 ```
 
-## Real-world Example
-Now let's consider a real-world example that involves more features such as class and arrays. 
+## A More Complex Example
+Now let's consider a more complex example that involves more features such as class and arrays. 
 Suppose one wants to build a todo list app on blockchain, which is modeled as
 ```typescript
 export class Todo {
@@ -148,6 +226,11 @@ export function getAllTodos(): Array<Todo> {
   }
   return loaded;
 }
+
+@view
+export function description(): string {
+  return '{"name": "Todo list", "description": "A todo list on blockchain!"}'
+}
 ```
 
 For this contract, `setTodo` is a change method while `getTodo` and `getAllTodos` are view methods.
@@ -159,19 +242,25 @@ In this case, the metadata we want looks like
                  "name": "setTodo",
                  "parameters": [{"name": "id", "type": "string"}, {"name": "todo", "type": "Todo"}],
                  "returnType": "void",
-                 "methodType": "change"
+                 "stateMutability": "change"
                },
                {
                  "name": "getTodo",
                  "parameters": [{"name": "id", "type": "string"}],
                  "returnType": "Todo",
-                 "methodType": "view"
+                 "stateMutability": "view"
                },
                {
                  "name": "getAllTodos",
                  "parameters": [],
                  "returnType": "Array<Todo>",
-                 "methodType": "view"
+                 "stateMutability": "view"
+               },
+               {
+                 "name": "description",
+                 "parameters": [],
+                 "returnType": "string",
+                 "stateMutability": "view"
                }
              ],
    "classes": [
@@ -180,7 +269,8 @@ In this case, the metadata we want looks like
                   "fields": [{"name": "id", "type": "string"}, {"name":  "title", "type": "string"}, {"name": "completed", "type": "bool"}]
                 }
               ],
-   "contract": "a contract that implements a todo list on blockchain"
+   "contract": {"name":  "Todo list", "description": "A todo list on blockchain!"},
+   "version": "1.0"
 }
 
 ```
@@ -188,10 +278,9 @@ In this case, the metadata we want looks like
 # Reference-level explanation
 [reference-level-explanation]: #reference-level-explanation
 
-To implement this NEP, we just need to modify the binding generation to generate a method called `metadata` that returns
-json serialization of contract metadata described in the previous section. This involves walking through the exported methods
-in `main.ts`, get the metadata of each method, and serialize them in json. Metadata of a given method, including decorators,
-are easily extractable from the assemblyscript IR and serialized into json format.
+To implement this NEP, we need to modify the binding generation procedure to generate a method called `metadata` that returns
+json serialization of contract metadata described in the previous section. This involves an AST walk to collect the relevant
+ information about functions and classes, as well as mapping types to the types used in metadata.
 
 # Drawbacks
 [drawbacks]: #drawbacks
@@ -208,11 +297,10 @@ It is unclear to me what the alternative is.
 [unresolved-questions]: #unresolved-questions
 
 * What other information, besides those mentioned in [guide-level-explanation], should we include in the metadata?
-* Most of this NEP is concerned with contract metadata for assemblyscript, for the rust API, it is not yet unclear what
-needs to be done given that it is not yet stabilized.
 
 # Future possibilities
 [future-possibilities]: #future-possibilities
 
 Under the framework proposed in this NEP, it is also not difficult to add annotations to methods in natural language.
-We can also add contract-level annotation as part of the contract metadata json.
+Another interesting possibility is that for data validation, the contract can provide some predicate (in javascript for example)
+to the frontend to validate input data.
