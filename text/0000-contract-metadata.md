@@ -56,7 +56,9 @@ For types, we try to be as general and language agnostic as possible. Therefore 
   * `u8`, `u16`, `u32`, `u64`, `u128`
   * `string`
 
-* `byteArray`: an array of bytes. In Rust this is `[u8]` whereas in AssemblyScript this is typedarrays.
+* `TypedArray`: Fixed length array. In Rust this is something like `[u8]` or `[u32]` whereas in AssemblyScript this is something like
+`Uint8Array`. For the sake of convenience we use the Rust notation here. So `Uint8Array` would be represented as `[u8]` and 
+`Uint32Array` would be represented as `[u32]`, etc.
 * `Option<T>`: Either none or some value. In Rust this is `Option<T>` whereas in AssemblyScript this is `T | null` provided
 that `T` is nullable.
 * `Seq<T>`: A variably sized homogeneous sequence of values, for example `Vec<T>` or `HashSet<T>` in Rust, `Array<T>` in
@@ -278,9 +280,10 @@ In this case, the metadata we want looks like
 # Reference-level explanation
 [reference-level-explanation]: #reference-level-explanation
 
-To implement this NEP, we need to modify the binding generation procedure to generate a method called `metadata` that returns
-json serialization of contract metadata described in the previous section. This involves an AST walk to collect the relevant
- information about functions and classes, as well as mapping types to the types used in metadata.
+To implement this NEP, we need to modify the binding generation procedure in the assemblyscript compiler to generate a method called `metadata` that returns
+json serialization of contract metadata described in the previous section. In Rust we would need to augment the procedural macro to inject the metadata method.
+Both involve an AST walk to collect the relevant information about functions and classes, as well as mapping types to the types used in metadata.
+ 
 
 # Drawbacks
 [drawbacks]: #drawbacks
