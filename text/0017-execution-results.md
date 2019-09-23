@@ -1,6 +1,6 @@
 - Proposal Name: Execution Outcome
 - Start Date: 2019-09-23
-- NEP PR: [nearprotocol/neps#0000](https://github.com/nearprotocol/neps/pull/0000)
+- NEP PR: [nearprotocol/neps#0017](https://github.com/nearprotocol/neps/pull/17)
 - Issue(s): https://github.com/nearprotocol/nearcore/issues/1307
 
 # Summary
