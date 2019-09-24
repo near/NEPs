@@ -89,5 +89,5 @@ pub struct FinalExecutionOutcome {
 # Unresolved questions
 [unresolved-questions]: #unresolved-questions
 
-- Should `FinalExecutionResult` be `Started` if the outcome is already known. E.g. there are still some pending receipts, but 
+- Should `FinalExecutionStatus` be `Started` if the outcome is already known. E.g. there are still some pending receipts, but 
 the result is `Failure` or `SuccessValue`.
