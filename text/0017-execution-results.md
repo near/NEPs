@@ -32,6 +32,14 @@ Here is the proposed Rust structures. Highlights:
   We may also expose the error directly in the execution result.
 - Split into final outcome into transaction and receipts.
 
+### NEW
+
+- The `FinalExecutionStatus` contains the early result even if some dependent receipts are not yet executed. Most function call
+transactions contain 2 receipts. The 1st receipt is execution, the 2nd is the refund. Before this change, the transaction was
+not resolved until the 2nd receipt was executed. After this change, the `FinalExecutionOutcome` will have
+`FinalTransactionStatus::SuccessValue("")` after the execution of the 1st receipt, while the 2nd receipt execution outcome status is still `Pending`.
+This helps to get the transaction result on the front-end faster without waiting for all refunds.
+
 ```rust
 pub struct ExecutionOutcome {
     /// Execution status. Contains the result in case of successful execution.
@@ -72,8 +80,8 @@ pub enum FinalExecutionStatus {
     Started,
     /// The execution has failed.
     Failure,
-    /// The execution has succeeded and returned some value or an empty vec.
-    SuccessValue(Vec<u8>),
+    /// The execution has succeeded and returned some value or an empty vec in base64.
+    SuccessValue(String),
 }
 
 pub struct FinalExecutionOutcome {
@@ -85,9 +93,3 @@ pub struct FinalExecutionOutcome {
     pub receipts: Vec<ExecutionOutcomeWithId>,
 }
 ```
-
-# Unresolved questions
-[unresolved-questions]: #unresolved-questions
-
-- Should `FinalExecutionStatus` be `Started` if the outcome is already known. E.g. there are still some pending receipts, but 
-the result is `Failure` or `SuccessValue`.
