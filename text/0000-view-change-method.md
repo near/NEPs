@@ -26,7 +26,7 @@ are prohibited in view calls.
 Among binding methods that we expose from nearcore, some do make sense in a view call, such as `block_index`,
 while the majority does not. 
 Here we explicitly list the methods are not allowed in a view call and, in case they are invoked, the contract will panic with
-`Context variable <context_variable> is not allowed in view calls`.
+`<method_name> is not allowed in view calls`.
 
 The following methods are prohibited:
     - `signer_account_id`
@@ -48,7 +48,7 @@ To implement this NEP, we need to change how binding methods are handled in runt
 `free_of_charge` to `is_view` and use that to indicate whether we are processing a view call. In addition we can add
  a variant `ProhibitedInView(String)` to `HostError` so that if `is_view` is true,
 then all the access to the prohibited
-methods will error with `HostError::ProhibitedInView(<view method name>)`.
+methods will error with `HostError::ProhibitedInView(<method_name>)`.
 
 # Drawbacks
 [drawbacks]: #drawbacks
