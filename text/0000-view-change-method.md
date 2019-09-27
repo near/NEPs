@@ -15,22 +15,26 @@ to differentiate between the two in frontend or through near-shell.
 [motivation]: #motivation
 
 From the feedback we received it seems that developers are confused by the results they get from view calls, which are
-mainly caused by the context variables such as `signer_account_id`, `current_account_id`, `attached_deposit` do not make
-sense in a view call. To avoid such confusion and create better developer experience, it is better if those context variables
+mainly caused by the fact that some binding methods such as `signer_account_id`, `current_account_id`, `attached_deposit`
+do not make sense in a view call. 
+To avoid such confusion and create better developer experience, it is better if those context variables
 are prohibited in view calls.
 
 # Guide-level explanation
 [guide-level-explanation]: #guide-level-explanation
 
-Among context variables, some do make sense in a view call, such as `block_index`, while the majority does not. Here we
-explicitly list the variables are not allowed in a view call and, in case they are invoked, the contract will panic with
+Among binding methods that we expose from nearcore, some do make sense in a view call, such as `block_index`,
+while the majority does not. 
+Here we explicitly list the methods are not allowed in a view call and, in case they are invoked, the contract will panic with
 `Context variable <context_variable> is not allowed in view calls`.
 
-The only allowed context variables are:
-    - `block_index`
-    - `storage_usage`
-
-All others are prohibited.
+The following methods are prohibited:
+    - `signer_account_id`
+    - `signer_account_pk`
+    - `predecessor_account_id`
+    - `attached_deposit`
+    - `prepaid_gas`
+    - `used_gas`
 
 From the developer perspective, if they want to call view functions from command line on some contract, they would just
 call `near view <contractName> <methodName> [args]`. If they are building an app and want to call a view function from the
@@ -40,9 +44,11 @@ frontend, they should follow the same pattern as we have right now, specifying `
 # Reference-level explanation
 [reference-level-explanation]: #reference-level-explanation
 
-To implement this NEP, we need to change how context is handled in runtime. More specifically, we can add a field `is_view: bool`
-in `VMContext` to indicate whether we are processing a view call. If `is_view` is true, then all the access to the prohibited
-variables will error with the error message described above.
+To implement this NEP, we need to change how binding methods are handled in runtime. More specifically, we can rename
+`free_of_charge` to `is_view` and use that to indicate whether we are processing a view call. In addition we can add
+ a variant `ProhibitedInView(String)` to `HostError` so that if `is_view` is true,
+then all the access to the prohibited
+methods will error with `HostError::ProhibitedInView(<view method name>)`.
 
 # Drawbacks
 [drawbacks]: #drawbacks
@@ -61,7 +67,7 @@ requires much more work and is not currently feasible for Rust contracts.
 # Unresolved questions
 [unresolved-questions]: #unresolved-questions
 
-- Should we allow any context variables to be accessed at all? 
+- Should we allow promise API to be called in view methods?
 
 # Future possibilities
 [future-possibilities]: #future-possibilities
