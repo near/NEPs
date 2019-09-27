@@ -29,12 +29,12 @@ Here we explicitly list the methods are not allowed in a view call and, in case 
 `<method_name> is not allowed in view calls`.
 
 The following methods are prohibited:
-    - `signer_account_id`
-    - `signer_account_pk`
-    - `predecessor_account_id`
-    - `attached_deposit`
-    - `prepaid_gas`
-    - `used_gas`
+  * `signer_account_id`
+  * `signer_account_pk`
+  * `predecessor_account_id`
+  * `attached_deposit`
+  * `prepaid_gas`
+  * `used_gas`
 
 From the developer perspective, if they want to call view functions from command line on some contract, they would just
 call `near view <contractName> <methodName> [args]`. If they are building an app and want to call a view function from the
