@@ -1,6 +1,6 @@
 - Proposal Name: Improve view/change methods in contracts
 - Start Date: 2019-09-26
-- NEP PR: [nearprotocol/neps#0000](https://github.com/nearprotocol/neps/pull/0000)
+- NEP PR: [nearprotocol/neps#0000](https://github.com/nearprotocol/neps/pull/18)
 
 # Summary
 [summary]: #summary
