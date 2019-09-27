@@ -35,6 +35,23 @@ The following methods are prohibited:
   * `attached_deposit`
   * `prepaid_gas`
   * `used_gas`
+  * `promise_create`
+  * `promise_then`
+  * `promise_and`
+  * `promise_batch_create`
+  * `promise_batch_then`
+  * `promise_batch_action_create_account`
+  * `promise_batch_action_deploy_account`
+  * `promise_batch_action_function_call`
+  * `promise_batch_action_transfer`
+  * `promise_batch_action_stake`
+  * `promise_batch_action_add_key_with_full_access`
+  * `promise_batch_action_add_key_with_function_call`
+  * `promise_batch_action_delete_key`
+  * `promise_batch_action_delete_account`
+  * `promise_results_count`
+  * `promise_result`
+  * `promise_return`
 
 From the developer perspective, if they want to call view functions from command line on some contract, they would just
 call `near view <contractName> <methodName> [args]`. If they are building an app and want to call a view function from the
