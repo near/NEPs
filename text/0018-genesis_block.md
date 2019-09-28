@@ -92,3 +92,14 @@ We could make account of Token Holder to be fully functional (e.g. by adding pro
 complex (since its balance structure is not trivial) and there is no real need to do so, since Token Holder can just move vested&unlocked balance to a different account and use it from there.
 
 
+# Economics config
+
+We are going to store economics config in a key-value pair not associated with any account and therefore not a subject
+to storage rent. The key is going to be `ecfg` (notice that it is shorter than 5 characters and therefore not account can be
+created on the top of it). The value is going to be a list of economics configs serialized with Borsh. We are going to use
+`StateRecord::Data` to inject it into the trie.
+
+Each economics config will have a version associated with it and the block index at which it kicks in.
+
+Until we implement the governance mechanism NEAR Inc account will be able to issue a special kind of transaction that overrides the key-value pair of the economics config.
+
