@@ -23,16 +23,16 @@ Vesting is done over several years with an optional cliff starting with:
 * For investors -- investment date.
 * Everyone else -- a custom start date.
 
-Non-standard vesting and lock up schedules can be later created by the NEAR Foundation foundation.
+Non-standard vesting and lock up schedules can be later created by the The NEAR Foundation foundation.
 
 Lock up is applied to the token holder with 1 year starting with the mainnet launch. If token is vested before the lock up expires then it cannot be sold until the end of the lock up. If token is vested after the lock up then it can be sold immediately.
 
-In case of employees the NEAR Foundation company can decide to terminate the employment and the person would lose the unvested tokens, however the lock period will still be applied to vested tokens.
+In case of employees the The NEAR Foundation company can decide to terminate the employment and the person would lose the unvested tokens, however the lock period will still be applied to vested tokens.
 
 # Design details
 We create the following accounts and contracts:
 * For each token holder we create an account and a contract;
-* We create one account for NEAR Foundation.
+* We create one account for The NEAR Foundation.
 
 ## Token holder
 Token holder gets a standard account that has a special contract and balance corresponding to all vested and unvested tokens.
@@ -44,7 +44,7 @@ The token holder person/entity gets one access key for this account, which allow
 
 `transfer(other_account_id, amount)` can transfer vested locked tokens to a different account.
 
-NEAR Foundation entity gets one access key for this account which allows to call these two functions:
+The NEAR Foundation entity gets one access key for this account which allows to call these two functions:
 * `permanently_unstake()`;
 * `terminate()`.
 
@@ -52,16 +52,16 @@ These functions will panic if account is not an employee (internal boolean flag)
 
 `permanently_unstake()` will send unstaking transaction on behalf of the account and will switch the internal flag that will prohibit future calls to `stake(amount)`.
 
-`terminate()` will take the remaining unvested balance and send it to the NEAR Foundation account.
+`terminate()` will take the remaining unvested balance and send it to the The NEAR Foundation account.
 
-This access key will also have a limited allowance to avoid NEAR Foundation calling it repeatedly to deplete the funds.
+This access key will also have a limited allowance to avoid The NEAR Foundation calling it repeatedly to deplete the funds.
 
 Note, that no one in the system will have a full access key to the token holder account.
 
 Note, the contract will use the block timestamp to determine when the tokens are vested and locked.
 
-## NEAR Foundation
-NEAR Foundation will have a standard account with the balance of tokens that it has received from the foundation. The account will not have a contract deployed to it and there will only be one full access key given to it. It will have balance equal to the amount issued by the foundation minus all balances of the initial token holders.
+## The NEAR Foundation
+The NEAR Foundation will have a standard account with the balance of tokens that it has received from the foundation. The account will not have a contract deployed to it and there will only be one full access key given to it. It will have balance equal to the amount issued by the foundation minus all balances of the initial token holders.
 
 # Implementation details
 The contract for token holders is going to be implemented in Rust with the following features:
@@ -74,7 +74,7 @@ The contract for token holders is going to be implemented in Rust with the follo
 This will hopefully lead to a contract size of ~400 bytes and a very small surface for mistakes.
 
 # Particularities
-Token holder balance will also be used for storage rent and function call execution. As mentioned above the access key of the token holder account used by NEAR Foundation will have a limited allowance.
+Token holder balance will also be used for storage rent and function call execution. As mentioned above the access key of the token holder account used by The NEAR Foundation will have a limited allowance.
 
 The storage rent will be obviously applied to the entire account, it is not essential whether vesting/locking computation is going to be done in such a manner that it reduces vested or unvested tokens.
 
@@ -84,7 +84,7 @@ remains functional.
 
 # Alternatives
 
-We could deploy a contract to NEAR Foundation account and call `permanently_unstake` and `terminate` functions from it which in
+We could deploy a contract to The NEAR Foundation account and call `permanently_unstake` and `terminate` functions from it which in
 turn would call the same functions on the Token Holder's account through promises, but there is no reason to do it, and it just makes the setup more complex.
 
 We cannot really merge `permanently_unstake` and `terminate` into one function because unstaking takes time.
@@ -102,5 +102,5 @@ created on the top of it). The value is going to be a list of economics configs 
 
 Each economics config will have a version associated with it and the block index at which it kicks in.
 
-Until we implement the governance mechanism NEAR Foundation account will be able to issue a special kind of transaction that overrides the key-value pair of the economics config.
+Until we implement the governance mechanism The NEAR Foundation account will be able to issue a special kind of transaction that overrides the key-value pair of the economics config.
 
