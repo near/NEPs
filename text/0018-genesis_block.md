@@ -22,6 +22,8 @@ Vesting is done over 4 years with 1 year cliff starting with:
 * For employees -- employment date or blockchain initiation date, whichever is latests;
 * For investors -- investment date.
 
+Non-standard vesting and lock up schedules can be later created by the Near Inc foundation.
+
 Lock up is applied to the token holder with 1 year starting with the mainnet launch. If token is vested before the lock up expires then it cannot be sold until the end of the lock up. If token is vested after the lock up then it can be sold immediately.
 
 In case of employees the NEAR Inc company can decide to terminate the employment and the person would lose the unvested tokens, however the lock period will still be applied to vested tokens.
