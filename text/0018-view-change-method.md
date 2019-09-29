@@ -84,8 +84,6 @@ requires much more work and is not currently feasible for Rust contracts.
 # Unresolved questions
 [unresolved-questions]: #unresolved-questions
 
-- Should we allow promise API to be called in view methods?
-
 # Future possibilities
 [future-possibilities]: #future-possibilities
 
