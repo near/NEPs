@@ -18,12 +18,14 @@ Each token holder will have tokens that go through the following lifecycle:
 * Vested, but locked;
 * Unlocked.
 
+Rewards from staking are going to become immediately unlocked.
+
 Vesting is done over several years with an optional cliff starting with:
 * For employees -- employment date or blockchain initiation date, whichever is latest;
 * For investors -- investment date.
 * Everyone else -- a custom start date.
 
-Non-standard vesting and lock up schedules can be later created by the The NEAR Foundation foundation.
+Non-standard vesting and lock up schedules can be later created by the The NEAR Foundation.
 
 Lock up is applied to the token holder with 1 year starting with the mainnet launch. If token is vested before the lock up expires then it cannot be sold until the end of the lock up. If token is vested after the lock up then it can be sold immediately.
 
@@ -36,13 +38,22 @@ We create the following accounts and contracts:
 
 ## Token holder
 Token holder gets a standard account that has a special contract and balance corresponding to all vested and unvested tokens.
-The token holder person/entity gets one access key for this account, which allows to call the following functions:
+The token holder person/entity gets several access key for this account. All access keys are not full, but one of them
+is "privileged", that is it can call `add_access_key` and `remove_access_key` functions. The contract has the following functions:
 * `stake(amount)`;
-* `transfer(other_account_id, amount)`.
+* `transfer(other_account_id, amount)`;
+* `add_access_key(public_key)`;
+* `remove_access_key(public_key)`;
 
 `stake(amount)` simply issues a staking transaction from the account. It is allowed to use all even unvested tokens for staking.
 
-`transfer(other_account_id, amount)` can transfer vested locked tokens to a different account.
+`transfer(other_account_id, amount)` can transfer vested unlocked tokens to a different account.
+
+`add_access_key(public_key)` -- adds another access key to the current account. Panics if `signer_account_pk() != privileged`.
+
+`remove_access_key(public_key)` -- removes access key from the current account. Panics if `signer_account_pk() != privileged`.
+
+These functions will panic if `predecessor_account_id() != current_account_id()`.
 
 The NEAR Foundation entity gets one access key for this account which allows to call these two functions:
 * `permanently_unstake()`;
@@ -59,6 +70,12 @@ This access key will also have a limited allowance to avoid The NEAR Foundation 
 Note, that no one in the system will have a full access key to the token holder account.
 
 Note, the contract will use the block timestamp to determine when the tokens are vested and locked.
+
+### Initialization process
+
+Some token holders will be added not through the genesis block. For that the Token Holder smart contract needs to have
+and initialization function that sets all the internal variables from the passed parameters. It is going to be implementation specific,
+see future implementation PR.
 
 ## The NEAR Foundation
 The NEAR Foundation will have a standard account with the balance of tokens that it has received from the foundation. The account will not have a contract deployed to it and there will only be one full access key given to it. It will have balance equal to the amount issued by the foundation minus all balances of the initial token holders.
@@ -95,10 +112,11 @@ complex (since its balance structure is not trivial) and there is no real need t
 
 # Economics config
 
-We are going to store economics config in a key-value pair not associated with any account and therefore not a subject
-to storage rent. The key is going to be `ecfg` (notice that it is shorter than 5 characters and therefore not account can be
-created on the top of it). The value is going to be a list of economics configs serialized with Borsh. We are going to use
-`StateRecord::Data` to inject it into the trie.
+As first implementation we are going to store economics config in the genesis only.
+
+In the future, we will store economics config in a key-value pair not associated with any account and therefore not a subject
+to storage rent. The key is going to be `ecfg` (we will prohibit creation of any account prefixed with `ecfg`).
+The value is going to be a list of economics configs serialized with Borsh. We are going to use `StateRecord::Data` to inject it into the trie.
 
 Each economics config will have a version associated with it and the block index at which it kicks in.
 
