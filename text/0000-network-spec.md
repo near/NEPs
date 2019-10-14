@@ -6,13 +6,13 @@
 [summary]: #summary
 
 Specification of the networking layer that peers use to communicate.
-Includes implementation details of peer discovery, handshake and reputation.
+Includes implementation overview of peer discovery, handshake and reputation.
 Does not include the format of the actual blockchain protocol.
 
 # Motivation
 [motivation]: #motivation
 
-To provide actually secure and efficent routing, especially among the validators, we postulate that account information and cryptographic signatures backed directly or inderectly by stake are required.
+To provide actually secure and efficient routing, especially among the validators, we postulate that account information and cryptographic signatures backed directly or indirectly by stake are required.
 This network specification describes all of the protocols and data structures to connect, handshake, discover peers and maintain connections and an integration with the blockchain itself.
 
 This document should serve as reference for all the clients to implement networking layer.
@@ -23,55 +23,31 @@ This document should serve as reference for all the clients to implement network
 ## Routing Table
 
 ### API
-Peer Manager should be the only interacting directly with Routing Table API.
+Routing table is accessible from peer manager.
 
-- **Find route to PeerID** Find next peer in the path to some PeerID. This PeerID should be known to us. ****
-- **Find route to AccountID** This will only require to store a HashMap
-- **Add PeerID** New node known to us.
-- **Add AccountID** If PeerID associated with this account was not known, it is added.
-- **Add Connection** New connection between two PeerID already known to us.
+- **Find route to PeerID** Find next peer in the path to some PeerID. This PeerID should be known to us.
+- **Find route to AccountID** Find next peer in the path to some AccountID. This AccountID should be known to us.
+- **Add AccountID** Associate AccountID with PeerId. If PeerID associated with this account was not known, it is added.
+- **Add Connection** New connection between two PeerID.
 - **Remove Connection** Remove connection between two PeerID
-- **Register Neighbor** Add new active neighbor
-- **Unregister Neighbor** Remove active neighbor
-- **Sample Peers** Return sample of peers
-
-**Note:** We should not spend extra CPU on PeerIDs that are not longer in the same connected component as us.
-
-### Routing back
-
-- **Store Previous Link** Request Messages are those that expect a response, and a route back is stored. This will expire after some fixed timeout of after a response is delivered. We store hash of the message to identify sender.
-- **Get Previous Link** Find previous Link for a message. We can try to route the message if we don’t have a direct connection to this PeerId any longer.
-
-### Broadcast routing API
-
-- [https://www.gsd.inesc-id.pt/~ler/reports/srds07.pdf](https://www.gsd.inesc-id.pt/~ler/reports/srds07.pdf)
-
-**Multiple source broadcast routing**
-It solves the problem of multiple nodes broadcasting the same messages. When there are multiple sources for the broadcast message it can affect MST topology. To address this, sources will pack their message with special content that allow for every node in the network determine, if the message:
-
-- Was not received before.
-- Was received before from the same source.
-- Was received before from different source.
-
-This is relevant since packages received from the same source provide MST edge removal.
 
 ### Details
 
-- Network information will be stored as a graph. Nodes are Peers and edge are active connections between Nodes.
+- Network information will be stored as a graph. Nodes are peers and Edges are active connections between peers.
 - Nodes can be added to the network.
 - Edges can be added and removed to the network.
-- For every known peer it keeps which are the active connections that belong to the shortest route to them.
-- This is recalculated periodically based on last change, and how far from us is the affected node.
-
-Round Robin will be used to pick which peer to send a message in case a routed message is needed.
+- Nodes maintain shortest path to every other node in the network. In practice only next hop is maintained and not the entire route. This is recalculated periodically. When more than one nodes works as next hop Round Robin is used to choose one.
 
 **Recalculation Policy**
-Recalculation is scheduled when needed.
 
-- If an edge is added between nodes two with absolute distance difference less than 1 no recalculation is needed.
-- If an edge is removed between two nodes and distance to them
+After new edge update routing table recalculation is scheduled. This prevents high CPU loads from computing shortest path all the time, and allows processing of batch of updates in a single run. The variable `ROUTING_TABLE_CALC_IDLE_TIME` denotes how much time we spent before recalculating the routing table from scratch. This period should not be too large, since in the middle time the routing table is out of sync.
 
-Recalculation is scheduled based on the distance of the closest affected peer. The closest the node is, the earlier recalculation is scheduled. We should have `MIN_RECALCULATION_IDLE_TIME` to avoid spending a lot of CPU keeping the shortest path to all nodes synced.
+### Routing back
+
+It is possible that node A is known to B but not the other way around. In case node A sends a request that requires a response to B, the response is routed back through the same path used to send the message from A to B. This are special types of messages.
+
+- **Store Previous Link** Request Messages are those that expect a response, and a route back is stored. This will expire after some fixed timeout or after a response is delivered. We store hash of the message to identify sender.
+- **Get Previous Link** Find previous link for a message. Proposal: nodes can try to route the message if it doesn't have a direct connection to previous link anymore.
 
 ## Peer Manager
 
@@ -92,11 +68,34 @@ Recalculation is scheduled based on the distance of the closest affected peer. T
 
 This service will handle keeping the network view for every peer up to date using Broadcast mechanism. This will manage MST. When new edge is created this information is propagated through the network.
 
+### Edges
+
+Edge instance contains the following information:
+
+- `peer0` Endpoint of this edge.
+- `peer1` Endpoint of this edge.
+- `edge_type` Enum that takes one of two values L(`Added`, `Removed`). It represents the addition or deletion of one edge in the network respectively.
+- `nonce` Used to have an order among different edges between the same peers. Edge with higher nonce comes later and should be preferred. It also avoid reusing the same edge by malicious actors.
+- `signature0` Required for validating the edge. (Both in addition and deletion).
+- `signature1` Required for validating the edge. (Only in addition, in deletion only one signature is required).
+
+Since edges are undirected the canonical representation requires that `peer0 < peer1` (if PeerId are interpreted as integers).
+
+### Broadcast mechanics
+
+### Broadcast routing API
+
+For message broadcasting nodes maintain a dynamic spanning tree which adapts fast to new edges additions and removals [1](#reference). Broadcasted messages will travel in a near-optimal way through this tree.
+
+### Hard sync
+
 Also there is a hard sync mechanism for two nodes, that is used when new connection between two nodes is established.  Periodically nodes will run this hard sync to become up to date. The period to hard sync is always large enough so that changes are allowed to get propagated through the spanning tree.
 If view of the network differ by a large margin nodes will send their full view of the graph. Useful when new nodes join for the first time.
 Otherwise they will use bloom filters to find differences.
 
-**AddEdge/RemoveEdge** messages should contains a timestamp/nonce to avoid situations when removal gets to a node before addition (though in practice this should be extremely rare). When adding a new edge, both nodes after having signature from the other peer start broadcasting this new edge. Use multiple source broadcast mechanism.
+### Announce Account
+
+Data structure containing new account information.
 
 ## Connecting Service
 
@@ -104,9 +103,9 @@ This service will handle active connections.
 
 - It will determine if an incoming connection should be established. When some node is trying to establish a new connection if peers slots is full we will ping peer with latest last message. If ping fails, we drop our connection and establish connection with new peer.
 - It will try to establish new connections in several situations:
-    - Bootstrapping (When joining the network for the first time). Nodes will try to learn new nodes running
-    - Network balancing. We will have high tolerance to support connections to nodes that need to be close to use (same shard or block producers). Though we will have this number capped in case
-    - Low number of outbound connections.
+  - Bootstrapping (When joining the network for the first time).
+  - Network balancing. We will have high tolerance to support connections to nodes that need to be close to use (same shard or block producers). Though we will have this number capped in case
+  - Low number of outbound connections.
 - Remove some of the active connections if the number of active peer goes over some threshold. We allow number of active peers to be unbound in case we need to establish new connections because lack of outbound connections, or because we becoming part of new shard.
 
 ### Bootstrapping
@@ -117,7 +116,7 @@ When node starts it have two lists:
 - Known peers, peers that this node has connected before in previous sessions and stored on disk to persist between runs. This list can be empty if this is first time to start the node.
 
 Both of these lists are merged and node starts by connecting to `max_peers` random peers from this list.
-If there is not enough peers in the lists, node periodically tries to connect to newly discovered peers with a exponential back off timeout (in case network is smaller than K in the first place) until it switches to *regular* mode. *Regular* mode means that node periodically checks if there is not enough peers (due to disconnects) and conncects to new peers.
+If there is not enough peers in the lists, node periodically tries to connect to newly discovered peers with a exponential back off timeout (in case network is smaller than K in the first place) until it switches to *regular* mode. *Regular* mode means that node periodically checks if there is not enough peers (due to disconnects) and connects to new peers.
 
 Additionally, to prevent various eclipse attacks where attacker forces node to have all incoming connection to them, we require node to have at least `min_outgoing_peers` outgoing connections.
 
@@ -132,7 +131,7 @@ In pseudo code, this would look like:
     sample_peers = sample(peers, peers_to_connect)
     for peer in sample_peers:
         connect(peer)
-    wait_time = max(wait_time * backoff, peer_reconnect_wait)
+    wait_time = max(wait_time * back_off, peer_reconnect_wait)
     sleep(wait_time)
 ```
 
@@ -152,7 +151,7 @@ In pseudo code, this would look like:
     - Keep connections to node in the active set.
     - Keep connections to latest `OUTBOUND_PEERS_CONSTANT`
     - Keep connections to latest `NUM_PEERS_CONSTANT`
-    - Keep connections marked as `IMPORTANT` (This will be used to keep broadcast spanning tree connections, maybe can be used to hardcode some connections).
+    - Keep connections marked as `IMPORTANT` (This will be used to keep broadcast spanning tree connections, maybe can be used to hard code some connections).
     - List all other connections and remove them as long as
 
 ## Peer
@@ -203,17 +202,19 @@ We identify list of possible attacks, their severity and resulting reaction of t
 
 - Peer responds with false `latest_height` / `latest_weight`. The attacker might want to stall node in syncing mode, waiting for headers that don't exist by providing way to large `latest_height`. The only way to actually verify this is to try to pull headers from this peer. As we start requesting headers, a timer setup. If peer doesn't respond to the `HeaderRequest` within this time, we Ban the peer for a medium period of time. Additional heuristic can be added, which node will be banned if their `latest_height` is above some threshold of heights known from other peers.
 
+- Create several ghost accounts with ghost connections among them and flood the network with them. Nodes will be calculating shortest path frequently and having many reachable nodes in the routing table increase the cost of such operation.
+
 ### Eclipse attack manipulating reputation
 
 A malicious actor put as little stake as possible in the blockchain to become validator from as much peer ids as possible. All this peer id become relevant (maybe gaining reputation through time) and tries to flood some participants active connections with their forged peer ids.
 
-Outbounds connections might not be an effective resource to avoid such situation if malicious actor plans it attack with some time, though waiting to all its nodes get high reputation (this is undetectable, mostly because malicious actor needs to do nothing bad).
+Outbound connections might not be an effective resource to avoid such situation if malicious actor plans it attack with some time, though waiting to all its nodes get high reputation (this is undetectable, mostly because malicious actor needs to do nothing bad).
 
 Also in order to achieve this it can also corrupt (take control) of high reputation nodes which is not that unrealistic.
 
 One defense against such an attack right now is part of the balance mechanism, where validators will make direct connections to other validators, hence keeping at least one connection to an honest node.
 
-Proposal: We can fetch some reputable peers from a UDP channel from other nodes we know in the network and randomly rotate some (few) slots of our connected peers. Trying to establish this way new outbounds (also inbound) connections to other peers.
+Proposal: We can fetch some reputable peers from a UDP channel from other nodes we know in the network and randomly rotate some (few) slots of our connected peers. Trying to establish this way new outbound (also inbound) connections to other peers.
 
 **WARNING**: This situation taken to an extreme might lead to a centralized system where all honest nodes are connected to a malicious node without knowing the existence of other honest nodes.
 
@@ -221,7 +222,7 @@ Proposal: We can fetch some reputable peers from a UDP channel from other nodes 
 [rationale-and-alternatives]: #rationale-and-alternatives
 
 Ethereum uses Kademlia table for new peer discovery.
-Kademlia is a distributed hash table (DHT), whose function is mostly to store pieces of data across a peer-to-peer network. Kademlia wasn't also designed with the goal to prevent malicious agents attack (as usually it's used to store content addressable data which is self verifiable). [1](#references) has shown some easy ways to attack Kademlia table peer-to-peer discovery process.
+Kademlia is a distributed hash table (DHT), whose function is mostly to store pieces of data across a peer-to-peer network. Kademlia wasn't also designed with the goal to prevent malicious agents attack (as usually it's used to store content addressable data which is self verifiable). [2](#references) has shown some easy ways to attack Kademlia table peer-to-peer discovery process.
 
 # Unresolved questions
 [unresolved-questions]: #unresolved-questions
@@ -235,8 +236,8 @@ Kademlia is a distributed hash table (DHT), whose function is mostly to store pi
 
 Add a reputation mechanism. Using reputation is somehow easy to design a strategy that effectively avoids both, sybil and eclipse attack; also it can be leveraged to improve network balancing using connections from well known (reputable) nodes. But setting up a reputation mechanism increase notably the complexity of the system, and it is very hard to design it off-chain in such a way that can’t be manipulated by malicious actor. We are still researching in this area,
 
-
 # References
 [references]: #references
 
-1. Low-Resource Eclipse Attacks on Ethereum’s Peer-to-Peer Network
+1. [Epidemic Broadcast Tree](https://www.gsd.inesc-id.pt/~ler/reports/srds07.pdf)
+2. Low-Resource Eclipse Attacks on Ethereum’s Peer-to-Peer Network.
