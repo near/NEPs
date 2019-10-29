@@ -171,8 +171,9 @@ The full implementation in Rust can be found there: https://github.com/nearproto
 Interface:
 
 ```rust
-/// Initializes the token contract with the given `total_supply` owned by the `owner_id`.
-pub fn new(owner_id: AccountId, total_supply: Balance) -> Self;
+/******************/
+/* CHANGE METHODS */
+/******************/
 
 /// Sets amount allowed to spent by `escrow_account_id` on behalf of the caller of the function
 /// (`predecessor_id`) who is considered the balance owner to the new `allowance`.
@@ -205,8 +206,12 @@ pub fn unlock(&mut self, owner_id: AccountId, unlock_amount: Balance);
 /// unlocked tokens.
 pub fn transfer_from(&mut self, owner_id: AccountId, new_owner_id: AccountId, amount: Balance);
 
-/// Same as `transfer_from` with `owner_id` `predecessor_id`.
+/// Same as `transfer_from` with `owner_id` equals to `predecessor_id`.
 pub fn transfer(&mut self, new_owner_id: AccountId, amount: Balance);
+
+/****************/
+/* VIEW METHODS */
+/****************/
 
 /// Returns total supply of tokens.
 pub fn get_total_supply(&self) -> Balance;
@@ -227,7 +232,7 @@ pub fn get_locked_balance(&self, owner_id: AccountId, escrow_account_id: Account
 # Drawbacks
 [drawbacks]: #drawbacks
 
-- Current interface doesn't have minting, precision and naming.
+- Current interface doesn't have minting, precision (decimals), naming.
 - It's possible to accidentally lock tokens if the escrow account is not carefully handling gas correctly.
 Ideally we should automatically unlock long-locked tokens after the some period of time and/or blocks.  
 
