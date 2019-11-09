@@ -53,7 +53,7 @@ If after processing a block at height `n'` the state machine is in a state `Reve
 
 If all the seeds are revealed, the state machine moves to the state `Producing output <v> from <i>`, where `v` is the `xor` of all the valid seeds (seeds that match the commitment).
 
-If some seeds are missing, and `n' - n >= z` for some system parameter `z` (in practice `z` should be around 2), each block producer creates a message with all the decoded `s_{z_j, i}` or proofs that corresponding elements cannot be decrypted, following the subsection `Reveal` of section 2 in the paper. Such messages are broadcast off-chain via the gossip network, and are locally accumulated by all block producers. If a block producer has enough of such messages to decode all missing seeds, they publish them in the block. Processing such a block naturally moves the state machine into state `Producing output <v> from <i>`.
+If some seeds are missing, and `n' - i >= z` for some system parameter `z` (in practice `z` should be around 2), each block producer `x` creates a message with all the decoded `s_{z_j, x}` or proofs that corresponding elements cannot be decrypted, following the subsection `Reveal` of section 2 in the paper. Such messages are broadcast off-chain via the gossip network, and are locally accumulated by all block producers. If a block producer has enough of such messages to decode all missing seeds, they publish them in the block. Processing such a block naturally moves the state machine into state `Producing output <v> from <i>`.
 
 If at any moment the state machine is in the state `Producing output <v> from <i>`, it immediately moves to the state `NotRevealing`.
 
