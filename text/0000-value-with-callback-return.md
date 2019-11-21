@@ -1,4 +1,4 @@
-- Proposal Name: caller-promise
+- Proposal Name: value-with-callback-return
 - Start Date: 2019-11-20
 - NEP PR: [nearprotocol/neps#0000](https://github.com/nearprotocol/neps/pull/0000)
 - Issue(s): [neps#23](https://github.com/nearprotocol/neps/pull/23)
@@ -6,7 +6,7 @@
 # Summary
 [summary]: #summary
 
-Caller promise allows to schedule a promise as a callback to the caller.
+Add a new API to schedule callbacks on the output dependencies. It allows to implement simple automatic unlocks.
 
 # Motivation
 [motivation]: #motivation
@@ -50,8 +50,7 @@ The proposal is:
 - `alice` calls `dex`
 - `dex` calls `fun` and `nai` to lock corresponding balances. Attaches a callback back to `dex` to call `on_locks`
 - `fun` and `nai` locks balances within their contracts.
-And each attaches a caller callback to unlock themselves by calling `promise_caller_create` with a similar interface to
-[`promise_batch_create`](https://nomicon.io/Runtime/Components/BindingsSpec/PromisesAPI.html).
+And also creates a new promise to unlock themselves. But instead they return it with `value_with_callback_return` (debatable name).
 This will attach a new promise to the result of `dex`'s callback (for each token).
 - `on_locks` on `dex` is called. `dex` can assert both locks succeeded.
 `dex` calls `fun` and `nai` to transfer funds. Attaches a new callback back to `dex`.
@@ -150,7 +149,7 @@ ActionReceipt {
     receiver_id: "A",
     predecessor_id: "USER",
     input_data_ids: [],
-    output: [],
+    output_data_receivers: [],
 }
 
 
@@ -162,7 +161,7 @@ ActionReceipt {
     receiver_id: "B",
     predecessor_id: "A",
     input_data_ids: [],
-    output: [],
+    output_data_receivers: [],
 }
 
 // Attaches a callback back to `A`. (R2 is modified, R3 is created)
@@ -171,7 +170,7 @@ ActionReceipt {
     receiver_id: "B",
     predecessor_id: "A",
     input_data_ids: [],
-    output: [
+    output_data_receivers: [
         DataReceiver {receiver_id: "A", data: "D1"}
     ]
 }
@@ -180,7 +179,7 @@ ActionReceipt {
     receiver_id: "A",
     predecessor_id: "A",
     input_data_ids: ["D1"],
-    output: []
+    output_data_receivers: []
 }
 
 // Returns callback `A`. (Doesn't change anything, cause R1 doesn't have output)
@@ -194,14 +193,14 @@ ActionReceipt {
     receiver_id: "C",
     predecessor_id: "B",
     input_data_ids: [],
-    output: [],
+    output_data_receivers: [],
 }
 ActionReceipt {
     id: "R5",
     receiver_id: "D",
     predecessor_id: "B",
     input_data_ids: [],
-    output: [],
+    output_data_receivers: [],
 }
 
 // Attaches a callback from `C` to `D`. (R4 and R5 are modified)
@@ -210,7 +209,7 @@ ActionReceipt {
     receiver_id: "C",
     predecessor_id: "B",
     input_data_ids: [],
-    output: [
+    output_data_receivers: [
         DataReceiver {receiver_id: "D", data: "D2"},
     ],
 }
@@ -219,7 +218,7 @@ ActionReceipt {
     receiver_id: "D",
     predecessor_id: "B",
     input_data_ids: ["D2"],
-    output: [],
+    output_data_receivers: [],
 }
 // And returns promise `C`. (R4 is modified)
 ActionReceipt {
@@ -227,7 +226,7 @@ ActionReceipt {
     receiver_id: "C",
     predecessor_id: "B",
     input_data_ids: [],
-    output: [
+    output_data_receivers: [
         DataReceiver {receiver_id: "A", data: "D1"},
         DataReceiver {receiver_id: "D", data: "D2"},
      ],
@@ -240,44 +239,98 @@ Let's now discuss how to implement the proposed change.
 
 ## Proposed change
 
-In order to create a promise on the caller, we need to pass it through the data 
+### Back to example
 
+In the example with `fun` tokens, we need to attach a promise on the caller. But let's look at the example of `R4` receipt instead:
+```rust
+ActionReceipt {
+    id: "R4",
+    receiver_id: "C",
+    predecessor_id: "B",
+    input_data_ids: [],
+    output_data_receivers: [
+        DataReceiver {receiver_id: "A", data: "D1"},
+        DataReceiver {receiver_id: "D", data: "D2"},
+     ],
+}
+```
+
+There caller (`predecessor_id`) is `B`, but the output data receivers are `A` and `D`.
+Execution at `C` can't influence `B` or attach anything to `B`, because execution of `B` has already completed or has indirect dependency.
+Instead `C` can only influence both `A` and `D`. 
+
+Now lets look at `fun` token receipt example:
+```rust
+ActionReceipt {
+    id: "R6",
+    receiver_id: "fun",
+    predecessor_id: "dex",
+    input_data_ids: [],
+    output_data_receivers: [
+        DataReceiver {receiver_id: "dex", data: "D3"},
+     ],
+}
+```
+
+In this case `dex` is both the caller and the output data receiver.
+So for the `lock` example `fun` might be able to attach something towards `dex` through the generated output data.
+
+### Changes
+
+- Add a new runtime API method `value_with_callback_return` (the name is debatable).
+- Add another return type to VMLogic, that is Value with callbacks. Or modify existing Value return.
+- Add a new field to `DataReceipt` to provide new outputs. Call it `new_output_data_receivers` which is a vector of `DataReceiver`.
+- Modify logic of Runtime on passing `output_data_receivers` towards `VMLogic`.
+The new `output_data_receivers` should not only contains data from the receipt, but also a contain all receivers from `new_output_data_receivers` from `DataReceipt`s.
+
+New `DataReceipt` and `ReceivedData` structures:
+```rust
+#[derive(BorshSerialize, BorshDeserialize, Hash, PartialEq, Eq, Clone)]
+pub struct DataReceipt {
+    pub data_id: CryptoHash,
+    pub data: Option<Vec<u8>>,
+    pub new_output_data_receivers: Vec<DataReceiver>,
+}
+
+#[derive(BorshSerialize, BorshDeserialize, Hash, PartialEq, Eq, Clone)]
+pub struct ReceivedData {
+    pub data: Option<Vec<u8>>,
+    pub new_output_data_receivers: Vec<DataReceiver>,
+}
+```
+
+# Rationale
+[rationale]: #rationale
+
+- When returning a `value_with_callback_return`, the Runtime knows how many output data receivers are there.
+So we can calculate the cost of the data receipts required to generate. 
+- Existing return types doesn't break the assumption and we can easily modify the output receivers of not yet executed action receipt
+- If there are more than 1 output data receiver, then the `unlock` will depend on the both outputs and it wouldn't unlock early.
+- The unlock is fully prepaid during the lock, so the lock can't happen without unlock.
+- It requires a little changes to Runtime and doesn't introduce storage locks.
+- Developers don't need to explicitly unlock.
+- The change is flexible enough to support locks and doesn't force developers to be limited to Row locks.
+- It supports all examples that were discussed offline, including
+    - proxy: works with proxy, if proxy just returns a promise instead of having a callback. 
+    - 2 exchanges. The lock will be dropped before leaving the exchange contract. So it will unlock. Also doesn't affect, cause re-entry is handled differently.
+- This doesn't break the existing Runtime API.
+    
 # Drawbacks
 [drawbacks]: #drawbacks
 
-Why should we *not* do this?
+- This might be complicated to developers to understand the difference between the return types. Hopefully the bindgen will hide it or simplify it.
+- There are might be a need in some additional API to redirect output data dependencies to a caller as well. This is if the proxy decides to implement a callback. Can discuss offline.
 
-# Rationale and alternatives
-[rationale-and-alternatives]: #rationale-and-alternatives
-
-- Why is this design the best in the space of possible designs?
-- What other designs have been considered and what is the rationale for not choosing them?
-- What is the impact of not doing this?
 
 # Unresolved questions
 [unresolved-questions]: #unresolved-questions
 
-- What parts of the design do you expect to resolve through the NEP process before this gets merged?
-- What parts of the design do you expect to resolve through the implementation of this feature before stabilization?
-- What related issues do you consider out of scope for this NEP that could be addressed in the future independently of the solution that comes out of this NEP?
+- How a proxy contract can be implemented with a callback. Such as `dex` -> `proxy` -> `token` -> `proxy` -> `dex`.
+In this case the callback at `proxy` will drop the `unlock` dependency, and the `token` will unlock. Instead it should somehow return data dependency back to `dex`.
+For this data output needs to be visible to VM logic. And input data would need to have a `predecessor_id` (which we can expose in `ReceivedData`).
 
 # Future possibilities
 [future-possibilities]: #future-possibilities
 
-Think about what the natural extension and evolution of your proposal would
-be and how it would affect the project as a whole in a holistic
-way. Try to use this section as a tool to more fully consider all possible
-interactions with the project in your proposal.
-Also consider how the this all fits into the roadmap for the project
-and of the relevant sub-team.
+- Implement more runtime APIs to allow redirect some outputs instead of returning them. This will resolve the proxy callback problem.
 
-This is also a good place to "dump ideas", if they are out of scope for the
-NEP you are writing but otherwise related.
-
-If you have tried and cannot think of any future possibilities,
-you may simply state that you cannot think of anything.
-
-Note that having something written down in the future-possibilities section
-is not a reason to accept the current or a future NEP. Such notes should be
-in the section on motivation or rationale in this or subsequent NEPs.
-The section merely provides additional information.
