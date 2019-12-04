@@ -114,7 +114,7 @@ Because Chain and Runtime guarantees that no receipts are missing, we can rely t
 
 When a promise is created inside the VM logic, it calls externalities to create a corresponding action receipt.
 
-When a `promise_then` is called, it depends one promise ID. This promise ID can either be a regular promise or a joint promise.
+When a `promise_then` is called, it depends on one promise ID. This promise ID can either be a regular promise or a joint promise.
 Joint promise is created by joining multiple promises using `promise_and`. We can think about them as a vector of regular promises.
 
 `promise_then` creates a new promise by calling externalities and passing a list of regular promises.
@@ -249,8 +249,8 @@ ActionReceipt {
     predecessor_id: "B",
     input_data_ids: [],
     output_data_receivers: [
-        DataReceiver {receiver_id: "A", data: "D1"},
-        DataReceiver {receiver_id: "D", data: "D2"},
+        DataReceiver {receiver_id: "A", data_id: "D1"},
+        DataReceiver {receiver_id: "D", data_id: "D2"},
      ],
 }
 ```
@@ -267,7 +267,7 @@ ActionReceipt {
     predecessor_id: "dex",
     input_data_ids: [],
     output_data_receivers: [
-        DataReceiver {receiver_id: "dex", data: "D3"},
+        DataReceiver {receiver_id: "dex", data_id: "D3"},
      ],
 }
 ```
@@ -333,4 +333,3 @@ For this data output needs to be visible to VM logic. And input data would need 
 [future-possibilities]: #future-possibilities
 
 - Implement more runtime APIs to allow redirect some outputs instead of returning them. This will resolve the proxy callback problem.
-
