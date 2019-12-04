@@ -171,7 +171,7 @@ ActionReceipt {
     predecessor_id: "A",
     input_data_ids: [],
     output_data_receivers: [
-        DataReceiver {receiver_id: "A", data: "D1"}
+        DataReceiver {receiver_id: "A", data_id: "D1"}
     ]
 }
 ActionReceipt {
@@ -210,7 +210,7 @@ ActionReceipt {
     predecessor_id: "B",
     input_data_ids: [],
     output_data_receivers: [
-        DataReceiver {receiver_id: "D", data: "D2"},
+        DataReceiver {receiver_id: "D", data_id: "D2"},
     ],
 }
 ActionReceipt {
@@ -227,8 +227,8 @@ ActionReceipt {
     predecessor_id: "B",
     input_data_ids: [],
     output_data_receivers: [
-        DataReceiver {receiver_id: "A", data: "D1"},
-        DataReceiver {receiver_id: "D", data: "D2"},
+        DataReceiver {receiver_id: "A", data_id: "D1"},
+        DataReceiver {receiver_id: "D", data_id: "D2"},
      ],
 }
 ```
