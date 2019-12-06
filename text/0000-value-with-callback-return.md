@@ -706,6 +706,83 @@ fun->fun: unlock(fun-lock-id-1)
 
 The first part is the same as in the current version. Scenarios are different.
 
+```rust
+/// `alice` calls `dex`
+//////// Original receipt
+ActionReceipt {
+    id: "A1",
+    receiver_id: "dex",
+    predecessor_id: "alice",
+    input_data_ids: [],
+    output_data_receivers: [],
+    actions: [FunctionCall { method_name: "exchange", ... }],
+}
+
+
+/// `dex` calls `fun` and `nai` to lock corresponding balances.
+//////// Executing A1
+ActionReceipt {
+    id: "A2",
+    receiver_id: "fun",
+    predecessor_id: "dex",
+    input_data_ids: [],
+    output_data_receivers: [],
+    actions: [FunctionCall { method_name: "lock", ... }],
+}
+ActionReceipt {
+    id: "A3",
+    receiver_id: "nai",
+    predecessor_id: "dex",
+    input_data_ids: [],
+    output_data_receivers: [],
+    actions: [FunctionCall { method_name: "lock", ... }],
+}
+
+/// `dex` creates a callback back to `dex` to call `on_locks`.
+ActionReceipt {
+    id: "A4",
+    receiver_id: "dex",
+    predecessor_id: "dex",
+    input_data_ids: [],
+    output_data_receivers: [],
+    actions: [FunctionCall { method_name: "on_locks", ... }],
+}
+
+/// `dex` attaches this callback to joint promises for `fun` and `nai`. (Modifies A2, A3, A4)
+ActionReceipt {
+    id: "A2",
+    receiver_id: "fun",
+    predecessor_id: "dex",
+    input_data_ids: [],
+    output_data_receivers: [
+        DataReceiver {receiver_id: "dex", data_id: "data-id-1"}
+    ],
+    actions: [FunctionCall { method_name: "lock", ... }],
+}
+ActionReceipt {
+    id: "A3",
+    receiver_id: "nai",
+    predecessor_id: "dex",
+    input_data_ids: [],
+    output_data_receivers: [
+        DataReceiver {receiver_id: "dex", data_id: "data-id-2"}
+    ],
+    actions: [FunctionCall { method_name: "lock", ... }],
+}
+ActionReceipt {
+    id: "A4",
+    receiver_id: "dex",
+    predecessor_id: "dex",
+    input_data_ids: ["data-id-1", "data-id-2"],
+    output_data_receivers: [],
+    actions: [FunctionCall { method_name: "on_locks", ... }],
+}
+
+/// `dex` returns this callback using `return_promise`.
+// No receipts are modified, but execution outcome for A1 changes to reflect to wait for A4.
+
+```
+
 ##### Proposed Changes - Scenario 1. Both locks succeeded
 
 ```rust
