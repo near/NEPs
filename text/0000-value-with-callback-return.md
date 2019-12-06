@@ -875,7 +875,12 @@ ActionReceipt {
 }
 
 
-/// NOTE!
+//////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////// NOTE //////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////
+
 /// Now A7 can only be executed after A5 and A6.
 /// Which means C1 and C2 can only be executed after both A5 and A6.
 
@@ -1200,7 +1205,7 @@ ActionReceipt {
 ```
 
 There caller (`predecessor_id`) is `B`, but the output data receivers are `A` and `D`.
-Execution at `C` can't influence `B` or attach anything to `B`, because execution of `B` has already completed or has indirect dependency.
+Execution at `C` can't influence `B` or attach any promises or callbacks to `B`, because execution of `B` has already completed or has indirect dependency.
 Instead `C` can only influence both `A` and `D`. 
 
 Now lets look at `fun` token receipt example:
