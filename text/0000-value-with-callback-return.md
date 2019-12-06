@@ -1,6 +1,6 @@
 - Proposal Name: value-with-callback-return
 - Start Date: 2019-11-20
-- NEP PR: [nearprotocol/neps#0000](https://github.com/nearprotocol/neps/pull/0000)
+- NEP PR: [nearprotocol/neps#0024](https://github.com/nearprotocol/neps/pull/24)
 - Issue(s): [neps#23](https://github.com/nearprotocol/neps/pull/23)
 
 # Summary
@@ -36,29 +36,300 @@ The proposed idea is to be able to attach a callback to the caller's callback.
 
 User `alice` calls exchange `dex` to swap token `fun` with token `nai` 
 
-Here is how it works now:
-- `alice` calls `dex`
-- `dex` calls `fun` and `nai` to lock corresponding balances. Attaches a callback back to `dex` to call `on_locks`
-- `fun` and `nai` locks balances within their contracts
-- `on_locks` on `dex` is called.
-    - If both locks succeeded, `dex` calls `fun` and `nai` to transfer funds.
-    - If one of the locks failed, `dex` calls the a token contract with the successful lock to unlock funds.
-   
-The issue is if the callback on `dex` fails for some reason, the tokens might remain locked.
+#### Current version
 
-The proposal is:
 - `alice` calls `dex`
-- `dex` calls `fun` and `nai` to lock corresponding balances. Attaches a callback back to `dex` to call `on_locks`
-- `fun` and `nai` locks balances within their contracts.
-And also creates a new promise to unlock themselves. But instead they return it with `value_with_callback_return` (debatable name).
-This will attach a new promise to the result of `dex`'s callback (for each token).
-- `on_locks` on `dex` is called. `dex` can assert both locks succeeded.
-`dex` calls `fun` and `nai` to transfer funds. Attaches a new callback back to `dex`.
-- a new callback on `dex` is called. It can be noop.
+- `dex` calls `fun` and `nai` to lock corresponding balances.
+    - `dex` creates a callback back to `dex` to call `on_locks`.
+    - `dex` attaches this callback to joint promises for `fun` and `nai`.
+    - `dex` returns this callback using `return_promise`.
+- Scenario 1. Both locks succeeded. 
+    - `fun` and `nai` locks balances within their contracts. 
+        - `fun` returns lock ID
+        - `nai` returns lock ID
+    - `on_locks` on `dex` is called.
+        - `dex` calls `fun` and `nai` to transfer funds.
+        - `transferFrom` called on `fun` and `nai`
+            - `fun` and `nai` transfers locked balances to the new owner.
+            - `fun` and `nai` removes the locks internally.
+- Scenario 2. `nai` lock failed
+    - `fun` and `nai` locks balances within their contracts. 
+        - `fun` returns lock ID
+        - `nai` lock fails
+    - `on_locks` on `dex` is called.
+        - `dex` calls the a token contract with the successful lock to unlock funds.
+            - `dex` calls method `unlock` on `fun`
+        - `unlock` on `fun` is called.
+            - unlocks funds with the corresponding lock.
+- Scenario 3. Houston, we have a problem.
+    - `fun` and `nai` locks balances within their contracts. 
+        - `fun` returns lock ID
+        - `nai` lock fails
+    - `on_locks` on `dex` is called.
+        - `dex` asserts both locks succeeded.
+        - `dex` on_locks fails
+    - Funds on `fun` remain locked for a while. Unless there is timed auto-unlock, funds are locked forever. This is a problem.
+
+Let's look at receipts (See [How runtime works](#how-runtime-work)):
+
+```rust
+/// `alice` calls `dex`
+//////// Original receipt
+ActionReceipt {
+    id: "A1",
+    receiver_id: "dex",
+    predecessor_id: "alice",
+    input_data_ids: [],
+    output_data_receivers: [],
+    actions: [FunctionCall { method_name: "exchange", ... }],
+}
+
+
+/// `dex` calls `fun` and `nai` to lock corresponding balances.
+//////// Executing A1
+ActionReceipt {
+    id: "A2",
+    receiver_id: "fun",
+    predecessor_id: "dex",
+    input_data_ids: [],
+    output_data_receivers: [],
+    actions: [FunctionCall { method_name: "lock", ... }],
+}
+ActionReceipt {
+    id: "A3",
+    receiver_id: "nai",
+    predecessor_id: "dex",
+    input_data_ids: [],
+    output_data_receivers: [],
+    actions: [FunctionCall { method_name: "lock", ... }],
+}
+
+/// `dex` creates a callback back to `dex` to call `on_locks`.
+ActionReceipt {
+    id: "A4",
+    receiver_id: "dex",
+    predecessor_id: "dex",
+    input_data_ids: [],
+    output_data_receivers: [],
+    actions: [FunctionCall { method_name: "on_locks", ... }],
+}
+
+/// `dex` attaches this callback to joint promises for `fun` and `nai`. (Modifies A2, A3, A4)
+ActionReceipt {
+    id: "A2",
+    receiver_id: "fun",
+    predecessor_id: "dex",
+    input_data_ids: [],
+    output_data_receivers: [
+        DataReceiver {receiver_id: "dex", data_id: "data-id-1"}
+    ],
+    actions: [FunctionCall { method_name: "lock", ... }],
+}
+ActionReceipt {
+    id: "A3",
+    receiver_id: "nai",
+    predecessor_id: "dex",
+    input_data_ids: [],
+    output_data_receivers: [
+        DataReceiver {receiver_id: "dex", data_id: "data-id-2"}
+    ],
+    actions: [FunctionCall { method_name: "lock", ... }],
+}
+ActionReceipt {
+    id: "A4",
+    receiver_id: "dex",
+    predecessor_id: "dex",
+    input_data_ids: ["data-id-1", "data-id-2"],
+    output_data_receivers: [],
+    actions: [FunctionCall { method_name: "on_locks", ... }],
+}
+
+/// `dex` returns this callback using `return_promise`.
+// No receipts are modified, but execution outcome for A1 changes to reflect to wait for A4.
+
+```
+
+##### Current version - Scenario 1. Both locks succeeded
+
+```rust
+/// `fun` and `nai` locks balances within their contracts
+
+/// `fun` returns lock ID
+//////// Executing A2 (Generates D1)
+DataReceipt {
+    id: "D1",
+    receiver_id: "dex",
+    predecessor_id: "fun",
+    data_id: "data-id-1",
+    data: Some(b"fun-lock-id-1"),
+}
+
+/// `nai` returns lock ID
+//////// Executing A3 (Generates D2)
+DataReceipt {
+    id: "D2",
+    receiver_id: "dex",
+    predecessor_id: "nai",
+    data_id: "data-id-2",
+    data: Some(b"nai-lock-id-1"),
+}
+
+/// `on_locks` on `dex` is called.
+//////// Executing A4
+
+/// `dex` calls `fun` and `nai` to transfer funds.
+// Generates 2 receipts A5 and A6, passes lock ids
+ActionReceipt {
+    id: "A5",
+    receiver_id: "fun",
+    predecessor_id: "dex",
+    input_data_ids: [],
+    output_data_receivers: [],
+    actions: [FunctionCall { method_name: "trasnferFrom", ... }],
+}
+
+ActionReceipt {
+    id: "A6",
+    receiver_id: "nai",
+    predecessor_id: "dex",
+    input_data_ids: [],
+    output_data_receivers: [],
+    actions: [FunctionCall { method_name: "trasnferFrom", ... }],
+}
+
+/// `transferFrom` called on `fun` and `nai`.
+/// `fun` and `nai` transfers locked balances to the new owner.
+/// `fun` and `nai` removes the locks internally.
+
+//////// Executing A5 and A6
+....
+```
+
+##### Current version - Scenario 2. `nai` lock failed
+
+```rust
+/// `fun` and `nai` locks balances within their contracts
+/// `fun` returns lock ID
+//////// Executing A2 (Generates D1)
+DataReceipt {
+    id: "D1",
+    receiver_id: "dex",
+    predecessor_id: "fun",
+    data_id: "data-id-1",
+    data: Some(b"fun-lock-id-1"),
+}
+
+/// `nai` lock fails
+//////// Executing A3 (Generates D2)
+DataReceipt {
+    id: "D2",
+    receiver_id: "dex",
+    predecessor_id: "nai",
+    data_id: "data-id-2",
+    data: None,
+}
+
+/// `on_locks` on `dex` is called.
+//////// Executing A4
+
+/// `dex` calls the a token contract with the successful lock to unlock funds
+/// `dex` calls method `unlock` on `fun`
+// Generates A5, passes lock id to unlock
+
+ActionReceipt {
+    id: "A5",
+    receiver_id: "fun",
+    predecessor_id: "dex",
+    input_data_ids: [],
+    output_data_receivers: [],
+    actions: [FunctionCall { method_name: "unlock", args: b"{\"lock_id\": \"fun-lock-id-1\"}", ... }],
+}
+
+/// `unlock` on `fun` is called.
+/// unlocks funds with the corresponding lock.
+ 
+//////// Executing A5
+....
+```
+
+##### Current version - Scenario 3. Houston, we have a problem.
+        - `dex` asserts both locks succeeded.
+        - `dex` on_locks fails
+    - Funds on `fun` remain locked for a while. Unless there is timed auto-unlock, funds are locked forever. This is a problem.
+    
+```rust
+/// `fun` and `nai` locks balances within their contracts
+/// `fun` and `nai` locks balances within their contracts
+/// `fun` returns lock ID
+//////// Executing A2 (Generates D1)
+DataReceipt {
+    id: "D1",
+    receiver_id: "dex",
+    predecessor_id: "fun",
+    data_id: "data-id-1",
+    data: Some(b"fun-lock-id-1"),
+}
+
+/// `nai` lock fails
+//////// Executing A3 (Generates D2)
+DataReceipt {
+    id: "D2",
+    receiver_id: "dex",
+    predecessor_id: "nai",
+    data_id: "data-id-2",
+    data: None,
+}
+
+/// `on_locks` on `dex` is called.
+//////// Executing A4
+
+/// `dex` asserts both locks succeeded.
+/// `dex` on_locks fails
+/// Funds on `fun` remain locked for a while.
+/// Unless there is timed auto-unlock, funds are locked forever.
+
+/// This is a problem.
+
+```
+
+#### The proposal
+
+- `alice` calls `dex`
+- `dex` calls `fun` and `nai` to lock corresponding balances.
+    - `dex` creates a callback back to `dex` to call `on_locks`.
+    - `dex` attaches this callback to joint promises for `fun` and `nai`.
+    - `dex` returns this callback using `return_promise`.
+- Scenario 1. Both locks succeeded
+    - `fun` and `nai` locks balances within their contracts. Explaining for `fun` only, `nai` is similar.
+        - `fun` creates a new promise to `fun` to call `unlock`.
+        - `fun` returns new lock ID and a callback using `value_with_callback_return` (debatable name).
+    - `on_locks` on `dex` is called.
+        - `dex` asserts both locks succeeded.
+        - `dex` calls `fun` and `nai` to transfer funds.
+        - `dex` creates a callback back to `dex` to call `on_transfers`.
+        - `dex` attaches this callback to joint promises on `transfer` for `fun` and `nai`.
+        - `dex` returns this callback using `return_promise`.
+    - `transferFrom` called on `fun` and `nai`
+        - `fun` transfers locked balances to the new owner.
+        - `fun` removes the locks internally, so the following `unlock` for this lock ID will be noop.
+    - `on_transfers` on `dex` is called. It can be noop.
+        - returns `true`.
+    - `unlock` is called on `fun` and `nai`.
+        - Because transfers removed the locks, it's noop. 
+- Scenario 2. `nai` lock failed.
+    - `fun` and `nai` locks balances within their contracts, but `nai` fails.
+        - `fun` creates a new promise to `fun` to call `unlock`.
+        - `fun` returns new lock ID and a callback using `value_with_callback_return` (debatable name).
+        - `nai` fails
+    - `on_locks` on `dex` is called.
+        - `dex` asserts both locks succeeded.
+        - `on_locks` fails.
+    - `unlock` is called on `fun`.
+        - `fun` unlocks locked funds.
 
 Two things to notice:
-1. `dex` no longer need to unlock tokens in case of lock failures, instead it can assert them.
-2. `dex` has to attach a callback to token transfer.
+1. `dex` no longer need to unlock tokens in case of lock failures, instead it can assert success of locks.
+2. `dex` has to attach a callback to token transfer `on_transfers`.
 
 ### No need to unlock
 
@@ -74,6 +345,321 @@ tokens from being unlocked before transfers are completed.
 If `dex` doesn't depend on transfers, the `unlock` might be executed before transfers, and someone might try to front-run it, so one of the transfers might fail.
 To avoid this `dex` has to attach another callback towards transfer calls, this will delay `unlock` execution until transfers are executed.
 
+Let's look at receipts:
+
+The first part is the same. Scenarios are different.
+
+##### Proposed Changes - Scenario 1. Both locks succeeded
+
+```rust
+/// `fun` and `nai` locks balances within their contracts
+//////// Executing A2
+
+/// `fun` creates a new promise to `fun` to call `unlock`.
+ActionReceipt {
+    id: "C1",
+    receiver_id: "fun",
+    predecessor_id: "fun",
+    input_data_ids: [],
+    output_data_receivers: [],
+    actions: [FunctionCall { method_name: "unlock", args: b"{\"lock_id\": \"fun-lock-id-1\"}", ... }],
+}
+
+/// `fun` returns new lock ID and a callback using `value_with_callback_return`.
+// Creates D1 and modifies C1
+DataReceipt {
+    id: "D1",
+    receiver_id: "dex",
+    predecessor_id: "fun",
+    data_id: "data-id-1",
+    data: Some(b"fun-lock-id-1"),
+    // See reference-level explanation for details
+    new_output_data_receivers: [
+        DataReceiver {receiver_id: "fun", data_id: "data-id-3"}
+    ],
+}
+ActionReceipt {
+    id: "C1",
+    receiver_id: "fun",
+    predecessor_id: "fun",
+    input_data_ids: ["data-id-3"],
+    output_data_receivers: [],
+    actions: [FunctionCall { method_name: "unlock", args: b"{\"lock_id\": \"fun-lock-id-1\"}", ... }],
+}
+
+/// `nai` is similar to `fun`
+/// `nai` creates a new promise to `nai` to call `unlock`.
+ActionReceipt {
+    id: "C2",
+    receiver_id: "nai",
+    predecessor_id: "nai",
+    input_data_ids: [],
+    output_data_receivers: [],
+    actions: [FunctionCall { method_name: "unlock", args: b"{\"lock_id\": \"nai-lock-id-1\"}", ... }],
+}
+
+/// `nai` returns new lock ID and a callback using `value_with_callback_return`.
+// Creates D2 and modifies C2
+DataReceipt {
+    id: "D2",
+    receiver_id: "dex",
+    predecessor_id: "nai",
+    data_id: "data-id-2",
+    data: Some(b"nai-lock-id-1"),
+    // See reference-level explanation for details
+    new_output_data_receivers: [
+        DataReceiver {receiver_id: "nai", data_id: "data-id-4"}
+    ],
+}
+ActionReceipt {
+    id: "C2",
+    receiver_id: "nai",
+    predecessor_id: "nai",
+    input_data_ids: ["data-id-4"],
+    output_data_receivers: [],
+    actions: [FunctionCall { method_name: "unlock", args: b"{\"lock_id\": \"nai-lock-id-1\"}", ... }],
+}
+
+/// `on_locks` on `dex` is called.
+/// Because input `DataReceipt` contained `new_output_data_receivers`, the receipt `A4` might look like this.
+/// Internally we wouldn't modify it, but we'll account for the new output data receivers
+ActionReceipt {
+    id: "A4",
+    receiver_id: "dex",
+    predecessor_id: "dex",
+    input_data_ids: ["data-id-1", "data-id-2"],
+    // 2 new data receivers we added for the received input data
+    output_data_receivers: [
+        DataReceiver {receiver_id: "fun", data_id: "data-id-3"},
+        DataReceiver {receiver_id: "nai", data_id: "data-id-4"},
+    ],
+    actions: [FunctionCall { method_name: "on_locks", ... }],
+}
+
+//////// Executing A4
+
+/// `dex` asserts both locks succeeded.
+// This is OK, since both locks succeeded.
+
+/// `dex` calls `fun` and `nai` to transfer funds.
+// Generates 2 receipts A5 and A6, passes lock IDs
+ActionReceipt {
+    id: "A5",
+    receiver_id: "fun",
+    predecessor_id: "dex",
+    input_data_ids: [],
+    output_data_receivers: [],
+    actions: [FunctionCall { method_name: "trasnferFrom", ... }],
+}
+
+ActionReceipt {
+    id: "A6",
+    receiver_id: "nai",
+    predecessor_id: "dex",
+    input_data_ids: [],
+    output_data_receivers: [],
+    actions: [FunctionCall { method_name: "trasnferFrom", ... }],
+}
+
+/// `dex` creates a callback back to `dex` to call `on_transfers`.
+// Generates A7
+ActionReceipt {
+    id: "A7",
+    receiver_id: "dex",
+    predecessor_id: "dex",
+    input_data_ids: [],
+    output_data_receivers: [],
+    actions: [FunctionCall { method_name: "on_transfers", ... }],
+}
+
+/// `dex` attaches this callback to joint promises on `transfer` for `fun` and `nai`.
+// This modifies A5, A6 and A7
+ActionReceipt {
+    id: "A5",
+    receiver_id: "fun",
+    predecessor_id: "dex",
+    input_data_ids: [],
+    output_data_receivers: [
+        DataReceiver {receiver_id: "dex", data_id: "data-id-5"},
+    ],
+    actions: [FunctionCall { method_name: "trasnferFrom", ... }],
+}
+ActionReceipt {
+    id: "A6",
+    receiver_id: "nai",
+    predecessor_id: "dex",
+    input_data_ids: [],
+    output_data_receivers: [
+        DataReceiver {receiver_id: "dex", data_id: "data-id-6"},
+    ],
+    actions: [FunctionCall { method_name: "trasnferFrom", ... }],
+}
+ActionReceipt {
+    id: "A7",
+    receiver_id: "dex",
+    predecessor_id: "dex",
+    input_data_ids: ["data-id-5", "data-id-6"],
+    output_data_receivers: [],
+    actions: [FunctionCall { method_name: "on_transfers", ... }],
+}
+
+/// `dex` returns this callback (A7) using `return_promise`.
+// This modifies A7, by redirecting output from A4.
+ActionReceipt {
+    id: "A7",
+    receiver_id: "dex",
+    predecessor_id: "dex",
+    input_data_ids: ["data-id-5", "data-id-6"],
+    output_data_receivers: [
+        DataReceiver {receiver_id: "fun", data_id: "data-id-3"},
+        DataReceiver {receiver_id: "nai", data_id: "data-id-4"},
+    ],
+    actions: [FunctionCall { method_name: "on_transfers", ... }],
+}
+
+
+/// NOTE!
+/// Now A7 can only be executed after A5 and A6.
+/// Which means C1 and C2 can only be executed after both A5 and A6.
+
+/// `transferFrom` called on `fun` and `nai`
+/// `fun` and `nai` transfer locked balances to the new owner.
+/// `fun` and `nai` remove the locks internally, so the following `unlock` for these lock IDs will be noop.
+
+//////// Executing A5 and A6
+
+// `fun` generates D3, `nai` generates `D4`
+DataReceipt {
+    id: "D3",
+    receiver_id: "dex",
+    predecessor_id: "fun",
+    data_id: "data-id-5",
+    data: Some(b"true"),
+    new_output_data_receivers: [],
+}
+DataReceipt {
+    id: "D4",
+    receiver_id: "dex",
+    predecessor_id: "nai",
+    data_id: "data-id-6",
+    data: Some(b"true"),
+    new_output_data_receivers: [],
+}
+
+/// `on_transfers` on `dex` is called. It can be noop.
+/// returns `true`.
+
+//////// Executing A7
+// Generates data receipts D5, D6
+DataReceipt {
+    id: "D5",
+    receiver_id: "fun",
+    predecessor_id: "dex",
+    data_id: "data-id-3",
+    data: Some(b"true"),
+    new_output_data_receivers: [],
+}
+DataReceipt {
+    id: "D6",
+    receiver_id: "nai",
+    predecessor_id: "dex",
+    data_id: "data-id-4",
+    data: Some(b"true"),
+    new_output_data_receivers: [],
+}
+
+/// `unlock` is called on `fun` and `nai`.
+/// Because transfers removed the locks, it's noop. 
+
+//////// Executing C1 and C2
+// Internally it checks that lock IDs were used, so it's NOOP.
+```
+
+##### Proposed Changes - Scenario 2. `nai` lock failed
+
+```rust
+/// `fun` and `nai` locks balances within their contracts
+//////// Executing A2
+
+/// `fun` creates a new promise to `fun` to call `unlock`.
+ActionReceipt {
+    id: "C1",
+    receiver_id: "fun",
+    predecessor_id: "fun",
+    input_data_ids: [],
+    output_data_receivers: [],
+    actions: [FunctionCall { method_name: "unlock", args: b"{\"lock_id\": \"fun-lock-id-1\"}", ... }],
+}
+
+/// `fun` returns new lock ID and a callback using `value_with_callback_return`.
+// Creates D1 and modifies C1
+DataReceipt {
+    id: "D1",
+    receiver_id: "dex",
+    predecessor_id: "fun",
+    data_id: "data-id-1",
+    data: Some(b"fun-lock-id-1"),
+    // See reference-level explanation for details
+    new_output_data_receivers: [
+        DataReceiver {receiver_id: "fun", data_id: "data-id-3"}
+    ],
+}
+ActionReceipt {
+    id: "C1",
+    receiver_id: "fun",
+    predecessor_id: "fun",
+    input_data_ids: ["data-id-3"],
+    output_data_receivers: [],
+    actions: [FunctionCall { method_name: "unlock", args: b"{\"lock_id\": \"fun-lock-id-1\"}", ... }],
+}
+
+/// `nai` tried to create a promise to call `unlock`, but it run out of gas, so it failed to lock balance as well.
+// Runtime automatically generates DataReceipt D2 with `data: None`.
+DataReceipt {
+    id: "D2",
+    receiver_id: "dex",
+    predecessor_id: "nai",
+    data_id: "data-id-2",
+    data: None,
+    new_output_data_receivers: [],
+}
+
+
+/// `on_locks` on `dex` is called.
+/// Because input `DataReceipt` contained `new_output_data_receivers`, the receipt `A4` might look like this.
+/// Internally we wouldn't modify it, but we'll account for the new output data receiver from `fun`.
+ActionReceipt {
+    id: "A4",
+    receiver_id: "dex",
+    predecessor_id: "dex",
+    input_data_ids: ["data-id-1", "data-id-2"],
+    // 1 new data receivers we added for the received input data from `fun`
+    output_data_receivers: [
+        DataReceiver {receiver_id: "fun", data_id: "data-id-3"},
+    ],
+    actions: [FunctionCall { method_name: "on_locks", ... }],
+}
+
+//////// Executing A4
+
+/// `dex` asserts both locks succeeded.
+// Assertion fails, so `on_locks` fails as well.
+// Runtime automatically generates a DataReceipt D3 with `data: None`.
+DataReceipt {
+    id: "D5",
+    receiver_id: "fun",
+    predecessor_id: "dex",
+    data_id: "data-id-3",
+    data: None,
+    new_output_data_receivers: [],
+}
+
+/// `unlock` is called on `fun`.
+/// `fun` unlocks locked funds.
+
+//////// Executing C1
+// Internally it checks that lock IDs is still valid and unlocks it.
+```
 
 # Reference-level explanation
 [reference-level-explanation]: #reference-level-explanation
@@ -82,6 +668,7 @@ This change doesn't require complicated changes on runtime. The economics of thi
 It also reuses the limitation that we have right now with the existing `promise_return`, it can't return a joint promise (a promise created with `promise_and`).
 
 ## How Runtime works now
+[how-runtime-works]: #how-runtime-works
 
 To understand how this change works, we need to explain how promises works with more details:
 
@@ -145,7 +732,7 @@ Here the receipts that were created:
 ```rust
 //////// Original receipt
 ActionReceipt {
-    id: "R1",
+    id: "A1",
     receiver_id: "A",
     predecessor_id: "USER",
     input_data_ids: [],
@@ -153,87 +740,87 @@ ActionReceipt {
 }
 
 
-//////// Executing R1
+//////// Executing A1
 
-// `A` calls `B`. (R2 is created)
+// `A` calls `B`. (A2 is created)
 ActionReceipt {
-    id: "R2",
+    id: "A2",
     receiver_id: "B",
     predecessor_id: "A",
     input_data_ids: [],
     output_data_receivers: [],
 }
 
-// Attaches a callback back to `A`. (R2 is modified, R3 is created)
+// Attaches a callback back to `A`. (A2 is modified, A3 is created)
 ActionReceipt {
-    id: "R2",
+    id: "A2",
     receiver_id: "B",
     predecessor_id: "A",
     input_data_ids: [],
     output_data_receivers: [
-        DataReceiver {receiver_id: "A", data_id: "D1"}
+        DataReceiver {receiver_id: "A", data_id: "data-id-1"}
     ]
 }
 ActionReceipt {
-    id: "R3",
+    id: "A3",
     receiver_id: "A",
     predecessor_id: "A",
-    input_data_ids: ["D1"],
+    input_data_ids: ["data-id-1"],
     output_data_receivers: []
 }
 
-// Returns callback `A`. (Doesn't change anything, cause R1 doesn't have output)
+// Returns callback `A`. (Doesn't change anything, cause A1 doesn't have output)
 
 
-//////// Executing R2
+//////// Executing A2
 
-// `B` calls `C` and `D`. (R4 and R5 are created)
+// `B` calls `C` and `D`. (A4 and A5 are created)
 ActionReceipt {
-    id: "R4",
+    id: "A4",
     receiver_id: "C",
     predecessor_id: "B",
     input_data_ids: [],
     output_data_receivers: [],
 }
 ActionReceipt {
-    id: "R5",
+    id: "A5",
     receiver_id: "D",
     predecessor_id: "B",
     input_data_ids: [],
     output_data_receivers: [],
 }
 
-// Attaches a callback from `C` to `D`. (R4 and R5 are modified)
+// Attaches a callback from `C` to `D`. (A4 and A5 are modified)
 ActionReceipt {
-    id: "R4",
+    id: "A4",
     receiver_id: "C",
     predecessor_id: "B",
     input_data_ids: [],
     output_data_receivers: [
-        DataReceiver {receiver_id: "D", data_id: "D2"},
+        DataReceiver {receiver_id: "D", data_id: "data-id-2"},
     ],
 }
 ActionReceipt {
-    id: "R5",
+    id: "A5",
     receiver_id: "D",
     predecessor_id: "B",
-    input_data_ids: ["D2"],
+    input_data_ids: ["data-id-2"],
     output_data_receivers: [],
 }
-// And returns promise `C`. (R4 is modified)
+// And returns promise `C`. (A4 is modified)
 ActionReceipt {
-    id: "R4",
+    id: "A4",
     receiver_id: "C",
     predecessor_id: "B",
     input_data_ids: [],
     output_data_receivers: [
-        DataReceiver {receiver_id: "A", data_id: "D1"},
-        DataReceiver {receiver_id: "D", data_id: "D2"},
+        DataReceiver {receiver_id: "A", data_id: "data-id-1"},
+        DataReceiver {receiver_id: "D", data_id: "data-id-2"},
      ],
 }
 ```
 
-So now when `R4` is executed, it will send 2 data receipts.
+So now when `A4` is executed, it will send 2 data receipts.
 
 Let's now discuss how to implement the proposed change.
 
@@ -241,16 +828,16 @@ Let's now discuss how to implement the proposed change.
 
 ### Back to example
 
-In the example with `fun` tokens, we need to attach a promise on the caller. But let's look at the example of `R4` receipt instead:
+In the example with `fun` tokens, we need to attach a promise on the caller. But let's look at the example of `A4` receipt instead:
 ```rust
 ActionReceipt {
-    id: "R4",
+    id: "A4",
     receiver_id: "C",
     predecessor_id: "B",
     input_data_ids: [],
     output_data_receivers: [
-        DataReceiver {receiver_id: "A", data_id: "D1"},
-        DataReceiver {receiver_id: "D", data_id: "D2"},
+        DataReceiver {receiver_id: "A", data_id: "data-id-1"},
+        DataReceiver {receiver_id: "D", data_id: "data-id-2"},
      ],
 }
 ```
@@ -262,7 +849,7 @@ Instead `C` can only influence both `A` and `D`.
 Now lets look at `fun` token receipt example:
 ```rust
 ActionReceipt {
-    id: "R6",
+    id: "A6",
     receiver_id: "fun",
     predecessor_id: "dex",
     input_data_ids: [],
