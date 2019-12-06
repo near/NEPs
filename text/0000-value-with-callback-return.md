@@ -32,11 +32,9 @@ This will lead to lock forever, because `fun_token` doesn't receive callback of 
 
 The proposed idea is to be able to attach a callback to the caller's callback.
 
-### Example:
-
 User `alice` calls exchange `dex` to swap token `fun` with token `nai` 
 
-#### Current version
+### Current version
 
 - `alice` calls `dex`
 - `dex` calls `fun` and `nai` to lock corresponding balances.
@@ -69,6 +67,186 @@ User `alice` calls exchange `dex` to swap token `fun` with token `nai`
         - `dex` asserts both locks succeeded.
         - `dex` on_locks fails
     - Funds on `fun` remain locked for a while. Unless there is timed auto-unlock, funds are locked forever. This is a problem.
+
+#### Current version - Diagrams
+
+##### Current version - Scenario 1. Both locks succeeded
+
+<!--
+object alice dex fun nai
+
+alice->dex: exchange(fun, bob, dai)
+dex->fun: lock(alice)
+dex->nai: lock(bob)
+note left of dex: add callback on_locks(fun, dai)
+
+fun->dex: Data: "fun-lock-id-1"
+nai->dex: Data: "nai-lock-id-1"
+
+dex->dex: on_locks(fun, dai) with data ["fun-lock-id-1", "nai-lock-id-1"]
+dex->fun: transferFrom(fun-lock-id-1, alice, bob)
+dex->nai: transferFrom(nai-lock-id-1, bob, alice)
+
+dex->alice: Probably OK
+-->
+
+```text
++-------+                             +-----+                                                              +-----+ +-----+
+| alice |                             | dex |                                                              | fun | | nai |
++-------+                             +-----+                                                              +-----+ +-----+
+    |                                    |                                                                    |       |
+    | exchange(fun, bob, dai)            |                                                                    |       |
+    |----------------------------------->|                                                                    |       |
+    |                                    |                                                                    |       |
+    |                                    | lock(alice)                                                        |       |
+    |                                    |------------------------------------------------------------------->|       |
+    |                                    |                                                                    |       |
+    |                                    | lock(bob)                                                          |       |
+    |                                    |--------------------------------------------------------------------------->|
+    |----------------------------------\ |                                                                    |       |
+    || add callback on_locks(fun, dai) |-|                                                                    |       |
+    ||---------------------------------| |                                                                    |       |
+    |                                    |                                                                    |       |
+    |                                    |                                              Data: "fun-lock-id-1" |       |
+    |                                    |<-------------------------------------------------------------------|       |
+    |                                    |                                                                    |       |
+    |                                    |                                                      Data: "nai-lock-id-1" |
+    |                                    |<---------------------------------------------------------------------------|
+    |                                    |                                                                    |       |
+    |                                    | on_locks(fun, dai) with data ["fun-lock-id-1", "nai-lock-id-1"]    |       |
+    |                                    |----------------------------------------------------------------    |       |
+    |                                    |                                                               |    |       |
+    |                                    |<---------------------------------------------------------------    |       |
+    |                                    |                                                                    |       |
+    |                                    | transferFrom(fun-lock-id-1, alice, bob)                            |       |
+    |                                    |------------------------------------------------------------------->|       |
+    |                                    |                                                                    |       |
+    |                                    | transferFrom(nai-lock-id-1, bob, alice)                            |       |
+    |                                    |--------------------------------------------------------------------------->|
+    |                                    |                                                                    |       |
+    |                        Probably OK |                                                                    |       |
+    |<-----------------------------------|                                                                    |       |
+    |                                    |                                                                    |       |
+```
+
+##### Current version - Scenario 2. `nai` lock failed
+
+<!--
+object alice dex fun nai
+
+alice->dex: exchange(fun, bob, dai)
+dex->fun: lock(alice)
+dex->nai: lock(bob)
+note left of dex: add callback on_locks(fun, dai)
+
+fun->dex: Data: "fun-lock-id-1"
+nai->dex: FAIL
+
+dex->dex: on_locks(fun, dai) with data ["fun-lock-id-1", FAIL]
+dex->fun: unlock(fun-lock-id-1)
+
+dex->alice: Sorry
+-->
+
+```text
++-------+                             +-----+                                                   +-----+ +-----+
+| alice |                             | dex |                                                   | fun | | nai |
++-------+                             +-----+                                                   +-----+ +-----+
+    |                                    |                                                         |       |
+    | exchange(fun, bob, dai)            |                                                         |       |
+    |----------------------------------->|                                                         |       |
+    |                                    |                                                         |       |
+    |                                    | lock(alice)                                             |       |
+    |                                    |-------------------------------------------------------->|       |
+    |                                    |                                                         |       |
+    |                                    | lock(bob)                                               |       |
+    |                                    |---------------------------------------------------------------->|
+    |----------------------------------\ |                                                         |       |
+    || add callback on_locks(fun, dai) |-|                                                         |       |
+    ||---------------------------------| |                                                         |       |
+    |                                    |                                                         |       |
+    |                                    |                                   Data: "fun-lock-id-1" |       |
+    |                                    |<--------------------------------------------------------|       |
+    |                                    |                                                         |       |
+    |                                    |                                                         |  FAIL |
+    |                                    |<----------------------------------------------------------------|
+    |                                    |                                                         |       |
+    |                                    | on_locks(fun, dai) with data ["fun-lock-id-1", FAIL]    |       |
+    |                                    |-----------------------------------------------------    |       |
+    |                                    |                                                    |    |       |
+    |                                    |<----------------------------------------------------    |       |
+    |                                    |                                                         |       |
+    |                                    | unlock(fun-lock-id-1)                                   |       |
+    |                                    |-------------------------------------------------------->|       |
+    |                                    |                                                         |       |
+    |                              Sorry |                                                         |       |
+    |<-----------------------------------|                                                         |       |
+    |                                    |                                                         |       |
+```
+
+
+##### Current version - Scenario 3. Houston, we have a problem.
+
+<!--
+object alice dex fun nai
+
+alice->dex: exchange(fun, bob, dai)
+dex->fun: lock(alice)
+dex->nai: lock(bob)
+note left of dex: add callback on_locks(fun, dai)
+
+fun->dex: Data: "fun-lock-id-1"
+nai->dex: FAIL
+
+dex->dex: on_locks(fun, dai) with data ["fun-lock-id-1", FAIL]
+dex->dex: FAIL
+note right of fun: Funds are still locked :(
+
+note right of alice: Alice looks for a different blockchain :(
+-->
+
+```text
++-------+                                         +-----+                                                   +-----+                          +-----+
+| alice |                                         | dex |                                                   | fun |                          | nai |
++-------+                                         +-----+                                                   +-----+                          +-----+
+    |                                                |                                                         |                                |
+    | exchange(fun, bob, dai)                        |                                                         |                                |
+    |----------------------------------------------->|                                                         |                                |
+    |                                                |                                                         |                                |
+    |                                                | lock(alice)                                             |                                |
+    |                                                |-------------------------------------------------------->|                                |
+    |                                                |                                                         |                                |
+    |                                                | lock(bob)                                               |                                |
+    |                                                |----------------------------------------------------------------------------------------->|
+    |            ----------------------------------\ |                                                         |                                |
+    |            | add callback on_locks(fun, dai) |-|                                                         |                                |
+    |            |---------------------------------| |                                                         |                                |
+    |                                                |                                                         |                                |
+    |                                                |                                   Data: "fun-lock-id-1" |                                |
+    |                                                |<--------------------------------------------------------|                                |
+    |                                                |                                                         |                                |
+    |                                                |                                                         |                           FAIL |
+    |                                                |<-----------------------------------------------------------------------------------------|
+    |                                                |                                                         |                                |
+    |                                                | on_locks(fun, dai) with data ["fun-lock-id-1", FAIL]    |                                |
+    |                                                |-----------------------------------------------------    |                                |
+    |                                                |                                                    |    |                                |
+    |                                                |<----------------------------------------------------    |                                |
+    |                                                |                                                         |                                |
+    |                                                | FAIL                                                    |                                |
+    |                                                |-----                                                    |                                |
+    |                                                |    |                                                    |                                |
+    |                                                |<----                                                    |                                |
+    |                                                |                                                         | ----------------------------\  |
+    |                                                |                                                         |-| Funds are still locked :( |  |
+    |                                                |                                                         | |---------------------------|  |
+    | --------------------------------------------\  |                                                         |                                |
+    |-| Alice looks for a different blockchain :( |  |                                                         |                                |
+    | |-------------------------------------------|  |                                                         |                                |
+    |                                                |                                                         |                                |
+```
+
+#### Current version - Receipts
 
 Let's look at receipts (See [How runtime works](#how-runtime-work)):
 
@@ -253,9 +431,6 @@ ActionReceipt {
 ```
 
 ##### Current version - Scenario 3. Houston, we have a problem.
-        - `dex` asserts both locks succeeded.
-        - `dex` on_locks fails
-    - Funds on `fun` remain locked for a while. Unless there is timed auto-unlock, funds are locked forever. This is a problem.
     
 ```rust
 /// `fun` and `nai` locks balances within their contracts
@@ -292,7 +467,7 @@ DataReceipt {
 
 ```
 
-#### The proposal
+### The proposal
 
 - `alice` calls `dex`
 - `dex` calls `fun` and `nai` to lock corresponding balances.
@@ -331,13 +506,13 @@ Two things to notice:
 1. `dex` no longer need to unlock tokens in case of lock failures, instead it can assert success of locks.
 2. `dex` has to attach a callback to token transfer `on_transfers`.
 
-### No need to unlock
+##### No need to unlock
 
 `dex` doesn't need to explicitly unlock tokens, because tokens can now attach a callback to unlock themselves.
 This callback going to executed when `on_locks` on `dex` finishes.
 So if `on_locks` method fails early on asserts, the unlock callbacks are going to be called. But only for successful locks.
 
-### Need to depend on token transfers
+##### Need to depend on token transfers
 
 This is a little more complicated. The reason `dex` needs to wait and depend on the token transfers is to avoid
 tokens from being unlocked before transfers are completed.
@@ -345,9 +520,191 @@ tokens from being unlocked before transfers are completed.
 If `dex` doesn't depend on transfers, the `unlock` might be executed before transfers, and someone might try to front-run it, so one of the transfers might fail.
 To avoid this `dex` has to attach another callback towards transfer calls, this will delay `unlock` execution until transfers are executed.
 
-Let's look at receipts:
+#### Proposed changes - Diagrams
 
-The first part is the same. Scenarios are different.
+##### Proposed version - Scenario 1. Both locks succeeded
+
+<!--
+object alice dex fun nai
+
+alice->dex: exchange(fun, bob, dai)
+dex->fun: lock(alice)
+dex->nai: lock(bob)
+note left of dex: add callback on_locks(fun, dai)
+
+note left of fun: add callback unlock(fun-lock-id-1)
+fun->dex: Data: "fun-lock-id-1" and callback to unlock
+
+note left of nai: add callback unlock(nai-lock-id-1)
+nai->dex: Data: "nai-lock-id-1" and callback to unlock
+
+dex->dex: on_locks(fun, dai) 
+dex->fun: transferFrom(fun-lock-id-1, alice, bob)
+dex->nai: transferFrom(nai-lock-id-1, bob, alice)
+note left of dex: add callback on_transfers(fun, dai)
+
+fun->dex: Data: OK
+nai->dex: Data: OK
+
+dex->dex: on_transfers(fun, dai) 
+dex->alice: OK
+dex->fun: Data: OK
+dex->nai: Data: OK
+
+fun->fun: unlock(fun-lock-id-1) NOOP
+nai->nai: unlock(nai-lock-id-1) NOOP
+-->
+
+```text
++-------+                                 +-----+                                           +-----+                                 +-----+                         
+| alice |                                 | dex |                                           | fun |                                 | nai |                         
++-------+                                 +-----+                                           +-----+                                 +-----+                         
+    |                                        |                                                 |                                       |                            
+    | exchange(fun, bob, dai)                |                                                 |                                       |                            
+    |--------------------------------------->|                                                 |                                       |                            
+    |                                        |                                                 |                                       |                            
+    |                                        | lock(alice)                                     |                                       |                            
+    |                                        |------------------------------------------------>|                                       |                            
+    |                                        |                                                 |                                       |                            
+    |                                        | lock(bob)                                       |                                       |                            
+    |                                        |---------------------------------------------------------------------------------------->|                            
+    |    ----------------------------------\ |                                                 |                                       |                            
+    |    | add callback on_locks(fun, dai) |-|                                                 |                                       |                            
+    |    |---------------------------------| |                                                 |                                       |                            
+    |                                        |          -------------------------------------\ |                                       |                            
+    |                                        |          | add callback unlock(fun-lock-id-1) |-|                                       |                            
+    |                                        |          |------------------------------------| |                                       |                            
+    |                                        |                                                 |                                       |                            
+    |                                        |    Data: "fun-lock-id-1" and callback to unlock |                                       |                            
+    |                                        |<------------------------------------------------|                                       |                            
+    |                                        |                                                 |-------------------------------------\ |                            
+    |                                        |                                                 || add callback unlock(nai-lock-id-1) |-|                            
+    |                                        |                                                 ||------------------------------------| |                            
+    |                                        |                                                 |                                       |                            
+    |                                        |                                            Data: "nai-lock-id-1" and callback to unlock |                            
+    |                                        |<----------------------------------------------------------------------------------------|                            
+    |                                        |                                                 |                                       |                            
+    |                                        | on_locks(fun, dai)                              |                                       |                            
+    |                                        |--------------------                             |                                       |                            
+    |                                        |                   |                             |                                       |                            
+    |                                        |<-------------------                             |                                       |                            
+    |                                        |                                                 |                                       |                            
+    |                                        | transferFrom(fun-lock-id-1, alice, bob)         |                                       |                            
+    |                                        |------------------------------------------------>|                                       |                            
+    |                                        |                                                 |                                       |                            
+    |                                        | transferFrom(nai-lock-id-1, bob, alice)         |                                       |                            
+    |                                        |---------------------------------------------------------------------------------------->|                            
+    |--------------------------------------\ |                                                 |                                       |                            
+    || add callback on_transfers(fun, dai) |-|                                                 |                                       |                            
+    ||-------------------------------------| |                                                 |                                       |                            
+    |                                        |                                                 |                                       |                            
+    |                                        |                                        Data: OK |                                       |                            
+    |                                        |<------------------------------------------------|                                       |                            
+    |                                        |                                                 |                                       |                            
+    |                                        |                                                 |                              Data: OK |                            
+    |                                        |<----------------------------------------------------------------------------------------|                            
+    |                                        |                                                 |                                       |                            
+    |                                        | on_transfers(fun, dai)                          |                                       |                            
+    |                                        |------------------------                         |                                       |                            
+    |                                        |                       |                         |                                       |                            
+    |                                        |<-----------------------                         |                                       |                            
+    |                                        |                                                 |                                       |                            
+    |                                     OK |                                                 |                                       |                            
+    |<---------------------------------------|                                                 |                                       |                            
+    |                                        |                                                 |                                       |                            
+    |                                        | Data: OK                                        |                                       |                            
+    |                                        |------------------------------------------------>|                                       |                            
+    |                                        |                                                 |                                       |                            
+    |                                        | Data: OK                                        |                                       |                            
+    |                                        |---------------------------------------------------------------------------------------->|                            
+    |                                        |                                                 |                                       |                            
+    |                                        |                                                 | unlock(fun-lock-id-1) NOOP            |                            
+    |                                        |                                                 |---------------------------            |                            
+    |                                        |                                                 |                          |            |                            
+    |                                        |                                                 |<--------------------------            |                            
+    |                                        |                                                 |                                       |                            
+    |                                        |                                                 |                                       | unlock(nai-lock-id-1) NOOP 
+    |                                        |                                                 |                                       |--------------------------- 
+    |                                        |                                                 |                                       |                          | 
+    |                                        |                                                 |                                       |<-------------------------- 
+    |                                        |                                                 |                                       |                            
+```
+
+##### Proposed version - Scenario 1. Both locks succeeded
+
+<!--
+object alice dex fun nai
+
+alice->dex: exchange(fun, bob, dai)
+dex->fun: lock(alice)
+dex->nai: lock(bob)
+note left of dex: add callback on_locks(fun, dai)
+
+note left of fun: add callback unlock(fun-lock-id-1)
+fun->dex: Data: "fun-lock-id-1" and callback to unlock
+nai->dex: FAIL
+
+dex->dex: on_locks(fun, dai) 
+dex->dex: Assert FAIL
+dex->alice: FAIL (but nothing to worry, funds are SAFU)
+
+fun->dex: FAIL
+
+fun->fun: unlock(fun-lock-id-1)
+-->
+
+```text
++-------+                                         +-----+                                           +-----+                    +-----+
+| alice |                                         | dex |                                           | fun |                    | nai |
++-------+                                         +-----+                                           +-----+                    +-----+
+    |                                                |                                                 |                          |
+    | exchange(fun, bob, dai)                        |                                                 |                          |
+    |----------------------------------------------->|                                                 |                          |
+    |                                                |                                                 |                          |
+    |                                                | lock(alice)                                     |                          |
+    |                                                |------------------------------------------------>|                          |
+    |                                                |                                                 |                          |
+    |                                                | lock(bob)                                       |                          |
+    |                                                |--------------------------------------------------------------------------->|
+    |            ----------------------------------\ |                                                 |                          |
+    |            | add callback on_locks(fun, dai) |-|                                                 |                          |
+    |            |---------------------------------| |                                                 |                          |
+    |                                                |          -------------------------------------\ |                          |
+    |                                                |          | add callback unlock(fun-lock-id-1) |-|                          |
+    |                                                |          |------------------------------------| |                          |
+    |                                                |                                                 |                          |
+    |                                                |    Data: "fun-lock-id-1" and callback to unlock |                          |
+    |                                                |<------------------------------------------------|                          |
+    |                                                |                                                 |                          |
+    |                                                |                                                 |                     FAIL |
+    |                                                |<---------------------------------------------------------------------------|
+    |                                                |                                                 |                          |
+    |                                                | on_locks(fun, dai)                              |                          |
+    |                                                |--------------------                             |                          |
+    |                                                |                   |                             |                          |
+    |                                                |<-------------------                             |                          |
+    |                                                |                                                 |                          |
+    |                                                | Assert FAIL                                     |                          |
+    |                                                |------------                                     |                          |
+    |                                                |           |                                     |                          |
+    |                                                |<-----------                                     |                          |
+    |                                                |                                                 |                          |
+    |    FAIL (but nothing to worry, funds are SAFU) |                                                 |                          |
+    |<-----------------------------------------------|                                                 |                          |
+    |                                                |                                                 |                          |
+    |                                                |                                            FAIL |                          |
+    |                                                |<------------------------------------------------|                          |
+    |                                                |                                                 |                          |
+    |                                                |                                                 | unlock(fun-lock-id-1)    |
+    |                                                |                                                 |----------------------    |
+    |                                                |                                                 |                     |    |
+    |                                                |                                                 |<---------------------    |
+    |                                                |                                                 |                          |
+```
+
+#### Proposed Changes - Receipts
+
+The first part is the same as in the current version. Scenarios are different.
 
 ##### Proposed Changes - Scenario 1. Both locks succeeded
 
