@@ -249,6 +249,8 @@ note right of alice: Alice looks for a different blockchain :(
 #### Current version - Receipts
 
 Let's look at receipts (See [How runtime works](#how-runtime-work)):
+The pseudocode below demonstrates how receipts are created and updated during the execution of `exchange` method on `dex`.
+
 
 ```rust
 /// `alice` calls `dex`
@@ -271,7 +273,11 @@ ActionReceipt {
     predecessor_id: "dex",
     input_data_ids: [],
     output_data_receivers: [],
-    actions: [FunctionCall { method_name: "lock", ... }],
+    actions: [FunctionCall {
+        method_name: "lock",
+        args: b"{\"owner_id\": \"alice\", \"amount\": 1000}",
+        ...
+    }],
 }
 ActionReceipt {
     id: "A3",
@@ -279,7 +285,11 @@ ActionReceipt {
     predecessor_id: "dex",
     input_data_ids: [],
     output_data_receivers: [],
-    actions: [FunctionCall { method_name: "lock", ... }],
+    actions: [FunctionCall {
+        method_name: "lock",
+        args: b"{\"owner_id\": \"bob\", \"amount\": 10}",
+        ...
+    }],
 }
 
 /// `dex` creates a callback back to `dex` to call `on_locks`.
@@ -289,7 +299,10 @@ ActionReceipt {
     predecessor_id: "dex",
     input_data_ids: [],
     output_data_receivers: [],
-    actions: [FunctionCall { method_name: "on_locks", ... }],
+    actions: [FunctionCall {
+        method_name: "on_locks",
+        ...
+    }],
 }
 
 /// `dex` attaches this callback to joint promises for `fun` and `nai`. (Modifies A2, A3, A4)
@@ -301,7 +314,11 @@ ActionReceipt {
     output_data_receivers: [
         DataReceiver {receiver_id: "dex", data_id: "data-id-1"}
     ],
-    actions: [FunctionCall { method_name: "lock", ... }],
+    actions: [FunctionCall {
+        method_name: "lock",
+        args: b"{\"owner_id\": \"alice\", \"amount\": 1000}",
+        ...
+    }],
 }
 ActionReceipt {
     id: "A3",
@@ -311,7 +328,11 @@ ActionReceipt {
     output_data_receivers: [
         DataReceiver {receiver_id: "dex", data_id: "data-id-2"}
     ],
-    actions: [FunctionCall { method_name: "lock", ... }],
+    actions: [FunctionCall {
+        method_name: "lock",
+        args: b"{\"owner_id\": \"bob\", \"amount\": 10}",
+        ...
+    }],
 }
 ActionReceipt {
     id: "A4",
@@ -319,7 +340,10 @@ ActionReceipt {
     predecessor_id: "dex",
     input_data_ids: ["data-id-1", "data-id-2"],
     output_data_receivers: [],
-    actions: [FunctionCall { method_name: "on_locks", ... }],
+    actions: [FunctionCall {
+        method_name: "on_locks",
+        ...
+    }],
 }
 
 /// `dex` returns this callback using `return_promise`.
@@ -363,7 +387,11 @@ ActionReceipt {
     predecessor_id: "dex",
     input_data_ids: [],
     output_data_receivers: [],
-    actions: [FunctionCall { method_name: "trasnferFrom", ... }],
+    actions: [FunctionCall {
+        method_name: "transferFrom",
+        args: b"{\"lock_id\": \"fun-lock-id-1\", \"amount\": 1000, \"new_owner_id\": \"bob\"}",
+        ...
+    }],
 }
 
 ActionReceipt {
@@ -372,7 +400,11 @@ ActionReceipt {
     predecessor_id: "dex",
     input_data_ids: [],
     output_data_receivers: [],
-    actions: [FunctionCall { method_name: "trasnferFrom", ... }],
+    actions: [FunctionCall {
+        method_name: "transferFrom",
+        args: b"{\"lock_id\": \"nai-lock-id-1\", \"amount\": 10, \"new_owner_id\": \"alice\"}",
+        ...
+    }],
 }
 
 /// `transferFrom` called on `fun` and `nai`.
@@ -492,7 +524,7 @@ DataReceipt {
     - `unlock` is called on `fun` and `nai`.
         - Because transfers removed the locks, it's noop. 
 - Scenario 2. `nai` lock failed.
-    - `fun` and `nai` locks balances within their contracts, but `nai` fails.
+    - `fun` and `nai` lock balances within their contracts, but `nai` fails.
         - `fun` creates a new promise to `fun` to call `unlock`.
         - `fun` returns new lock ID and a callback using `value_with_callback_return` (debatable name).
         - `nai` fails
@@ -630,7 +662,7 @@ nai->nai: unlock(nai-lock-id-1) NOOP
     |                                        |                                                 |                                       |                            
 ```
 
-##### Proposed version - Scenario 1. Both locks succeeded
+##### Proposed version - Scenario 2. `nai` lock failed.
 
 <!--
 object alice dex fun nai
@@ -727,7 +759,11 @@ ActionReceipt {
     predecessor_id: "dex",
     input_data_ids: [],
     output_data_receivers: [],
-    actions: [FunctionCall { method_name: "lock", ... }],
+    actions: [FunctionCall {
+        method_name: "lock",
+        args: b"{\"owner_id\": \"alice\", \"amount\": 1000}",
+        ...
+    }],
 }
 ActionReceipt {
     id: "A3",
@@ -735,7 +771,11 @@ ActionReceipt {
     predecessor_id: "dex",
     input_data_ids: [],
     output_data_receivers: [],
-    actions: [FunctionCall { method_name: "lock", ... }],
+    actions: [FunctionCall {
+        method_name: "lock",
+        args: b"{\"owner_id\": \"bob\", \"amount\": 10}",
+        ...
+    }],
 }
 
 /// `dex` creates a callback back to `dex` to call `on_locks`.
@@ -745,7 +785,10 @@ ActionReceipt {
     predecessor_id: "dex",
     input_data_ids: [],
     output_data_receivers: [],
-    actions: [FunctionCall { method_name: "on_locks", ... }],
+    actions: [FunctionCall {
+        method_name: "on_locks",
+        ...
+    }],
 }
 
 /// `dex` attaches this callback to joint promises for `fun` and `nai`. (Modifies A2, A3, A4)
@@ -757,7 +800,11 @@ ActionReceipt {
     output_data_receivers: [
         DataReceiver {receiver_id: "dex", data_id: "data-id-1"}
     ],
-    actions: [FunctionCall { method_name: "lock", ... }],
+    actions: [FunctionCall {
+        method_name: "lock",
+        args: b"{\"owner_id\": \"alice\", \"amount\": 1000}",
+        ...
+    }],
 }
 ActionReceipt {
     id: "A3",
@@ -767,7 +814,11 @@ ActionReceipt {
     output_data_receivers: [
         DataReceiver {receiver_id: "dex", data_id: "data-id-2"}
     ],
-    actions: [FunctionCall { method_name: "lock", ... }],
+    actions: [FunctionCall {
+        method_name: "lock",
+        args: b"{\"owner_id\": \"bob\", \"amount\": 10}",
+        ...
+    }],
 }
 ActionReceipt {
     id: "A4",
@@ -786,7 +837,7 @@ ActionReceipt {
 ##### Proposed Changes - Scenario 1. Both locks succeeded
 
 ```rust
-/// `fun` and `nai` locks balances within their contracts
+/// `fun` and `nai` lock balances within their contracts
 //////// Executing A2
 
 /// `fun` creates a new promise to `fun` to call `unlock`.
@@ -854,9 +905,16 @@ ActionReceipt {
     actions: [FunctionCall { method_name: "unlock", args: b"{\"lock_id\": \"nai-lock-id-1\"}", ... }],
 }
 
+//////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////
+//////////////////////////// IMPORTANT NOTE //////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////
+
 /// `on_locks` on `dex` is called.
-/// Because input `DataReceipt` contained `new_output_data_receivers`, the receipt `A4` might look like this.
-/// Internally we wouldn't modify it, but we'll account for the new output data receivers
+/// The input `DataReceipt` contained `new_output_data_receivers`.
+/// If we append them to the existing `output_data_receivers` the receipt `A4` would look like the following.
+/// NOTE: Internally the Runtime will not modify the receipt itself, but instead create a vec `all_output_data_receivers`.
 ActionReceipt {
     id: "A4",
     receiver_id: "dex",
@@ -883,7 +941,11 @@ ActionReceipt {
     predecessor_id: "dex",
     input_data_ids: [],
     output_data_receivers: [],
-    actions: [FunctionCall { method_name: "trasnferFrom", ... }],
+    actions: [FunctionCall {
+        method_name: "transferFrom",
+        args: b"{\"lock_id\": \"fun-lock-id-1\", \"amount\": 1000, \"new_owner_id\": \"bob\"}",
+        ...
+    }],
 }
 
 ActionReceipt {
@@ -892,7 +954,11 @@ ActionReceipt {
     predecessor_id: "dex",
     input_data_ids: [],
     output_data_receivers: [],
-    actions: [FunctionCall { method_name: "trasnferFrom", ... }],
+    actions: [FunctionCall {
+        method_name: "transferFrom",
+        args: b"{\"lock_id\": \"nai-lock-id-1\", \"amount\": 10, \"new_owner_id\": \"alice\"}",
+        ...
+    }],
 }
 
 /// `dex` creates a callback back to `dex` to call `on_transfers`.
@@ -916,7 +982,11 @@ ActionReceipt {
     output_data_receivers: [
         DataReceiver {receiver_id: "dex", data_id: "data-id-5"},
     ],
-    actions: [FunctionCall { method_name: "trasnferFrom", ... }],
+    actions: [FunctionCall {
+        method_name: "transferFrom",
+        args: b"{\"lock_id\": \"fun-lock-id-1\", \"amount\": 1000, \"new_owner_id\": \"bob\"}",
+        ...
+    }],
 }
 ActionReceipt {
     id: "A6",
@@ -926,7 +996,11 @@ ActionReceipt {
     output_data_receivers: [
         DataReceiver {receiver_id: "dex", data_id: "data-id-6"},
     ],
-    actions: [FunctionCall { method_name: "trasnferFrom", ... }],
+    actions: [FunctionCall {
+        method_name: "transferFrom",
+        args: b"{\"lock_id\": \"nai-lock-id-1\", \"amount\": 10, \"new_owner_id\": \"alice\"}",
+        ...
+    }],
 }
 ActionReceipt {
     id: "A7",
@@ -954,7 +1028,7 @@ ActionReceipt {
 
 //////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////// NOTE //////////////////////////////////////
+//////////////////////////// IMPORTANT NOTE //////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////
 
@@ -1017,7 +1091,7 @@ DataReceipt {
 ##### Proposed Changes - Scenario 2. `nai` lock failed
 
 ```rust
-/// `fun` and `nai` locks balances within their contracts
+/// `fun` and `nai` lock balances within their contracts
 //////// Executing A2
 
 /// `fun` creates a new promise to `fun` to call `unlock`.
@@ -1103,8 +1177,10 @@ DataReceipt {
 # Reference-level explanation
 [reference-level-explanation]: #reference-level-explanation
 
-This change doesn't require complicated changes on runtime. The economics of this change also work, since caller promises are prepaid, there are no additional unexpected fees.
-It also reuses the limitation that we have right now with the existing `promise_return`, it can't return a joint promise (a promise created with `promise_and`).
+This change doesn't require complicated changes on runtime.
+The economics of this change also work, since caller promises are prepaid, there are no additional unexpected fees.
+
+This change also reuses the existing limitation on `promise_return`. `promise_return` can't return a joint promise (a promise created with `promise_and`). So the auto-unlock promise can't be underpaid.
 
 ## How Runtime works now
 [how-runtime-works]: #how-runtime-works
@@ -1285,16 +1361,21 @@ There caller (`predecessor_id`) is `B`, but the output data receivers are `A` an
 Execution at `C` can't influence `B` or attach any promises or callbacks to `B`, because execution of `B` has already completed or has indirect dependency.
 Instead `C` can only influence both `A` and `D`. 
 
-Now lets look at `fun` token receipt example:
+Now lets look at an example of calling `lock` on `fun` from `dex`:
 ```rust
 ActionReceipt {
-    id: "A6",
+    id: "A2",
     receiver_id: "fun",
     predecessor_id: "dex",
     input_data_ids: [],
     output_data_receivers: [
-        DataReceiver {receiver_id: "dex", data_id: "D3"},
-     ],
+        DataReceiver {receiver_id: "dex", data_id: "data-id-1"}
+    ],
+    actions: [FunctionCall {
+        method_name: "lock",
+        args: b"{\"owner_id\": \"alice\", \"amount\": 1000}",
+        ...
+     }],
 }
 ```
 
@@ -1345,6 +1426,7 @@ So we can calculate the cost of the data receipts required to generate.
 [drawbacks]: #drawbacks
 
 - This might be complicated to developers to understand the difference between the return types. Hopefully the bindgen will hide it or simplify it.
+- This introduces some changes to Runtime, so it increases the complexity.
 - There are might be a need in some additional API to redirect output data dependencies to a caller as well. This is if the proxy decides to implement a callback. Can discuss offline.
 
 
