@@ -1,7 +1,7 @@
-- Proposal Name: (fill me in with a unique ident, `my_awesome_feature`)
-- Start Date: (fill me in with today's date, YYYY-MM-DD)
-- NEP PR: [nearprotocol/neps#0000](https://github.com/nearprotocol/neps/pull/0000)
-- Issue(s): link to relevant issues in relevant repos (not required).
+- Proposal Name: auto-unlock-with-safes
+- Start Date: 2019-12-10
+- NEP PR: [nearprotocol/neps#26](https://github.com/nearprotocol/neps/pull/26)
+- Issue(s):  [nearprotocol/neps#23](https://github.com/nearprotocol/neps/pull/23), [nearprotocol/neps#24](https://github.com/nearprotocol/neps/pull/24)
 
 # Summary
 [summary]: #summary
@@ -36,7 +36,6 @@ We introduce a new concept which we call a `safe`.
 - Safe can't be cloned or copied, so there are always only 1 instance of a particular safe.
 - Non-owner contracts can pass safes to other contracts and read the content, but can't modify the content of the safe.
 - Owner contract can modify the content of the safe, but not the automatic release promise.
-- Explain the proposal as if it was already implemented and you were teaching it to another developer. That generally means:
 
 ### Example:
 
