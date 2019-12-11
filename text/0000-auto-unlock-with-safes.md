@@ -56,16 +56,17 @@ Now Dex has this safe from the token contract.
 Dex can read the content of the safe and assert the content is correct.
 
 - Dex calls `transfer` on the token contract and pass this safe with this promise.
-- Token contract reads the content of the safe that it received and transfers the required amount to the new owner.
-- Token contract modifies the content of the safe and decreased the safe amount by the transferred amount. E.g.
-- Token contract can now return OK and the safe back to `dex`.
+- Token contract reads the content of the safe that it received and transfers the required amount `400` to the new owner.
+- Token contract modifies the content of the safe and decreased the safe amount by `400` by the transferred amount. E.g.
 ```
 {
   owner_id: "alice",
-  amount: 100,
+  amount: 600,
   locked_by: "dex",
 }
 ```
+- Token contract can now return OK and the safe back to `dex`.
+
 Transfer has completed successfully, but `dex` may want to do more transfers. It's safe to drop the safe now.
 
 - Dex returns OK and drops the safe.
