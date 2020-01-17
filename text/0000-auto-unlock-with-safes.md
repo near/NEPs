@@ -77,21 +77,248 @@ It's because the promise is fully prepaid during the creation of the safe.
 
 - Token contract checks the content of the safe and if there are still funds, it can return them back to `alice`.
 
-
-# TBD BELOW
-# TBD BELOW
-# TBD BELOW
-
 # Reference-level explanation
 [reference-level-explanation]: #reference-level-explanation
 
-This is the technical portion of the NEP. Explain the design in sufficient detail that:
+Introducing new Runtime API to handle safes:
 
-- Its interaction with other features is clear.
-- It is reasonably clear how the feature would be implemented.
-- Corner cases are dissected by example.
+## API to create safes and read/write content 
+```rust
+/// Creates a new safe with the provided `method_name`, `arguments` and `gas` for the unlock callback.
+/// Returns the Safe index.
+/// 
+/// NOTE: Internally it crease a new promise, that is associated with the given safe.
+/// You can't reuse this promise for anything else.
+/// The promise will be called only when the safe is dropped.
+/// The content of the safe will be given as the first promise result.
+fn safe_create(method_name_len: u64,
+               method_name_ptr: u64,
+               arguments_len: u64,
+               arguments_ptr: u64,
+               gas: u64) -> u64;
 
-The section should return to the examples given in the previous section, and explain more fully how the detailed proposal makes those examples work.
+/// Writes the content to the safe identified by `safe_idx`.
+/// Can only be called by the safe owner. 
+fn safe_content_write(safe_idx: u64, value_len: u64, value_ptr: u64);
+
+/// Reads the content from the safe identified by `safe_idx` into a `register_id`. 
+fn safe_content_read(safe_idx: u64, register_id: u64);
+
+/// Reads the owner account ID of the safe identified by `safe_idx` into a `register_id`. 
+fn safe_owner(safe_idx: u64, register_id: u64);
+```
+
+## Passing safes
+
+If you don't return or pass a safe, then this safe will be dropped at the end of the contract execution.  
+
+```rust
+/// Returns the safe identified by `safe_idx` from the contract.
+/// You can return multiple safes from the contract by calling this method on multiple safes.
+/// This method consumes the associated safe, so it can't be used afterwards.
+/// 
+/// If a contract returns a value using `value_return`, the safe passed with this data to the data receiver.
+/// If a contract returns a promise using `promise_return`, the safe will be attached to this promise (similar to `promise_attach_safe`). 
+fn safe_return(safe_idx: u64);
+
+/// Attaches the safe identified by `safe_idx` to the promise identified by the `promise_idx`.
+/// This method consumes the associated safe, so it can't be used afterwards.
+/// The promise can't be a joined promise created using `promise_and`.
+fn promise_attach_safe(promise_idx: u64, safe_idx: u64);
+```
+
+## Receiving safes 
+
+Safes can be received in two ways:
+- Receiving safes attached to the input of this call.
+- Receiving safes with a promise result.
+
+```rust
+/// Returns the number of safes received with the input for this function.
+fn input_safes_count() -> u64;
+
+/// Returns `safe_idx` at the position `input_safe_idx` in the input safes.
+fn input_safe(input_safe_idx: u64) -> u64;
+
+/// Returns the number of safes returned with the given result at the position `result_idx`.
+fn promise_result_safes_count(result_idx: u64) -> u64;
+
+/// Returns `safe_idx` at the position `result_safe_idx` for a result at the position `result_idx`.
+/// For example, there are 3 results:
+/// - result #0 has 2 safes with safe idx: [0, 1]
+/// - result #1 has no safes: []
+/// - result #2 has 1 safes with safe idx: [2]
+/// Call results will be:
+/// ```
+/// assert_eq!(promise_result_safes_count(0), 2);
+/// assert_eq!(promise_result_safe(0, 0), 0);
+/// assert_eq!(promise_result_safe(0, 1), 1);
+/// assert_eq!(promise_result_safe(2, 0), 2);
+/// ```
+fn promise_result_safe(result_idx: u64, result_safe_idx: u64) -> u64;
+```
+
+## Low-level contract example
+
+This is still pseudo-code. But it should highlight how safes work.
+E.g. this code don't use registers and assumes core functions return vectors. 
+
+```rust
+// Dex contract
+impl Dex {
+    /// Initiates trades between `owner1` who owns `amount1` tokens of `token1` with
+    /// `owner2` who owns `amount2` tokens of `token2`. 
+    /// Simplified logic, cause we don't check open orders, permissions, etc.
+    pub fn trade(
+        owner1: AccountId,
+        token1: AccountId,
+        amount1: Balance,
+        owner2: AccountId,
+        token2: AccountId,
+        amount2: Balance,
+    ) {
+        // Locking `amount1` of tokens `token1` from `owner1`
+        let promiseLock1 = TokenContract::new(token1).lock(LockArgs {
+            owner: owner1,
+            amount: amount1,
+        }.try_to_vec().unwrap());
+        // Locking `amount2` of tokens `token2` from `owner2`
+        let promiseLock2 = TokenContract::new(token2).lock(LockArgs {
+            owner: owner2,
+            amount: amount2,
+        }.try_to_vec().unwrap());
+        // Join promises, so we can wait on both of them.
+        let promisesJoinedLocks = promise_and([promiseLock1, promiseLock2]);
+        // Attaching a callback back to us, that will receive results of locks.
+        let callback = promise_then(promisesJoinedLocks, current_account_id(), "on_locks", OnLocksArgs {
+            owner1,
+            token1,
+            amount1,
+            owner2,
+            token2,
+            amount2,
+        }.try_to_vec().unwrap());
+        // Return our callback, so the execution doesn't return result yet.
+        promise_return(promisesJoinedLocks);
+    }
+    
+    /// Callback to process locks received from the token contracts.
+    pub fn on_locks(
+        owner1: AccountId,
+        token1: AccountId,
+        amount1: Balance,
+        owner2: AccountId,
+        token2: AccountId,
+        amount2: Balance,
+    ) {
+        // Check it's a callback by this contract.
+        assert_eq!(predecessor_account_id(), current_account_id());
+        // Get indices for safes. It would fail if one of the locks failed,
+        // So the callback will fail as well. 
+        let safe_idx1 = promise_result_safe(0, 0);
+        let safe_idx2 = promise_result_safe(1, 0);
+        // We can verify safe owners.
+        // It's unnecessary, because we trust token contracts.
+        assert_eq!(safe_owner(safe_idx1), token1);
+        assert_eq!(safe_owner(safe_idx2), token2);
+        // We can also check content of the safes. E.g. check the amounts.
+        // But we probably shouldn't, because the implementation might be different.
+        assert_eq!(TokenSafeContent.try_from_slice(safe_content_read(safe_idx1)).unwrap().amount, amount1);
+        assert_eq!(TokenSafeContent.try_from_slice(safe_content_read(safe_idx2)).unwrap().amount, amount2);
+        // Now the actual code for transfers.
+        
+        // Create transfer of `amount1` tokens `token1` to the new owner `owner2`
+        let promiseTransfer1 = TokenContract::new(tokenFrom).transfer_with_safe(TransferArgs {
+            new_owner: owner2,
+            amount: amount1,
+        }.try_to_vec().unwrap());
+        // Attaching a safe to the new promise. Now we can't use the safe `safe_idx1` anymore.
+        promise_attach_safe(promiseTransfer1, safe_idx1);
+
+        // Create transfer of `amount2` tokens `token2` to the new owner `owner1`
+        let promiseTransfer2 = TokenContract::new(tokenTo).transfer_with_safe(TransferArgs {
+            new_owner: owner1,
+            amount: amount2,
+        }.try_to_vec().unwrap());
+        // Attaching a safe to the new promise. Now we can't use the safe `safe_idx2` anymore.
+        promise_attach_safe(promiseTransfer2, safe_idx2);
+        
+        // We are done. Don't need to return anything or depend on results.
+    }
+}
+
+// Token contract implementation
+impl Token {
+    /// Locks tokens from owner
+    pub fn lock(
+        &mut self,
+        owner: AccountId,
+        amount: Balance,
+    ) {
+        // Check the predecessor has enough allowance and token balance.
+        self.assertPermission(onwer, amount);
+        let safe_idx = safe_create("unlock", UnlockArgs {
+            // unlock parameters can go there.
+            // We don't need them right now, because content of the safe is enough.
+        }.try_to_vec().unwrap(), ENOUGH_GAS);
+        // Decrease owner's balance and the allowances
+        self.token[owner].balance -= amount;
+        self.token[owner].allowances[predecessor_account_id()] -= amount;
+        // Create safe content
+        safe_content_write(safe_idx, TokenSafeContent {
+            owner,
+            amount,
+            caller: predecessor_account_id(),
+        }.try_to_vec().unwrap());
+        
+        // Return safe from the contract.
+        safe_return(safe_idx);
+    }
+    
+    /// Transferring `amount` of tokens to `new_owner` from the given `safe`.
+    pub fn transfer_with_safe(
+        &mut self,
+        new_owner: AccountId,
+        amount: Balance,
+    ) {
+        // Get the safe index first. It will fail, if the safe is not passed.
+        let safe_idx = input_safe(0);
+        // Check that the safe is from this token contract.
+        assert_eq!(safe_owner(safe_idx), current_account_id());
+        // Get content of the safe.
+        let mut safe = TokenSafeContent.try_from_slice(safe_content_read(safe_idx)).unwrap();
+        // Check that the safe has enough amount;
+        assert!(safe.amount >= amount);
+        // Transfer tokens from safe to the new owner balance.
+        safe.amount -= amount;
+        self.token[new_owner].balance += amount;
+        // Update safe content
+        safe_content_write(safe_idx, safe.try_to_vec().unwrap());
+        
+        // We are done. The safe will be dropped and the remaining balance returned to the owner.
+    }
+    
+    /// Unlocks the safe. Returns the remaining balance back to the owner and the remaining
+    /// allowance back to the caller.
+    /// NOTE: The content of the safe is given as the first promise result.
+    pub fn unlock(&mut self) {
+        // Check that it's a callback by this contract.
+        assert_eq!(predecessor_account_id(), current_account_id());
+        // The content of the safe is given as the first promise result.
+        let safe = TokenSafeContent.try_from_slice(promise_result(0)).unwrap();
+        if safe.amount > 0 {
+            self.token[safe.owner].balance += safe.amount;
+            self.token[safe.owner].allowances[safe.caller] += safe.amount;
+        }
+    }
+}
+```
+
+# TBD BELOW
+# TBD BELOW
+# TBD BELOW
+# TBD BELOW
+
 
 # Drawbacks
 [drawbacks]: #drawbacks
