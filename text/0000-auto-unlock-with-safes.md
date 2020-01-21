@@ -203,7 +203,7 @@ impl Dex {
             amount2,
         }.try_to_vec().unwrap());
         // Return our callback, so the execution doesn't return result yet.
-        promise_return(promisesJoinedLocks);
+        promise_return(callback);
     }
     
     /// Callback to process locks received from the token contracts.
