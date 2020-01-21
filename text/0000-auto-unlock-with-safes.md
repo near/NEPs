@@ -80,9 +80,11 @@ It's because the promise is fully prepaid during the creation of the safe.
 # Reference-level explanation
 [reference-level-explanation]: #reference-level-explanation
 
+## Runtime API
+
 Introducing new Runtime API to handle safes:
 
-## API to create safes and read/write content 
+### API to create safes and read/write content 
 ```rust
 /// Creates a new safe with the provided `method_name`, `arguments` and `gas` for the unlock callback.
 /// Returns the Safe index.
@@ -105,20 +107,22 @@ fn safe_content_write(safe_idx: u64, value_len: u64, value_ptr: u64);
 fn safe_content_read(safe_idx: u64, register_id: u64);
 
 /// Reads the owner account ID of the safe identified by `safe_idx` into a `register_id`. 
-fn safe_owner(safe_idx: u64, register_id: u64);
+fn safe_owner_id(safe_idx: u64, register_id: u64);
 ```
 
-## Passing safes
+### Passing safes
 
 If you don't return or pass a safe, then this safe will be dropped at the end of the contract execution.  
 
 ```rust
-/// Returns the safe identified by `safe_idx` from the contract.
+/// Returns the safe identified by `safe_idx` from the contract with the outgoing data.
 /// You can return multiple safes from the contract by calling this method on multiple safes.
 /// This method consumes the associated safe, so it can't be used afterwards.
 /// 
-/// If a contract returns a value using `value_return`, the safe passed with this data to the data receiver.
-/// If a contract returns a promise using `promise_return`, the safe will be attached to this promise (similar to `promise_attach_safe`). 
+/// The call will panic if the contract has multiple outgoing dependencies.
+/// 
+/// NOTE: If a contract returns a promise using `promise_return` or there are no outgoing dependencies,
+/// the safe will be dropped at the end of the contract execution.
 fn safe_return(safe_idx: u64);
 
 /// Attaches the safe identified by `safe_idx` to the promise identified by the `promise_idx`.
@@ -127,7 +131,7 @@ fn safe_return(safe_idx: u64);
 fn promise_attach_safe(promise_idx: u64, safe_idx: u64);
 ```
 
-## Receiving safes 
+### Receiving safes 
 
 Safes can be received in two ways:
 - Receiving safes attached to the input of this call.
@@ -314,48 +318,213 @@ impl Token {
 }
 ```
 
-# TBD BELOW
-# TBD BELOW
-# TBD BELOW
-# TBD BELOW
+## On access to safes from multiple actions.
 
+Since safes are passed to a promise and not to a particular function call.
+Let's say a promise contains 2 function calls.
+All safe(s) will be given to the first function call. If the function call doesn't consume a safe, it will be passed towards the next function call.
+Once the safe reaches the last action and the safe is not consumed by the last action, the safe will be dropped.
 
-# Drawbacks
-[drawbacks]: #drawbacks
+If the content of the safe is modified by the contract during one of the function call, but then the next action fails. The content of the safe
+is reverted to the original content, the content before the first action has started.
+   
+## Runtime internal implementation
 
-Why should we *not* do this?
+To handle safes properly we need the following:
+ - To track safes across actions. This includes:
+   - To track safe owner.
+   - To track current safe content and the original safe content.
+   - To track whether the safe was created during this action was passed in.
+   - To track which promise to call when the safe is dropped.
+ - Providing safes for actions and updating them.
+ - To pass safes with action receipts (for `promise_attach_safe`)
+ - To pass safes with data receipts (for `safe_return`).
+ - To resolve all remaining safes that were not consumed.
 
-# Rationale and alternatives
-[rationale-and-alternatives]: #rationale-and-alternatives
+### Tracking safes
 
-- Why is this design the best in the space of possible designs?
-- What other designs have been considered and what is the rationale for not choosing them?
-- What is the impact of not doing this?
+The easiest option to handle safes is to accumulate all safes at the beginning of action receipt processing.
+Same way we accumulate input_data, we can accumulate safes with content. Let's introduce `Safe` data structure:
+```rust
+pub struct Safe {
+    /// Account ID of the safe owner. It's the account ID of the contract that created the safe.
+    /// It's where the safe content will be sent when the safe is dropped. 
+    pub owner_id: AccountId,
+    
+    /// Unique ID of the data. It's similar `data_id` in `DataReceipt`s and in `DataReceiver`s.
+    /// When this safe is dropped, the content of the safe will be sent using (`owner_id`, `data_id`)
+    /// within a `DataReceipt`. It'll trigger the `ActionReceipt` on the `owner_id` account that 
+    /// will handle unlocking/resolving logic of the safe.
+    pub data_id: CryptoHash,
+    
+    /// Content of the safe. Safe contains an empty vec by default.
+    pub content: Vec<u8>,
+}
+```
 
-# Unresolved questions
-[unresolved-questions]: #unresolved-questions
+Then we add a new vector of `all_safes` into `apply_action_receipt` within a Runtime.
+This vector allows us to drop all safes with the original content in case any action fails during
+processing of this `ActionReceipt`.
+```rust
+    /// Contains safes attached to the action receipt and all safes from all promise results.
+    let original_safes: Vec<Safe>;
+```
 
-- What parts of the design do you expect to resolve through the NEP process before this gets merged?
-- What parts of the design do you expect to resolve through the implementation of this feature before stabilization?
-- What related issues do you consider out of scope for this NEP that could be addressed in the future independently of the solution that comes out of this NEP?
+```rust
+    /// Mutable clone of original safes.
+    /// NOTE: It's easier to clone original safes than trying to wrap them
+    /// and then clone on demand (e.g. when attaching to receipts). 
+    let mut safes: Vec<Safe>;
 
-# Future possibilities
-[future-possibilities]: #future-possibilities
+    /// Safe indices that are attached to this `ActionReceipt`. 
+    let mut input_safes_idxs: Vec<SafeIndex>;
+    /// Safe indices that were received with the promise results. 
+    let mut promise_results_safes_idxs: Vec<Vec<SafeIndex>>;
+```
 
-Think about what the natural extension and evolution of your proposal would
-be and how it would affect the project as a whole in a holistic
-way. Try to use this section as a tool to more fully consider all possible
-interactions with the project in your proposal.
-Also consider how the this all fits into the roadmap for the project
-and of the relevant sub-team.
+### Processing safes with actions
 
-This is also a good place to "dump ideas", if they are out of scope for the
-NEP you are writing but otherwise related.
+Each action will receive a mutable reference to `input_safes` and `promise_results_safes`.
 
-If you have tried and cannot think of any future possibilities,
-you may simply state that you cannot think of anything.
+If any action fails, then we don't care about `input_safes` and `promise_results_safes` anymore, because
+we'll just drop safes from `original_safes`.
 
-Note that having something written down in the future-possibilities section
-is not a reason to accept the current or a future NEP. Such notes should be
-in the section on motivation or rationale in this or subsequent NEPs.
-The section merely provides additional information.
+A function call on an account that owns a safe may update the content of the safe.
+A function call can also consume some safes from either vector, or create new safes and add them to `input_safes`.
+Newly created safes that are not consumed will be passed to the next action as an input, so it can act the safe if needed.
+
+The content of the safes will be handled through `RuntimeExt` crate.
+
+Inside a VMLogic, we'll track safes the following way.
+```rust
+    // Immutable:
+    /// Safe indices that are attached to this `ActionReceipt`. 
+    input_safes_idxs: Vec<SafeIndex>,
+    /// Safe indices that were received with the promise results. 
+    promise_results_safes_idxs: Vec<Vec<SafeIndex>>,
+    
+    // Mutable:
+    /// Safe indices that were created during the execution.
+    new_safes_idxs: Vec<SafeIndex>,
+    /// Safe indices that were consumed during the execution.
+    /// Once a safe is consumed it can't be used later.  
+    consumed_safes_idxs: HashSet<SafeIndex>,
+    /// Returned safe indices.
+    /// NOTE: These safes are recorded as consumed as well.
+    returned_safes_idxs: Vec<SafeIndex>,
+```
+
+Handling of returned safes:
+- If there are 2 or more outgoing dependencies, the `safe_return` call will panic immediately.
+NOTE: Even though the safe can be attached to the promise, with multiple outgoing dependencies, you can do this by
+attaching it directly instead of relying on `safe_return`.
+- Otherwise the safe index is added to both `consumed_safes_idxs` and
+  `returned_safes_idxs`. NOTE: if the outgoing dependencies are empty, the safe will not be returned
+  anywhere, so it effectively will be dropped after this action.
+
+We also need to update `Promise` enum to indicate safe resolving promise:
+```rust
+/// Promises API allows to create a DAG-structure that defines dependencies between smart contract
+/// calls. A single promise can be created with zero or several dependencies on other promises.
+/// * If a promise was created from a receipt (using `promise_create` or `promise_then`) it's a
+///   `Receipt`;
+/// * If a promise was created by merging several promises (using `promise_and`) then
+///   it's a `NotReceipt`, but has receipts of all promises it depends on.
+/// * If a promise was created by creating a safe, then this promise can't be used for any other
+///   promise operations.
+#[derive(Debug)]
+enum Promise {
+    Receipt(ReceiptIndex),
+    NotReceipt(Vec<ReceiptIndex>),
+    /// The promise was created with a safe, so it shouldn't be use or exposed.
+    Safe(SafeIndex),
+}
+```
+
+`RuntimeExt` needs the following methods:
+```rust
+    /// Creates a new safe. The given action receipt will be called when the safe is dropped.
+    /// VMLogic guarantees that the receipt doesn't have any input or output dependencies yet.
+    /// The receiver ID of the corresponding receipt will be the owner of the new safe.
+    fn safe_create(&mut self, receipt_index: u64) -> SafeIndex;
+    
+    /// Updates the content of the given safe.
+    /// VMLogic should ensure that the safe is owned by the current account ID.
+    fn safe_set_content(&mut self, safe_idx: SafeIndex, content: Vec<u8>);
+
+    /// Returns content of the safe.
+    fn safe_get_content(&self, safe_idx: SafeIndex) -> &[u8];
+    
+    /// Returns account ID of the safe owner.
+    fn safe_get_owner_id(&self, safe_idx: SafeIndex) -> AccountId;
+    
+    /// Consumes given safe and attaches it to the given action receipt.
+    fn safe_attach(&mut self, receipt_index: u64, safe_idx: SafeIndex);
+``` 
+
+Need to add the following fields to the `ActionResult`:
+```rust
+    /// Safes that needs to passed towards the single dependency in `outgoing_dependencies`.
+    /// Or dropped if there are no `outgoing_dependencies`.
+    pub returned_safes: Vec<SafeWrapper>,
+    /// Safes that were dropped by returning safes from earlier actions.
+    /// Need to track them, since new safes might have been created in between.
+    pub dropped_safes: Vec<SafeWrapper>,
+``` 
+
+Collecting safes after successful execution of a Function Call action:
+- `VMOutcome` should contain the following fields from `VMLogic`:
+    - `new_safes_idxs`
+    - `consumed_safes_idxs`
+    - `returned_safes_idxs`
+- `RuntimeExt` should return `mut safes` back to `Runtime`.
+- `Runtime` should do the following:
+    - Filter `safes` by removing all `consumed_safes_idxs`:
+        - Remember the remapping for the old indices towards a new indices.
+        - Returned safes should be retained in a `returned_safes` in `ActionResult`.
+    - Add `new_safes_idxs` to `input_safes_idxs`.
+    - Update `input_safes_idxs` and `promise_results_safes_idxs` by retaining only safe
+    indices that were not consumed and remapping the old indices to the new indices.
+
+Merging `ActionResult`:
+- If we merging a new `ActionResult`, all old `returned_safes` should be moved to old `dropped_safes`.
+The reason for this is there shouldn't be any `outgoing_dependencies` in the old `ActionResult`.
+Because the old action was not the last action and only the last action can have `outgoing_dependencies`.
+- If the new `ActionResult` result is `Err`, all new `returned_safes` should be moved to new `dropped_safes`.
+- new `dropped_safes` are added after old `dropped_safes`.
+
+### Update `ActionReceipt` and `DataReceipt`
+
+Need to add one field to `ActionReceipt`:
+```rust
+    /// Attached safes.
+    pub safes: Vec<Safe>,
+```
+
+Also need to add one field to `DataReceipt`:
+```rust
+    /// Safes returned with this data.
+    /// It will be empty for failed executions.
+    pub safes: Vec<Safe>,
+```
+
+### Resolving safes at the end.
+
+If the `ActionResult` result is `Err`:
+- drop all `original_safes`
+
+If the `ActionResult` result is `Ok`, we have safes in the following fields:
+- `returned_safes` and `dropped_safes` in the `ActionResult`
+- some safes that are already attached to `Receipt` in the `ActionResult`
+- all the remaining `safes` that were not consumed and should be dropped.
+- if the `return_data` is `PromiseIndex` all `returned_safes` should be moved to `dropped_safes`.
+- if there are no `outgoing_dependencies` all `returned_safes` should be moved to `dropped_safes`.
+
+Handling `returned_safes` for `Ok` with exactly 1 outgoing dependency:
+- Append all safes from `returned_safes` to `safes` from the outgoing `DataReceipt`. 
+
+Dropping safes:
+- To drop a safe, we need to create a `Receipt` with a `DataReceipt`. 
+    - `receiver_id` is `safe.owner_id`.
+    - `data_id` is `safe.data_id`.
+    - `data` is the `Some(safe.content)`.
