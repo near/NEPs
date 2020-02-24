@@ -1,9 +1,10 @@
 # The NEAR Protocol Specification
 
-Nearnomicon contains the following information about the components of the NearProtocol client, with the goal to help
-with the collaboration:
+Near Protocol is the scalable blockchain protocol.
 
-- High-level overview of the components and how they interact, including APIs;
-- Data-structures;
-- Things that are not yet implemented or replaced with temporary solutions;
-- Assumptions that each component makes.
+For the overview of the NEAR Protocol, read the following documents in numerical order.
+1. [Terminology](Terminology.md)
+2. [Data structures](DataStructures.md)
+3. [Architecture](Architecture.md)
+4. [Chain specification](ChainSpec/README.md)
+5. [Runtime specification](RuntimeSpec/README.md)
