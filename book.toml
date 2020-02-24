@@ -1,0 +1,12 @@
+[book]
+authors = ["Near Inc <hello@nearprotocol.com>"]
+multilingual = false
+src = "specs"
+title = "NEAR Protocol Specification"
+description = "Specification of the NEAR Protocol"
+
+[build]
+build-dir = "docs"
+
+[output.html]
+mathjax-support = true
