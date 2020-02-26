@@ -29,7 +29,22 @@ Storage rent is charged for every account.
 
 ## Validators
 
+
 ### Validator Selection
+
+| Name | Description |
+| - | - |
+| `proposals` | The array of all existing validators, minus the ones which were online less than `ONLINE_THRESHOLD`, plus new validators |
+| `INCLUSION_FEE` | The arbitrary transaction fee that new validators offer to be included in the `proposals`, to mitigate censorship risks by existing validators |
+| `ONLINE_THRESHOLD` | `0.9` |
+| `epoch[T]` | The epoch when validator[v] is selected from the `proposals` auction array |
+| `seatPrice` | The minimum stake needed to become validator in epoch[T] |
+| `stake[v]` | The amount in NEAR tokens staked by validator[v] during the auction at the end of epoch[T-2], minus `INCLUSION_FEE` |
+| `shard[v]` | The shard randomically assigned to validator[v] at epoch[T-1], such that its node can download and sync with its state |
+| `numSeats` | Number of seats assigned to validator[v], calculated from stake[v]/seatPrice |
+| `validatorAssignments` | The resulting ordered array of all `proposals` with a stake higher than `seatPrice` |
+
+`validatorAssignments` is then split in two groups: block/chunk producers and 'hidden validators'
 
 ### Rewards
 

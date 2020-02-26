@@ -7,7 +7,7 @@ Both changes to the core specification and standards are called Near Enhancement
 
 ## Specification
 
-NEAR Specification is under active development. Latest version can be found - https://nomicon.com
+NEAR Specification is under active development. Latest version can be found - https://nomicon.io
 Specification defines how any NEAR client should be connecting, producing blocks, reaching consensus, processing state transitions and runtime APIs.
 
 ### Contributing

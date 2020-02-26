@@ -2794,6 +2794,18 @@ a contract.</p>
 <p>Storage rent is charged for every account.</p>
 <h2><a class="header" href="#validators-2" id="validators-2">Validators</a></h2>
 <h3><a class="header" href="#validator-selection" id="validator-selection">Validator Selection</a></h3>
+<table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>proposals</code></td><td>The array of all existing validators, minus the ones which were online less than <code>ONLINE_THRESHOLD</code>, plus new validators</td></tr>
+<tr><td><code>INCLUSION_FEE</code></td><td>The arbitrary transaction fee that new validators offer to be included in the <code>proposals</code>, to mitigate censorship risks by existing validators</td></tr>
+<tr><td><code>ONLINE_THRESHOLD</code></td><td><code>0.9</code></td></tr>
+<tr><td><code>epoch[T]</code></td><td>The epoch when validator[v] is selected from the <code>proposals</code> auction array</td></tr>
+<tr><td><code>seatPrice</code></td><td>The minimum stake needed to become validator in epoch[T]</td></tr>
+<tr><td><code>stake[v]</code></td><td>The amount in NEAR tokens staked by validator[v] during the auction at the end of epoch[T-2], minus <code>INCLUSION_FEE</code></td></tr>
+<tr><td><code>shard[v]</code></td><td>The shard randomically assigned to validator[v] at epoch[T-1], such that its node can download and sync with its state</td></tr>
+<tr><td><code>numSeats</code></td><td>Number of seats assigned to validator[v], calculated from stake[v]/seatPrice</td></tr>
+<tr><td><code>validatorAssignments</code></td><td>The resulting ordered array of all <code>proposals</code> with a stake higher than <code>seatPrice</code></td></tr>
+</tbody></table>
+<p><code>validatorAssignments</code> is then split in two groups: block/chunk producers and 'hidden validators'</p>
 <h3><a class="header" href="#rewards" id="rewards">Rewards</a></h3>
 <table><thead><tr><th>Name</th><th>Value</th></tr></thead><tbody>
 <tr><td><code>REWARD_FACTOR</code></td><td><code>0.05</code></td></tr>
