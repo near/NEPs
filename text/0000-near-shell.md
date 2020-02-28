@@ -19,15 +19,114 @@ These enhancements are intended to simplify and enhance developer and user produ
 # Guide-level explanation
 [guide-level-explanation]: #guide-level-explanation
 
-Using NEAR Shell, users can configure accounts, networks, and an instance of a server validator node on the host machine the shell is running.  An instance of NEAR Shell loads its state from the configuration directory and files stored in the default location:  `~/.near`.  Once the configuration is loaded, the active account and network are selected automatically either from the previously stored configuration or the defaults as shipped with NEAR Shell.
+## Configuration and key management
+
+Configuration and key management are two types of stored settings necessary for developers to build and deploy projects. The options for key storage and the way configuration is loaded will benefit with customization.
+
+Definitions:
+- Configuration - a key-value storage (typically JSON) containing information.
+    - `networkId` - similar to an environment to work on (ex: 'staging')
+    - `nodeUrl` - URL to RPC
+    - `contractName` - NEAR account name for smart contract
+    - `walletUrl` - URL to NEAR Wallet
+    - `helperUrl` - URL to project helping with token dissemination
+    - `masterAccount` - NEAR account used for continuous integration
+    - `keyPath` - for validators, the path to a file containing an account's private key
+- Keys - the storage of an account id and a corresponding private key.
+    - `account_id`
+    - `private_key`
+
+### Projects (currently)
+
+Currently, NEAR projects (for example, one generated using `create-near-app`) hold the configuration in the project's file:
+
+`src/config.js`
+
+**Note**: the active configuration can have keys overridden by flags.
+
+After the user completes the instructions from running `near login`, the project has a new directory where private key(s) are stored:
+
+`./neardev`
+
+### Validator nodes (currently)
+
+Currently, validators use different scripts
+
+Validator nodes using the `nearcore` repository follow instructions that will create their keys in the user's home directory, not the project directory. This directory name differs from a project's key storage directory. It is located in:
+
+`~/.near`
+
+### Proposed customization
+
+Both configuration and key management will be able to exist in various places, allowing end users to customize which accounts are using which configuration. Keys and config settings will apply for all contracts unless explicitly directed via the usage of CLI flags.
+
+Commands check the active configuration for items not found, or expected in flags.
+
+For example, instead of a user entering:
+
+`near call my_dapp my_function --accountId my_account_id`
+
+there exist an configuration that substitutes the `--accountId` flag:
+
+```json
+…
+  "accountId": "my_account_id",
+…
+``` 
+
+`near-shell` will look for keys in a specific order. If the active configuration file explicitly specifies a key storage directive, that setting will take precedence and it will not use this lookup order. This list is in ascending order and can be understood to mean, "if the key is not found here, then try the next location/store."
+
+1. Environment variables:
+    - `NEAR_ACCOUNT_ID`
+    - `NEAR_PRIVATE_KEY`
+    
+2. Operating system key management:
+    - OS X - use of built-in `/usr/bin/security` [cli tool](https://www.unix.com/man-page/osx/1/security/).
+    - Linux - use of `secret-tool` [cli command](https://specifications.freedesktop.org/secret-service/latest/).
+    - Windows - possibly [use cmdkey.exe](https://social.technet.microsoft.com/Forums/en-US/268cb72e-0916-4219-8543-219092d2fb39/command-line-for-credential-manager?forum=w7itprosecurity) although implementation is not certain
+
+3. Project directory (`/Users/friend/projects/my-awesome-app/.near`)
+    - Instead of `neardev` in the project directory, it is now called `.near`
+
+4. Home directory (`/Users/friend/.near`)
+
+**Note**: during implementation it's advised to have the key storage options extendable. As the project grows, developers in the NEAR Collective may choose to add integrations with password management applications or hosted key solutions.
+
+## Translation
+
+It's important to invite the international community into developing with NEAR. Translation of these user-facing content are essential:
+- Help commands (the text describing what a command does and how to use it)
+- Error and logging messages
+
+Language preference can be set in two ways:
+- Using environment variables (i.e., parsed from `process.env.LANG`)
+- Set explicitly in configuration using [ISO 639-1](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes)
+
+```json
+…
+  "defaultAccountId": "my_account_id",
+  "language": "en"
+…
+```
+
+Commands and subcommands (ex: `call`) are not translated.
+
+#### User stories
+As a user, I want to store my keys safely in my home directory, but have a configuration file in the project folder that overrides my default configuration stored in the home directory.
+
+As a user, I want the operating system to prompt for my user password deploying a contract.
+
+As a user, I want to be able to have multiple projects that use the same account (and corresponding key(s)) without having to login to each project.
+
+As a user, I want to be able to read logs and instructions for commands in the language locale I'm used to, or I choose.
 
 ## NEAR Shell Top-Level Commands 
 
 ### `near network <command>`
 
-This command category is used to select and configure NEAR networks for a NEAR Shell user.  This category manipulates the user's `~/.near` configuration to allow a user to specify NEAR network details via the CLI instead of manually editing config files.
+This command category is used to select and configure NEAR networks for a NEAR Shell user.  This category manipulates the user's active configuration to allow a user to specify NEAR network details via the CLI instead of manually editing config files.
 
-Sub-commands for `network` might include:
+Sub-commands for `network` include:
 
 * `near network list` : Display the current list of networks for the current instance of NEAR Shell.  
 * `near network status` :  Show the user's current network configuration.
@@ -42,12 +141,15 @@ Sub-commands for `network` might include:
 This category is used to create, select, and configure accounts on NEAR networks for a given NEAR Shell user.  
 
 * `near account list`   : Display list of accounts configured on local host.
-* `near account status` : Display status of active or specified account.
+* `near account status` : Display status of active or specified account, including token amounts, locked, etc.
+* `near account send`   : Send tokens from active or specified account to another NEAR account or contract.
 * `near account create` : Create a new account or sub-account.
 * `near account delete` : Delete an account or sub-account.
+* `near account create-key` : Delete an account or sub-account.
+* `near account revoke-key` : Delete an account or sub-account.
 * `near account select` : Select an account from the list of locally configured accounts as the active account.
 * `near account login`  : Log in the current active or specified account.
-* `near account logout` : Log out the current active or specified account.
+* `near account logout` : Log out the current active or specified account. Essentially revoking a full access key.
 * `near account help`   : Display help on account subcommands.
 
 ### `server`
@@ -60,15 +162,7 @@ These commands are used to administer a NEAR server validator node.  Currently, 
 * `near server monitor` : Interactively display NEAR validator server status on current host.
 * `near server tail`    : Tail the log of the NEAR validator server on current host.
 * `near server help`    : Display help on server subcommands.
-
-### `near tokens <command>`
-
-* `near tokens send`	: Send tokens to another NEAR account.
-* `near tokens status`	: Display tokens in wallet.
-* `near tokens stake`
-* `near tokens help`
-
-### `near key <command>`
+* `near server stake`   : Stake tokens on the configured network with the active or specified account
 
 ### `near contract <command>` 
 * `near contract list`
@@ -78,9 +172,23 @@ These commands are used to administer a NEAR server validator node.  Currently, 
 * `near contract build`
 * `near contract deploy`
 * `near contract call`
+* `near contract view`
 
 ### `near config <command>`
+* `near config`         : List the location of active configuration file if it's loaded, or default config settings
+* `near config set`     : Set a key in the active configuration, or if using default, create a config file in the home directory with defaults and the specified key and value
 
+## Command input can be inline and file-based
+
+Some commands in `near-shell` may become long and difficult to type out. End users with a standard Terminal application may have a difficult time making small adjustments to a command that is quite lengthy. (Ex: pressing backwards or forwards many times to correct a typo.)
+
+In this spec, flags may be done inline: 
+
+`…call my_dapp my_function -i '{"key": "value_19"}'`
+
+or designated by a file:
+ 
+`…call my_dapp my_function -f ./params.json`
 
 ### User Stories
 For user-facing NEPs this section should focus on user stories.
@@ -90,6 +198,8 @@ These enhancements to near-shell aim to increase user and developer adoption by 
 If NEAR Shell is required, it makes sense to enhance NEAR Shell to include other features critical to user and developer interactions.  The commands proposed above enhance NEAR Shell to include validator node deployment and control for both local and distributed development, i.e., using a local network for offline development vs. testnet as a live network used by others, and to be able to select configure and select networks.
 
 Here are a few user stories to demonstrate the utility of these enhancements.
+
+1. As a user, I want to 
 
 #### Creating and Configuring Networks
 
@@ -106,7 +216,7 @@ Example:
 1.  A user or developer wants to interact with NEARs active testnet network.
 2.  The user lists the networks currently configured:  `near network list`.  
 3.  The user, by default, is presented with a list of networks with only one entry: `localnet`
-4.  Since, after these enhancements, NEAR Shell creates a localnet by default, the user will need to add and select a new network configuration.  The user executes the shell command:  `near network add testnet <options>`
+4.  Since, after these enhancements, near-shell creates a localnet by default, the user will need to add and select a new network configuration.  The user executes the shell command:  `near network add testnet <options>`
 
 etc. TBD.
 
@@ -120,6 +230,18 @@ This is the technical portion of the NEP. Explain the design in sufficient detai
 - Corner cases are dissected by example.
 
 The section should return to the examples given in the previous section, and explain more fully how the detailed proposal makes those examples work.
+
+---
+
+The programming language for NEAR Shell has not been determined yet but there have been opinions regarding proper, future-proof implementation.
+
+Long term goals to keep in mind:
+- Upgradable, but also able to lock a specific version.
+- Where possible, avoid single point of failures. This is in regards to using a package manager in particular.
+    - An official installer for multiple operating systems may be advised here, where trusted OS or GPG keys can verify the shell.
+- Able to traverse directory structures from all operating systems
+    - This applies particularly to Windows where backslashes are used in the default command prompt.
+- Limited dependencies to abate unforeseen issues.
 
 # Drawbacks
 [drawbacks]: #drawbacks
