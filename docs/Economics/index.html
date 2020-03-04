@@ -160,16 +160,64 @@
 <tr><td><code>BLOCK_TIME</code></td><td><code>1</code> second</td></tr>
 <tr><td><code>EPOCH_LENGTH</code></td><td><code>43,200</code> blocks</td></tr>
 <tr><td><code>EPOCHS_A_YEAR</code></td><td><code>730</code> epochs</td></tr>
+<tr><td><code>CONTRACT_PCT_PER_YEAR</code></td><td><code>0.3</code></td></tr>
+<tr><td><code>ADJ_FEE</code></td><td><code>0.001</code></td></tr>
 </tbody></table>
-<p>Where <em>yoctoNear</em> is smallest undividable amount of native currency <em>NEAR</em>.</p>
-<h2><a class="header" href="#variables" id="variables">Variables</a></h2>
+<p>Where <em>yoctoNear</em> is smallest undividable amount of native currency <em>NEAR</em>.
+<code>CONTRACT_PCT_PER_YEAR</code> is 30% of the <code>txFee[i]</code>, allocated to the balance of an application invoked by transactions. Can be referred also as <code>developerPct</code> .</p>
+<h2><a class="header" href="#general-variables" id="general-variables">General Variables</a></h2>
 <table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody>
-<tr><td><code>total_supply</code></td><td>Total supply of NEAR at given epoch</td></tr>
+<tr><td><code>total_supply[t]</code></td><td>Total supply of NEAR at given epoch[t]</td></tr>
+<tr><td><code>gasPrice</code></td><td>The cost of 1 unit of <em>gas</em> in NEAR tokens (see Transaction Fees section below)</td></tr>
 </tbody></table>
-<h2><a class="header" href="#transaction-fees" id="transaction-fees">Transaction Fees</a></h2>
-<h2><a class="header" href="#storage-rent" id="storage-rent">Storage Rent</a></h2>
-<p>Storage rent is charged for every account.</p>
+<h2><a class="header" href="#rewards" id="rewards">Rewards</a></h2>
+<p>The protocol sets a ceiling for the maximum issuance of tokens, and dynamically decreases this issuance depending on the amount of total fees in the system.</p>
+<table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>reward[t]</code></td><td><code>totalSupply[t]</code> * ((<code>1 - REWARD_PCT_PER_YEAR</code>) ^ <code>1/EPOCHS_A_YEAR</code> - <code>1</code>)</td></tr>
+<tr><td><code>issuance[t]</code></td><td>The amount of token issued at a certain epoch[t], such that <code>issuance[t] = reward[t] - epochFee[t]</code></td></tr>
+</tbody></table>
+<p>Where <code>totalSupply[t]</code> is the total number of tokens in the system at a given time <em>t</em>.
+If <code>epochFee[t] &gt; reward[t]</code> the issuance is negative, thus the <code>totalSupply[t]</code> decreases</p>
+<h3><a class="header" href="#transaction-fees" id="transaction-fees">Transaction Fees</a></h3>
+<table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>epochFee[t]</code></td><td>Summation <code>∑</code> of the fees collected by all block[i] in the epoch[t], such that <code>(1 - DEVELOPER_PCT_PER_YEAR) * txFee[i] + stateFee[i]</code>, where [i] represents any considered block within the epoch[t]</td></tr>
+<tr><td><code>txFee[i]</code></td><td>The cost of computation and bandwidth to include a transaction within the block[i]</td></tr>
+<tr><td><code>stateFee[i]</code></td><td>The cost of storage paid to the nodes to maintain the state of the existing state</td></tr>
+</tbody></table>
+<p>Each transaction pays the cost for bandwidth, processing, and the cost for state storage over time:</p>
+<table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>gas[tx]</code></td><td>1 CPU instruction and 1 byte of bandwidth, such that: <code>CPU[tx]</code> + <code>$\alpha$</code> * <code>Size[tx]</code></td></tr>
+<tr><td><code>gasPrice</code></td><td><code>= gasPrice * (1 + (gasUsed/gasLimit - 1/2) * ADJ_FEE</code>)</td></tr>
+<tr><td><code>gasUsed[i,s]</code></td><td>Gas used in the shard[s] at index[i]</td></tr>
+<tr><td><code>gasLimit[i]</code></td><td>Maximum amount of gas allowed at the block index[i], uniform across all shards</td></tr>
+<tr><td><code>ADJ_FEE</code></td><td>the maximum variation of of <code>gasPrice</code> after each block, see in General Parameters the constant value</td></tr>
+<tr><td><code>minGasPrice</code></td><td>The floor for gas price in NEAR</td></tr>
+</tbody></table>
+<p>Where <code>CPU[tx]</code> is represented as <em>numberOfCPUInstructions(tx)</em> and <code>Size[tx]</code> is represented as <em>SizeOf(tx)</em> on the white paper at section 4.1(4).</p>
+<p><code>gasPrice</code> is uniform across all shards, regardless of their actual usage. Block producers vote on a new <code>gasLimit</code> within <code>±ADJ_FEE</code> (0.1%) if block[i-1] has <code>gasUsed &gt; 0.9 * gasLimit</code>.</p>
+<h3><a class="header" href="#state-storage-rent" id="state-storage-rent">State Storage Rent</a></h3>
+<p>For each new block[i] created, each account is charged an amount of NEAR proportional to their storage footprint, commonly defined as <em>state rent</em>.
+<code>storagePrice</code> is charged as soon as an account[a] issues a new transaction.</p>
+<table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>stateFee[i,a]</code></td><td>The fees at block[i] payable by an account[a], such that: <code>stateFee[i,a] = storagePrice * size[a]</code></td></tr>
+<tr><td><code>size[a]</code></td><td>The size of a given account[a] in <em>bytes</em></td></tr>
+<tr><td><code>storagePrice</code></td><td>A constant fee, with a negligible cost for normal use. <em>This is subject to change in the future</em></td></tr>
+<tr><td><code>storagePaidAt[h]</code></td><td>The <em>state rent</em> paid from the account[a] at the most recent transaction stored in the block[h], used to calculate the accrued fees</td></tr>
+<tr><td><code>current balance</code></td><td>The current balance of the account[a] after the <em>state rent</em> is calculated, such that: <code>current balance = balance[a] - storagePrice * size[a] * (block[i] - storagePriceAt[h])</code>, where <code>storagePriceAt[h]</code> is updated to <code>storagePriceAt[i]</code> once the calculation is done</td></tr>
+<tr><td><code>minBalance[a]</code></td><td><code>pokeThreshold * storagePrice * size[a]</code></td></tr>
+</tbody></table>
+<p>Where <code>minBalance</code>, once reached, enables anyone to send a special transaction, such that they will receive a <code>pokeReward</code> of the remaining account[a] balance.</p>
+<p>Important caveats apply to the <em>state rent</em>:</p>
+<ol>
+<li>If an account[a] brings <code>balance[a]</code> below <code>minBalance[a]</code> by either moving tokens or increasing size, transaction will fail and changes reverted</li>
+<li>When account[a] is staking, if <code>minBalance[a] &gt; 4 * epochLength * storagePrice * size[a]</code> is false, the <code>proposal</code> will not be accepted for a rollover in the next epoch (see below in the Validator section)</li>
+</ol>
 <h2><a class="header" href="#validators" id="validators">Validators</a></h2>
+<p>NEAR validators provide their resources in exchange for a reward <code>epochReward[t]</code>, where [t] represents the considered epoch</p>
+<table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>epochReward[t]</code></td><td><code>= coinbaseReward[t] + epochFee[t]</code></td></tr>
+<tr><td><code>coinbaseReward[t]</code></td><td>The maximum inflation per epoch[t], as a function of <code>REWARD_PCT_PER_YEAR / EPOCHS_A_YEAR</code></td></tr>
+</tbody></table>
 <h3><a class="header" href="#validator-selection" id="validator-selection">Validator Selection</a></h3>
 <table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody>
 <tr><td><code>proposals</code></td><td>The array of all existing validators, minus the ones which were online less than <code>ONLINE_THRESHOLD</code>, plus new validators</td></tr>
@@ -183,10 +231,10 @@
 <tr><td><code>validatorAssignments</code></td><td>The resulting ordered array of all <code>proposals</code> with a stake higher than <code>seatPrice</code></td></tr>
 </tbody></table>
 <p><code>validatorAssignments</code> is then split in two groups: block/chunk producers and 'hidden validators'</p>
-<h3><a class="header" href="#rewards" id="rewards">Rewards</a></h3>
+<h3><a class="header" href="#rewards-calculation" id="rewards-calculation">Rewards Calculation</a></h3>
 <table><thead><tr><th>Name</th><th>Value</th></tr></thead><tbody>
 <tr><td><code>REWARD_FACTOR</code></td><td><code>0.05</code></td></tr>
-<tr><td><code>ONLINE_THRESHOLD</code></td><td><code>0.9</code></td></tr>
+<tr><td><code>ONLINE_THRESHOLD</code></td><td>see above</td></tr>
 </tbody></table>
 <p>Total reward every epoch <code>t</code> is equal to:</p>
 <pre><code class="language-python">reward[t] = total_supply * ((1 + REWARD_FACTOR) ** (1 / EPOCHS_A_YEAR) - 1)
@@ -204,6 +252,11 @@ else:
 <pre><code class="language-python">validator[t][j] = uptime[t][j] * reward[t] / total_seats * seats[j]
 </code></pre>
 <h3><a class="header" href="#slashing" id="slashing">Slashing</a></h3>
+<p>Slashing penalty is applied to the stake as follows:</p>
+<table><thead><tr><th>Criteria</th><th>Value</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>DoubleSignature</code></td><td><code>0.05</code></td><td>In case of equivocation, a slashing of 5% is applied</td></tr>
+<tr><td><code>InvalidStateTransition</code></td><td><code>1</code></td><td>In case of invalid state transition, slashing is 100% of the stake. <em>This may be subject to change in the future</em></td></tr>
+</tbody></table>
 <h2><a class="header" href="#protocol-treasury" id="protocol-treasury">Protocol Treasury</a></h2>
 <table><thead><tr><th>Name</th><th>Value</th></tr></thead><tbody>
 <tr><td><code>TREASURY_ACCOUNT_ID</code></td><td><code>treasury</code></td></tr>
