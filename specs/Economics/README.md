@@ -178,7 +178,8 @@ Total reward every epoch `t` is equal to:
 reward[t] = totalSupply * ((1 + REWARD_PCT_PER_YEAR) ** (1 / EPOCHS_A_YEAR) - 1)
 ```
 
-Uptime of a specific validator is computed:
+Validators that didn't meet the threshold for either blocks or chunks get kicked out and don't get any reward, otherwise uptime
+of a validator is computed:
 
 ```python
 pct_online[t][j] = (num_produced_blocks[t][j] / expected_produced_blocks[t][j] + num_produced_chunks[t][j] / expected_produced_chunks[t][j]) / 2
