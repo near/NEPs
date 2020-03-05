@@ -1,5 +1,12 @@
 # Economics
 
+## Units
+
+| Name | Value |
+| yoctoNEAR | smallest undividable amount of native currency *NEAR*. |
+| NEAR | 1E+24 yoctoNEAR |
+| block | unit of time, measured in block produced |
+
 ## General Parameters
 
 | Name | Value |
@@ -10,11 +17,12 @@
 | `BLOCK_TIME` | `1` second |
 | `EPOCH_LENGTH` | `43,200` blocks |
 | `EPOCHS_A_YEAR` | `730` epochs |
-| `CONTRACT_PCT_PER_YEAR` | `0.3` |
+| `POKE_THRESHOLD` | `500` blocks |
+| `STORAGE_PRICE` | `7E-15` NEAR per byte per block | 
+| `TREASURY_PCT` | `0.1` |
+| `CONTRACT_PCT` | `0.3` |
+| `INVALID_STATE_SLASH_PCT` | `0.05` |
 | `ADJ_FEE` | `0.001` |
-
-Where *yoctoNear* is smallest undividable amount of native currency *NEAR*.
-`CONTRACT_PCT_PER_YEAR` is 30% of the `txFee[i]`, allocated to the balance of an application invoked by transactions. Can be referred also as `developerPct` .
 
 ## General Variables
 
@@ -23,7 +31,7 @@ Where *yoctoNear* is smallest undividable amount of native currency *NEAR*.
 | `total_supply[t]` | Total supply of NEAR at given epoch[t] |
 | `gasPrice` | The cost of 1 unit of *gas* in NEAR tokens (see Transaction Fees section below) |
 
-## Rewards
+## Issuance
 
 The protocol sets a ceiling for the maximum issuance of tokens, and dynamically decreases this issuance depending on the amount of total fees in the system.
 
@@ -32,19 +40,18 @@ The protocol sets a ceiling for the maximum issuance of tokens, and dynamically 
 | `reward[t]` | `totalSupply[t]` * ((`1 - REWARD_PCT_PER_YEAR`) ^ `1/EPOCHS_A_YEAR` - `1`) |
 | `issuance[t]` | The amount of token issued at a certain epoch[t], such that `issuance[t] = reward[t] - epochFee[t]` |
 
-
 Where `totalSupply[t]` is the total number of tokens in the system at a given time *t*.
-If `epochFee[t] > reward[t]` the issuance is negative, thus the `totalSupply[t]` decreases
+If `epochFee[t] > reward[t]` the issuance is negative, thus the `totalSupply[t]` decreases in given epoch.
 
+## Transaction and Storage Fees
 
 ### Transaction Fees
 
 | Name | Description |
 | - | - |
-| `epochFee[t]` | Summation `∑` of the fees collected by all block[i] in the epoch[t], such that `(1 - DEVELOPER_PCT_PER_YEAR) * txFee[i] + stateFee[i]`, where [i] represents any considered block within the epoch[t] |
-| `txFee[i]` | The cost of computation and bandwidth to include a transaction within the block[i] |
-| `stateFee[i]` | The cost of storage paid to the nodes to maintain the state of the existing state |
-
+| `epochFee[t]` | `sum([(1 - DEVELOPER_PCT_PER_YEAR) * txFee[i] + stateFee[i] for i in epoch[t]])`, where [i] represents any considered block within the epoch[t] |
+| `txFee[i]` | Sum of the costs of computation and bandwidth of included transactions within the block[i] |
+| `stateFee[i]` | The cost of storage paid to the nodes to maintain the state of the existing state at the block[i] |
 
 Each transaction pays the cost for bandwidth, processing, and the cost for state storage over time:
 
@@ -142,13 +149,61 @@ validator[t][j] = uptime[t][j] * reward[t] / total_seats * seats[j]
 
 ### Slashing
 
-Slashing penalty is applied to the stake as follows:
+#### Block Double Sign
 
-| Criteria | Value | Description |
-| - | - | - |
-| `DoubleSignature` | `0.05` | In case of equivocation, a slashing of 5% is applied |
-| `InvalidStateTransition` | `1` | In case of invalid state transition, slashing is 100% of the stake. *This may be subject to change in the future* |
+```python
+# Check if given two blocks headers have the same height and 
+# are valid (signed by the same validator).
+def block_double_sign_condition(header1, header2):
+    return valid_header(header1) and valid_header(heade2) and header1.height == header2.height
 
+# At the end of the epoch, run update validators and 
+# determine how much to slash validators.
+def end_of_epoch_update_validators(validators):
+    # ...
+    total_stake = 0
+    total_offended_stake = 0
+    for validator in validators:
+        total_stake += validator.stake
+        if validator.is_slashed:
+            total_offended_stake += validator.stake
+    for validator in validators:
+        if validator.is_slashed:
+            validator.stake -= validator.stake * 3 * total_offended_stake / total_stake
+```
+
+#### ChunkProofs
+
+```python
+# Check that chunk is invalid, because the proofs in header don't match the body.
+def chunk_proofs_condition(chunk):
+    # TODO
+
+# At the end of the epoch, run update validators and
+# determine how much to slash validators.
+def end_of_epoch_update_validators(validators):
+    # ...
+    for validator in validators:
+        if validator.is_slashed:
+            validator.stake -= INVALID_STATE_SLASH_PCT * validator.stake
+```
+
+#### ChunkState
+
+```python
+# Check that chunk header post state root is invalid, 
+# because the execution of previous chunk doesn't lead to it.
+def chunk_state_condition(prev_chunk, prev_state, chunk_header):
+    # TODO
+
+# At the end of the epoch, run update validators and
+# determine how much to slash validators.
+def end_of_epoch_update_validators(validators):
+    # ...
+    for validator in validators:
+        if validator.is_slashed:
+            validator.stake -= INVALID_STATE_SLASH_PCT * validator.stake
+```
 
 ## Protocol Treasury
 
@@ -160,5 +215,5 @@ Slashing penalty is applied to the stake as follows:
 Treasury account receives reward every epoch `t`:
 
 ```python
-treasury[t] = treasury[t - 1] + TREASURY_PCT * reward[t]
+accounts[TREASURY_ACCOUNT_ID][t] = accounts[TREASURY_ACCOUNT_ID][t - 1] + TREASURY_PCT * reward[t]
 ```

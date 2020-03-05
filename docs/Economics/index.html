@@ -152,6 +152,11 @@
                 <div id="content" class="content">
                     <main>
                         <h1><a class="header" href="#economics" id="economics">Economics</a></h1>
+<h2><a class="header" href="#units" id="units">Units</a></h2>
+<p>| Name | Value |
+| yoctoNEAR | smallest undividable amount of native currency <em>NEAR</em>. |
+| NEAR | 1E+24 yoctoNEAR |
+| block | unit of time, measured in block produced |</p>
 <h2><a class="header" href="#general-parameters" id="general-parameters">General Parameters</a></h2>
 <table><thead><tr><th>Name</th><th>Value</th></tr></thead><tbody>
 <tr><td><code>INITIAL_SUPPLY</code></td><td><code>10**33</code> yoctoNEAR</td></tr>
@@ -160,29 +165,32 @@
 <tr><td><code>BLOCK_TIME</code></td><td><code>1</code> second</td></tr>
 <tr><td><code>EPOCH_LENGTH</code></td><td><code>43,200</code> blocks</td></tr>
 <tr><td><code>EPOCHS_A_YEAR</code></td><td><code>730</code> epochs</td></tr>
-<tr><td><code>CONTRACT_PCT_PER_YEAR</code></td><td><code>0.3</code></td></tr>
+<tr><td><code>POKE_THRESHOLD</code></td><td><code>500</code> blocks</td></tr>
+<tr><td><code>STORAGE_PRICE</code></td><td><code>7E-15</code> NEAR per byte per block</td></tr>
+<tr><td><code>TREASURY_PCT</code></td><td><code>0.1</code></td></tr>
+<tr><td><code>CONTRACT_PCT</code></td><td><code>0.3</code></td></tr>
+<tr><td><code>INVALID_STATE_SLASH_PCT</code></td><td><code>0.05</code></td></tr>
 <tr><td><code>ADJ_FEE</code></td><td><code>0.001</code></td></tr>
 </tbody></table>
-<p>Where <em>yoctoNear</em> is smallest undividable amount of native currency <em>NEAR</em>.
-<code>CONTRACT_PCT_PER_YEAR</code> is 30% of the <code>txFee[i]</code>, allocated to the balance of an application invoked by transactions. Can be referred also as <code>developerPct</code> .</p>
 <h2><a class="header" href="#general-variables" id="general-variables">General Variables</a></h2>
 <table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody>
 <tr><td><code>total_supply[t]</code></td><td>Total supply of NEAR at given epoch[t]</td></tr>
 <tr><td><code>gasPrice</code></td><td>The cost of 1 unit of <em>gas</em> in NEAR tokens (see Transaction Fees section below)</td></tr>
 </tbody></table>
-<h2><a class="header" href="#rewards" id="rewards">Rewards</a></h2>
+<h2><a class="header" href="#issuance" id="issuance">Issuance</a></h2>
 <p>The protocol sets a ceiling for the maximum issuance of tokens, and dynamically decreases this issuance depending on the amount of total fees in the system.</p>
 <table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody>
 <tr><td><code>reward[t]</code></td><td><code>totalSupply[t]</code> * ((<code>1 - REWARD_PCT_PER_YEAR</code>) ^ <code>1/EPOCHS_A_YEAR</code> - <code>1</code>)</td></tr>
 <tr><td><code>issuance[t]</code></td><td>The amount of token issued at a certain epoch[t], such that <code>issuance[t] = reward[t] - epochFee[t]</code></td></tr>
 </tbody></table>
 <p>Where <code>totalSupply[t]</code> is the total number of tokens in the system at a given time <em>t</em>.
-If <code>epochFee[t] &gt; reward[t]</code> the issuance is negative, thus the <code>totalSupply[t]</code> decreases</p>
+If <code>epochFee[t] &gt; reward[t]</code> the issuance is negative, thus the <code>totalSupply[t]</code> decreases in given epoch.</p>
+<h2><a class="header" href="#transaction-and-storage-fees" id="transaction-and-storage-fees">Transaction and Storage Fees</a></h2>
 <h3><a class="header" href="#transaction-fees" id="transaction-fees">Transaction Fees</a></h3>
 <table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody>
-<tr><td><code>epochFee[t]</code></td><td>Summation <code>∑</code> of the fees collected by all block[i] in the epoch[t], such that <code>(1 - DEVELOPER_PCT_PER_YEAR) * txFee[i] + stateFee[i]</code>, where [i] represents any considered block within the epoch[t]</td></tr>
-<tr><td><code>txFee[i]</code></td><td>The cost of computation and bandwidth to include a transaction within the block[i]</td></tr>
-<tr><td><code>stateFee[i]</code></td><td>The cost of storage paid to the nodes to maintain the state of the existing state</td></tr>
+<tr><td><code>epochFee[t]</code></td><td><code>sum([(1 - DEVELOPER_PCT_PER_YEAR) * txFee[i] + stateFee[i] for i in epoch[t]])</code>, where [i] represents any considered block within the epoch[t]</td></tr>
+<tr><td><code>txFee[i]</code></td><td>Sum of the costs of computation and bandwidth of included transactions within the block[i]</td></tr>
+<tr><td><code>stateFee[i]</code></td><td>The cost of storage paid to the nodes to maintain the state of the existing state at the block[i]</td></tr>
 </tbody></table>
 <p>Each transaction pays the cost for bandwidth, processing, and the cost for state storage over time:</p>
 <table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody>
@@ -252,18 +260,60 @@ else:
 <pre><code class="language-python">validator[t][j] = uptime[t][j] * reward[t] / total_seats * seats[j]
 </code></pre>
 <h3><a class="header" href="#slashing" id="slashing">Slashing</a></h3>
-<p>Slashing penalty is applied to the stake as follows:</p>
-<table><thead><tr><th>Criteria</th><th>Value</th><th>Description</th></tr></thead><tbody>
-<tr><td><code>DoubleSignature</code></td><td><code>0.05</code></td><td>In case of equivocation, a slashing of 5% is applied</td></tr>
-<tr><td><code>InvalidStateTransition</code></td><td><code>1</code></td><td>In case of invalid state transition, slashing is 100% of the stake. <em>This may be subject to change in the future</em></td></tr>
-</tbody></table>
+<h4><a class="header" href="#block-double-sign" id="block-double-sign">Block Double Sign</a></h4>
+<pre><code class="language-python"># Check if given two blocks headers have the same height and 
+# are valid (signed by the same validator).
+def block_double_sign_condition(header1, header2):
+    return valid_header(header1) and valid_header(heade2) and header1.height == header2.height
+
+# At the end of the epoch, run update validators and 
+# determine how much to slash validators.
+def end_of_epoch_update_validators(validators):
+    # ...
+    total_stake = 0
+    total_offended_stake = 0
+    for validator in validators:
+        total_stake += validator.stake
+        if validator.is_slashed:
+            total_offended_stake += validator.stake
+    for validator in validators:
+        if validator.is_slashed:
+            validator.stake -= validator.stake * 3 * total_offended_stake / total_stake
+</code></pre>
+<h4><a class="header" href="#chunkproofs" id="chunkproofs">ChunkProofs</a></h4>
+<pre><code class="language-python"># Check that chunk is invalid, because the proofs in header don't match the body.
+def chunk_proofs_condition(chunk):
+    # TODO
+
+# At the end of the epoch, run update validators and
+# determine how much to slash validators.
+def end_of_epoch_update_validators(validators):
+    # ...
+    for validator in validators:
+        if validator.is_slashed:
+            validator.stake -= INVALID_STATE_SLASH_PCT * validator.stake
+</code></pre>
+<h4><a class="header" href="#chunkstate" id="chunkstate">ChunkState</a></h4>
+<pre><code class="language-python"># Check that chunk header post state root is invalid, 
+# because the execution of previous chunk doesn't lead to it.
+def chunk_state_condition(prev_chunk, prev_state, chunk_header):
+    # TODO
+
+# At the end of the epoch, run update validators and
+# determine how much to slash validators.
+def end_of_epoch_update_validators(validators):
+    # ...
+    for validator in validators:
+        if validator.is_slashed:
+            validator.stake -= INVALID_STATE_SLASH_PCT * validator.stake
+</code></pre>
 <h2><a class="header" href="#protocol-treasury" id="protocol-treasury">Protocol Treasury</a></h2>
 <table><thead><tr><th>Name</th><th>Value</th></tr></thead><tbody>
 <tr><td><code>TREASURY_ACCOUNT_ID</code></td><td><code>treasury</code></td></tr>
 <tr><td><code>TREASURY_PCT</code></td><td><code>0.01</code></td></tr>
 </tbody></table>
 <p>Treasury account receives reward every epoch <code>t</code>:</p>
-<pre><code class="language-python">treasury[t] = treasury[t - 1] + TREASURY_PCT * reward[t]
+<pre><code class="language-python">accounts[TREASURY_ACCOUNT_ID][t] = accounts[TREASURY_ACCOUNT_ID][t - 1] + TREASURY_PCT * reward[t]
 </code></pre>
 
                     </main>
