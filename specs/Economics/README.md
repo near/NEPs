@@ -3,9 +3,11 @@
 ## Units
 
 | Name | Value |
+| - | - |
 | yoctoNEAR | smallest undividable amount of native currency *NEAR*. |
-| NEAR | 1E+24 yoctoNEAR |
-| block | unit of time, measured in block produced |
+| NEAR | `10**24` yoctoNEAR |
+| block | smallest on-chain unit of time |
+| gas | unit to measure usage of blockchain |
 
 ## General Parameters
 
@@ -45,49 +47,52 @@ If `epochFee[t] > reward[t]` the issuance is negative, thus the `totalSupply[t]`
 
 ## Transaction and Storage Fees
 
+All state fees and most of transaction fees get burned.
+
 ### Transaction Fees
 
-| Name | Description |
-| - | - |
-| `epochFee[t]` | `sum([(1 - DEVELOPER_PCT_PER_YEAR) * txFee[i] + stateFee[i] for i in epoch[t]])`, where [i] represents any considered block within the epoch[t] |
-| `txFee[i]` | Sum of the costs of computation and bandwidth of included transactions within the block[i] |
-| `stateFee[i]` | The cost of storage paid to the nodes to maintain the state of the existing state at the block[i] |
+Each transaction before inclusion must buy gas enough to cover the cost of bandwidth and execution.
 
-Each transaction pays the cost for bandwidth, processing, and the cost for state storage over time:
+Gas unifies execution and bytes of bandwidth usage of blockchain. Each WASM instruction or pre-compiled function gets assigned an amount of gas based on measurements on common-denominator computer. Same goes for weighting the used bandwidth based on general unified costs. For specific gas mapping numbers see [???]().
 
-| Name | Description |
-| - | - |
-| `gas[tx]` | 1 CPU instruction and 1 byte of bandwidth, such that: `CPU[tx]` + `$\alpha$` * `Size[tx]` |
-| `gasPrice` | `= gasPrice * (1 + (gasUsed/gasLimit - 1/2) * ADJ_FEE`) |
-| `gasUsed[i,s]` | Gas used in the shard[s] at index[i] |
-| `gasLimit[i]` | Maximum amount of gas allowed at the block index[i], uniform across all shards |
-| `ADJ_FEE` | the maximum variation of of `gasPrice` after each block, see in General Parameters the constant value |
-| `minGasPrice` | The floor for gas price in NEAR |
+Gas is priced dynamically in `NEAR` tokens. At each block `t`, we update `gasPrice[t] = gasPrice[t - 1] * (gasUsed[t - 1] / gasLimit[t - 1] - 0.5) * ADJ_FEE`.
 
-Where `CPU[tx]` is represented as *numberOfCPUInstructions(tx)* and `Size[tx]` is represented as *SizeOf(tx)* on the white paper at section 4.1(4).
-
-`gasPrice` is uniform across all shards, regardless of their actual usage. Block producers vote on a new `gasLimit` within `±ADJ_FEE` (0.1%) if block[i-1] has `gasUsed > 0.9 * gasLimit`.
+Where `gasUsed[t] = sum([sum([gas(tx) for tx in chunk]) for chunk in block[t]])`.
+`gasLimit[t]` is defined as `gasLimit[t] = gasLimit[t - 1] + validatorGasDiff[t - 1]`, where `validatorGasDiff` is parameter with which each chunk producer can either increase or decrease gas limit based on how long it to execute the previous chunk. `validatorGasDiff[t]` can be only within `±0.1%` of `gasLimit[t]` and only if `gasUsed[t - 1] > 0.9 * gasLimit[t - 1]`.
 
 ### State Storage Rent
 
-For each new block[i] created, each account is charged an amount of NEAR proportional to their storage footprint, commonly defined as *state rent*.
-`storagePrice` is charged as soon as an account[a] issues a new transaction.
+At every block time, each account is charged an amount of `NEAR` tokens proportional to their storage footprint, commonly defined as *state rent*.
 
-| Name | Description |
-| - | - |
-| `stateFee[i,a]` | The fees at block[i] payable by an account[a], such that: `stateFee[i,a] = storagePrice * size[a]` |
-| `size[a]` | The size of a given account[a] in *bytes* |
-| `storagePrice` | A constant fee, with a negligible cost for normal use. *This is subject to change in the future* |
-| `storagePaidAt[h]` | The *state rent* paid from the account[a] at the most recent transaction stored in the block[h], used to calculate the accrued fees |
-|  `current balance` | The current balance of the account[a] after the *state rent* is calculated, such that: `current balance = balance[a] - storagePrice * size[a] * (block[i] - storagePriceAt[h])`, where `storagePriceAt[h]` is updated to `storagePriceAt[i]` once the calculation is done |
-| `minBalance[a]` | `pokeThreshold * storagePrice * size[a]` |
+```python
+# Before account touched / changed, we check that it has enough to pay fees.
+# This will fail on any transaction that touches such an account.
+def before_acccount_change(block_height, account):
+    maxFee = sizeOf(account) * storagePrice * pokeThreshold
+    # Check that current amount is enough to cover at least `pokeThreshold` of blocks.
+    if maxFee >= account.amount:
+        assert "Can't modify under funded account"
 
+# After account touched / changed, we charge the storage fee.
+def on_account_change(block_height, account):
+    # Compute fee since last charging state rent (last call this function).
+    fee = sizeOf(account) * storagePrice * (block_height - account.storagePaidAt)
+    account.amount -= fee
+    account.storagePaidAt = block_height
 
-Where `minBalance`, once reached, enables anyone to send a special transaction, such that they will receive a `pokeReward` of the remaining account[a] balance.
+# Can delete underfunded account by anyone.
+def can_delete_account(block_height, account):
+    maxFee = sizeOf(account) * storagePrice * pokeThreshold
+    if maxFee < account.amount:
+        assert "Account still has enough funds"
+    # Return to caller the rest of the amonut after charging fees.
+    owedFee = sizeOf(account) * storagePrice * (block_height - account.storagePaidAt)
+    return account.amount - owedFee
+```
 
-Important caveats apply to the *state rent*:
-1. If an account[a] brings `balance[a]` below `minBalance[a]` by either moving tokens or increasing size, transaction will fail and changes reverted
-2. When account[a] is staking, if `minBalance[a] > 4 * epochLength * storagePrice * size[a]` is false, the `proposal` will not be accepted for a rollover in the next epoch (see below in the Validator section)
+Where `sizeOf(account)` includes size of `account` structure and size of all the data stored under the account.
+
+When `account` is staking, if `account.amount < 4 * epochLength * storagePrice * sizeOf(account)`, the staking transaction fill fail or existing staking proposal will not be accepted for a rollover in the next epoch (see below in the Validator section)
 
 ## Validators
 
@@ -122,6 +127,7 @@ NEAR validators provide their resources in exchange for a reward `epochReward[t]
 | - | - |
 | `REWARD_FACTOR` | `0.05` |
 | `ONLINE_THRESHOLD` | see above |
+| `epochFee[t]` | `sum([(1 - DEVELOPER_PCT_PER_YEAR) * txFee[i] + stateFee[i] for i in epoch[t]])`, where [i] represents any considered block within the epoch[t] |
 
 Total reward every epoch `t` is equal to:
 ```python
@@ -198,7 +204,7 @@ def chunk_state_condition(prev_chunk, prev_state, chunk_header):
 
 # At the end of the epoch, run update validators and
 # determine how much to slash validators.
-def end_of_epoch_update_validators(validators):
+def end_of_epoch(..., validators):
     # ...
     for validator in validators:
         if validator.is_slashed:
@@ -215,5 +221,8 @@ def end_of_epoch_update_validators(validators):
 Treasury account receives reward every epoch `t`:
 
 ```python
-accounts[TREASURY_ACCOUNT_ID][t] = accounts[TREASURY_ACCOUNT_ID][t - 1] + TREASURY_PCT * reward[t]
+# At the end of the epoch, update treasury
+def end_of_epoch(..., reward):
+    # ...
+    accounts[TREASURY_ACCOUNT_ID].amount = TREASURY_PCT * reward
 ```

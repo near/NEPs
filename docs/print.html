@@ -2780,10 +2780,12 @@ a contract.</p>
 <p>Cost for calling promise_return</p>
 <h1><a class="header" href="#economics" id="economics">Economics</a></h1>
 <h2><a class="header" href="#units" id="units">Units</a></h2>
-<p>| Name | Value |
-| yoctoNEAR | smallest undividable amount of native currency <em>NEAR</em>. |
-| NEAR | 1E+24 yoctoNEAR |
-| block | unit of time, measured in block produced |</p>
+<table><thead><tr><th>Name</th><th>Value</th></tr></thead><tbody>
+<tr><td>yoctoNEAR</td><td>smallest undividable amount of native currency <em>NEAR</em>.</td></tr>
+<tr><td>NEAR</td><td><code>10**24</code> yoctoNEAR</td></tr>
+<tr><td>block</td><td>smallest on-chain unit of time</td></tr>
+<tr><td>gas</td><td>unit to measure usage of blockchain</td></tr>
+</tbody></table>
 <h2><a class="header" href="#general-parameters" id="general-parameters">General Parameters</a></h2>
 <table><thead><tr><th>Name</th><th>Value</th></tr></thead><tbody>
 <tr><td><code>INITIAL_SUPPLY</code></td><td><code>10**33</code> yoctoNEAR</td></tr>
@@ -2813,40 +2815,41 @@ a contract.</p>
 <p>Where <code>totalSupply[t]</code> is the total number of tokens in the system at a given time <em>t</em>.
 If <code>epochFee[t] &gt; reward[t]</code> the issuance is negative, thus the <code>totalSupply[t]</code> decreases in given epoch.</p>
 <h2><a class="header" href="#transaction-and-storage-fees" id="transaction-and-storage-fees">Transaction and Storage Fees</a></h2>
+<p>All state fees and most of transaction fees get burned.</p>
 <h3><a class="header" href="#transaction-fees" id="transaction-fees">Transaction Fees</a></h3>
-<table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody>
-<tr><td><code>epochFee[t]</code></td><td><code>sum([(1 - DEVELOPER_PCT_PER_YEAR) * txFee[i] + stateFee[i] for i in epoch[t]])</code>, where [i] represents any considered block within the epoch[t]</td></tr>
-<tr><td><code>txFee[i]</code></td><td>Sum of the costs of computation and bandwidth of included transactions within the block[i]</td></tr>
-<tr><td><code>stateFee[i]</code></td><td>The cost of storage paid to the nodes to maintain the state of the existing state at the block[i]</td></tr>
-</tbody></table>
-<p>Each transaction pays the cost for bandwidth, processing, and the cost for state storage over time:</p>
-<table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody>
-<tr><td><code>gas[tx]</code></td><td>1 CPU instruction and 1 byte of bandwidth, such that: <code>CPU[tx]</code> + <code>$\alpha$</code> * <code>Size[tx]</code></td></tr>
-<tr><td><code>gasPrice</code></td><td><code>= gasPrice * (1 + (gasUsed/gasLimit - 1/2) * ADJ_FEE</code>)</td></tr>
-<tr><td><code>gasUsed[i,s]</code></td><td>Gas used in the shard[s] at index[i]</td></tr>
-<tr><td><code>gasLimit[i]</code></td><td>Maximum amount of gas allowed at the block index[i], uniform across all shards</td></tr>
-<tr><td><code>ADJ_FEE</code></td><td>the maximum variation of of <code>gasPrice</code> after each block, see in General Parameters the constant value</td></tr>
-<tr><td><code>minGasPrice</code></td><td>The floor for gas price in NEAR</td></tr>
-</tbody></table>
-<p>Where <code>CPU[tx]</code> is represented as <em>numberOfCPUInstructions(tx)</em> and <code>Size[tx]</code> is represented as <em>SizeOf(tx)</em> on the white paper at section 4.1(4).</p>
-<p><code>gasPrice</code> is uniform across all shards, regardless of their actual usage. Block producers vote on a new <code>gasLimit</code> within <code>±ADJ_FEE</code> (0.1%) if block[i-1] has <code>gasUsed &gt; 0.9 * gasLimit</code>.</p>
+<p>Each transaction before inclusion must buy gas enough to cover the cost of bandwidth and execution.</p>
+<p>Gas unifies execution and bytes of bandwidth usage of blockchain. Each WASM instruction or pre-compiled function gets assigned an amount of gas based on measurements on common-denominator computer. Same goes for weighting the used bandwidth based on general unified costs. For specific gas mapping numbers see <a href="Economics/">???</a>.</p>
+<p>Gas is priced dynamically in <code>NEAR</code> tokens. At each block <code>t</code>, we update <code>gasPrice[t] = gasPrice[t - 1] * (gasUsed[t - 1] / gasLimit[t - 1] - 0.5) * ADJ_FEE</code>.</p>
+<p>Where <code>gasUsed[t] = sum([sum([gas(tx) for tx in chunk]) for chunk in block[t]])</code>.
+<code>gasLimit[t]</code> is defined as <code>gasLimit[t] = gasLimit[t - 1] + validatorGasDiff[t - 1]</code>, where <code>validatorGasDiff</code> is parameter with which each chunk producer can either increase or decrease gas limit based on how long it to execute the previous chunk. <code>validatorGasDiff[t]</code> can be only within <code>±0.1%</code> of <code>gasLimit[t]</code> and only if <code>gasUsed[t - 1] &gt; 0.9 * gasLimit[t - 1]</code>.</p>
 <h3><a class="header" href="#state-storage-rent" id="state-storage-rent">State Storage Rent</a></h3>
-<p>For each new block[i] created, each account is charged an amount of NEAR proportional to their storage footprint, commonly defined as <em>state rent</em>.
-<code>storagePrice</code> is charged as soon as an account[a] issues a new transaction.</p>
-<table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody>
-<tr><td><code>stateFee[i,a]</code></td><td>The fees at block[i] payable by an account[a], such that: <code>stateFee[i,a] = storagePrice * size[a]</code></td></tr>
-<tr><td><code>size[a]</code></td><td>The size of a given account[a] in <em>bytes</em></td></tr>
-<tr><td><code>storagePrice</code></td><td>A constant fee, with a negligible cost for normal use. <em>This is subject to change in the future</em></td></tr>
-<tr><td><code>storagePaidAt[h]</code></td><td>The <em>state rent</em> paid from the account[a] at the most recent transaction stored in the block[h], used to calculate the accrued fees</td></tr>
-<tr><td><code>current balance</code></td><td>The current balance of the account[a] after the <em>state rent</em> is calculated, such that: <code>current balance = balance[a] - storagePrice * size[a] * (block[i] - storagePriceAt[h])</code>, where <code>storagePriceAt[h]</code> is updated to <code>storagePriceAt[i]</code> once the calculation is done</td></tr>
-<tr><td><code>minBalance[a]</code></td><td><code>pokeThreshold * storagePrice * size[a]</code></td></tr>
-</tbody></table>
-<p>Where <code>minBalance</code>, once reached, enables anyone to send a special transaction, such that they will receive a <code>pokeReward</code> of the remaining account[a] balance.</p>
-<p>Important caveats apply to the <em>state rent</em>:</p>
-<ol>
-<li>If an account[a] brings <code>balance[a]</code> below <code>minBalance[a]</code> by either moving tokens or increasing size, transaction will fail and changes reverted</li>
-<li>When account[a] is staking, if <code>minBalance[a] &gt; 4 * epochLength * storagePrice * size[a]</code> is false, the <code>proposal</code> will not be accepted for a rollover in the next epoch (see below in the Validator section)</li>
-</ol>
+<p>At every block time, each account is charged an amount of <code>NEAR</code> tokens proportional to their storage footprint, commonly defined as <em>state rent</em>.</p>
+<pre><code class="language-python"># Before account touched / changed, we check that it has enough to pay fees.
+# This will fail on any transaction that touches such an account.
+def before_acccount_change(block_height, account):
+    maxFee = sizeOf(account) * storagePrice * pokeThreshold
+    # Check that current amount is enough to cover at least `pokeThreshold` of blocks.
+    if maxFee &gt;= account.amount:
+        assert &quot;Can't modify under funded account&quot;
+
+# After account touched / changed, we charge the storage fee.
+def on_account_change(block_height, account):
+    # Compute fee since last charging state rent (last call this function).
+    fee = sizeOf(account) * storagePrice * (block_height - account.storagePaidAt)
+    account.amount -= fee
+    account.storagePaidAt = block_height
+
+# Can delete underfunded account by anyone.
+def can_delete_account(block_height, account):
+    maxFee = sizeOf(account) * storagePrice * pokeThreshold
+    if maxFee &lt; account.amount:
+        assert &quot;Account still has enough funds&quot;
+    # Return to caller the rest of the amonut after charging fees.
+    owedFee = sizeOf(account) * storagePrice * (block_height - account.storagePaidAt)
+    return account.amount - owedFee
+</code></pre>
+<p>Where <code>sizeOf(account)</code> includes size of <code>account</code> structure and size of all the data stored under the account.</p>
+<p>When <code>account</code> is staking, if <code>account.amount &lt; 4 * epochLength * storagePrice * sizeOf(account)</code>, the staking transaction fill fail or existing staking proposal will not be accepted for a rollover in the next epoch (see below in the Validator section)</p>
 <h2><a class="header" href="#validators-2" id="validators-2">Validators</a></h2>
 <p>NEAR validators provide their resources in exchange for a reward <code>epochReward[t]</code>, where [t] represents the considered epoch</p>
 <table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody>
@@ -2870,6 +2873,7 @@ If <code>epochFee[t] &gt; reward[t]</code> the issuance is negative, thus the <c
 <table><thead><tr><th>Name</th><th>Value</th></tr></thead><tbody>
 <tr><td><code>REWARD_FACTOR</code></td><td><code>0.05</code></td></tr>
 <tr><td><code>ONLINE_THRESHOLD</code></td><td>see above</td></tr>
+<tr><td><code>epochFee[t]</code></td><td><code>sum([(1 - DEVELOPER_PCT_PER_YEAR) * txFee[i] + stateFee[i] for i in epoch[t]])</code>, where [i] represents any considered block within the epoch[t]</td></tr>
 </tbody></table>
 <p>Total reward every epoch <code>t</code> is equal to:</p>
 <pre><code class="language-python">reward[t] = total_supply * ((1 + REWARD_FACTOR) ** (1 / EPOCHS_A_YEAR) - 1)
@@ -2928,7 +2932,7 @@ def chunk_state_condition(prev_chunk, prev_state, chunk_header):
 
 # At the end of the epoch, run update validators and
 # determine how much to slash validators.
-def end_of_epoch_update_validators(validators):
+def end_of_epoch(..., validators):
     # ...
     for validator in validators:
         if validator.is_slashed:
@@ -2940,7 +2944,10 @@ def end_of_epoch_update_validators(validators):
 <tr><td><code>TREASURY_PCT</code></td><td><code>0.01</code></td></tr>
 </tbody></table>
 <p>Treasury account receives reward every epoch <code>t</code>:</p>
-<pre><code class="language-python">accounts[TREASURY_ACCOUNT_ID][t] = accounts[TREASURY_ACCOUNT_ID][t - 1] + TREASURY_PCT * reward[t]
+<pre><code class="language-python"># At the end of the epoch, update treasury
+def end_of_epoch(..., reward):
+    # ...
+    accounts[TREASURY_ACCOUNT_ID].amount = TREASURY_PCT * reward
 </code></pre>
 
                     </main>
