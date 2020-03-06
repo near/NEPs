@@ -152,6 +152,7 @@
                 <div id="content" class="content">
                     <main>
                         <h1><a class="header" href="#economics" id="economics">Economics</a></h1>
+<p><strong>This is under heavy development</strong></p>
 <h2><a class="header" href="#units" id="units">Units</a></h2>
 <table><thead><tr><th>Name</th><th>Value</th></tr></thead><tbody>
 <tr><td>yoctoNEAR</td><td>smallest undividable amount of native currency <em>NEAR</em>.</td></tr>
@@ -237,7 +238,7 @@ def can_delete_account(block_height, account):
 <tr><td><code>epoch[T]</code></td><td>The epoch when validator[v] is selected from the <code>proposals</code> auction array</td></tr>
 <tr><td><code>seatPrice</code></td><td>The minimum stake needed to become validator in epoch[T]</td></tr>
 <tr><td><code>stake[v]</code></td><td>The amount in NEAR tokens staked by validator[v] during the auction at the end of epoch[T-2], minus <code>INCLUSION_FEE</code></td></tr>
-<tr><td><code>shard[v]</code></td><td>The shard randomically assigned to validator[v] at epoch[T-1], such that its node can download and sync with its state</td></tr>
+<tr><td><code>shard[v]</code></td><td>The shard is randomly assigned to validator[v] at epoch[T-1], such that its node can download and sync with its state</td></tr>
 <tr><td><code>numSeats</code></td><td>Number of seats assigned to validator[v], calculated from stake[v]/seatPrice</td></tr>
 <tr><td><code>validatorAssignments</code></td><td>The resulting ordered array of all <code>proposals</code> with a stake higher than <code>seatPrice</code></td></tr>
 </tbody></table>

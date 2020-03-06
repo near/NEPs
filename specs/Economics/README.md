@@ -1,5 +1,7 @@
 # Economics
 
+**This is under heavy development**
+
 ## Units
 
 | Name | Value |
@@ -114,7 +116,7 @@ NEAR validators provide their resources in exchange for a reward `epochReward[t]
 | `epoch[T]` | The epoch when validator[v] is selected from the `proposals` auction array |
 | `seatPrice` | The minimum stake needed to become validator in epoch[T] |
 | `stake[v]` | The amount in NEAR tokens staked by validator[v] during the auction at the end of epoch[T-2], minus `INCLUSION_FEE` |
-| `shard[v]` | The shard randomically assigned to validator[v] at epoch[T-1], such that its node can download and sync with its state |
+| `shard[v]` | The shard is randomly assigned to validator[v] at epoch[T-1], such that its node can download and sync with its state |
 | `numSeats` | Number of seats assigned to validator[v], calculated from stake[v]/seatPrice |
 | `validatorAssignments` | The resulting ordered array of all `proposals` with a stake higher than `seatPrice` |
 
