@@ -22,7 +22,7 @@ A validator `A` can create such contract and stake with it on their node.
 Any other user can send their money to it, which will be pooled together with `A`'s stake.
 These users would acrue rewards (subtracted `A` fee) and can withdraw their balance within the same unbonding period.
 
-More complex example can also issue token for deposited user's stake. This stake is the right to withdraw undelaying balance and rewards. This provides staking liquidity and allows to trade staked tokens.
+More complex example can also issue token for deposited user's stake. This stake is the right to withdraw underlaying balance and rewards. This provides staking liquidity and allows to trade staked tokens.
 
 # Reference-level explanation
 [reference-level-explanation]: #reference-level-explanation
@@ -60,7 +60,7 @@ trait StakingContract {
 We suggest to at least have next internal state:
 * `owner: AccountId` - the account that has ability to change `staking_public_key` and stop this staking contract operation.
 * `staking_public_key: PublicKey` - current key that the contract stakes with. This is required as `stake` calls will be made to runtime and they require it as input.
-* `users: NearMap<AcountId, User>` - map of accounts that delegated the money to given contract with the state of delegation.
+* `users: NearMap<AccountId, User>` - map of accounts that delegated the money to given contract with the state of delegation.
 
 Where `User` is represented in the next way:
 ```
@@ -137,4 +137,3 @@ An alternative to callback API, we can extend promises API to support a delayed 
 
 # Future possibilities
 [future-possibilities]: #future-possibilities
-
