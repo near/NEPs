@@ -69,7 +69,7 @@ Please refer to the diagram above where (A), (B) and (C) appear to the left and 
 - A contract running on the *Ethereum blockchain* requires verifiable proof that a transaction result has been recorded on the *NEAR blockchain*.
 - The contract `(1)` invokes a method on the `NearTxResultVerifier` `(2)`, passing in the appropriate parameters to represent the transaction result and inclusion proof
 - `NearTxResultVerifier` `(2)` verifies the Near transaction belongs to the related block header which is stored in the `NearClient` `(3)`
-- `NearClient` `(3)` returns a boolean indicating whether the block header was indeed recorded on the NEAR blockchain
+- `NearClient` `(3)` returns a boolean indicating whether the block hash was indeed recorded on the NEAR blockchain
 - `NearTxResultVerifier` `(2)` passes this result on to the contract `(1)` as proof or rejection of the transaction result as valid
 
 *In both cases, the light clients `EthClient` and `NearClient` are supported by arbitrary trustless actors (`EthRelay` and `NearRelay`) who wish to forward necessary data between Near and Ethereum blockchains, respectively.*
