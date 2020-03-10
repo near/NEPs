@@ -39,7 +39,7 @@
 Two smart contracts, `(C)` and `(3)` establish the baseline source of truth for blockchain activity on the "other" network.
 
 - **(C)** `NearClient`- *smart contract hosted on **Ethereum** network*  \
-   This contract is a NEAR light client that receives NEAR block headers.  It verifies and stores block hashes only.
+   This contract is a NEAR light client that receives NEAR block headers.  It verifies the NEAR chain of blocks following Near Light Client Specification and stores block hashes only.
 
 - **(3)** `EthClient` – *smart contract hosted on the **NEAR** network*  \
    This contract is an Ethereum light client that receives Ethereum block headers.  It verifies ethash and longest chain rule and stores block hashes only.
@@ -50,8 +50,8 @@ Two smart contracts demonstrate what is possible using the Rainbow Bridge.  Thes
 
 *A note about NEAR and Ethereum blockchains*
 
-- At its core, NEAR is a sharded transaction processing engine which records *transaction results*.  These *transaction results* are a verifiable source of truth about the NEAR blockchain.
-- At its core, Ethereum is single threaded computer which, at various points in time, records *events*.  These *events* are a verifiable source of truth about the Ethereum blockchain.
+- At its core, NEAR is a sharded transaction processing engine that records *transaction results*.  These *transaction results* are a verifiable source of truth about the NEAR blockchain.
+- At its core, Ethereum is single-threaded computer that, at various points in time, records *events*.  These *events* are a verifiable source of truth about the Ethereum blockchain.
 
 - **(B)** `NearTxResultVerifier` - *smart contract on **Ethereum** network*  \
   This contract performs verification of **NEAR transaction results** that have been included into NEAR blocks. It uses Merkle trees and hash preimages for verification.
@@ -69,7 +69,7 @@ Two smart contracts demonstrate what is possible using the Rainbow Bridge.  Thes
 
 ### Installation
 
-1. clone the repo `git clone git@github.com:nearprotocol/near-bridge.git`
+1. clone the repo `git clone --recurse-submodules git@github.com:nearprotocol/near-bridge.git`
 2. run `NearRelay` node script to do two things:
    - deploy `NearClient` contract (written in Solidity) to Ethereum network (note: just use ABI file to connect if the `NearClient` contract is already deployed)
    - start sending NEAR block headers to `NearClient` every 10 seconds
@@ -123,14 +123,13 @@ impl Default for EthBridge {}
 
 #[near_bindgen]
 impl EthBridge {
-    pub fn init(validate_ethash: bool, dags_start_epoch: u64, dags_merkle_roots: Vec<H128>) -> Self {}
-    pub fn apply_merkle_proof(&self, index: u64) -> H128 {}
-    pub fn initialized(&self) -> bool {}
-    pub fn last_block_number(&self) -> u64 {}
-    pub fn dag_merkle_root(&self, epoch: u64) -> H128 {}
-    pub fn block_hash(&self, index: u64) -> Option<H256> {}
-    pub fn block_hash_safe(&self, index: u64) -> Option<H256> {}
-    pub fn add_block_header(&mut self, block_header: Vec<u8>, dag_nodes: Vec<DoubleNodeWithMerkleProof>) {}
+    // EthRelay-specific API methods:
+    pub fn last_block_number(&self) -> u64;
+    pub fn add_block_header(&mut self, block_header: Vec<u8>, dag_nodes: Vec<DoubleNodeWithMerkleProof>);
+
+    // Public smart contracts API methods:
+    pub fn block_hash(&self, index: u64) -> Option<H256>;
+    pub fn block_hash_safe(&self, index: u64) -> Option<H256>;
 }
 ```
 
