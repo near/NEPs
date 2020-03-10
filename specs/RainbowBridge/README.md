@@ -57,7 +57,7 @@ Please refer to the diagram above where (A), (B) and (C) appear to the left and 
 *NEAR smart contract must verify an event was recorded on the Ethereum blockchain*
 
 - A contract running on the *NEAR blockchain* requires verifiable proof that an event has been recorded on the *Ethereum blockchain*.
-- The contract `(A)` invokes a method on the `EthEventVerifier` `(B)`, passing in the appropriate parameters to represent the event
+- The contract `(A)` invokes a method on the `EthEventVerifier` `(B)`, passing in the appropriate parameters to represent the event and corresponding inclusion proof
 - `EthEventVerifier` `(B)` unpacks the Ethereum event and extracts the related block header which it passes on to the `EthClient` `(C)`
 - `EthClient` `(C)` returns a boolean indicating whether the block header was indeed recorded on the Ethereum blockchain
 - `EthEventVerifier` `(B)` passes this result on to the contract `(A)` as proof or rejection of the event as valid
