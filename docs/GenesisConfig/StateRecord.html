@@ -198,7 +198,7 @@
 <p>The access key in JSON-friendly string format. See <a href="../DataStructures/AccessKey.html">AccessKey</a> for details.</p>
 <h2><a class="header" href="#postponedreceipt" id="postponedreceipt">PostponedReceipt</a></h2>
 <p><em>type: Box&lt;[ReceiptView]&gt;</em></p>
-<p>Record that contains information about a receipt that was postponed on a shard (e.g. it's waiting for incoming data).
+<p>Record that contains a receipt that was postponed on a shard (e.g. it's waiting for incoming data).
 The receipt is in JSON-friendly format. The receipt can only be an <code>ActionReceipt</code>. See <a href="../RuntimeSpec/Receipts.html">Receipts</a> for details.</p>
 <p>NOTE: Box is used to decrease fixed size of the entire enum.</p>
 <h2><a class="header" href="#receiveddata" id="receiveddata">ReceivedData</a></h2>
@@ -214,6 +214,11 @@ The data is received using <code>DataReceipt</code> before. See <a href="../Runt
 <h3><a class="header" href="#data-1" id="data-1">data</a></h3>
 <p><em>type: Option&lt;Vec&lt;u8&gt;&gt;</em></p>
 <p>Optional data encoded as base64 format or null in JSON.</p>
+<h2><a class="header" href="#delayedreceipt" id="delayedreceipt">DelayedReceipt</a></h2>
+<p><em>type: Box&lt;[ReceiptView]&gt;</em></p>
+<p>Record that contains a receipt that was delayed on a shard. It means the shard was overwhelmed with receipts and it processes receipts from backlog.
+The receipt is in JSON-friendly format.  See <a href="../RuntimeSpec/Components/RuntimeCrate.html#delayed-receipts">Delayed Receipts</a> for details.</p>
+<p>NOTE: Box is used to decrease fixed size of the entire enum.</p>
 
                     </main>
 

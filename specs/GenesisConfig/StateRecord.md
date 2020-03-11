@@ -96,7 +96,7 @@ The access key in JSON-friendly string format. See [AccessKey](../DataStructures
 
 _type: Box<[ReceiptView]>_
 
-Record that contains information about a receipt that was postponed on a shard (e.g. it's waiting for incoming data).
+Record that contains a receipt that was postponed on a shard (e.g. it's waiting for incoming data).
 The receipt is in JSON-friendly format. The receipt can only be an `ActionReceipt`. See [Receipts](../RuntimeSpec/Receipts.md) for details.
 
 NOTE: Box is used to decrease fixed size of the entire enum.
@@ -127,5 +127,14 @@ _type: Option\<Vec\<u8\>\>_
 
 Optional data encoded as base64 format or null in JSON.
 
+
+## DelayedReceipt
+
+_type: Box<[ReceiptView]>_
+
+Record that contains a receipt that was delayed on a shard. It means the shard was overwhelmed with receipts and it processes receipts from backlog.
+The receipt is in JSON-friendly format.  See [Delayed Receipts](../RuntimeSpec/Components/RuntimeCrate.md#delayed-receipts) for details.
+
+NOTE: Box is used to decrease fixed size of the entire enum.
 
 
