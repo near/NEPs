@@ -1,5 +1,7 @@
 # StateRecord
 
+_type: Enum_
+
 Enum that describes one of the records in the state storage.
 
 ## Account
