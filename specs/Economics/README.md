@@ -27,6 +27,8 @@
 | `CONTRACT_PCT` | `0.3` |
 | `INVALID_STATE_SLASH_PCT` | `0.05` |
 | `ADJ_FEE` | `0.001` |
+| `TREASURY_ACCOUNT_ID` | `treasury` |
+| `TREASURY_PCT` | `0.01` |
 
 ## General Variables
 
@@ -41,8 +43,9 @@ The protocol sets a ceiling for the maximum issuance of tokens, and dynamically 
 
 | Name | Description |
 | - | - |
-| `reward[t]` | `totalSupply[t]` * ((`1 - REWARD_PCT_PER_YEAR`) ^ `1/EPOCHS_A_YEAR` - `1`) |
-| `issuance[t]` | The amount of token issued at a certain epoch[t], such that `issuance[t] = reward[t] - epochFee[t]` |
+| `reward[t]` | `totalSupply[t]` * ((`1 - REWARD_PCT_PER_YEAR`) ** (`1/EPOCHS_A_YEAR`) - `1`) |
+| `epochFee[t]` | `sum([(1 - DEVELOPER_PCT_PER_YEAR) * block.txFee + block.stateFee for block in epoch[t]])` |
+| `issuance[t]` | The amount of token issued at a certain epoch[t], `issuance[t] = reward[t] - epochFee[t]` |
 
 Where `totalSupply[t]` is the total number of tokens in the system at a given time *t*.
 If `epochFee[t] > reward[t]` the issuance is negative, thus the `totalSupply[t]` decreases in given epoch.
@@ -127,13 +130,11 @@ NEAR validators provide their resources in exchange for a reward `epochReward[t]
 
 | Name | Value |
 | - | - |
-| `REWARD_FACTOR` | `0.05` |
-| `ONLINE_THRESHOLD` | see above |
 | `epochFee[t]` | `sum([(1 - DEVELOPER_PCT_PER_YEAR) * txFee[i] + stateFee[i] for i in epoch[t]])`, where [i] represents any considered block within the epoch[t] |
 
 Total reward every epoch `t` is equal to:
 ```python
-reward[t] = total_supply * ((1 + REWARD_FACTOR) ** (1 / EPOCHS_A_YEAR) - 1)
+reward[t] = total_supply * ((1 + REWARD_PCT_PER_YEAR) ** (1 / EPOCHS_A_YEAR) - 1)
 ```
 
 Uptime of a specific validator is computed:
@@ -153,7 +154,6 @@ The specific `validator[t]` reward for epoch `j` is then computed:
 ```python
 validator[t][j] = uptime[t][j] * reward[t] / total_seats * seats[j]
 ```
-
 
 ### Slashing
 
@@ -215,12 +215,7 @@ def end_of_epoch(..., validators):
 
 ## Protocol Treasury
 
-| Name | Value |
-| - | - |
-| `TREASURY_ACCOUNT_ID` | `treasury` |
-| `TREASURY_PCT` | `0.01` |
-
-Treasury account receives reward every epoch `t`:
+Treasury account `TREASURY_ACCOUNT_ID` receives fraction of reward every epoch `t`:
 
 ```python
 # At the end of the epoch, update treasury

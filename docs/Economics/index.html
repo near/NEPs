@@ -174,6 +174,8 @@
 <tr><td><code>CONTRACT_PCT</code></td><td><code>0.3</code></td></tr>
 <tr><td><code>INVALID_STATE_SLASH_PCT</code></td><td><code>0.05</code></td></tr>
 <tr><td><code>ADJ_FEE</code></td><td><code>0.001</code></td></tr>
+<tr><td><code>TREASURY_ACCOUNT_ID</code></td><td><code>treasury</code></td></tr>
+<tr><td><code>TREASURY_PCT</code></td><td><code>0.01</code></td></tr>
 </tbody></table>
 <h2><a class="header" href="#general-variables" id="general-variables">General Variables</a></h2>
 <table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody>
@@ -183,8 +185,9 @@
 <h2><a class="header" href="#issuance" id="issuance">Issuance</a></h2>
 <p>The protocol sets a ceiling for the maximum issuance of tokens, and dynamically decreases this issuance depending on the amount of total fees in the system.</p>
 <table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody>
-<tr><td><code>reward[t]</code></td><td><code>totalSupply[t]</code> * ((<code>1 - REWARD_PCT_PER_YEAR</code>) ^ <code>1/EPOCHS_A_YEAR</code> - <code>1</code>)</td></tr>
-<tr><td><code>issuance[t]</code></td><td>The amount of token issued at a certain epoch[t], such that <code>issuance[t] = reward[t] - epochFee[t]</code></td></tr>
+<tr><td><code>reward[t]</code></td><td><code>totalSupply[t]</code> * ((<code>1 - REWARD_PCT_PER_YEAR</code>) ** (<code>1/EPOCHS_A_YEAR</code>) - <code>1</code>)</td></tr>
+<tr><td><code>epochFee[t]</code></td><td><code>sum([(1 - DEVELOPER_PCT_PER_YEAR) * block.txFee + block.stateFee for block in epoch[t]])</code></td></tr>
+<tr><td><code>issuance[t]</code></td><td>The amount of token issued at a certain epoch[t], <code>issuance[t] = reward[t] - epochFee[t]</code></td></tr>
 </tbody></table>
 <p>Where <code>totalSupply[t]</code> is the total number of tokens in the system at a given time <em>t</em>.
 If <code>epochFee[t] &gt; reward[t]</code> the issuance is negative, thus the <code>totalSupply[t]</code> decreases in given epoch.</p>
@@ -245,12 +248,10 @@ def can_delete_account(block_height, account):
 <p><code>validatorAssignments</code> is then split in two groups: block/chunk producers and 'hidden validators'</p>
 <h3><a class="header" href="#rewards-calculation" id="rewards-calculation">Rewards Calculation</a></h3>
 <table><thead><tr><th>Name</th><th>Value</th></tr></thead><tbody>
-<tr><td><code>REWARD_FACTOR</code></td><td><code>0.05</code></td></tr>
-<tr><td><code>ONLINE_THRESHOLD</code></td><td>see above</td></tr>
 <tr><td><code>epochFee[t]</code></td><td><code>sum([(1 - DEVELOPER_PCT_PER_YEAR) * txFee[i] + stateFee[i] for i in epoch[t]])</code>, where [i] represents any considered block within the epoch[t]</td></tr>
 </tbody></table>
 <p>Total reward every epoch <code>t</code> is equal to:</p>
-<pre><code class="language-python">reward[t] = total_supply * ((1 + REWARD_FACTOR) ** (1 / EPOCHS_A_YEAR) - 1)
+<pre><code class="language-python">reward[t] = total_supply * ((1 + REWARD_PCT_PER_YEAR) ** (1 / EPOCHS_A_YEAR) - 1)
 </code></pre>
 <p>Uptime of a specific validator is computed:</p>
 <pre><code class="language-python">median_produced_blocks[t] = median(num_produced_blocks[t])
@@ -313,11 +314,7 @@ def end_of_epoch(..., validators):
             validator.stake -= INVALID_STATE_SLASH_PCT * validator.stake
 </code></pre>
 <h2><a class="header" href="#protocol-treasury" id="protocol-treasury">Protocol Treasury</a></h2>
-<table><thead><tr><th>Name</th><th>Value</th></tr></thead><tbody>
-<tr><td><code>TREASURY_ACCOUNT_ID</code></td><td><code>treasury</code></td></tr>
-<tr><td><code>TREASURY_PCT</code></td><td><code>0.01</code></td></tr>
-</tbody></table>
-<p>Treasury account receives reward every epoch <code>t</code>:</p>
+<p>Treasury account <code>TREASURY_ACCOUNT_ID</code> receives fraction of reward every epoch <code>t</code>:</p>
 <pre><code class="language-python"># At the end of the epoch, update treasury
 def end_of_epoch(..., reward):
     # ...
