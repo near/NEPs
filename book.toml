@@ -7,6 +7,7 @@ description = "Specification of the NEAR Protocol"
 
 [build]
 build-dir = "docs"
+use-default-preprocessors = false
 
 [output.html]
 mathjax-support = true

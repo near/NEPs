@@ -138,3 +138,8 @@ Expected number of blocks per year
 _type: AccountId_
 
 Protocol treasury account
+
+## protocol economics
+
+> For the specific economic specs, refer to [Economics Section](../Economics/README.md).
+
