@@ -22,7 +22,7 @@
 | `EPOCH_LENGTH` | `43,200` blocks |
 | `EPOCHS_A_YEAR` | `730` epochs |
 | `POKE_THRESHOLD` | `500` blocks |
-| `STORAGE_PRICE` | `7E-15` NEAR per byte per block | 
+| `STORAGE_AMOUNT_PER_BYTE` | `7E-5` NEAR per byte | 
 | `TREASURY_PCT` | `0.1` |
 | `CONTRACT_PCT` | `0.3` |
 | `INVALID_STATE_SLASH_PCT` | `0.05` |
@@ -50,11 +50,7 @@ The protocol sets a ceiling for the maximum issuance of tokens, and dynamically 
 Where `totalSupply[t]` is the total number of tokens in the system at a given time *t*.
 If `epochFee[t] > reward[t]` the issuance is negative, thus the `totalSupply[t]` decreases in given epoch.
 
-## Transaction and Storage Fees
-
-All state fees and most of transaction fees get burned.
-
-### Transaction Fees
+## Transaction Fees
 
 Each transaction before inclusion must buy gas enough to cover the cost of bandwidth and execution.
 
@@ -65,39 +61,22 @@ Gas is priced dynamically in `NEAR` tokens. At each block `t`, we update `gasPri
 Where `gasUsed[t] = sum([sum([gas(tx) for tx in chunk]) for chunk in block[t]])`.
 `gasLimit[t]` is defined as `gasLimit[t] = gasLimit[t - 1] + validatorGasDiff[t - 1]`, where `validatorGasDiff` is parameter with which each chunk producer can either increase or decrease gas limit based on how long it to execute the previous chunk. `validatorGasDiff[t]` can be only within `±0.1%` of `gasLimit[t]` and only if `gasUsed[t - 1] > 0.9 * gasLimit[t - 1]`.
 
-### State Storage Rent
+## State Stake
+
+Amount of `NEAR` on the account represents right for this account to take portion of the blockchain's overall global state.
 
 At every block time, each account is charged an amount of `NEAR` tokens proportional to their storage footprint, commonly defined as *state rent*.
 
 ```python
-# Before account touched / changed, we check that it has enough to pay fees.
-# This will fail on any transaction that touches such an account.
-def before_acccount_change(block_height, account):
-    maxFee = sizeOf(account) * storagePrice * pokeThreshold
-    # Check that current amount is enough to cover at least `pokeThreshold` of blocks.
-    if maxFee >= account.amount:
-        assert "Can't modify under funded account"
-
-# After account touched / changed, we charge the storage fee.
+# After account touched / changed, we check it still has enough balance to cover it's storage.
 def on_account_change(block_height, account):
-    # Compute fee since last charging state rent (last call this function).
-    fee = sizeOf(account) * storagePrice * (block_height - account.storagePaidAt)
-    account.amount -= fee
-    account.storagePaidAt = block_height
-
-# Can delete underfunded account by anyone.
-def can_delete_account(block_height, account):
-    maxFee = sizeOf(account) * storagePrice * pokeThreshold
-    if maxFee < account.amount:
-        assert "Account still has enough funds"
-    # Return to caller the rest of the amonut after charging fees.
-    owedFee = sizeOf(account) * storagePrice * (block_height - account.storagePaidAt)
-    return account.amount - owedFee
+    # Compute requiredAmount given size of the account.
+    requiredAmount = sizeOf(account) * storageAmountPerByte
+    if account.amount + account.lock < requiredAmount:
+        assert "Transaction fails due to not enough balance to cover state stake"
 ```
 
 Where `sizeOf(account)` includes size of `account` structure and size of all the data stored under the account.
-
-When `account` is staking, if `account.amount < 4 * epochLength * storagePrice * sizeOf(account)`, the staking transaction fill fail or existing staking proposal will not be accepted for a rollover in the next epoch (see below in the Validator section)
 
 ## Validators
 
