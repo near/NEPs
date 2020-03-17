@@ -17,11 +17,13 @@
 | - | - |
 | `INITIAL_SUPPLY` | `10**33` yoctoNEAR |
 | `NEAR` | `10**24` yoctoNEAR |
+| `INITIAL_GAS_PRICE` | `10**5` yoctoNEAR |
 | `REWARD_PCT_PER_YEAR` | `0.05` |
 | `BLOCK_TIME` | `1` second |
 | `EPOCH_LENGTH` | `43,200` blocks |
 | `EPOCHS_A_YEAR` | `730` epochs |
 | `POKE_THRESHOLD` | `500` blocks |
+| `INITIAL_MAX_STORAGE` | `10 * 2**40` bytes == `10` TB |
 | `STORAGE_AMOUNT_PER_BYTE` | `7E-5` NEAR per byte | 
 | `TREASURY_PCT` | `0.1` |
 | `CONTRACT_PCT` | `0.3` |
@@ -29,13 +31,15 @@
 | `ADJ_FEE` | `0.001` |
 | `TREASURY_ACCOUNT_ID` | `treasury` |
 | `TREASURY_PCT` | `0.01` |
+| `TOTAL_SEATS` | `100` |
 
 ## General Variables
 
-| Name | Description |
-| - | - |
-| `total_supply[t]` | Total supply of NEAR at given epoch[t] |
-| `gasPrice` | The cost of 1 unit of *gas* in NEAR tokens (see Transaction Fees section below) |
+| Name | Description | Initial value |
+| - | - | - |
+| `totalSupply[t]` | Total supply of NEAR at given epoch[t] | `INITIAL_SUPPLY` |
+| `gasPrice[t]` | The cost of 1 unit of *gas* in NEAR tokens (see Transaction Fees section below) | `INITIAL_GAS_PRICE` |
+| `storageAmountPerByte[t]` | keeping constant, `INITIAL_SUPPLY / INITIAL_MAX_STORAGE` | `9 * 10**19` yoctoNEAR |
 
 ## Issuance
 
@@ -63,16 +67,14 @@ Where `gasUsed[t] = sum([sum([gas(tx) for tx in chunk]) for chunk in block[t]])`
 
 ## State Stake
 
-Amount of `NEAR` on the account represents right for this account to take portion of the blockchain's overall global state.
-
-At every block time, each account is charged an amount of `NEAR` tokens proportional to their storage footprint, commonly defined as *state rent*.
+Amount of `NEAR` on the account represents right for this account to take portion of the blockchain's overall global state. Transactions fail if account doesn't have enough balance to cover the storage required for given account.
 
 ```python
 # After account touched / changed, we check it still has enough balance to cover it's storage.
 def on_account_change(block_height, account):
     # Compute requiredAmount given size of the account.
     requiredAmount = sizeOf(account) * storageAmountPerByte
-    if account.amount + account.lock < requiredAmount:
+    if account.amount + account.locked < requiredAmount:
         assert "Transaction fails due to not enough balance to cover state stake"
 ```
 
@@ -102,7 +104,7 @@ NEAR validators provide their resources in exchange for a reward `epochReward[t]
 | `numSeats` | Number of seats assigned to validator[v], calculated from stake[v]/seatPrice |
 | `validatorAssignments` | The resulting ordered array of all `proposals` with a stake higher than `seatPrice` |
 
-`validatorAssignments` is then split in two groups: block/chunk producers and 'hidden validators'
+`validatorAssignments` is then split in two groups: block/chunk producers and hidden validators.
 
 
 ### Rewards Calculation
@@ -113,7 +115,7 @@ NEAR validators provide their resources in exchange for a reward `epochReward[t]
 
 Total reward every epoch `t` is equal to:
 ```python
-reward[t] = total_supply * ((1 + REWARD_PCT_PER_YEAR) ** (1 / EPOCHS_A_YEAR) - 1)
+reward[t] = totalSupply * ((1 + REWARD_PCT_PER_YEAR) ** (1 / EPOCHS_A_YEAR) - 1)
 ```
 
 Uptime of a specific validator is computed:
@@ -131,7 +133,7 @@ else:
 The specific `validator[t]` reward for epoch `j` is then computed:
 
 ```python
-validator[t][j] = uptime[t][j] * reward[t] / total_seats * seats[j]
+validator[t][j] = uptime[t][j] * reward[t] / TOTAL_SEATS * seats[j]
 ```
 
 ### Slashing
