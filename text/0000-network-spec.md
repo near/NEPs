@@ -6,14 +6,14 @@
 [summary]: #summary
 
 Specification of the networking layer that peers use to communicate.
-Includes implementation overview of peer discovery, handshake and reputation.
+Includes implementation overview of peer discovery, handshake.
 Does not include the format of the actual blockchain protocol.
 
 # Motivation
 [motivation]: #motivation
 
 To provide actually secure and efficient routing, especially among the validators, we postulate that account information and cryptographic signatures backed directly or indirectly by stake are required.
-This network specification describes all of the protocols and data structures to connect, handshake, discover peers and maintain connections and an integration with the blockchain itself.
+This network specification describes all of the protocols and data structures to connect, handshake, discover peers and maintain connections and an integration with the chain layer.
 
 This document should serve as reference for all the clients to implement networking layer.
 
@@ -40,7 +40,7 @@ Routing table is accessible from peer manager.
 
 **Recalculation Policy**
 
-After new edge update routing table recalculation is scheduled. This prevents high CPU loads from computing shortest path all the time, and allows processing of batch of updates in a single run. The variable `ROUTING_TABLE_CALC_IDLE_TIME` denotes how much time we spent before recalculating the routing table from scratch. This period should not be too large, since in the middle time the routing table is out of sync.
+After new edge update routing table recalculation is scheduled. This prevents high CPU loads from computing shortest path all the time, and allows processing of batch of updates in a single run. This period should not be too large, since in the middle time the routing table is out of sync. Right now the scheduled time is the minimum between 1 second and a number proportional to the number of known peers.
 
 ### Routing back
 
