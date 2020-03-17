@@ -24,7 +24,6 @@
 | `EPOCHS_A_YEAR` | `730` epochs |
 | `POKE_THRESHOLD` | `500` blocks |
 | `INITIAL_MAX_STORAGE` | `10 * 2**40` bytes == `10` TB |
-| `STORAGE_AMOUNT_PER_BYTE` | `7E-5` NEAR per byte | 
 | `TREASURY_PCT` | `0.1` |
 | `CONTRACT_PCT` | `0.3` |
 | `INVALID_STATE_SLASH_PCT` | `0.05` |
