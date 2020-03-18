@@ -31,6 +31,7 @@
 | `TREASURY_ACCOUNT_ID` | `treasury` |
 | `TREASURY_PCT` | `0.01` |
 | `TOTAL_SEATS` | `100` |
+| `ACCOUNT_LENGTH_BASELINE_COST` | `2.07 * 10**20` yoctoNEAR |
 
 ## General Variables
 
@@ -69,15 +70,37 @@ Where `gasUsed[t] = sum([sum([gas(tx) for tx in chunk]) for chunk in block[t]])`
 Amount of `NEAR` on the account represents right for this account to take portion of the blockchain's overall global state. Transactions fail if account doesn't have enough balance to cover the storage required for given account.
 
 ```python
+def check_storage_cost(account):
+    accountLengthAmount = 0 if len(account_id) > 10 else ACCOUNT_LENGTH_BASELINE_COST / 3 ** (len(account_id) - 2)
+    # Compute requiredAmount given size of the account and additional cost for shorter names.
+    requiredAmount = sizeOf(account) * storageAmountPerByte + accountLengthAmount
+    return account.amount + account.locked < requiredAmount
+
 # After account touched / changed, we check it still has enough balance to cover it's storage.
 def on_account_change(block_height, account):
-    # Compute requiredAmount given size of the account.
-    requiredAmount = sizeOf(account) * storageAmountPerByte
-    if account.amount + account.locked < requiredAmount:
-        assert "Transaction fails due to not enough balance to cover state stake"
+    # ...
+    # Validate post-condition and revert if it fails.
+    if not check_storage_cost(account):
+        assert LackBalanceForState(signer_id: ctx.signer_id, amount: requiredAmount)
 ```
 
-Where `sizeOf(account)` includes size of `account` structure and size of all the data stored under the account.
+Where `sizeOf(account)` includes size of `account_id`, `account` structure and size of all the data stored under the account.
+
+Account can end up with not enough balance for next two reasons:
+ - Created new account and didn't give it enough funds.
+ - Account got slashed.
+
+This account still can receive transfers, hence can be saved.
+But to prevent grinding with accounts that don't have balances, we allow for anyone to delete accounts that don't have enough balance.
+
+```python
+def action_delete_account(account_id, account, ...):
+    if ctx.signer == account_id or not check_storage_rent(account):
+        # proceed with deleting
+    else:
+        assert DeleteAccountHasEnoughBalance()
+```
+
 
 ## Validators
 
