@@ -125,7 +125,23 @@ Reads input to the contract call into the register. Input is expected to be in J
 block_index() -> u64
 ```
 
-Returns the current block index.
+Returns the current block height from genesis.
+
+---
+
+```rust
+block_timestamp() -> u64
+```
+
+Returns the current block timestamp (number of non-leap-nanoseconds since January 1, 1970 0:00:00 UTC).
+
+---
+
+```rust
+epoch_height() -> u64
+```
+
+Returns the current epoch height from genesis.
 
 ---
 
