@@ -139,7 +139,6 @@ NEAR validators provide their resources in exchange for a reward `epochReward[t]
 
 `validatorAssignments` is then split in two groups: block/chunk producers and hidden validators.
 
-
 ### Rewards Calculation
 
 | Name | Value |
@@ -154,45 +153,22 @@ reward[t] = totalSupply * ((1 + REWARD_PCT_PER_YEAR) ** (1 / EPOCHS_A_YEAR) - 1)
 Uptime of a specific validator is computed:
 
 ```python
-median_produced_blocks[t] = median(num_produced_blocks[t])
-
-pct_produced_blocks[t][j] = num_produced_blocks[t][j] * median_produced_blocks[t]
-if pct_produced_blocks > ONLINE_THRESHOLD:
-    uptime[t][j] = (pct_produced_blocks[t][j] - ONLINE_THRESHOLD) / (1 - ONLINE_THRESHOLD)
+pct_online[t][j] = (num_produced_blocks[t][j] / expected_produced_blocks[t][j] + num_produced_chunks[t][j] / expected_produced_chunks[t][j]) / 2
+if pct_online > ONLINE_THRESHOLD:
+    uptime[t][j] = (pct_online[t][j] - ONLINE_THRESHOLD) / (1 - ONLINE_THRESHOLD)
 else:
     uptime[t][j] = 0
 ```
 
-The specific `validator[t]` reward for epoch `j` is then computed:
+Where `expected_produced_blocks` and `expected_produced_chunks` is the number of blocks and chunks respectively that is expected to be produced by given validator `j` in the epoch `t`.
+
+The specific `validator[t][j]` reward for epoch `t` is then proportional to the fraction of stake of this validator from total stake:
 
 ```python
-validator[t][j] = uptime[t][j] * reward[t] / TOTAL_SEATS * seats[j]
+validator[t][j] = (uptime[t][j] * stake[t][j] * reward[t]) / total_stake[t]
 ```
 
 ### Slashing
-
-#### Block Double Sign
-
-```python
-# Check if given two blocks headers have the same height and 
-# are valid (signed by the same validator).
-def block_double_sign_condition(header1, header2):
-    return valid_header(header1) and valid_header(heade2) and header1.height == header2.height
-
-# At the end of the epoch, run update validators and 
-# determine how much to slash validators.
-def end_of_epoch_update_validators(validators):
-    # ...
-    total_stake = 0
-    total_offended_stake = 0
-    for validator in validators:
-        total_stake += validator.stake
-        if validator.is_slashed:
-            total_offended_stake += validator.stake
-    for validator in validators:
-        if validator.is_slashed:
-            validator.stake -= validator.stake * 3 * total_offended_stake / total_stake
-```
 
 #### ChunkProofs
 
