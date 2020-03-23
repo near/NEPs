@@ -9,3 +9,7 @@ For the overview of the NEAR Protocol, read the following documents in numerical
 4. [Chain specification](ChainSpec/README.md)
 5. [Runtime specification](RuntimeSpec/README.md)
 6. [Economics](Economics/README.md)
+
+## Standards
+
+Standards such as Fungible Token Standard can be found in [Standards](Standards/README.md) page.
