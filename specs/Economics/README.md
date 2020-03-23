@@ -25,11 +25,10 @@
 | `POKE_THRESHOLD` | `500` blocks |
 | `INITIAL_MAX_STORAGE` | `10 * 2**40` bytes == `10` TB |
 | `TREASURY_PCT` | `0.1` |
+| `TREASURY_ACCOUNT_ID` | `treasury` |
 | `CONTRACT_PCT` | `0.3` |
 | `INVALID_STATE_SLASH_PCT` | `0.05` |
 | `ADJ_FEE` | `0.001` |
-| `TREASURY_ACCOUNT_ID` | `treasury` |
-| `TREASURY_PCT` | `0.01` |
 | `TOTAL_SEATS` | `100` |
 | `ACCOUNT_LENGTH_BASELINE_COST` | `2.07 * 10**20` yoctoNEAR |
 
@@ -71,17 +70,29 @@ Amount of `NEAR` on the account represents right for this account to take portio
 
 ```python
 def check_storage_cost(account):
+    # See Account Name System for pricing of short named accounts.
     accountLengthAmount = 0 if len(account_id) > 10 else ACCOUNT_LENGTH_BASELINE_COST / 3 ** (len(account_id) - 2)
     # Compute requiredAmount given size of the account and additional cost for shorter names.
     requiredAmount = sizeOf(account) * storageAmountPerByte + accountLengthAmount
-    return account.amount + account.locked < requiredAmount
+    return Ok() if account.amount + account.locked < requiredAmount else Error(requiredAmount)
+
+# Check when transaction is received to verify that it is valid.
+def verify_transaction(tx, signer_account):
+    # ...
+    # Updates signer's account with the amount it will have after executing this tx.
+    update_post_amount(signer_account, tx)
+    result = check_storage_cost(signer_account)
+    # If enough balance OR account is been deleted by the owner.
+    if not result.ok() or DeleteAccount(tx.signer_id) in tx.actions:
+        assert LackBalanceForState(signer_id: tx.signer_id, amount: result.err())
 
 # After account touched / changed, we check it still has enough balance to cover it's storage.
 def on_account_change(block_height, account):
-    # ...
+    # ... execute transaction / receipt changes ...
     # Validate post-condition and revert if it fails.
-    if not check_storage_cost(account):
-        assert LackBalanceForState(signer_id: ctx.signer_id, amount: requiredAmount)
+    result = check_storage_cost(sender_account)
+    if not result.ok():
+        assert LackBalanceForState(signer_id: tx.signer_id, amount: result.err())
 ```
 
 Where `sizeOf(account)` includes size of `account_id`, `account` structure and size of all the data stored under the account.
