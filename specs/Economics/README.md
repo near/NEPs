@@ -17,7 +17,7 @@
 | - | - |
 | `INITIAL_SUPPLY` | `10**33` yoctoNEAR |
 | `NEAR` | `10**24` yoctoNEAR |
-| `INITIAL_GAS_PRICE` | `10**5` yoctoNEAR |
+| `MIN_GAS_PRICE` | `10**5` yoctoNEAR |
 | `REWARD_PCT_PER_YEAR` | `0.05` |
 | `BLOCK_TIME` | `1` second |
 | `EPOCH_LENGTH` | `43,200` blocks |
@@ -30,15 +30,14 @@
 | `INVALID_STATE_SLASH_PCT` | `0.05` |
 | `ADJ_FEE` | `0.001` |
 | `TOTAL_SEATS` | `100` |
-| `ACCOUNT_LENGTH_BASELINE_COST` | `2.07 * 10**20` yoctoNEAR |
 
 ## General Variables
 
 | Name | Description | Initial value |
 | - | - | - |
 | `totalSupply[t]` | Total supply of NEAR at given epoch[t] | `INITIAL_SUPPLY` |
-| `gasPrice[t]` | The cost of 1 unit of *gas* in NEAR tokens (see Transaction Fees section below) | `INITIAL_GAS_PRICE` |
-| `storageAmountPerByte[t]` | keeping constant, `INITIAL_SUPPLY / INITIAL_MAX_STORAGE` | `9 * 10**19` yoctoNEAR |
+| `gasPrice[t]` | The cost of 1 unit of *gas* in NEAR tokens (see Transaction Fees section below) | `MIN_GAS_PRICE` |
+| `storageAmountPerByte[t]` | keeping constant, `INITIAL_SUPPLY / INITIAL_MAX_STORAGE` | `~9.09 * 10**19` yoctoNEAR |
 
 ## Issuance
 
@@ -70,10 +69,8 @@ Amount of `NEAR` on the account represents right for this account to take portio
 
 ```python
 def check_storage_cost(account):
-    # See Account Name System for pricing of short named accounts.
-    accountLengthAmount = 0 if len(account_id) > 10 else ACCOUNT_LENGTH_BASELINE_COST / 3 ** (len(account_id) - 2)
-    # Compute requiredAmount given size of the account and additional cost for shorter names.
-    requiredAmount = sizeOf(account) * storageAmountPerByte + accountLengthAmount
+    # Compute requiredAmount given size of the account.
+    requiredAmount = sizeOf(account) * storageAmountPerByte
     return Ok() if account.amount + account.locked < requiredAmount else Error(requiredAmount)
 
 # Check when transaction is received to verify that it is valid.
@@ -102,7 +99,7 @@ Account can end up with not enough balance for next two reasons:
  - Account got slashed.
 
 This account still can receive transfers, hence can be saved.
-But to prevent grinding with accounts that don't have balances, we allow for anyone to delete accounts that don't have enough balance.
+But to prevent grinding with accounts that don't have balances, we allow for anyone to delete accounts that don't have enough balance. *Note:* this creates possible race conflicts and we recommend all account creating applications to be careful about funding account properly at the creation.
 
 ```python
 def action_delete_account(account_id, account, ...):
@@ -111,7 +108,6 @@ def action_delete_account(account_id, account, ...):
     else:
         assert DeleteAccountHasEnoughBalance()
 ```
-
 
 ## Validators
 
