@@ -164,7 +164,7 @@
 <table><thead><tr><th>Name</th><th>Value</th></tr></thead><tbody>
 <tr><td><code>INITIAL_SUPPLY</code></td><td><code>10**33</code> yoctoNEAR</td></tr>
 <tr><td><code>NEAR</code></td><td><code>10**24</code> yoctoNEAR</td></tr>
-<tr><td><code>INITIAL_GAS_PRICE</code></td><td><code>10**5</code> yoctoNEAR</td></tr>
+<tr><td><code>MIN_GAS_PRICE</code></td><td><code>10**5</code> yoctoNEAR</td></tr>
 <tr><td><code>REWARD_PCT_PER_YEAR</code></td><td><code>0.05</code></td></tr>
 <tr><td><code>BLOCK_TIME</code></td><td><code>1</code> second</td></tr>
 <tr><td><code>EPOCH_LENGTH</code></td><td><code>43,200</code> blocks</td></tr>
@@ -177,13 +177,12 @@
 <tr><td><code>INVALID_STATE_SLASH_PCT</code></td><td><code>0.05</code></td></tr>
 <tr><td><code>ADJ_FEE</code></td><td><code>0.001</code></td></tr>
 <tr><td><code>TOTAL_SEATS</code></td><td><code>100</code></td></tr>
-<tr><td><code>ACCOUNT_LENGTH_BASELINE_COST</code></td><td><code>2.07 * 10**20</code> yoctoNEAR</td></tr>
 </tbody></table>
 <h2><a class="header" href="#general-variables" id="general-variables">General Variables</a></h2>
 <table><thead><tr><th>Name</th><th>Description</th><th>Initial value</th></tr></thead><tbody>
 <tr><td><code>totalSupply[t]</code></td><td>Total supply of NEAR at given epoch[t]</td><td><code>INITIAL_SUPPLY</code></td></tr>
-<tr><td><code>gasPrice[t]</code></td><td>The cost of 1 unit of <em>gas</em> in NEAR tokens (see Transaction Fees section below)</td><td><code>INITIAL_GAS_PRICE</code></td></tr>
-<tr><td><code>storageAmountPerByte[t]</code></td><td>keeping constant, <code>INITIAL_SUPPLY / INITIAL_MAX_STORAGE</code></td><td><code>9 * 10**19</code> yoctoNEAR</td></tr>
+<tr><td><code>gasPrice[t]</code></td><td>The cost of 1 unit of <em>gas</em> in NEAR tokens (see Transaction Fees section below)</td><td><code>MIN_GAS_PRICE</code></td></tr>
+<tr><td><code>storageAmountPerByte[t]</code></td><td>keeping constant, <code>INITIAL_SUPPLY / INITIAL_MAX_STORAGE</code></td><td><code>~9.09 * 10**19</code> yoctoNEAR</td></tr>
 </tbody></table>
 <h2><a class="header" href="#issuance" id="issuance">Issuance</a></h2>
 <p>The protocol sets a ceiling for the maximum issuance of tokens, and dynamically decreases this issuance depending on the amount of total fees in the system.</p>
@@ -203,10 +202,8 @@ If <code>epochFee[t] &gt; reward[t]</code> the issuance is negative, thus the <c
 <h2><a class="header" href="#state-stake" id="state-stake">State Stake</a></h2>
 <p>Amount of <code>NEAR</code> on the account represents right for this account to take portion of the blockchain's overall global state. Transactions fail if account doesn't have enough balance to cover the storage required for given account.</p>
 <pre><code class="language-python">def check_storage_cost(account):
-    # See Account Name System for pricing of short named accounts.
-    accountLengthAmount = 0 if len(account_id) &gt; 10 else ACCOUNT_LENGTH_BASELINE_COST / 3 ** (len(account_id) - 2)
-    # Compute requiredAmount given size of the account and additional cost for shorter names.
-    requiredAmount = sizeOf(account) * storageAmountPerByte + accountLengthAmount
+    # Compute requiredAmount given size of the account.
+    requiredAmount = sizeOf(account) * storageAmountPerByte
     return Ok() if account.amount + account.locked &lt; requiredAmount else Error(requiredAmount)
 
 # Check when transaction is received to verify that it is valid.
@@ -234,7 +231,7 @@ def on_account_change(block_height, account):
 <li>Account got slashed.</li>
 </ul>
 <p>This account still can receive transfers, hence can be saved.
-But to prevent grinding with accounts that don't have balances, we allow for anyone to delete accounts that don't have enough balance.</p>
+But to prevent grinding with accounts that don't have balances, we allow for anyone to delete accounts that don't have enough balance. <em>Note:</em> this creates possible race conflicts and we recommend all account creating applications to be careful about funding account properly at the creation.</p>
 <pre><code class="language-python">def action_delete_account(account_id, account, ...):
     if ctx.signer == account_id or not check_storage_rent(account):
         # proceed with deleting

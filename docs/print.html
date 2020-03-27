@@ -1673,7 +1673,8 @@ however the actual implementation does not return error at all, <a href="https:/
 </span>storage_iter_prefix(prefix_len: u64, prefix_ptr: u64) -&gt; u64
 <span class="boring">}
 </span></code></pre></pre>
-<p>Creates an iterator object inside the host.
+<p>DEPRECATED, calling it will result result in <code>HostError::Deprecated</code> error.
+Creates an iterator object inside the host.
 Returns the identifier that uniquely differentiates the given iterator from other iterators that can be simultaneously
 created.</p>
 <h6><a class="header" href="#normal-operation-5" id="normal-operation-5">Normal operation</a></h6>
@@ -1692,7 +1693,8 @@ order of the bytes in the keys. If there are no keys, it creates an empty iterat
 </span>storage_iter_range(start_len: u64, start_ptr: u64, end_len: u64, end_ptr: u64) -&gt; u64
 <span class="boring">}
 </span></code></pre></pre>
-<p>Similarly to <code>storage_iter_prefix</code>
+<p>DEPRECATED, calling it will result result in <code>HostError::Deprecated</code> error.
+Similarly to <code>storage_iter_prefix</code>
 creates an iterator object inside the host.</p>
 <h6><a class="header" href="#normal-operation-6" id="normal-operation-6">Normal operation</a></h6>
 <p>Unless lexicographically <code>start &lt; end</code>, it creates an empty iterator.
@@ -1709,7 +1711,8 @@ Iterates over all key-values such that keys are between <code>start</code> and <
 </span>storage_iter_next(iterator_id: u64, key_register_id: u64, value_register_id: u64) -&gt; u64
 <span class="boring">}
 </span></code></pre></pre>
-<p>Advances iterator and saves the next key and value in the register.</p>
+<p>DEPRECATED, calling it will result result in <code>HostError::Deprecated</code> error.
+Advances iterator and saves the next key and value in the register.</p>
 <h6><a class="header" href="#normal-operation-7" id="normal-operation-7">Normal operation</a></h6>
 <ul>
 <li>If iterator is not empty (after calling next it points to a key-value), copies the key into <code>key_register_id</code> and value into <code>value_register_id</code> and returns <code>1</code>;</li>
@@ -2209,7 +2212,23 @@ be used to read all</li>
 </span>block_index() -&gt; u64
 <span class="boring">}
 </span></code></pre></pre>
-<p>Returns the current block index.</p>
+<p>Returns the current block height from genesis.</p>
+<hr />
+<pre><pre class="playpen"><code class="language-rust">
+<span class="boring">#![allow(unused_variables)]
+</span><span class="boring">fn main() {
+</span>block_timestamp() -&gt; u64
+<span class="boring">}
+</span></code></pre></pre>
+<p>Returns the current block timestamp (number of non-leap-nanoseconds since January 1, 1970 0:00:00 UTC).</p>
+<hr />
+<pre><pre class="playpen"><code class="language-rust">
+<span class="boring">#![allow(unused_variables)]
+</span><span class="boring">fn main() {
+</span>epoch_height() -&gt; u64
+<span class="boring">}
+</span></code></pre></pre>
+<p>Returns the current epoch height from genesis.</p>
 <hr />
 <pre><pre class="playpen"><code class="language-rust">
 <span class="boring">#![allow(unused_variables)]
@@ -2791,7 +2810,7 @@ a contract.</p>
 <table><thead><tr><th>Name</th><th>Value</th></tr></thead><tbody>
 <tr><td><code>INITIAL_SUPPLY</code></td><td><code>10**33</code> yoctoNEAR</td></tr>
 <tr><td><code>NEAR</code></td><td><code>10**24</code> yoctoNEAR</td></tr>
-<tr><td><code>INITIAL_GAS_PRICE</code></td><td><code>10**5</code> yoctoNEAR</td></tr>
+<tr><td><code>MIN_GAS_PRICE</code></td><td><code>10**5</code> yoctoNEAR</td></tr>
 <tr><td><code>REWARD_PCT_PER_YEAR</code></td><td><code>0.05</code></td></tr>
 <tr><td><code>BLOCK_TIME</code></td><td><code>1</code> second</td></tr>
 <tr><td><code>EPOCH_LENGTH</code></td><td><code>43,200</code> blocks</td></tr>
@@ -2804,13 +2823,12 @@ a contract.</p>
 <tr><td><code>INVALID_STATE_SLASH_PCT</code></td><td><code>0.05</code></td></tr>
 <tr><td><code>ADJ_FEE</code></td><td><code>0.001</code></td></tr>
 <tr><td><code>TOTAL_SEATS</code></td><td><code>100</code></td></tr>
-<tr><td><code>ACCOUNT_LENGTH_BASELINE_COST</code></td><td><code>2.07 * 10**20</code> yoctoNEAR</td></tr>
 </tbody></table>
 <h2><a class="header" href="#general-variables" id="general-variables">General Variables</a></h2>
 <table><thead><tr><th>Name</th><th>Description</th><th>Initial value</th></tr></thead><tbody>
 <tr><td><code>totalSupply[t]</code></td><td>Total supply of NEAR at given epoch[t]</td><td><code>INITIAL_SUPPLY</code></td></tr>
-<tr><td><code>gasPrice[t]</code></td><td>The cost of 1 unit of <em>gas</em> in NEAR tokens (see Transaction Fees section below)</td><td><code>INITIAL_GAS_PRICE</code></td></tr>
-<tr><td><code>storageAmountPerByte[t]</code></td><td>keeping constant, <code>INITIAL_SUPPLY / INITIAL_MAX_STORAGE</code></td><td><code>9 * 10**19</code> yoctoNEAR</td></tr>
+<tr><td><code>gasPrice[t]</code></td><td>The cost of 1 unit of <em>gas</em> in NEAR tokens (see Transaction Fees section below)</td><td><code>MIN_GAS_PRICE</code></td></tr>
+<tr><td><code>storageAmountPerByte[t]</code></td><td>keeping constant, <code>INITIAL_SUPPLY / INITIAL_MAX_STORAGE</code></td><td><code>~9.09 * 10**19</code> yoctoNEAR</td></tr>
 </tbody></table>
 <h2><a class="header" href="#issuance" id="issuance">Issuance</a></h2>
 <p>The protocol sets a ceiling for the maximum issuance of tokens, and dynamically decreases this issuance depending on the amount of total fees in the system.</p>
@@ -2830,10 +2848,8 @@ If <code>epochFee[t] &gt; reward[t]</code> the issuance is negative, thus the <c
 <h2><a class="header" href="#state-stake" id="state-stake">State Stake</a></h2>
 <p>Amount of <code>NEAR</code> on the account represents right for this account to take portion of the blockchain's overall global state. Transactions fail if account doesn't have enough balance to cover the storage required for given account.</p>
 <pre><code class="language-python">def check_storage_cost(account):
-    # See Account Name System for pricing of short named accounts.
-    accountLengthAmount = 0 if len(account_id) &gt; 10 else ACCOUNT_LENGTH_BASELINE_COST / 3 ** (len(account_id) - 2)
-    # Compute requiredAmount given size of the account and additional cost for shorter names.
-    requiredAmount = sizeOf(account) * storageAmountPerByte + accountLengthAmount
+    # Compute requiredAmount given size of the account.
+    requiredAmount = sizeOf(account) * storageAmountPerByte
     return Ok() if account.amount + account.locked &lt; requiredAmount else Error(requiredAmount)
 
 # Check when transaction is received to verify that it is valid.
@@ -2861,7 +2877,7 @@ def on_account_change(block_height, account):
 <li>Account got slashed.</li>
 </ul>
 <p>This account still can receive transfers, hence can be saved.
-But to prevent grinding with accounts that don't have balances, we allow for anyone to delete accounts that don't have enough balance.</p>
+But to prevent grinding with accounts that don't have balances, we allow for anyone to delete accounts that don't have enough balance. <em>Note:</em> this creates possible race conflicts and we recommend all account creating applications to be careful about funding account properly at the creation.</p>
 <pre><code class="language-python">def action_delete_account(account_id, account, ...):
     if ctx.signer == account_id or not check_storage_rent(account):
         # proceed with deleting

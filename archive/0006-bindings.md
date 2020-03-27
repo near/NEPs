@@ -81,7 +81,7 @@ wrong location this function will overwrite memory that it is not supposed to ov
 ---
 ```rust
 register_len(register_id: u64) -> u64
-``` 
+```
 Returns the size of the blob stored in the given register.
 ###### Normal operation
 * If register is used, then returns the size, which can potentially be zero;
@@ -120,7 +120,7 @@ create this error and terminate the execution of VM. For mocks of the host that 
 ---
 ```rust
 storage_read(key_len: u64, key_ptr: u64, register_id: u64) -> u64
-``` 
+```
 Reads the value stored under the given key.
 ###### Normal operation
 * If key is used copies the content of the value into the `register_id`, even if the content is zero bytes;
@@ -163,7 +163,7 @@ Very similar to `storage_read`:
 ---
 ```rust
 storage_has_key(key_len: u64, key_ptr: u64) -> u64
-``` 
+```
 Checks if there is a key-value pair.
 ###### Normal operation
 * If key is used returns `1`, even if the value is zero bytes;
@@ -325,7 +325,7 @@ Returns the current block index.
 ---
 ```rust
 storage_usage() -> u64
-``` 
+```
 Returns the number of bytes used by the contract if it was saved to the trie as of the
 invocation. This includes:
 * The data written with `storage_*` functions during current and previous execution;
@@ -447,7 +447,7 @@ promise_then(promise_idx: u64,
              arguments_len: u64,
              arguments_ptr: u64,
              amount_ptr: u64,
-             gas: u64) -> u64            
+             gas: u64) -> u64
 ```
 Attaches the callback that is executed after promise pointed by `promise_idx` is complete.
 
