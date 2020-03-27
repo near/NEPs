@@ -17,25 +17,27 @@
 | - | - |
 | `INITIAL_SUPPLY` | `10**33` yoctoNEAR |
 | `NEAR` | `10**24` yoctoNEAR |
+| `MIN_GAS_PRICE` | `10**5` yoctoNEAR |
 | `REWARD_PCT_PER_YEAR` | `0.05` |
 | `BLOCK_TIME` | `1` second |
 | `EPOCH_LENGTH` | `43,200` blocks |
 | `EPOCHS_A_YEAR` | `730` epochs |
 | `POKE_THRESHOLD` | `500` blocks |
-| `STORAGE_PRICE` | `7E-15` NEAR per byte per block | 
+| `INITIAL_MAX_STORAGE` | `10 * 2**40` bytes == `10` TB |
 | `TREASURY_PCT` | `0.1` |
+| `TREASURY_ACCOUNT_ID` | `treasury` |
 | `CONTRACT_PCT` | `0.3` |
 | `INVALID_STATE_SLASH_PCT` | `0.05` |
 | `ADJ_FEE` | `0.001` |
-| `TREASURY_ACCOUNT_ID` | `treasury` |
-| `TREASURY_PCT` | `0.01` |
+| `TOTAL_SEATS` | `100` |
 
 ## General Variables
 
-| Name | Description |
-| - | - |
-| `total_supply[t]` | Total supply of NEAR at given epoch[t] |
-| `gasPrice` | The cost of 1 unit of *gas* in NEAR tokens (see Transaction Fees section below) |
+| Name | Description | Initial value |
+| - | - | - |
+| `totalSupply[t]` | Total supply of NEAR at given epoch[t] | `INITIAL_SUPPLY` |
+| `gasPrice[t]` | The cost of 1 unit of *gas* in NEAR tokens (see Transaction Fees section below) | `MIN_GAS_PRICE` |
+| `storageAmountPerByte[t]` | keeping constant, `INITIAL_SUPPLY / INITIAL_MAX_STORAGE` | `~9.09 * 10**19` yoctoNEAR |
 
 ## Issuance
 
@@ -50,11 +52,7 @@ The protocol sets a ceiling for the maximum issuance of tokens, and dynamically 
 Where `totalSupply[t]` is the total number of tokens in the system at a given time *t*.
 If `epochFee[t] > reward[t]` the issuance is negative, thus the `totalSupply[t]` decreases in given epoch.
 
-## Transaction and Storage Fees
-
-All state fees and most of transaction fees get burned.
-
-### Transaction Fees
+## Transaction Fees
 
 Each transaction before inclusion must buy gas enough to cover the cost of bandwidth and execution.
 
@@ -65,39 +63,51 @@ Gas is priced dynamically in `NEAR` tokens. At each block `t`, we update `gasPri
 Where `gasUsed[t] = sum([sum([gas(tx) for tx in chunk]) for chunk in block[t]])`.
 `gasLimit[t]` is defined as `gasLimit[t] = gasLimit[t - 1] + validatorGasDiff[t - 1]`, where `validatorGasDiff` is parameter with which each chunk producer can either increase or decrease gas limit based on how long it to execute the previous chunk. `validatorGasDiff[t]` can be only within `±0.1%` of `gasLimit[t]` and only if `gasUsed[t - 1] > 0.9 * gasLimit[t - 1]`.
 
-### State Storage Rent
+## State Stake
 
-At every block time, each account is charged an amount of `NEAR` tokens proportional to their storage footprint, commonly defined as *state rent*.
+Amount of `NEAR` on the account represents right for this account to take portion of the blockchain's overall global state. Transactions fail if account doesn't have enough balance to cover the storage required for given account.
 
 ```python
-# Before account touched / changed, we check that it has enough to pay fees.
-# This will fail on any transaction that touches such an account.
-def before_acccount_change(block_height, account):
-    maxFee = sizeOf(account) * storagePrice * pokeThreshold
-    # Check that current amount is enough to cover at least `pokeThreshold` of blocks.
-    if maxFee >= account.amount:
-        assert "Can't modify under funded account"
+def check_storage_cost(account):
+    # Compute requiredAmount given size of the account.
+    requiredAmount = sizeOf(account) * storageAmountPerByte
+    return Ok() if account.amount + account.locked < requiredAmount else Error(requiredAmount)
 
-# After account touched / changed, we charge the storage fee.
+# Check when transaction is received to verify that it is valid.
+def verify_transaction(tx, signer_account):
+    # ...
+    # Updates signer's account with the amount it will have after executing this tx.
+    update_post_amount(signer_account, tx)
+    result = check_storage_cost(signer_account)
+    # If enough balance OR account is been deleted by the owner.
+    if not result.ok() or DeleteAccount(tx.signer_id) in tx.actions:
+        assert LackBalanceForState(signer_id: tx.signer_id, amount: result.err())
+
+# After account touched / changed, we check it still has enough balance to cover it's storage.
 def on_account_change(block_height, account):
-    # Compute fee since last charging state rent (last call this function).
-    fee = sizeOf(account) * storagePrice * (block_height - account.storagePaidAt)
-    account.amount -= fee
-    account.storagePaidAt = block_height
-
-# Can delete underfunded account by anyone.
-def can_delete_account(block_height, account):
-    maxFee = sizeOf(account) * storagePrice * pokeThreshold
-    if maxFee < account.amount:
-        assert "Account still has enough funds"
-    # Return to caller the rest of the amonut after charging fees.
-    owedFee = sizeOf(account) * storagePrice * (block_height - account.storagePaidAt)
-    return account.amount - owedFee
+    # ... execute transaction / receipt changes ...
+    # Validate post-condition and revert if it fails.
+    result = check_storage_cost(sender_account)
+    if not result.ok():
+        assert LackBalanceForState(signer_id: tx.signer_id, amount: result.err())
 ```
 
-Where `sizeOf(account)` includes size of `account` structure and size of all the data stored under the account.
+Where `sizeOf(account)` includes size of `account_id`, `account` structure and size of all the data stored under the account.
 
-When `account` is staking, if `account.amount < 4 * epochLength * storagePrice * sizeOf(account)`, the staking transaction fill fail or existing staking proposal will not be accepted for a rollover in the next epoch (see below in the Validator section)
+Account can end up with not enough balance for next two reasons:
+ - Created new account and didn't give it enough funds.
+ - Account got slashed.
+
+This account still can receive transfers, hence can be saved.
+But to prevent grinding with accounts that don't have balances, we allow for anyone to delete accounts that don't have enough balance. *Note:* this creates possible race conflicts and we recommend all account creating applications to be careful about funding account properly at the creation.
+
+```python
+def action_delete_account(account_id, account, ...):
+    if ctx.signer == account_id or not check_storage_rent(account):
+        # proceed with deleting
+    else:
+        assert DeleteAccountHasEnoughBalance()
+```
 
 ## Validators
 
@@ -123,7 +133,7 @@ NEAR validators provide their resources in exchange for a reward `epochReward[t]
 | `numSeats` | Number of seats assigned to validator[v], calculated from stake[v]/seatPrice |
 | `validatorAssignments` | The resulting ordered array of all `proposals` with a stake higher than `seatPrice` |
 
-`validatorAssignments` is then split in two groups: block/chunk producers and 'hidden validators'
+`validatorAssignments` is then split in two groups: block/chunk producers and hidden validators.
 
 
 ### Rewards Calculation
@@ -134,7 +144,7 @@ NEAR validators provide their resources in exchange for a reward `epochReward[t]
 
 Total reward every epoch `t` is equal to:
 ```python
-reward[t] = total_supply * ((1 + REWARD_PCT_PER_YEAR) ** (1 / EPOCHS_A_YEAR) - 1)
+reward[t] = totalSupply * ((1 + REWARD_PCT_PER_YEAR) ** (1 / EPOCHS_A_YEAR) - 1)
 ```
 
 Uptime of a specific validator is computed:
@@ -152,7 +162,7 @@ else:
 The specific `validator[t]` reward for epoch `j` is then computed:
 
 ```python
-validator[t][j] = uptime[t][j] * reward[t] / total_seats * seats[j]
+validator[t][j] = uptime[t][j] * reward[t] / TOTAL_SEATS * seats[j]
 ```
 
 ### Slashing
