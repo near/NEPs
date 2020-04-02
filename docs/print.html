@@ -2871,19 +2871,8 @@ def on_account_change(block_height, account):
         assert LackBalanceForState(signer_id: tx.signer_id, amount: result.err())
 </code></pre>
 <p>Where <code>sizeOf(account)</code> includes size of <code>account_id</code>, <code>account</code> structure and size of all the data stored under the account.</p>
-<p>Account can end up with not enough balance for next two reasons:</p>
-<ul>
-<li>Created new account and didn't give it enough funds.</li>
-<li>Account got slashed.</li>
-</ul>
-<p>This account still can receive transfers, hence can be saved.
-But to prevent grinding with accounts that don't have balances, we allow for anyone to delete accounts that don't have enough balance. <em>Note:</em> this creates possible race conflicts and we recommend all account creating applications to be careful about funding account properly at the creation.</p>
-<pre><code class="language-python">def action_delete_account(account_id, account, ...):
-    if ctx.signer == account_id or not check_storage_rent(account):
-        # proceed with deleting
-    else:
-        assert DeleteAccountHasEnoughBalance()
-</code></pre>
+<p>Account can end up with not enough balance in case it gets slashed. Account will become unusable as all orginating transactions will fail (including deletion).
+The only way to recover it in this case is by sending extra funds from a different accounts.</p>
 <h2><a class="header" href="#validators-2" id="validators-2">Validators</a></h2>
 <p>NEAR validators provide their resources in exchange for a reward <code>epochReward[t]</code>, where [t] represents the considered epoch</p>
 <table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody>
