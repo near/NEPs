@@ -94,20 +94,8 @@ def on_account_change(block_height, account):
 
 Where `sizeOf(account)` includes size of `account_id`, `account` structure and size of all the data stored under the account.
 
-Account can end up with not enough balance for next two reasons:
- - Created new account and didn't give it enough funds.
- - Account got slashed.
-
-This account still can receive transfers, hence can be saved.
-But to prevent grinding with accounts that don't have balances, we allow for anyone to delete accounts that don't have enough balance. *Note:* this creates possible race conflicts and we recommend all account creating applications to be careful about funding account properly at the creation.
-
-```python
-def action_delete_account(account_id, account, ...):
-    if ctx.signer == account_id or not check_storage_rent(account):
-        # proceed with deleting
-    else:
-        assert DeleteAccountHasEnoughBalance()
-```
+Account can end up with not enough balance in case it gets slashed. Account will become unusable as all orginating transactions will fail (including deletion).
+The only way to recover it in this case is by sending extra funds from a different accounts.
 
 ## Validators
 
