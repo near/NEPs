@@ -29,7 +29,7 @@ Block producers in the particular epoch exchange many kinds of messages. The two
 ```rust
 struct Approval {
     prev_hash: BlockHash,
-    prev_height: BlockIndex,
+    prev_height: BlockHeight,
     target_height: BlockHeight,
     signature: Signature,
     account_id: AccountId
