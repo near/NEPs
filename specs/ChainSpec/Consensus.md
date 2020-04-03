@@ -14,13 +14,13 @@ struct BlockHeader {
 }
 ```
 
-Each block belongs to a particular epoch, and has a particular height. The highest height block known to a particular node is its head.
+Each block belongs to a particular epoch, and has a particular height. The highest height block accepted by a particular node is its head.
 
 Each epoch has a set of block producers who are assigned to produce blocks in the epoch, and has an assigned block producer for each height in the epoch. The block producers and the assignments in a particular epoch are known from the first block of the *preceding* epoch.
 
-Consecutive blocks do not necessarily have sequential heights. For example, if a block producer responsible for producing a block at height `h` is offline, the block at height `h+1` can have as its previous block a block with height `h-1`.
+Consecutive blocks do not necessarily have sequential heights. A block at height `h+1` can have as its previous block a block with height `h-1` or lower.
 
-If a block `B` at some height `h` builds on top of a block `B_prev` that has height `h-1`, and `B_prev` in turn builds on top of a block `B_prev_prev` that has height `h-2` (i.e. if the last three blocks in the chain ending at `B` have sequential heights), and all three blocks are in the same epoch, the block `B_prev_prev` is final, and cannot be reverted unless block producers with more than `2/3` cumulative stake deviate from the protocol. 
+If a block `B` at some height `h` builds on top of a block `B_prev` that has height `h-1`, and `B_prev` in turn builds on top of a block `B_prev_prev` that has height `h-2`, and all three blocks are in the same epoch, the block `B_prev_prev` is final, and cannot be reverted unless block producers with more than `2/3` cumulative stake deviate from the protocol. 
 
 TODO: talk about epoch boundaries here
 
@@ -79,8 +79,7 @@ def process_timer(self):
 
     skip_delay = get_delay(self.timer_height - self.largest_final_height)
 
-    if self.endorsement_pending and \
-          now > self.timer_started + ENDORSEMENT_DELAY:
+    if self.endorsement_pending and now > self.timer_started + ENDORSEMENT_DELAY:
 
         if self.head_height >= self.largest_target_height:
             self.larget_target_height = self.head_height + 1
