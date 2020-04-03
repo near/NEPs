@@ -119,7 +119,7 @@ A block producer assigned for a particular height produces a block at that heigh
 
 We call approvals for which `prev_height + 1 = target_height` endorsements, and all other approvals skips.
 
-Note that with the implementation above a honest block producer can never produce two endorsements with the same `prev_height` (call this condition *conflicting endorsements*), neigher can they produce a skip message `s` and an endorsement `e` such that `s.prev_height > e.prev_height and s.target_height <= e.target_height` (call this condition *conflicting skip and endorsement*).
+Note that with the implementation above a honest block producer can never produce two endorsements with the same `prev_height` (call this condition *conflicting endorsements*), neither can they produce a skip message `s` and an endorsement `e` such that `s.prev_height > e.prev_height and s.target_height <= e.target_height` (call this condition *conflicting skip and endorsement*).
 
 Say a block `B0` is final, i.e. there are blocks `B1` and `B2` that build on top of it and have sequential heights.
 
