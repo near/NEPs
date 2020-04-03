@@ -75,7 +75,7 @@ Criterion for kicking out chunk producers (this is a number between 0 and 100)
 
 ## gas_price_adjustment_rate
 
-_type: u8_
+_type: Fraction_
 
 Gas price adjustment rate
 
@@ -105,21 +105,21 @@ Number of blocks for which a given transaction is valid
 
 ## developer_reward_percentage
 
-_type: u8_
+_type: Fraction_
 
-Developer reward percentage (this is a number between 0 and 100)
+Developer reward percentage.
 
 ## protocol_reward_percentage
 
-_type: u8_
+_type: Fraction_
 
-Protocol treasury percentage (this is a number between 0 and 100)
+Protocol treasury percentage.
 
 ## max_inflation_rate
 
-_type: u8_
+_type: Fraction_
 
-Maximum inflation on the total supply every epoch (this is a number between 0 and 100)
+Maximum inflation on the total supply every epoch.
 
 ## total_supply
 
