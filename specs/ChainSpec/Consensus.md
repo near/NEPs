@@ -47,7 +47,7 @@ def on_approval(self, approval):
     self.approvals.append(approval)
 ```
 
-Whenever a participant receives a block, the operations relevant to the consensus include updating the `head` and initiating a timer to start sending the approvals on the block to the block producerse at the consecutive `target_height`s. The timer delays depend on the height of the last final block, so that information is also persisted.
+Whenever a participant receives a block, the operations relevant to the consensus include updating the `head` and initiating a timer to start sending the approvals on the block to the block producers at the consecutive `target_height`s. The timer delays depend on the height of the last final block, so that information is also persisted.
 
 ```python
 def on_block(self, block):
