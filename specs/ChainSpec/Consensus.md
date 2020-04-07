@@ -86,7 +86,7 @@ def process_timer(self):
     if self.endorsement_pending and now > self.timer_started + ENDORSEMENT_DELAY:
 
         if self.head_height >= self.largest_target_height:
-            self.larget_target_height = self.head_height + 1
+            self.largest_target_height = self.head_height + 1
             self.send_approval(head_height + 1)
 
         self.endorsement_pending = False
