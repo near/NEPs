@@ -12,15 +12,15 @@ Record that contains account information for a given account ID.
 
 ### account_id
 
-_type: AccountId_
+_type: `AccountId`_
 
 The account ID of the account.
 
 ### account
 
-_type: [AccountView]_
+_type: [Account](../DataStructures/Account.md)_
 
-The account structure in JSON-friendly format. See [Account](../DataStructures/Account.md) for details.
+The account structure. Serialized to JSON. U128 types are serialized to strings.
 
 
 ## Data
@@ -31,23 +31,23 @@ Record that contains key-value data record for a contract at the given account I
 
 ### account_id
 
-_type: AccountId_
+_type: `AccountId`_
 
 The account ID of the contract that contains this data record.
 
-### key
+### data_key
 
-_type: String_
+_type: `Vec<u8>`_
 
-Key encoded in Base64 format.
+Data Key serialized in Base64 format.
 
 _NOTE: Key doesn't contain the data separator._
 
 ### value
 
-_type: String_
+_type: `Vec<u8>`_
 
-Value encoded in Base64 format.
+Value serialized in Base64 format.
 
 
 ## Contract
@@ -58,15 +58,15 @@ Record that contains a contract code for a given account ID.
 
 ### account_id
 
-_type: AccountId_
+_type: `AccountId`_
 
 The account ID of that has the contract.
 
 ### code
 
-_type: String_
+_type: `Vec<u8>`_
 
-Base64 encoded contract code.
+WASM Binary contract code serialized in Base64 format.
 
 
 ## AccessKey
@@ -77,7 +77,7 @@ Record that contains an access key for a given account ID.
 
 ### account_id
 
-_type: AccountId_
+_type: `AccountId`_
 
 The account ID of the access key owner.
 
@@ -89,17 +89,17 @@ The public key for the access key in JSON-friendly string format. E.g. `ed25519:
 
 ### access_key
 
-_type: [AccessKeyView]_
+_type: [AccessKey](../DataStructures/AccessKey.md)_
 
-The access key in JSON-friendly string format. See [AccessKey](../DataStructures/AccessKey.md) for details.
+The access key serialized in JSON format.
 
 
 ## PostponedReceipt
 
-_type: Box<[ReceiptView]>_
+_type: `Box<`[Receipt](../RuntimeSpec/Receipts.md)`>`_
 
 Record that contains a receipt that was postponed on a shard (e.g. it's waiting for incoming data).
-The receipt is in JSON-friendly format. The receipt can only be an `ActionReceipt`. See [Receipts](../RuntimeSpec/Receipts.md) for details.
+The receipt is in JSON-friendly format. The receipt can only be an `ActionReceipt`.
 
 NOTE: Box is used to decrease fixed size of the entire enum.
 
@@ -113,7 +113,7 @@ The data is received using `DataReceipt` before. See [Receipts](../RuntimeSpec/R
 
 ### account_id
 
-_type: AccountId_
+_type: `AccountId`_
 
 The account ID of the receiver of the data.
 
@@ -125,14 +125,14 @@ Data ID of the data in base58 format.
 
 ### data
 
-_type: Option\<Vec\<u8\>\>_
+_type: `Option<Vec<u8>>`_
 
 Optional data encoded as base64 format or null in JSON.
 
 
 ## DelayedReceipt
 
-_type: Box<[ReceiptView]>_
+_type: `Box<`[Receipt](../RuntimeSpec/Receipts.md)`>`_
 
 Record that contains a receipt that was delayed on a shard. It means the shard was overwhelmed with receipts and it processes receipts from backlog.
 The receipt is in JSON-friendly format.  See [Delayed Receipts](../RuntimeSpec/Components/RuntimeCrate.md#delayed-receipts) for details.

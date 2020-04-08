@@ -2804,65 +2804,65 @@ a contract.</p>
 <p><em>type: Unnamed struct</em></p>
 <p>Record that contains account information for a given account ID.</p>
 <h3><a class="header" href="#account_id" id="account_id">account_id</a></h3>
-<p><em>type: AccountId</em></p>
+<p><em>type: <code>AccountId</code></em></p>
 <p>The account ID of the account.</p>
 <h3><a class="header" href="#account-2" id="account-2">account</a></h3>
-<p><em>type: [AccountView]</em></p>
-<p>The account structure in JSON-friendly format. See <a href="GenesisConfig/../DataStructures/Account.html">Account</a> for details.</p>
+<p><em>type: <a href="GenesisConfig/../DataStructures/Account.html">Account</a></em></p>
+<p>The account structure. Serialized to JSON. U128 types are serialized to strings.</p>
 <h2><a class="header" href="#data-1" id="data-1">Data</a></h2>
 <p><em>type: Unnamed struct</em></p>
 <p>Record that contains key-value data record for a contract at the given account ID.</p>
 <h3><a class="header" href="#account_id-1" id="account_id-1">account_id</a></h3>
-<p><em>type: AccountId</em></p>
+<p><em>type: <code>AccountId</code></em></p>
 <p>The account ID of the contract that contains this data record.</p>
-<h3><a class="header" href="#key" id="key">key</a></h3>
-<p><em>type: String</em></p>
-<p>Key encoded in Base64 format.</p>
+<h3><a class="header" href="#data_key" id="data_key">data_key</a></h3>
+<p><em>type: <code>Vec&lt;u8&gt;</code></em></p>
+<p>Data Key serialized in Base64 format.</p>
 <p><em>NOTE: Key doesn't contain the data separator.</em></p>
 <h3><a class="header" href="#value" id="value">value</a></h3>
-<p><em>type: String</em></p>
-<p>Value encoded in Base64 format.</p>
+<p><em>type: <code>Vec&lt;u8&gt;</code></em></p>
+<p>Value serialized in Base64 format.</p>
 <h2><a class="header" href="#contract" id="contract">Contract</a></h2>
 <p><em>type: Unnamed struct</em></p>
 <p>Record that contains a contract code for a given account ID.</p>
 <h3><a class="header" href="#account_id-2" id="account_id-2">account_id</a></h3>
-<p><em>type: AccountId</em></p>
+<p><em>type: <code>AccountId</code></em></p>
 <p>The account ID of that has the contract.</p>
 <h3><a class="header" href="#code" id="code">code</a></h3>
-<p><em>type: String</em></p>
-<p>Base64 encoded contract code.</p>
+<p><em>type: <code>Vec&lt;u8&gt;</code></em></p>
+<p>WASM Binary contract code serialized in Base64 format.</p>
 <h2><a class="header" href="#accesskey" id="accesskey">AccessKey</a></h2>
 <p><em>type: Unnamed struct</em></p>
 <p>Record that contains an access key for a given account ID.</p>
 <h3><a class="header" href="#account_id-3" id="account_id-3">account_id</a></h3>
-<p><em>type: AccountId</em></p>
+<p><em>type: <code>AccountId</code></em></p>
 <p>The account ID of the access key owner.</p>
 <h3><a class="header" href="#public_key" id="public_key">public_key</a></h3>
 <p><em>type: [PublicKey]</em></p>
 <p>The public key for the access key in JSON-friendly string format. E.g. <code>ed25519:5JFfXMziKaotyFM1t4hfzuwh8GZMYCiKHfqw1gTEWMYT</code></p>
 <h3><a class="header" href="#access_key" id="access_key">access_key</a></h3>
-<p><em>type: [AccessKeyView]</em></p>
-<p>The access key in JSON-friendly string format. See <a href="GenesisConfig/../DataStructures/AccessKey.html">AccessKey</a> for details.</p>
+<p><em>type: <a href="GenesisConfig/../DataStructures/AccessKey.html">AccessKey</a></em></p>
+<p>The access key serialized in JSON format.</p>
 <h2><a class="header" href="#postponedreceipt" id="postponedreceipt">PostponedReceipt</a></h2>
-<p><em>type: Box&lt;[ReceiptView]&gt;</em></p>
+<p><em>type: <code>Box&lt;</code><a href="GenesisConfig/../RuntimeSpec/Receipts.html">Receipt</a><code>&gt;</code></em></p>
 <p>Record that contains a receipt that was postponed on a shard (e.g. it's waiting for incoming data).
-The receipt is in JSON-friendly format. The receipt can only be an <code>ActionReceipt</code>. See <a href="GenesisConfig/../RuntimeSpec/Receipts.html">Receipts</a> for details.</p>
+The receipt is in JSON-friendly format. The receipt can only be an <code>ActionReceipt</code>.</p>
 <p>NOTE: Box is used to decrease fixed size of the entire enum.</p>
 <h2><a class="header" href="#receiveddata" id="receiveddata">ReceivedData</a></h2>
 <p><em>type: Unnamed struct</em></p>
 <p>Record that contains information about received data for some action receipt, that is not yet received or processed for a given account ID.
 The data is received using <code>DataReceipt</code> before. See <a href="GenesisConfig/../RuntimeSpec/Receipts.html">Receipts</a> for details.</p>
 <h3><a class="header" href="#account_id-4" id="account_id-4">account_id</a></h3>
-<p><em>type: AccountId</em></p>
+<p><em>type: <code>AccountId</code></em></p>
 <p>The account ID of the receiver of the data.</p>
 <h3><a class="header" href="#data_id-1" id="data_id-1">data_id</a></h3>
 <p><em>type: [CryptoHash]</em></p>
 <p>Data ID of the data in base58 format.</p>
 <h3><a class="header" href="#data-2" id="data-2">data</a></h3>
-<p><em>type: Option&lt;Vec&lt;u8&gt;&gt;</em></p>
+<p><em>type: <code>Option&lt;Vec&lt;u8&gt;&gt;</code></em></p>
 <p>Optional data encoded as base64 format or null in JSON.</p>
 <h2><a class="header" href="#delayedreceipt" id="delayedreceipt">DelayedReceipt</a></h2>
-<p><em>type: Box&lt;[ReceiptView]&gt;</em></p>
+<p><em>type: <code>Box&lt;</code><a href="GenesisConfig/../RuntimeSpec/Receipts.html">Receipt</a><code>&gt;</code></em></p>
 <p>Record that contains a receipt that was delayed on a shard. It means the shard was overwhelmed with receipts and it processes receipts from backlog.
 The receipt is in JSON-friendly format.  See <a href="GenesisConfig/../RuntimeSpec/Components/RuntimeCrate.html#delayed-receipts">Delayed Receipts</a> for details.</p>
 <p>NOTE: Box is used to decrease fixed size of the entire enum.</p>
