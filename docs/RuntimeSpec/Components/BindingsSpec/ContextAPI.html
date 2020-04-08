@@ -276,7 +276,23 @@ be used to read all</li>
 </span>block_index() -&gt; u64
 <span class="boring">}
 </span></code></pre></pre>
-<p>Returns the current block index.</p>
+<p>Returns the current block height from genesis.</p>
+<hr />
+<pre><pre class="playpen"><code class="language-rust">
+<span class="boring">#![allow(unused_variables)]
+</span><span class="boring">fn main() {
+</span>block_timestamp() -&gt; u64
+<span class="boring">}
+</span></code></pre></pre>
+<p>Returns the current block timestamp (number of non-leap-nanoseconds since January 1, 1970 0:00:00 UTC).</p>
+<hr />
+<pre><pre class="playpen"><code class="language-rust">
+<span class="boring">#![allow(unused_variables)]
+</span><span class="boring">fn main() {
+</span>epoch_height() -&gt; u64
+<span class="boring">}
+</span></code></pre></pre>
+<p>Returns the current epoch height from genesis.</p>
 <hr />
 <pre><pre class="playpen"><code class="language-rust">
 <span class="boring">#![allow(unused_variables)]
