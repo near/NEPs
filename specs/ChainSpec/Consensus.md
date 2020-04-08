@@ -22,8 +22,6 @@ Consecutive blocks do not necessarily have sequential heights. A block at height
 
 If a block `B` at some height `h` builds on top of a block `B_prev` that has height `h-1`, and `B_prev` in turn builds on top of a block `B_prev_prev` that has height `h-2`, and all three blocks are in the same epoch, the block `B_prev_prev` is final, and cannot be reverted unless block producers with more than `2/3` cumulative stake deviate from the protocol. 
 
-TODO: talk about epoch boundaries here
-
 Block producers in the particular epoch exchange many kinds of messages. The two kinds that are relevant to the consensus are **Blocks** and **Approvals**. The approval contains five fields:
 
 ```rust
@@ -120,21 +118,34 @@ def get_approvals(self, target_height):
 
 A block producer assigned for a particular height produces a block at that height whenever they have `get_approvals` return approvals from block producers whose stake collectively exceeds 2/3 of the total stake.
 
-## Safety
+## Epoch Switches
+There's a parameter `epoch_length` in genesis config that defines the expected length of an epoch. Say a particular epoch `e_cur` started at height `h`, and say the next epoch will be `e_next`. Say `BP(e)` is a set of block producers in epoch `e`. Say `LFH(B)` is the height of most recent final block in the ancestry of `B`. The following are the rules of what blocks contain approvals from what block producers, and belong to what epoch.
 
-We call approvals for which `prev_height + 1 = target_height` endorsements, and all other approvals skips.
+- Any block `B` with height between `h` and `h + epoch_length - 3` (both inclusive) is in the epoch `e_cur` and must have approvals from more than 2/3 of `BP(e_cur)` (stake-weighted).
+- Any block `B` with height `h + epoch_length - 2` or higher for which `LFH(prev(B)) < h + epoch_length - 3` is in the epoch `e_cur` and must have the approvals from both more than 2/3 of `BP(e_cur)` and more than 2/3 of `BP(e_next)` (both stake-weighted).
+- The first block `B` with height `h + epoch_length - 2` or higher and `LFH(prev(B)) >= h + epoch_length - 3` is in the epoch `e_next` and only needs the approvals from more than 2/3 of `BP(e_next)` (stake-weighted).
+
+## Safety
 
 Note that with the implementation above a honest block producer can never produce two endorsements with the same `prev_height` (call this condition *conflicting endorsements*), neither can they produce a skip message `s` and an endorsement `e` such that `s.prev_height < e.prev_height and s.target_height >= e.target_height` (call this condition *conflicting skip and endorsement*).
 
 Say a block `B0` is final, i.e. there are blocks `B1` and `B2` that build on top of it and have sequential heights.
 
-Let's show that there's no other block `Bx` that has height higher than `B0` and doesn't have `B0` in its ancestry. Say it is not the case and such block `Bx` exists. Say `Bx` has the smallest height among such blocks. Thus, its previous block `Bp` has height less or equal to the height of `B0`. Consider three cases:
+Let's show that there's no other block `Bx` that has height higher than `B0` and doesn't have `B0` in its ancestry. Say it is not the case and such block `Bx` exists. Say `Bx` has the smallest height among such blocks. Thus, its previous block `Bp` has height less or equal to the height of `B0`.
+
+**`Bx` in the same epoch as `B0`**
+
+Consider the following three cases:
 
 1. `Bp.height < B0.height`. Then each approval in `Bx` is a skip. For each block producer that included a skip in `Bx` and an endorsement in `B1` these two messages conflict, thus at least 1/3 of stake-weighted block producers deviated from the protocol.
 2. `Bp.height == B0.height and Bx.height == B1.height`. Then each approval in `B1` is an endorsement. For each block producer that included an endorsement in `Bx` and an endorsement in `B1` these two messages conflict, thus at least 1/3 of stake-weighted block producers deviated from the protocol.
 3. `Bp.height == B0.height and Bx.height > B1.height`. Then each approval in `Bx` is a skip. For each block producer that included a skip in `Bx` and an endorsement in `B2` these two messages conflict, thus at least 1/3 of stake-weighted block producers deviated from the protocol.
 
 Thus, for any block with height higher than `B0.height` that doesn't have `B0` in its ancestry to be produced at least 1/3 of stake-weighted block producers must deviate from the protocol in a way that is cryptographically provable.
+
+**`Bx` and `B0` are in two different epochs**
+
+TODO
 
 ## Liveness
 
