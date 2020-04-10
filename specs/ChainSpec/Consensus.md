@@ -16,7 +16,7 @@ struct BlockHeader {
 
 Each block belongs to a particular epoch, and has a particular height. The largest height block accepted by a particular node is its head.
 
-Each epoch has a set of block producers who are assigned to produce blocks in the epoch, and has an assigned block producer for each height in the epoch. The block producers and the assignments in a particular epoch are known from the first block of the *preceding* epoch.
+Each epoch has a set of block producers who are assigned to produce blocks in the epoch, and has an assigned block producer for each height in the epoch (to whom we refer as *block proposer at `h`*). The block producers and the assignments in a particular epoch are known from the first block of the *preceding* epoch.
 
 Consecutive blocks do not necessarily have sequential heights. A block at height `h` can have as its previous block a block with height `h-1` or lower.
 
@@ -40,7 +40,31 @@ struct Approval {
 
 Where the parameter of the `Endorsement` is the hash of the approved block, the parameter of the `Skip` is the height of the approved block, `target_height` is the specific height at which the approval can be used (an approval with a particular `target_height` can be only included in the `approvals` of a block that has `height = target_height`), `account_id` is the account of the block producer who created the approval, and `signature` is their signature on the tuple `(inner, target_height)`.
 
-Any valid block must contain approvals from block producers whose cumulative stake exceeds 2/3 of the total stake in the epoch. For a block `B` and its previous block `B'` each approval in `B` must be an `Endorsement` with the hash of `B'` if and only if `B.height == B'.height + 1`, otherwise it must be a `Skip` with the height of `B'`. See [this section](#approval-condition) below for details on why the condition must be exactly such.
+## Approvals Requirements
+
+A block `B` at height `h` that has some other block `B'` as its previous block must logically contain approvals of a form described in the next paragraph from block producers whose cumulative stake exceeds 2/3 of the total stake in the current epoch, and in specific conditions described in section [epoch switches](#epoch-switches) also the approvals of the same form from block producers whose cumulative stake exceeds 2/3 of the total stake in the next epoch.
+
+If a block to be produced will have height `h` and previous block `B'`, the approvals locically included in it must be an `Endorsement` with the hash of `B'` if and only if `h == B'.height + 1`, otherwise it must be a `Skip` with the height of `B'`. See [this section](#approval-condition) below for details on why the endorsements must contain the hash of the previous block, and skips must contain the height.
+
+Note that since each approval that is logically stored in the block is the same for each block producer (except for the `account_id` of the sender and the `signature`), it is redundant to store the full approvals. Instead physically we only store the signatures of the approvals. The specific way they are stored is the following: we first fetch the ordered set of block producers from the current epoch. If the block is on the epoch boundary and also needs to include approvals from the next epoch (see [epoch switches](#epoch-switches)), we add new accounts from the new epoch
+
+```python
+def get_accounts_for_block_ordered(h, prev_block):
+    cur_epoch = get_next_block_epoch(prev_block)
+    next_epoch = get_next_block_next_epoch(prev_block)
+
+    account_ids = get_epoch_block_producers_ordered(cur_epoch)
+    if next_block_needs_approvals_from_next_epoch(prev_block):
+        for account_id in get_epoch_block_producers_ordered(next_epoch):
+            if account_id not in account_ids:
+                account_ids.append(account_id)
+
+    return account_ids
+```
+
+The block then contains a vector of optional signatures of the same or smaller size than the resulting set of `account_ids`, with each element being `None` if the approval for such account is absent, or the signature on the approval message if it is present. It's easy to show that the actual approvals that were signed by the block producers can easily be reconstructed from the information available in the block, and thus the signatures can be verified. If the vector of signatures is shorter than the length of `account_ids`, the remaining signatures are assumed to be `None`.
+
+## Messages
 
 On receival of the approval message the participant just stores it in the collection of approval messages.
 
@@ -97,9 +121,18 @@ def process_timer(self):
 
         self.timer_started = now
         self.timer_height += 1
+
+def send_approval(self, target_height):
+    if target_height == self.head_height + 1:
+        inner = new Endorsement(self.head_hash)
+    else:
+        inner = new Skip(self.head_height)
+    
+    approval = new Approval(inner, target_height)
+    send(approval, to_whom = get_block_proposer(self.head_hash, target_height))
 ```
 
-Where `send_approval` creates an approval with `prev_hash` and `prev_height` equal to `self.head_hash` and `self.head_height` correspondingly, `target_height` to the passed argument, and sends to the block producer at `target_height`.
+Where `get_block_proposer` returns the next block proposer given the previous block and the height of the next block.
 
 It is also necessary that `ENDORSEMENT_DELAY < MIN_DELAY`. Moreover, while not necessary for correctness, we require that `ENDORSEMENT_DELAY * 2 <= MIN_DELAY`.
 
@@ -119,11 +152,35 @@ def get_approvals(self, target_height):
 A block producer assigned for a particular height produces a block at that height whenever they have `get_approvals` return approvals from block producers whose stake collectively exceeds 2/3 of the total stake.
 
 ## Epoch Switches
-There's a parameter `epoch_length` in genesis config that defines the expected length of an epoch. Say a particular epoch `e_cur` started at height `h`, and say the next epoch will be `e_next`. Say `BP(e)` is a set of block producers in epoch `e`. Say `LFH(B)` is the height of most recent final block in the ancestry of `B`. The following are the rules of what blocks contain approvals from what block producers, and belong to what epoch.
+There's a parameter `epoch_length` in genesis config that defines the expected length of an epoch. Say a particular epoch `e_cur` started at height `h`, and say the next epoch will be `e_next`. Say `BP(e)` is a set of block producers in epoch `e`. Say `last_final_height(B)` is the height of most recent block that is known to be final by observing the chain that ends in `B`.
+
+```python
+def last_final_height(B):
+    if B == genesis or prev(B) == genesis:
+        return height(genesis)
+    if height(B) == height(prev(B)) + 1 and height(prev(B)) == height(prev(prev(B))) + 1:
+        return height(B) - 2
+    else
+        return last_final_height(prev(B))
+```
+
+The following are the rules of what blocks contain approvals from what block producers, and belong to what epoch.
 
 - Any block `B` with height between `h` and `h + epoch_length - 3` (both inclusive) is in the epoch `e_cur` and must have approvals from more than 2/3 of `BP(e_cur)` (stake-weighted).
-- Any block `B` with height `h + epoch_length - 2` or higher for which `LFH(prev(B)) < h + epoch_length - 3` is in the epoch `e_cur` and must have the approvals from both more than 2/3 of `BP(e_cur)` and more than 2/3 of `BP(e_next)` (both stake-weighted).
-- The first block `B` with height `h + epoch_length - 2` or higher and `LFH(prev(B)) >= h + epoch_length - 3` is in the epoch `e_next` and only needs the approvals from more than 2/3 of `BP(e_next)` (stake-weighted).
+- Any block `B` with height `h + epoch_length - 2` or higher for which `last_final_height(prev(B)) < h + epoch_length - 3` is in the epoch `e_cur` and must logically include approvals from both more than 2/3 of `BP(e_cur)` and more than 2/3 of `BP(e_next)` (both stake-weighted).
+- The first block `B` with `last_final_height(prev(B)) >= h + epoch_length - 3` is in the epoch `e_next` and must logically include approvals from more than 2/3 of `BP(e_next)` (stake-weighted).
+
+(see the definition of *logically including* approvals in [approval requirements](#approvals-requirements))
+
+```python
+def next_block_is_in_next_epoch(prev_block):
+    first_height = get_epoch_start_height(get_epoch(prev_block))
+    return height(last_final_height(prev_block)) >= first_height + epoch_length - 3
+
+def next_block_needs_approvals_from_next_epoch(prev_block):
+    first_height = get_epoch_start_height(get_epoch(prev_block))
+    return height(prev_block) >= first_height + epoch_length - 2 and not next_block_is_in_next_epoch(prev_block)
+```
 
 ## Safety
 
@@ -154,7 +211,7 @@ See the proof of livness in [near.ai/doomslug](near.ai/doomslug). The consensus 
 ## Approval condition
 The approval condition above
 
-> Any valid block must contain approvals from block producers whose cumulative stake exceeds 2/3 of the total stake in the epoch. For a block `B` and its previous block `B'` each approval in `B` must be an `Endorsement` with the hash of `B'` if and only if `B.height == B'.height + 1`, otherwise it must be a `Skip` with the height of `B'`
+> Any valid block must logically include approvals from block producers whose cumulative stake exceeds 2/3 of the total stake in the epoch. For a block `B` and its previous block `B'` each approval in `B` must be an `Endorsement` with the hash of `B'` if and only if `B.height == B'.height + 1`, otherwise it must be a `Skip` with the height of `B'`
 
 Is more complex that desired, and it is tempting to unify the two conditions. Unfortunately, they cannot be unified.
 
