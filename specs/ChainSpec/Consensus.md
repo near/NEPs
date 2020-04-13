@@ -20,7 +20,7 @@ Each epoch has a set of block producers who are assigned to produce blocks in th
 
 Consecutive blocks do not necessarily have sequential heights. A block at height `h` can have as its previous block a block with height `h-1` or lower.
 
-If a block `B` at some height `h` builds on top of a block `B_prev` that has height `h-1`, and `B_prev` in turn builds on top of a block `B_prev_prev` that has height `h-2`, and all three blocks are in the same epoch, the block `B_prev_prev` is final, and cannot be reverted unless block producers with more than `2/3` cumulative stake deviate from the protocol. 
+If a block `B` at some height `h` builds on top of a block `B_prev` that has height `h-1`, and `B_prev` in turn builds on top of a block `B_prev_prev` that has height `h-2`, the block `B_prev_prev` is final, and cannot be reverted unless block producers with more than `1/3` cumulative stake deviate from the protocol. 
 
 Block producers in the particular epoch exchange many kinds of messages. The two kinds that are relevant to the consensus are **Blocks** and **Approvals**. The approval contains five fields:
 
@@ -44,7 +44,7 @@ Where the parameter of the `Endorsement` is the hash of the approved block, the 
 
 A block `B` at height `h` that has some other block `B'` as its previous block must logically contain approvals of a form described in the next paragraph from block producers whose cumulative stake exceeds 2/3 of the total stake in the current epoch, and in specific conditions described in section [epoch switches](#epoch-switches) also the approvals of the same form from block producers whose cumulative stake exceeds 2/3 of the total stake in the next epoch.
 
-If a block to be produced will have height `h` and previous block `B'`, the approvals locically included in it must be an `Endorsement` with the hash of `B'` if and only if `h == B'.height + 1`, otherwise it must be a `Skip` with the height of `B'`. See [this section](#approval-condition) below for details on why the endorsements must contain the hash of the previous block, and skips must contain the height.
+If a block to be produced will have height `h` and previous block `B'`, the approvals logically included in it must be an `Endorsement` with the hash of `B'` if and only if `h == B'.height + 1`, otherwise it must be a `Skip` with the height of `B'`. See [this section](#approval-condition) below for details on why the endorsements must contain the hash of the previous block, and skips must contain the height.
 
 Note that since each approval that is logically stored in the block is the same for each block producer (except for the `account_id` of the sender and the `signature`), it is redundant to store the full approvals. Instead physically we only store the signatures of the approvals. The specific way they are stored is the following: we first fetch the ordered set of block producers from the current epoch. If the block is on the epoch boundary and also needs to include approvals from the next epoch (see [epoch switches](#epoch-switches)), we add new accounts from the new epoch
 
@@ -124,11 +124,11 @@ def process_timer(self):
 
 def send_approval(self, target_height):
     if target_height == self.head_height + 1:
-        inner = new Endorsement(self.head_hash)
+        inner = Endorsement(self.head_hash)
     else:
-        inner = new Skip(self.head_height)
+        inner = Skip(self.head_height)
     
-    approval = new Approval(inner, target_height)
+    approval = Approval(inner, target_height)
     send(approval, to_whom = get_block_proposer(self.head_hash, target_height))
 ```
 
@@ -144,9 +144,8 @@ def get_approvals(self, target_height):
     return [approval for approval
                      in self.approvals
                      if approval.target_height == target_height and
-                        approval.prev_height == self.head_height and
-                        (approval.prev_height + 1 != target_height or
-                         approval.prev_hash == self.head_hash)]
+                        (isinstance(approval.inner, Skip) and approval.prev_height == self.head_height or
+                         isinstance(approval.inner, Endorsement) and approval.prev_hash == self.head_hash)
 ```
 
 A block producer assigned for a particular height produces a block at that height whenever they have `get_approvals` return approvals from block producers whose stake collectively exceeds 2/3 of the total stake.
