@@ -93,7 +93,7 @@ List of initial validators.
 
 ## records
 
-_type: [StateRecord]_
+_type: Vec\<[StateRecord](StateRecord.md)\>_
 
 Records in storage at genesis (get split into shards at genesis creation).
 
