@@ -23,12 +23,10 @@ Regex for a full account ID, without checking for length:
 ```regex
 ^(([a-z\d]+[\-_])*[a-z\d]+\.)*([a-z\d]+[\-_])*[a-z\d]+$
 ```
-
-There is extra requirements for the amount that account has for the account ID length in case it's less than 11 characters long. See [Economics] for the details.
-
 ### Top Level Accounts
 
-Top level accounts are very valuable as they provide root of trust and discoverability for companies, applications and users. To prevent take over by squatters, the top level account names that are shorter than 10 characters they are going to be auctioned off.
+Top level accounts are very valuable as they provide root of trust and discoverability for companies, applications and users.
+To prevent take over by squatters, the top level account names that are shorter than 32 characters they are going to be auctioned off.
 
 Specifically, only `registrar` account can create new top level accounts. `registrar` implements standard Account Naming interface to allow create new accounts.
 
