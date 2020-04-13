@@ -28,7 +28,7 @@ Regex for a full account ID, without checking for length:
 Top level accounts are very valuable as they provide root of trust and discoverability for companies, applications and users.
 To prevent take over by squatters, the top level account names that are shorter than 32 characters they are going to be auctioned off.
 
-Specifically, only `registrar` account can create new top level accounts. `registrar` implements standard Account Naming interface to allow create new accounts.
+Specifically, only `registrar` account can create new top level accounts that are shorter than 32 characters. `registrar` implements standard Account Naming interface to allow create new accounts.
 
 *Note: we are not going to deploy `registrar` auction at launch, instead allow to deploy it by Foundation after initial launch. The details of the auction will be added here in the next spec release post MainNet.*
 
