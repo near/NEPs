@@ -26,6 +26,7 @@ Regex for a full account ID, without checking for length:
 ### Top Level Accounts
 
 | Name | Value |
+| - | - |
 | REGISTRAR_ACCOUNT_ID | `registrar` |
 | MIN_ALLOWED_TOP_LEVEL_ACCOUNT_LENGTH | 32 |
 
