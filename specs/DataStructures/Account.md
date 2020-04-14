@@ -25,12 +25,24 @@ Regex for a full account ID, without checking for length:
 ```
 ### Top Level Accounts
 
-Top level accounts are very valuable as they provide root of trust and discoverability for companies, applications and users.
-To prevent take over by squatters, the top level account names that are shorter than 32 characters they are going to be auctioned off.
+| Name | Value |
+| REGISTRAR_ACCOUNT_ID | `registrar` |
+| MIN_ALLOWED_TOP_LEVEL_ACCOUNT_LENGTH | 32 |
 
-Specifically, only `registrar` account can create new top level accounts that are shorter than 32 characters. `registrar` implements standard Account Naming interface to allow create new accounts.
+Top level account names (TLAs) are very valuable as they provide root of trust and discoverability for companies, applications and users.
+To allow for fair access to them, the top level account names that are shorter than `MIN_ALLOWED_TOP_LEVEL_ACCOUNT_LENGTH` characters going to be auctioned off.
 
-*Note: we are not going to deploy `registrar` auction at launch, instead allow to deploy it by Foundation after initial launch. The details of the auction will be added here in the next spec release post MainNet.*
+Specifically, only `REGISTRAR_ACCOUNT_ID` account can create new top level accounts that are shorter than `MIN_ALLOWED_TOP_LEVEL_ACCOUNT_LENGTH` characters. `REGISTRAR_ACCOUNT_ID` implements standard Account Naming (link TODO) interface to allow create new accounts.
+
+```python
+def action_create_account(predecessor_id, account_id):
+    """Called on CreateAccount action in receipt."""
+    if len(account_id) < MIN_ALLOWED_TOP_LEVEL_ACCOUNT_LENGTH and predecessor_id != REGISTRAR_ACCOUNT_ID:
+        raise CreateAccountOnlyByRegistrar(account_id, REGISTRAR_ACCOUNT_ID, predecessor_id)
+    # Otherwise, create account with given `account_id`.
+```
+
+*Note: we are not going to deploy `registrar` auction at launch, instead allow to deploy it by Foundation after initial launch. The link to details of the auction will be added here in the next spec release post MainNet.*
 
 ### Examples
 
