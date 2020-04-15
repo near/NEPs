@@ -20,7 +20,19 @@ These enhancements are intended to simplify and enhance developer and user produ
 
 ## Settings, config, and key management
 
-Project-level **settings**, connection **configuration**, and **key management** are the three types of stored data necessary for developers to reliably build and deploy projects. 
+Project-level **settings**, connection **configuration**, and **key management** are the three types of stored data necessary for developers to reliably build and deploy projects.
+ 
+```
+─ awesome-near-project  ⟵ NEAR dApp
+ ├── .near-config       ⟵ Stores project-level settings and connection configuration
+ │  ├── connections     ⟵ Stores values needed to connect and deploy a contract, except keys
+ │  │  ├── default.js   ⟵ Default configuration is for development
+ │  │  └── localnet.js  ⟵ Custom connection added by user for localnet
+ │  └── settings.js     ⟵ Stores near-shell settings, how shell behaves when run in this project
+ └── .near-credentials  ⟵ Previously "neardev" this directory contains private key inforamtion
+    └── default         
+       └── alice.json   ⟵ NEAR account "alice" has private key information here
+```
 
 ### Definitions:
 
@@ -32,26 +44,51 @@ These are key-values reflecting how `near-shell` behaves when called within a NE
 
 Besides answers to user prompts, project-level settings also store information about the last version of `near-shell` used in this project. For more information, please see [Upgradability](#upgradability).
 
+As shown in the directory structure above, this file is located in the project directory at:
+
+`.near-config/settings.js`
+
 In summary, "settings" are key-value pairs that are set by `near-shell` and relate to the behavior of how it operates in a given project directory. They do not relate to the development or deployment of smart contracts.
     
 #### Configuration
 Configuration are key-value pairs that relate to development and deployment of smart contracts and refer to *connection* information.
+
+**Example**: As a user, I want to deploy a contract to my localnet instead of testnet during development. I will provide flags and/or modify configuration so that `near-shell` can determine where to connect, for what contract, and on behalf of which NEAR account.
+
+Contains:
 
 * `networkId`       : Similar to an environment to work on (ex: 'staging')
 * `nodeUrl`         : URL to the NEAR node
 * `contractName`    : NEAR account name for the smart contract
 * `walletUrl`       : URL to NEAR Wallet
 * `helperUrl`       : URL to the contract helper that provides tokens upon account creation
-* `masterAccount`   : When creating "child" accounts, `masterAccount` is the "parent" 
-* `configFile`      : Specifies the location of a config file containing connection information. Default location is `src/config.js`
-    
-**Example**: As a user, I want to deploy a contract to my localnet instead of testnet during development. I will provide flags and/or modify configuration so that `near-shell` can determine where to connect, for what contract, and on behalf of which NEAR account.
+* `masterAccount`   : When creating "child" accounts, `masterAccount` is the "parent" and source of initial Ⓝ balance
+* `configFile`      : Explicitly specifies the location of the config file containing connection information. Default location is `.near-config/connections/default.js`    
+
+As shown in the directory structure earlier, this file is located in the project directory at:
+
+`.near-config/connections/default.js`
+
+**Note**: at the time of this writing, configuration is read from the project level at:
+
+`src/config.js`
+
+This is a file containing several environment configurations with a default, which the user can choose by setting the environment variable `NODE_ENV`. Configurations will no longer be set in that manner, but stored in files.
+
+For example, the command:
+
+`near contract view near-game topPlayers --env localnet`
+
+will call the function `topPlayers` on the contract `near-game` that is deployed to localnet. The connection information will be read from the file: `.near-config/connections/localnet.js`.
+
+Users may add, remove, or modify connection environments using [commands detailed later](#commands-config) in this spec.
 
 #### Key management
+[key-management]: #key-management
 The storage of an account id and a corresponding private key.
-* `keyPath`         : An argument used by `near-shell` specifying the path to the keyfile.
+* `keyPath`     : An argument used by `near-shell` specifying the path to the key file.
     
-The keyfile file contains the keys:
+The key file file contains the keys:
 * `type`        : Options include 
     - `unencrypted`     : An unencrypted file containing an account's private key
     - `native_osx`      : Private key stored with OS X key management 
@@ -63,14 +100,11 @@ The keyfile file contains the keys:
 `near-shell` will look for keys in a specific order. This list is in the prioritized order and can be understood to mean, "if the key is not found here, then try the next location/store."
 
 1. Environment variables:
-    - `NEAR_ACCOUNT_ID`
-    - `NEAR_ACCOUNT_TYPE`
-    - `NEAR_PRIVATE_KEY`
-    
+* `NEAR_ACCOUNT_ID`
+* `NEAR_ACCOUNT_TYPE`
+* `NEAR_PRIVATE_KEY`
 
 2. Project directory (`/Users/friend/projects/my-awesome-app/.near-credentials`)
-
-    **Note**: Formerly, the `neardev` folder contained the key files for a project. It is now `.near-credentials`.
 
 3. Home directory (`/Users/friend/.near-credentials`)
 
@@ -84,7 +118,9 @@ This prioritized order allows project-level configuration to take priority over 
 
 As an example, a user having credentials saved in their home directory will be able to use the `--accountId` flag to use keys from any project regardless of location. Said another way, the user does not need to run `near login` inside each project in order to access the keys.
 
-**Note**: as the project grows, developers in the NEAR Collective may choose to add integrations with password management applications or hosted key solutions.
+Formerly, the `neardev` folder contained the key files for a project. It is now `.near-credentials`. This folder is not nested within `.near-config` deliberately. Having this folder with "credentials" at the top-level of a project makes it apparent that it contains sensitive information and should not be revisioned or archived.
+
+**Note**: as the project grows, developers in the NEAR Collective may choose to add integrations with password management applications or hosted key solutions. Hence, expect the number of `type` options to increase.
 
 ## Translation
 
@@ -210,19 +246,23 @@ This category is used to create, select, and configure accounts on NEAR networks
 * `near account select` : Select an account from the list of locally configured accounts as the active account.
 * `near account login`  : Log in the current active or specified account.
 * `near account logout` : Log out the current active or specified account. Essentially revoking a full access key.
+* `near account secure` : Finds the key file for an account name, converts it to use OS-level key management via a command line wizard.
 * `near account --help`   : Display help on account subcommands.
 
-
 ### `near config <command>`
-* `near config`         : List the location of active configuration file if it's loaded, or default config settings
-* `near config set`     : Set a key in the active configuration, or if using default, create a config file in the home directory with defaults and the specified key and value
-* `near config clear`   : Remove the [project-level settings](#project-level-settings) file
+[commands-config]: #commands-config
 
-### `near contract <command>` 
-* `near contract build`
-* `near contract deploy`
-* `near contract call`
-* `near contract view`
+* `near config`         : List the location of active configuration file if it's loaded, or default config settings
+* `near config add`     : Set a key in the active configuration, or if using default, create a config file in the home directory with defaults and the specified key and value
+* `near config remove`   : Removes a configuration file. (Example: removes `.near-config/connections/localnet.js`)
+* `near config wizard`   : Runs through a command-line wizard for an environment, allowing user to modify the values.
+
+### `near contract <command>`
+
+* `near contract deploy`    : Deploys the contract in the project directory (Default: `out/main.wasm`)
+* `near contract call`      : Calls a function that may mutate state
+* `near contract view`      : Calls a function that reads state, does not mutate
+* `near contract estimate`  : Estimates gas consumption of a function call on a contract
 * `near contract --help`
 
 ## Command input can be inline and file-based
@@ -238,10 +278,11 @@ or defined in a file:
 `near call my_dapp my_function -f ./params.json`
 
 This `-f` or `--fromFile` argument is added to two commands:
-1. `contract call`
-2. `contract view`
 
-Other commands may be added in the future.
+1. `near contract call`
+2. `near contract view`
+
+Reading from a file may be added to other commands in the future.
 
 ### User Stories
 
@@ -387,3 +428,12 @@ Note that having something written down in the future-possibilities section
 is not a reason to accept the current or a future NEP. Such notes should be
 in the section on motivation or rationale in this or subsequent NEPs.
 The section merely provides additional information.
+
+# From here to there
+
+This section highlights actionable items needed to get from the current state of the project to this spec. It is not exhaustive, but rather can be used to jog memories and start the conversation on atomic tasks.
+
+* Remove `near build`   : With multiple languages in the future and multi-contract dApps, we cannot reliably run a single command to build. It needs to be communicated that the user will have to run a command or build script (not using `near-shell`) for this.
+* Keys stored in `neardev` need to have an additional key added: `"type": "unencrypted"`
+* The `neardev` folder needs to be renamed to `.near-credentials`
+* Add `--env` flag so that config will load proper file.
