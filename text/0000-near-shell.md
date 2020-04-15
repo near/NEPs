@@ -6,35 +6,17 @@
 # Summary
 [summary]: #summary
 
-NEAR Shell is one of the primary tools NEAR developers must use to develop and interact with NEAR networks and smart contracts.  Today, NEAR Shell contains the base commands for account creation and deletion, login, viewing account state and keys, sending tokens, creating staking transactions, and building, deploying, and calling smart contracts. There are more opportunities to integrate core NEAR features to expose them directly to users.  This proposal is to enhance NEAR Shell to represent all major functionality of NEAR.  For example, validator node management, network selection, native OS key management and integration, smart contract development (including testing, and interaction) could be added.  
+`near-shell` is one of the primary tools NEAR developers must use to develop and interact with NEAR networks and smart contracts.  Today, `near-shell` contains the base commands for account creation and deletion, login, viewing account state and keys, sending tokens, creating staking transactions, and building, deploying, and calling smart contracts. There are more opportunities to integrate core NEAR features to expose them directly to users.  This proposal is to enhance `near-shell` to represent all major functionality of NEAR.  For example, validator node management, network selection, native OS key management and integration, smart contract development (including testing, and interaction) could be added.  
 
-NEAR Shell is an excellent tool to attract and engage new NEAR developers, both core and contract level, and if it contains all the required features to select and configure and deploy NEAR networks, nodes, crypto assets (i.e., keys), accounts, and wallets, it can be the ideal single-entry point for those potential new hackers.  
+`near-shell` is an excellent tool to attract and engage new NEAR developers, both core and contract level, and if it contains all the required features to select and configure and deploy NEAR networks, nodes, crypto assets (i.e., keys), accounts, and wallets, it can be the ideal single-entry point for those potential new hackers.  
 
 # Motivation
 [motivation]: #motivation
 
-These enhancements are intended to simplify and enhance developer and user productivity by providing a single command-line tool which exercises all major features of NEAR.  As each major piece of NEAR functionality is added to Near Shell, we should see utilization of each of those features increase.  Additionally, community mindshare and understanding of NEAR should increase as NEAR Shell will contain detailed help documentation for each major feature with clear examples of use, just like Linux man pages and/or other major CLI tools which have integrated help for each command.
-
+These enhancements are intended to simplify and enhance developer and user productivity by providing a single command-line tool which exercises all major features of NEAR. As each major piece of NEAR functionality is added to `near-shell`, we should see utilization of each of those features increase.  Additionally, community mindshare and understanding of NEAR should increase as `near-shell` will contain detailed help documentation for each major feature with clear examples of use, just like Linux man pages and/or other major CLI tools which have integrated help for each command.
 
 # Guide-level explanation
 [guide-level-explanation]: #guide-level-explanation
-
-## Configuration and key management
-
-Configuration and key management are two types of stored settings necessary for developers to build and deploy projects. The options for key storage and the way configuration is loaded will benefit with customization.
-
-Definitions:
-- Configuration - a key-value storage (typically JSON) containing information.
-    - `networkId` - similar to an environment to work on (ex: 'staging')
-    - `nodeUrl` - URL to RPC
-    - `contractName` - NEAR account name for smart contract
-    - `walletUrl` - URL to NEAR Wallet
-    - `helperUrl` - URL to project helping with token dissemination
-    - `masterAccount` - NEAR account used for continuous integration
-    - `keyPath` - for validators, the path to a file containing an account's private key
-- Keys - the storage of an account id and a corresponding private key.
-    - `account_id`
-    - `private_key`
 
 ### Projects (currently)
 
@@ -42,7 +24,7 @@ Currently, NEAR projects (for example, one generated using `create-near-app`) ho
 
 `src/config.js`
 
-**Note**: the active configuration can have keys overridden by flags.
+**Note**: the active configuration can have values overridden by flags.
 
 After the user completes the instructions from running `near login`, the project has a new directory where private key(s) are stored:
 
@@ -50,31 +32,51 @@ After the user completes the instructions from running `near login`, the project
 
 ### Validator nodes (currently)
 
-Currently, validators use different scripts
+Currently, validators use scripts to run a node.
 
-Validator nodes using the `nearcore` repository follow instructions that will create their keys in the user's home directory, not the project directory. This directory name differs from a project's key storage directory. It is located in:
+Validator nodes using the `nearcore` repository follow instructions that will create their keys in the user's home directory, not the project directory. It is located in:
 
 `~/.near`
 
-### Proposed customization
+At this time, it is not advised to change this directory or try to use it for multiple purposes. Validator data has a monopoly on that folder.
 
-Both configuration and key management will be able to exist in various places, allowing end users to customize which accounts are using which configuration. Keys and config settings will apply for all contracts unless explicitly directed via the usage of CLI flags.
+## Settings, config, and key management
 
-Commands check the active configuration for items not found, or expected in flags.
+()From this section forward, the discussion is no longer about how `near-shell` works at the time of this writing, but what is proposed.)
 
-For example, instead of a user entering:
+Project-level **settings**, connection **configuration**, and **key management** are the three types of stored data necessary for developers to reliably build and deploy projects. 
 
-`near call my_dapp my_function --accountId my_account_id`
+### Definitions:
 
-there exist an configuration that substitutes the `--accountId` flag:
+#### Settings
+[project-level-settings]: #project-level-settings
+These are key-values reflecting how `near-shell` behaves when called within a NEAR project.
+    
+**Example**: a developer using OS X uses `near login` with access to a browser, whereas a validator runs `near login` on a CentOS box with no UI or browser. A user prompt may ask "Is this login from a computer with a browser?" The answer is then stored in key-value format in the project-level directory so it can be referenced later, skipping the prompt in the future.
 
-```json
-…
-  "accountId": "my_account_id",
-…
-``` 
+Besides answers to user prompts, project-level settings also store information about the last version of `near-shell` used in this project. For more information, please see [Upgradability](#upgradability).
+    
+#### Configuration
+A key-value storage (typically JSON) containing information.
 
-`near-shell` will look for keys in a specific order. If the active configuration file explicitly specifies a key storage directive, that setting will take precedence and it will not use this lookup order. This list is in ascending order and can be understood to mean, "if the key is not found here, then try the next location/store."
+- `networkId` - similar to an environment to work on (ex: 'staging')
+- `nodeUrl` - URL to RPC
+- `contractName` - NEAR account name for smart contract
+- `walletUrl` - URL to NEAR Wallet
+- `helperUrl` - URL to project helping with token dissemination
+- `masterAccount` - NEAR account used for continuous integration
+    
+**Example**: As a user, I want to deploy a contract to my localnet instead of testnet during development. I will provide flags and/or configuration so that `near-shell` can determine where to connect, for what contract, and on behalf of which NEAR account.
+
+#### Key management
+The storage of an account id and a corresponding private key.
+    - `keyPath` - an argument used by `near-shell` specifying the path to the unencrypted file containing an account's private key.
+    
+The unencrypted file contains the keys:
+- `account_id`
+- `private_key`
+
+`near-shell` will look for keys in a specific order. This list is in the prioritized order and can be understood to mean, "if the key is not found here, then try the next location/store."
 
 1. Environment variables:
     - `NEAR_ACCOUNT_ID`
@@ -86,59 +88,135 @@ there exist an configuration that substitutes the `--accountId` flag:
     - Windows - possibly [use cmdkey.exe](https://social.technet.microsoft.com/Forums/en-US/268cb72e-0916-4219-8543-219092d2fb39/command-line-for-credential-manager?forum=w7itprosecurity) although implementation is not certain
 
 3. Project directory (`/Users/friend/projects/my-awesome-app/.near`)
-    - Instead of `neardev` in the project directory, it is now called `.near`
+    - Instead of `neardev` in the project directory, it is now called `.near-credentials`
 
-4. Home directory (`/Users/friend/.near`)
+4. Home directory (`/Users/friend/.near-credentials`)
 
 **Note**: during implementation it's advised to have the key storage options extendable. As the project grows, developers in the NEAR Collective may choose to add integrations with password management applications or hosted key solutions.
 
 ## Translation
 
-It's important to invite the international community into developing with NEAR. Translation of these user-facing content are essential:
+It's important to invite the international community into developing with NEAR. Translation of user-facing content is essential for:
 - Help commands (the text describing what a command does and how to use it)
 - Error and logging messages
 
 Language preference can be set in two ways:
-- Using environment variables (i.e., parsed from `process.env.LANG`)
-- Set explicitly in configuration using [ISO 639-1](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes)
+- Using environment variables (i.e., parsed from `process.env.LANG`, and the default assignment)
+- Set explicitly in [project-level settings](#project-level-settings) using [ISO 639-1](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes)
 
+Example content from `<project-path>/.near-config/settings.env`:
 ```json
 …
-  "defaultAccountId": "my_account_id",
   "language": "en"
 …
 ```
 
-Commands and subcommands (ex: `call`) are not translated.
+Commands and subcommands (ex: `call` or `deploy`) are not translated and will be in English.
 
-#### User stories
-As a user, I want to store my keys safely in my home directory, but have a configuration file in the project folder that overrides my default configuration stored in the home directory.
+## Upgradability
+[upgradability]: #upgradability
 
-As a user, I want the operating system to prompt for my user password deploying a contract.
+As `near-shell` matures, updates may/will cause a user's project to become outdated. For instance, this NEP proposes to rename the project directory `neardev` to `.near-credentials`. Developers with existing `neardev` directories will either need to manually rename the folder, or `near-shell` will have to look in two places for the key files.
 
-As a user, I want to be able to have multiple projects that use the same account (and corresponding key(s)) without having to login to each project.
+This proposal declares that `near-shell` will have a mechanism to make such upgrades possible. This is not possible, however, without keeping track of which version of `near-shell` was most recently used on a project.
 
-As a user, I want to be able to read logs and instructions for commands in the language locale I'm used to, or I choose.
+**Example scenario**: a user begins developing a dApp on NEAR using `near-shell` version 0.19.0. The user takes a sabbatical for a few months and returns to the project with a new computer. The new computer installed `near-shell` version 0.23.1. The first time this user runs a command in this old project, migrations are run ensuring the project stays current.
 
-## NEAR Shell Top-Level Commands 
+Of the three types of storage mentioned before (project-level settings, connection configuration, and key management) the saved version information belongs to the project-level settings. It's possible that a user will have multiple dApps that are used less frequently than others. Each project, especially those used less frequently, must have their own record of which version of `near-shell` was most recently used.
+
+The location of these settings is:
+
+`./.near-config/settings.env` for a project.
+
+For example:
+`/Users/friend/near-projects/guest-book/.near-config/settings.env`
+
+The settings will exist as normal key-value pairs seen in environment variable files:
+
+```bash
+…
+LAST_SHELL_VERSION="0.19.1"
+…
+```
+
+Using middleware, `near-shell` will check the current version against the key `LAST_SHELL_VERSION` of the settings file and run any necessary migrations.
+
+### Migrations
+
+The folder structure within `near-shell` will have migration files per minor version as illustrated here:
+
+```bash
+└── middleware
+   └── migration
+      ├── README.md
+      ├── scripts
+      │  ├── 0.19.x.js          ⟵ logic to run for 0.19.0 to 0.19.N
+      │  ├── 0.20.x.js          ⟵ logic to run for 0.20.0 to 0.20.N
+      │  └── x.x.x-template.js  ⟵ template for adding new minor version migrations
+      └── shell-upgrade.js      ⟵ contains checks for current version against stored version, etc.
+```
+
+An example of a migration script might be:
+
+```javascript
+const upgrade = async (lastPatchVersion) => {
+    if (lastPatchVersion < 2) {
+      // implement essential logic that changed from x.x.0 to x.x.1
+      // check for existence of neardev/dev-account.env file, create if possible
+      const fs = require('fs');
+      const util = require('util');
+  
+      (async () => {
+          const oldDevDeployFile = 'neardev/dev-account';
+          const newDevDeployFile = 'neardev/dev-account.env';
+    
+          if (fs.existsSync(newDevDeployFile)) {
+              // user already has the latest near-shell
+              return;
+          }
+    
+          if (fs.existsSync(oldDevDeployFile)) {
+              // user has an outdated near-shell, create necessary file
+              const readFile = (filePath) => util.promisify(fs.readFile)(filePath, 'utf8');
+              const writeFile = (filePath, data) => util.promisify(fs.writeFile)(filePath, data);
+              // read and rewrite the old file into the new format
+              const fileData = await readFile(oldDevDeployFile);
+              await writeFile(newDevDeployFile, `CONTRACT_NAME=${fileData}`);
+          }
+      })();
+    }
+    
+    if (lastPatchVersion < 6) {
+        // implement essential logic that changed from x.x.2 to x.x.6
+    }
+    
+    …
+};
+
+exports.upgrade = upgrade;
+```
+
+The file `shell-upgrade.js`, after comparing the current version to the setting in `./.near-config/settings.env`, will determine how many migration scripts need to run, and call the `upgrade()` function on them in order. When complete, it will update the `LAST_SHELL_VERSION` key in the project-level settings file. At this time the project is considered current.
+
+## `near-shell` Top-Level Commands 
 
 ### `near network <command>`
 
-This command category is used to select and configure NEAR networks for a NEAR Shell user.  This category manipulates the user's active configuration to allow a user to specify NEAR network details via the CLI instead of manually editing config files.
+This command category is used to select and configure NEAR networks for a `near-shell` user.  This category manipulates the user's active configuration to allow a user to specify NEAR network details via the CLI instead of manually editing config files.
 
 Sub-commands for `network` include:
 
-* `near network list` : Display the current list of networks for the current instance of NEAR Shell.  
+* `near network list` : Display the current list of networks for the current instance of `near-shell`.  
 * `near network status` :  Show the user's current network configuration.
-* `near network select` : Select a NEAR network as the default network for subsequent NEAR Shell commands as well as the network configuration for a local server validator node managed by this instance of NEAR Shell.
+* `near network select` : Select a NEAR network as the default network for subsequent `near-shell` commands as well as the network configuration for a local server validator node managed by this instance of `near-shell`.
 * `near network add` : Add a network to the users's `~/.near` config files.
-* `near network remove` : Remove a network from tthe `~/.near` config files.
+* `near network remove` : Remove a network from the `~/.near` config files.
 * `near network monitor` : Interactively monitor one or more NEAR networks in a curses-like interface updated in a specified interval, default of 1s.
 * `near network help` : Display help on network subcommands. 
 
 ### `near account <command>`
 
-This category is used to create, select, and configure accounts on NEAR networks for a given NEAR Shell user.  
+This category is used to create, select, and configure accounts on NEAR networks for a given `near-shell` user.  
 
 * `near account list`   : Display list of accounts configured on local host.
 * `near account status` : Display status of active or specified account, including token amounts, locked, etc.
@@ -154,7 +232,7 @@ This category is used to create, select, and configure accounts on NEAR networks
 
 ### `server`
 
-These commands are used to administer a NEAR server validator node.  Currently, only one server per NEAR Shell is proposed; however, multiple servers per physical host should be considered.
+These commands are used to administer a NEAR server validator node.  Currently, only one server per `near-shell` is proposed; however, multiple servers per physical host should be considered.
 
 * `near server status`  : Display status of NEAR validator server on current host.
 * `near server start`   : Start NEAR validator server on current host.
@@ -180,43 +258,54 @@ These commands are used to administer a NEAR server validator node.  Currently, 
 
 ## Command input can be inline and file-based
 
-Some commands in `near-shell` may become long and difficult to type out. End users with a standard Terminal application may have a difficult time making small adjustments to a command that is quite lengthy. (Ex: pressing backwards or forwards many times to correct a typo.)
+Some commands in `near-shell` may become long and difficult to type on the command line. End users with a standard terminal application may have lengthy arguments that are better saved to a file.
 
-In this spec, flags may be done inline: 
+Flags may be done inline (default):
 
-`…call my_dapp my_function -i '{"key": "value_19"}'`
+`near call my_dapp my_function '{"key": "value_19"}'`
 
-or designated by a file:
+or defined in a file:
  
-`…call my_dapp my_function -f ./params.json`
+`near call my_dapp my_function -f ./params.json`
+
+This `-f` or `--fromFile` argument is added to two commands:
+1. `call`
+2. `view`
+
+Other commands may be added in the future.
 
 ### User Stories
-For user-facing NEPs this section should focus on user stories.
 
-These enhancements to near-shell aim to increase user and developer adoption by centralizing and optimizing all interactions with NEAR functionality.  Near Shell today is a thin and lightweight set of features which enable the use of each NEAR product offering.  Specifically, Near Shell is required to use NEAR products today.  For example, to stake, send tokens, create and delete accounts, view public keys, build and deploy smart contracts, call smart contract methods, and log in through NEAR Protocol's wallet.  Each of these features are critical to all NEAR products.
+These enhancements to `near-shell` aim to increase user and developer adoption by centralizing and optimizing all interactions with NEAR functionality. `near-shell` today is a thin and lightweight set of features which enable the use of each NEAR product offering.  Specifically, `near-shell` is required to use NEAR products today. For example, to stake, send tokens, create and delete accounts, view public keys, build and deploy smart contracts, call smart contract methods, and log in through NEAR Protocol's wallet. Each of these features are critical to all NEAR products.
 
-If NEAR Shell is required, it makes sense to enhance NEAR Shell to include other features critical to user and developer interactions.  The commands proposed above enhance NEAR Shell to include validator node deployment and control for both local and distributed development, i.e., using a local network for offline development vs. testnet as a live network used by others, and to be able to select configure and select networks.
+If `near-shell` is required, it makes sense to enhance `near-shell` to include other features critical to user and developer interactions. The commands proposed above enhance `near-shell` to include validator node deployment and control for both local and distributed development, i.e., using a local network for offline development vs. testnet as a live network used by others, and to be able to select configure and select networks.
 
 Here are a few user stories to demonstrate the utility of these enhancements.
 
-1. As a user, I want to 
+As a user, I want the option to have my operating system prompt for my user password before deploying a contract.
+
+As a user, I want to be able to have multiple projects that use the same account (and corresponding key(s)) without having to login to each project.
+
+As a user, I want to be able to instructions for commands in my own language.
+
+As a user, I want to be able to come back to a project months later, upgrade tooling, and face no issues building and deploying.
 
 #### Creating and Configuring Networks
 
-When a user or developer wants to try out a simple smart contract or maybe just use NEAR's wallet to send or account for tokens, the user will want to select the network--select a specific blockchain, be it local or a live multi-user chain--to interact with.  Today, all network configuration is contained in the ~/.near directory with only a single network configured at any given moment.  The ~/.near directory could contain configurations for multiple networks.  The network our documentation assumes today is testnet, and the ~/.near directory is configured whenever near-shell is started and the user attempts to create or log in to an account.
+When a user or developer wants to try out a simple smart contract or maybe just use NEAR's wallet to send or account for tokens, the user will want to select the network--select a specific blockchain, be it local or a live multi-user chain--to interact with.  Today, all network configuration is contained in the ~/.near directory with only a single network configured at any given moment.  The ~/.near directory could contain configurations for multiple networks.  The network our documentation assumes today is testnet, and the ~/.near directory is configured whenever `near-shell` is started and the user attempts to create or log in to an account.
 
-This NEP proposes that NEAR Shell be enhanced to enable multiple networks to be added, configured, and removed using new commands under a network category of commands.
+This NEP proposes that `near-shell` be enhanced to enable multiple networks to be added, configured, and removed using new commands under a network category of commands.
 
 Example:
 
 1.  A user or developer wants to interact with a local development network to test a simple smart contract.
-2.  User installs NEAR Shell.
-3.  User runs NEAR Shell for the first time.  If there is no network configured, NEAR Shell informs the user that a default network is configured for local interaction with a name of localnet.
+2.  User installs `near-shell`.
+3.  User runs `near-shell` for the first time.  If there is no network configured, `near-shell` informs the user that a default network is configured for local interaction with a name of localnet.
 
 1.  A user or developer wants to interact with NEARs active testnet network.
 2.  The user lists the networks currently configured:  `near network list`.  
 3.  The user, by default, is presented with a list of networks with only one entry: `localnet`
-4.  Since, after these enhancements, near-shell creates a localnet by default, the user will need to add and select a new network configuration.  The user executes the shell command:  `near network add testnet <options>`
+4.  Since, after these enhancements, `near-shell` creates a localnet by default, the user will need to add and select a new network configuration.  The user executes the shell command:  `near network add testnet <options>`
 
 etc. TBD.
 
@@ -233,7 +322,7 @@ The section should return to the examples given in the previous section, and exp
 
 ---
 
-The programming language for NEAR Shell has not been determined yet but there have been opinions regarding proper, future-proof implementation.
+The programming language for `near-shell` has not been determined yet but there have been opinions regarding proper, future-proof implementation.
 
 Long term goals to keep in mind:
 - Upgradable, but also able to lock a specific version.
@@ -248,11 +337,11 @@ Long term goals to keep in mind:
 
 Why should we *not* do this?
 
-* The download size of NEAR Shell will increase.  The amount of increase will be determined by the code and libraries required to add the ability to deploy a validator node.
-* The complexity of NEAR Shell increases whenever a new command is added.
+* The download size of `near-shell` will increase.  The amount of increase will be determined by the code and libraries required to add the ability to deploy a validator node.
+* The complexity of `near-shell` increases whenever a new command is added.
 * Today, the configuration of the NEAR networks is instigated and controlled using the `nearcore` repository.
 * Not all users will want to run a validator node.
-* These proposals increases the dependency chain of NEAR Shell to include Rust nearcore libraries and configuration.
+* These proposals increases the dependency chain of `near-shell` to include Rust nearcore libraries and configuration.
 
 
 # Rationale and alternatives
@@ -264,12 +353,12 @@ Today is difficult to communicate and introduce distributed Web concepts and fea
 
 Current best design practices for blockchain, wallets, and distributed Web applications attempt to mitigate blockchain interaction complexities by performing all required steps for interaction and feature use by *delaying* complex interactions and *encapsulating* multiple steps into as few interactions as possible.  The enhancements proposed here embrace multiple facets of NEAR features by including the most complicated feature interactions (i.e., configuring multiple networks, account creation and configuration, starting and managing NEAR validator nodes, etc.) and allow complex interactions with NEAR's blockchain features to be delayed until absolutely required, i.e., validator node configuration and deployment is available immediately, on-demand, only as needed, with no extra steps required to run a local network or an active distributed blockchain network.  The user is not required to pull a separate repository, hence *delaying* a relatively complex product interaction and practically eliminating most of the confusion introduced by fetching and inspecting another NEAR github repository.
 
-These NEAR Shell enhancements *encapsulate* multiple features and processes required to deploy and configure multiple networks. 
+These `near-shell` enhancements *encapsulate* multiple features and processes required to deploy and configure multiple networks. 
 
 
 - What other designs have been considered and what is the rationale for not choosing them?
 
-The current NEAR Shell design is the default.  Other designs might be ones that do not include the ability to configure and deploy active validator nodes.  Also, another approach might be to not use a shell at all.  Instead, NEAR might create GUI applications, e.g., electron or Web server-based configuration management where the user starts a local application which provides a port towards which the user can point their local Web browser to configure NEAR accounts, networks, and nodes.
+The current `near-shell` design is the default.  Other designs might be ones that do not include the ability to configure and deploy active validator nodes.  Also, another approach might be to not use a shell at all.  Instead, NEAR might create GUI applications, e.g., electron or Web server-based configuration management where the user starts a local application which provides a port towards which the user can point their local Web browser to configure NEAR accounts, networks, and nodes.
 
 - What is the impact of not doing this?
 
@@ -280,7 +369,9 @@ Users will not have a single application which enables configuration and managem
 
 - What parts of the design do you expect to resolve through the NEP process before this gets merged?
 
-NEAR developers must weigh in on the impact of including validator node configuration.  Also, the `~/.near` directory is currently created by `nearcore`.  Decisions must be made about whether or not NEAR's configuration should be managed by NEAR Shell instead of whenever a validator node is executed.
+aloha - remove all the stuff about ~/.near
+
+NEAR developers must weigh in on the impact of including validator node configuration.  Also, the `~/.near` directory is currently created by `nearcore`.  Decisions must be made about whether or not NEAR's configuration should be managed by `near-shell` instead of whenever a validator node is executed.
 
 - What parts of the design do you expect to resolve through the implementation of this feature before stabilization?
 
@@ -288,7 +379,7 @@ The management of the `~/.near` directory should be resolved when these enhancem
 
 - What related issues do you consider out of scope for this NEP that could be addressed in the future independently of the solution that comes out of this NEP?
 
-Out of scope is smart contract development and debugging.  However, future versions of NEAR Shell might include specific commands that enable the debugging and optimization of smart contract deployments.
+Out of scope is smart contract development and debugging.  However, future versions of `near-shell` might include specific commands that enable the debugging and optimization of smart contract deployments.
 
 
 # Future possibilities
