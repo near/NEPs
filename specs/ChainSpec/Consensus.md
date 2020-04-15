@@ -22,7 +22,7 @@ Consecutive blocks do not necessarily have sequential heights. A block at height
 
 If a block `B` at some height `h` builds on top of a block `B_prev` that has height `h-1`, and `B_prev` in turn builds on top of a block `B_prev_prev` that has height `h-2`, the block `B_prev_prev` is final, and cannot be reverted unless block producers with more than `1/3` cumulative stake deviate from the protocol. 
 
-Block producers in the particular epoch exchange many kinds of messages. The two kinds that are relevant to the consensus are **Blocks** and **Approvals**. The approval contains five fields:
+Block producers in the particular epoch exchange many kinds of messages. The two kinds that are relevant to the consensus are **Blocks** and **Approvals**. The approval contains the following fields:
 
 ```rust
 enum ApprovalInner {
@@ -165,8 +165,8 @@ def last_final_height(B):
 
 The following are the rules of what blocks contain approvals from what block producers, and belong to what epoch.
 
-- Any block `B` with height between `h` and `h + epoch_length - 3` (both inclusive) is in the epoch `e_cur` and must have approvals from more than 2/3 of `BP(e_cur)` (stake-weighted).
-- Any block `B` with height `h + epoch_length - 2` or higher for which `last_final_height(prev(B)) < h + epoch_length - 3` is in the epoch `e_cur` and must logically include approvals from both more than 2/3 of `BP(e_cur)` and more than 2/3 of `BP(e_next)` (both stake-weighted).
+- Any block `B` with `height(prev(B)) < h + epoch_length - 3` is in the epoch `e_cur` and must have approvals from more than 2/3 of `BP(e_cur)` (stake-weighted).
+- Any block `B` with `height(prev(B)) >= h + epoch_length - 3` for which `last_final_height(prev(B)) < h + epoch_length - 3` is in the epoch `e_cur` and must logically include approvals from both more than 2/3 of `BP(e_cur)` and more than 2/3 of `BP(e_next)` (both stake-weighted).
 - The first block `B` with `last_final_height(prev(B)) >= h + epoch_length - 3` is in the epoch `e_next` and must logically include approvals from more than 2/3 of `BP(e_next)` (stake-weighted).
 
 (see the definition of *logically including* approvals in [approval requirements](#approvals-requirements))
@@ -174,7 +174,7 @@ The following are the rules of what blocks contain approvals from what block pro
 ```python
 def next_block_is_in_next_epoch(prev_block):
     first_height = get_epoch_start_height(get_epoch(prev_block))
-    return height(last_final_height(prev_block)) >= first_height + epoch_length - 3
+    return last_final_height(prev_block) >= first_height + epoch_length - 3
 
 def next_block_needs_approvals_from_next_epoch(prev_block):
     first_height = get_epoch_start_height(get_epoch(prev_block))
