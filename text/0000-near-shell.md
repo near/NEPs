@@ -18,31 +18,7 @@ These enhancements are intended to simplify and enhance developer and user produ
 # Guide-level explanation
 [guide-level-explanation]: #guide-level-explanation
 
-### Projects (currently)
-
-Currently, NEAR projects (for example, one generated using `create-near-app`) hold the configuration in the project's file:
-
-`src/config.js`
-
-**Note**: the active configuration can have values overridden by flags.
-
-After the user completes the instructions from running `near login`, the project has a new directory where private key(s) are stored:
-
-`./neardev`
-
-### Validator nodes (currently)
-
-Currently, validators use scripts to run a node.
-
-Validator nodes using the `nearcore` repository follow instructions that will create their keys in the user's home directory, not the project directory. It is located in:
-
-`~/.near`
-
-At this time, it is not advised to change this directory or try to use it for multiple purposes. Validator data has a monopoly on that folder.
-
 ## Settings, config, and key management
-
-()From this section forward, the discussion is no longer about how `near-shell` works at the time of this writing, but what is proposed.)
 
 Project-level **settings**, connection **configuration**, and **key management** are the three types of stored data necessary for developers to reliably build and deploy projects. 
 
@@ -55,44 +31,60 @@ These are key-values reflecting how `near-shell` behaves when called within a NE
 **Example**: a developer using OS X uses `near login` with access to a browser, whereas a validator runs `near login` on a CentOS box with no UI or browser. A user prompt may ask "Is this login from a computer with a browser?" The answer is then stored in key-value format in the project-level directory so it can be referenced later, skipping the prompt in the future.
 
 Besides answers to user prompts, project-level settings also store information about the last version of `near-shell` used in this project. For more information, please see [Upgradability](#upgradability).
+
+In summary, "settings" are key-value pairs that are set by `near-shell` and relate to the behavior of how it operates in a given project directory. They do not relate to the development or deployment of smart contracts.
     
 #### Configuration
-A key-value storage (typically JSON) containing information.
+Configuration are key-value pairs that relate to development and deployment of smart contracts and refer to *connection* information.
 
-- `networkId` - similar to an environment to work on (ex: 'staging')
-- `nodeUrl` - URL to RPC
-- `contractName` - NEAR account name for smart contract
-- `walletUrl` - URL to NEAR Wallet
-- `helperUrl` - URL to project helping with token dissemination
-- `masterAccount` - NEAR account used for continuous integration
+* `networkId`       : Similar to an environment to work on (ex: 'staging')
+* `nodeUrl`         : URL to the NEAR node
+* `contractName`    : NEAR account name for the smart contract
+* `walletUrl`       : URL to NEAR Wallet
+* `helperUrl`       : URL to the contract helper that provides tokens upon account creation
+* `masterAccount`   : When creating "child" accounts, `masterAccount` is the "parent" 
+* `configFile`      : Specifies the location of a config file containing connection information. Default location is `src/config.js`
     
-**Example**: As a user, I want to deploy a contract to my localnet instead of testnet during development. I will provide flags and/or configuration so that `near-shell` can determine where to connect, for what contract, and on behalf of which NEAR account.
+**Example**: As a user, I want to deploy a contract to my localnet instead of testnet during development. I will provide flags and/or modify configuration so that `near-shell` can determine where to connect, for what contract, and on behalf of which NEAR account.
 
 #### Key management
 The storage of an account id and a corresponding private key.
-    - `keyPath` - an argument used by `near-shell` specifying the path to the unencrypted file containing an account's private key.
+* `keyPath`         : An argument used by `near-shell` specifying the path to the keyfile.
     
-The unencrypted file contains the keys:
-- `account_id`
-- `private_key`
+The keyfile file contains the keys:
+* `type`        : Options include 
+    - `unencrypted`     : An unencrypted file containing an account's private key
+    - `native_osx`      : Private key stored with OS X key management 
+    - `native_linux`    : Private key stored with Linux-based system's key management 
+    - `native_windows`  : Private key stored with Windows key management
+* `account_id`  : The NEAR account name
+* `private_key` : The plain-text private key, used when `type = "unencrypted"` 
 
 `near-shell` will look for keys in a specific order. This list is in the prioritized order and can be understood to mean, "if the key is not found here, then try the next location/store."
 
 1. Environment variables:
     - `NEAR_ACCOUNT_ID`
+    - `NEAR_ACCOUNT_TYPE`
     - `NEAR_PRIVATE_KEY`
     
-2. Operating system key management:
-    - OS X - use of built-in `/usr/bin/security` [cli tool](https://www.unix.com/man-page/osx/1/security/).
-    - Linux - use of `secret-tool` [cli command](https://specifications.freedesktop.org/secret-service/latest/).
-    - Windows - possibly [use cmdkey.exe](https://social.technet.microsoft.com/Forums/en-US/268cb72e-0916-4219-8543-219092d2fb39/command-line-for-credential-manager?forum=w7itprosecurity) although implementation is not certain
 
-3. Project directory (`/Users/friend/projects/my-awesome-app/.near`)
-    - Instead of `neardev` in the project directory, it is now called `.near-credentials`
+2. Project directory (`/Users/friend/projects/my-awesome-app/.near-credentials`)
 
-4. Home directory (`/Users/friend/.near-credentials`)
+    **Note**: Formerly, the `neardev` folder contained the key files for a project. It is now `.near-credentials`.
 
-**Note**: during implementation it's advised to have the key storage options extendable. As the project grows, developers in the NEAR Collective may choose to add integrations with password management applications or hosted key solutions.
+3. Home directory (`/Users/friend/.near-credentials`)
+
+If the key type among the `native_*` values, the operating system key management handles:
+
+* OS X      : Use of built-in `/usr/bin/security` [cli tool](https://www.unix.com/man-page/osx/1/security/).
+* Linux     : Use of `secret-tool` [cli command](https://specifications.freedesktop.org/secret-service/latest/).
+* Windows   : Possibly [use cmdkey.exe](https://social.technet.microsoft.com/Forums/en-US/268cb72e-0916-4219-8543-219092d2fb39/command-line-for-credential-manager?forum=w7itprosecurity) although implementation is not certain.
+
+This prioritized order allows project-level configuration to take priority over the home directory, offering an improved user experience.
+
+As an example, a user having credentials saved in their home directory will be able to use the `--accountId` flag to use keys from any project regardless of location. Said another way, the user does not need to run `near login` inside each project in order to access the keys.
+
+**Note**: as the project grows, developers in the NEAR Collective may choose to add integrations with password management applications or hosted key solutions.
 
 ## Translation
 
@@ -120,18 +112,18 @@ As `near-shell` matures, updates may/will cause a user's project to become outda
 
 This proposal declares that `near-shell` will have a mechanism to make such upgrades possible. This is not possible, however, without keeping track of which version of `near-shell` was most recently used on a project.
 
-**Example scenario**: a user begins developing a dApp on NEAR using `near-shell` version 0.19.0. The user takes a sabbatical for a few months and returns to the project with a new computer. The new computer installed `near-shell` version 0.23.1. The first time this user runs a command in this old project, migrations are run ensuring the project stays current.
+**Example scenario**: a user begins developing a dApp on NEAR using `near-shell` version 0.19.0. The user takes a sabbatical for a few months and returns with a new computer, cloning the old project. The new computer installed `near-shell` version 0.23.1. The first time this user runs a command in this old project, migrations are run ensuring the project stays current.
 
-Of the three types of storage mentioned before (project-level settings, connection configuration, and key management) the saved version information belongs to the project-level settings. It's possible that a user will have multiple dApps that are used less frequently than others. Each project, especially those used less frequently, must have their own record of which version of `near-shell` was most recently used.
+Of the three types of storage mentioned before (project-level settings, connection configuration, and key management) the saved version information belongs to the project-level settings. It's possible that a user will have multiple dApps that are used less frequently than others. Each project must have their own record of which version of `near-shell` was most recently used.
 
 The location of these settings is:
 
-`./.near-config/settings.env` for a project.
+`.near-config/settings.js` for a project.
 
 For example:
-`/Users/friend/near-projects/guest-book/.near-config/settings.env`
+`/Users/friend/near-projects/guest-book/.near-config/settings.js`
 
-The settings will exist as normal key-value pairs seen in environment variable files:
+In this proposal, the file is shown as JavaScript. This is not a hard requirement, as as key-value pairs could also be in the form of environment variables:
 
 ```bash
 …
@@ -139,7 +131,7 @@ LAST_SHELL_VERSION="0.19.1"
 …
 ```
 
-Using middleware, `near-shell` will check the current version against the key `LAST_SHELL_VERSION` of the settings file and run any necessary migrations.
+Using middleware, `near-shell` will check the current version against the key `lastShellVersion` (or `LAST_SHELL_VERSION`) of the settings file, then run any necessary migrations.
 
 ### Migrations
 
@@ -162,32 +154,14 @@ An example of a migration script might be:
 const upgrade = async (lastPatchVersion) => {
     if (lastPatchVersion < 2) {
       // implement essential logic that changed from x.x.0 to x.x.1
-      // check for existence of neardev/dev-account.env file, create if possible
-      const fs = require('fs');
-      const util = require('util');
-  
-      (async () => {
-          const oldDevDeployFile = 'neardev/dev-account';
-          const newDevDeployFile = 'neardev/dev-account.env';
-    
-          if (fs.existsSync(newDevDeployFile)) {
-              // user already has the latest near-shell
-              return;
-          }
-    
-          if (fs.existsSync(oldDevDeployFile)) {
-              // user has an outdated near-shell, create necessary file
-              const readFile = (filePath) => util.promisify(fs.readFile)(filePath, 'utf8');
-              const writeFile = (filePath, data) => util.promisify(fs.writeFile)(filePath, data);
-              // read and rewrite the old file into the new format
-              const fileData = await readFile(oldDevDeployFile);
-              await writeFile(newDevDeployFile, `CONTRACT_NAME=${fileData}`);
-          }
-      })();
+      // Example: the new minor version 0.24.0 changes the neardev directory to .near-credentials
+      // Logic here that checks for the absense of .near-credentials, the existence of neardev, and renames accordingly
     }
     
     if (lastPatchVersion < 6) {
         // implement essential logic that changed from x.x.2 to x.x.6
+        // Example: all keys in the .near-credentials need an additional key for "type"
+        // Logic looping through adding new key to existing files
     }
     
     …
@@ -196,29 +170,37 @@ const upgrade = async (lastPatchVersion) => {
 exports.upgrade = upgrade;
 ```
 
-The file `shell-upgrade.js`, after comparing the current version to the setting in `./.near-config/settings.env`, will determine how many migration scripts need to run, and call the `upgrade()` function on them in order. When complete, it will update the `LAST_SHELL_VERSION` key in the project-level settings file. At this time the project is considered current.
+Shown in the directory structure above is the file `shell-upgrade.js`. This file will, after comparing the current version to the last used version in `./.near-config/settings.js`, determine how many migration scripts are needed to run. It will loop through the necessary files calling the `upgrade()` function on them in the proper version order. When complete, it will update the `lastShellVersion` key in the project-level settings file. At this time the project is considered current.
 
-## `near-shell` Top-Level Commands 
+**Note**: migrations do not have to fix backwards-incompatible changes. Migrations can also improve experience by, for example, removing orphaned files, make safety checks and show warnings, etc.
 
-### `near network <command>`
+## Prompts
 
-This command category is used to select and configure NEAR networks for a `near-shell` user.  This category manipulates the user's active configuration to allow a user to specify NEAR network details via the CLI instead of manually editing config files.
+Various user prompts will enhance the experience of `near-shell` by providing options. These prompts have the option to save answers to that identical future prompts may be skipped if desired. As mentioned, the answers will be saved as **settings** on the project level.
 
-Sub-commands for `network` include:
+Example:
+`/Users/friend/near-projects/.near-config/settings.js` has:
 
-* `near network list` : Display the current list of networks for the current instance of `near-shell`.  
-* `near network status` :  Show the user's current network configuration.
-* `near network select` : Select a NEAR network as the default network for subsequent `near-shell` commands as well as the network configuration for a local server validator node managed by this instance of `near-shell`.
-* `near network add` : Add a network to the users's `~/.near` config files.
-* `near network remove` : Remove a network from the `~/.near` config files.
-* `near network monitor` : Interactively monitor one or more NEAR networks in a curses-like interface updated in a specified interval, default of 1s.
-* `near network help` : Display help on network subcommands. 
+```javascript
+…
+"alwaysSaveToLocation": "home"  ⟵ example: user chose to always save keys to home directory when running "near login"
+…
+```
+
+The number of prompts will grow beyond what can be captured in this spec. A number of possible prompts would be:
+
+- Is this project on an OS expected to have a browser and UI
+- When creating an account, always fund new accounts with the NEAR contract helper
+- Always run migrations in this project when applicable
+- Never run migrations in this project
+
+## `near-shell` Commands 
 
 ### `near account <command>`
 
 This category is used to create, select, and configure accounts on NEAR networks for a given `near-shell` user.  
 
-* `near account list`   : Display list of accounts configured on local host.
+* `near account list`   : Display list of accounts configured in the current directory and home directory
 * `near account status` : Display status of active or specified account, including token amounts, locked, etc.
 * `near account send`   : Send tokens from active or specified account to another NEAR account or contract.
 * `near account create` : Create a new account or sub-account.
@@ -228,33 +210,20 @@ This category is used to create, select, and configure accounts on NEAR networks
 * `near account select` : Select an account from the list of locally configured accounts as the active account.
 * `near account login`  : Log in the current active or specified account.
 * `near account logout` : Log out the current active or specified account. Essentially revoking a full access key.
-* `near account help`   : Display help on account subcommands.
+* `near account --help`   : Display help on account subcommands.
 
-### `server`
-
-These commands are used to administer a NEAR server validator node.  Currently, only one server per `near-shell` is proposed; however, multiple servers per physical host should be considered.
-
-* `near server status`  : Display status of NEAR validator server on current host.
-* `near server start`   : Start NEAR validator server on current host.
-* `near server stop`    : Stop NEAR validator server on current host.
-* `near server monitor` : Interactively display NEAR validator server status on current host.
-* `near server tail`    : Tail the log of the NEAR validator server on current host.
-* `near server help`    : Display help on server subcommands.
-* `near server stake`   : Stake tokens on the configured network with the active or specified account
-
-### `near contract <command>` 
-* `near contract list`
-* `near contract status`
-* `near contract add`
-* `near contract remove`
-* `near contract build`
-* `near contract deploy`
-* `near contract call`
-* `near contract view`
 
 ### `near config <command>`
 * `near config`         : List the location of active configuration file if it's loaded, or default config settings
 * `near config set`     : Set a key in the active configuration, or if using default, create a config file in the home directory with defaults and the specified key and value
+* `near config clear`   : Remove the [project-level settings](#project-level-settings) file
+
+### `near contract <command>` 
+* `near contract build`
+* `near contract deploy`
+* `near contract call`
+* `near contract view`
+* `near contract --help`
 
 ## Command input can be inline and file-based
 
@@ -269,8 +238,8 @@ or defined in a file:
 `near call my_dapp my_function -f ./params.json`
 
 This `-f` or `--fromFile` argument is added to two commands:
-1. `call`
-2. `view`
+1. `contract call`
+2. `contract view`
 
 Other commands may be added in the future.
 
@@ -311,6 +280,8 @@ etc. TBD.
 
 # Reference-level explanation
 [reference-level-explanation]: #reference-level-explanation
+
+TODO: - move some stuff down here
 
 This is the technical portion of the NEP. Explain the design in sufficient detail that:
 
@@ -369,7 +340,7 @@ Users will not have a single application which enables configuration and managem
 
 - What parts of the design do you expect to resolve through the NEP process before this gets merged?
 
-aloha - remove all the stuff about ~/.near
+TODO: - remove all the stuff about ~/.near
 
 NEAR developers must weigh in on the impact of including validator node configuration.  Also, the `~/.near` directory is currently created by `nearcore`.  Decisions must be made about whether or not NEAR's configuration should be managed by `near-shell` instead of whenever a validator node is executed.
 
@@ -384,6 +355,20 @@ Out of scope is smart contract development and debugging.  However, future versi
 
 # Future possibilities
 [future-possibilities]: #future-possibilities
+
+### `near network <command>`
+
+This command category is used to select and configure NEAR networks for a `near-shell` user.  This category manipulates the project's configuration to allow a user to specify NEAR network details via the CLI instead of manually editing config files.
+
+Sub-commands for `network` include:
+
+* `near network list` : Display the current list of networks for the current instance of `near-shell`.  
+* `near network status` :  Show the user's current network configuration.
+* `near network select` : Select a NEAR network as the default network for subsequent `near-shell` commands as well as the network configuration for a local server validator node managed by this instance of `near-shell`.
+* `near network add` : Add a network to the users's `~/.near` config files.
+* `near network remove` : Remove a network from the `~/.near` config files.
+* `near network monitor` : Interactively monitor one or more NEAR networks in a curses-like interface updated in a specified interval, default of 1s.
+* `near network help` : Display help on network subcommands.
 
 Think about what the natural extension and evolution of your proposal would
 be and how it would affect the project as a whole in a holistic
