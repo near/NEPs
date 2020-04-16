@@ -20,11 +20,11 @@ These enhancements are intended to simplify and enhance developer and user produ
 
 ## Settings, config, and key management
 
-Project-level **settings**, connection **configuration**, and **key management** are the three types of stored data necessary for developers to reliably build and deploy projects.
+Shell-experience **settings**, connection **configuration**, and **key management** are the three types of stored data necessary for developers to reliably build and deploy projects.
  
 ```
 ─ awesome-near-project  ⟵ NEAR dApp
- ├── .near-config       ⟵ Stores project-level settings and connection configuration
+ ├── .near-config       ⟵ Stores shell-experience settings and connection configuration
  │  ├── connections     ⟵ Contains files used to connect and deploy a contract (except keys)
  │  │  ├── default.js   ⟵ Default configuration is for development
  │  │  └── localnet.js  ⟵ Custom connection added by user for localnet
@@ -37,7 +37,7 @@ Project-level **settings**, connection **configuration**, and **key management**
 ### Definitions:
 
 #### Settings
-[project-level-settings]: #project-level-settings
+[shell-experience-settings]: #shell-experience-settings
 
 ---
 
@@ -45,7 +45,7 @@ These are key-values reflecting how `near-shell` behaves when called within a NE
     
 Example: a developer using OS X uses `near login` with access to a browser, whereas a validator runs `near login` on a CentOS box with no UI or browser. A user prompt may ask "Is this login from a computer with a browser?" The answer is then stored in key-value format in the project-level directory so it can be referenced later, skipping the prompt in the future.
 
-Besides answers to user prompts, project-level settings also store information about the last version of `near-shell` used in this project. For more information, please see [Upgradability](#upgradability).
+Besides answers to user prompts, shell-experience settings also store information about the last version of `near-shell` used in this project. For more information, please see [Upgradability](#upgradability).
 
 As shown in the directory structure above, this file is located in the project directory at:
 
@@ -53,7 +53,7 @@ As shown in the directory structure above, this file is located in the project d
 
 In summary, "settings" are key-value pairs that are set by `near-shell` and relate to the behavior of how it operates in a given project directory. They do not relate to the development or deployment of smart contracts, except for providing default values like `accountId`.
 
-**Note**: project-level settings can exist in the user's home directory as well. In this case, projects without their own `.near-config/settings.js` will use the home directory settings. `near-shell` will be quite verbose when running a command, letting the user know which settings and configuration files are being used when the user runs commands.
+**Note**: shell-experience settings can exist in the user's home directory as well. In this case, projects without their own `.near-config/settings.js` will use the home directory settings. `near-shell` will be quite verbose when running a command, letting the user know which settings and configuration files are being used when the user runs commands.
 
 To make this more clear, there are two nested arrays that differentiate settings that should only be applied from a project-level file from those in the home directory. This is how a `settings.js` file may look:
 
@@ -69,7 +69,7 @@ To make this more clear, there are two nested arrays that differentiate settings
 
 As defined later, there is a command `near settings set-default` which copies the current project's settings into the home directory. Keys inside the `project-only` object will not be moved.
 
-If a new project is created and has no project-level settings yet and the home directory has a settings file, this will be used as the template. Otherwise, a project-level settings file will be created and populated based on the user prompts given during regular usage of `near-shell`. 
+If a new project is created and has no project-level settings file yet, and the home directory has a settings file, the home directory's file will be used as the template. Otherwise, a project-level settings file will be created and populated based on the user prompts given during regular usage of `near-shell`. 
     
 #### Configuration
 
@@ -161,7 +161,7 @@ It's important to invite the international community into developing with NEAR. 
 
 Language preference can be set in two ways:
 - Using environment variables (i.e., parsed from `process.env.LANG`, and the default assignment)
-- Set explicitly in project-level settings using [ISO 639-1](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes)
+- Set explicitly in shell-experience settings using [ISO 639-1](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes)
 
 Example content from `<project-path>/.near-config/settings.js`:
 ```json
@@ -181,7 +181,7 @@ This proposal declares that `near-shell` will have a mechanism to make such upgr
 
 **Example scenario**: a user begins developing a dApp on NEAR using `near-shell` version `0.19.0`. The user takes a sabbatical for a few months and returns with a new computer, cloning the old project. The new computer installed `near-shell` version `0.23.1`. The first time this user runs a command in this old project, migrations are run ensuring the project stays current.
 
-Of the three types of storage mentioned before (project-level settings, connection configuration, and key management) the saved version information belongs to the project-level settings. It's possible that a user will have multiple dApps that are used less frequently than others and become out of date. Therefore, each project must have their own record of which version of `near-shell` was most recently used. This setting will never be placed in the home directory.
+Of the three types of storage mentioned before (shell-experience settings, connection configuration, and key management) the saved version information belongs to the project-level settings. It's possible that a user will have multiple dApps that are used less frequently than others and become out of date. Therefore, each project must have their own record of which version of `near-shell` was most recently used. This setting will never be placed in the home directory.
 
 The location of these settings is:
 
@@ -278,7 +278,7 @@ This category is used to create, select, and configure accounts on NEAR networks
 * `near account delete` : Delete an account or sub-account.
 * `near account create-key` : Delete an account or sub-account.
 * `near account revoke-key` : Delete an account or sub-account.
-* `near account select` : Selects a default account from the list of accounts with keys. Stored in project-level settings with key `defaultAccount`.
+* `near account select` : Selects a default account from the list of accounts with keys. Stored in shell-experience settings with key `defaultAccount`.
 * `near account login`  : Log in the current active or specified account.
 * `near account stake`  : Stake Ⓝ to a given staking contract
 * `near account secure` : Finds the key file for an account name, converts it to use OS-level key management via a command line wizard/instructions.
@@ -289,7 +289,7 @@ This category is used to create, select, and configure accounts on NEAR networks
 * `near config`         : List the location of active configuration file if it's loaded, or default config settings
 * `near config add`     : Set a key in the active configuration, or if using default, create a config file in the home directory with defaults and the specified key and value
 * `near config remove`  : Removes a configuration file. (Example: `near config remove localnet` removes `.near-config/connections/localnet.js`)
-* `near config select`  : Selects a default connection configuration file from the list of those available. Stored in the project-level settings with key `defaultConnection`. Default is `default`.
+* `near config select`  : Selects a default connection configuration file from the list of those available. Stored in the shell-experience settings with key `defaultConnection`. Default is `default`.
 * `near config wizard`  : Runs through a command-line wizard for an environment, allowing user to modify the values.
 
 ### `near settings <command>`
@@ -362,7 +362,7 @@ Reading from a file may be added to other commands in the future.
 
 Usage analytics will be used anonymously and purely to measure key performance indicators. [Mixpanel](https://mixpanel.com/) will be the chosen integration at this time. No private data will ever be sent, only metrics on the command usage and possible crash reporting.
 
-There will be the ability to opt-out as well. While the majority of settings are project-level, this is the only setting that will be saved directly to the user's home directory settings instead of the project-level settings file. (That is, stored in: `~/.near-config/settings.js`)
+There will be the ability to opt-out as well. While the majority of shell-experience settings are project-level, this is the only setting that will be saved directly to the user's home directory settings instead of the project-level settings file. (That is, stored in: `~/.near-config/settings.js`)
 
 ### User Stories
 
@@ -418,7 +418,7 @@ Adding the [upgradability mechanism](#upgradability) is key to `near-shell` bein
 
 Out of scope is smart contract execution and debugging. However, future versions of `near-shell` might include specific commands that enable the debugging and optimization of smart contract deployments. Gas estimation is the first step that will likely bring execution much closer in feasibility.
 
-In this proposal, `near account select` and `near config select` add to the project-level settings. These could arguably exist in the connection configuration.
+In this proposal, `near account select` and `near config select` add to the shell-experience settings. These could arguably exist in the connection configuration.
 
 #### Additional unresolved thoughts/questions
 
@@ -443,3 +443,4 @@ This section highlights actionable items needed to get from the current state of
 * Keys stored in `neardev` need to have an additional key added: `"type": "unencrypted"`.
 * The `neardev` folder needs to be renamed to `.near-credentials`.
 * Add `--env` flag so that config will load proper file.
+* Begin implementing yargs' [locale ability](https://yargs.js.org/docs/#api-locale) for translation.
