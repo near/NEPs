@@ -49,6 +49,8 @@ As shown in the directory structure above, this file is located in the project d
 `.near-config/settings.js`
 
 In summary, "settings" are key-value pairs that are set by `near-shell` and relate to the behavior of how it operates in a given project directory. They do not relate to the development or deployment of smart contracts.
+
+**Note**: project-level settings can exist in the user's home directory as well. In this case, projects without their own `.near-config/settings.js` will use the home directory settings. `near-shell` will be quite verbose when running a command, letting the user know which settings and configuration files are being used when the user runs commands.
     
 #### Configuration
 Configuration are key-value pairs that relate to development and deployment of smart contracts and refer to *connection* information.
@@ -264,6 +266,12 @@ This category is used to create, select, and configure accounts on NEAR networks
 * `near config select`  : Selects a default connection configuration file from the list of those available. Stored in the project-level settings with key `defaultConnection`. Default is `default`.
 * `near config wizard`  : Runs through a command-line wizard for an environment, allowing user to modify the values.
 
+### `near settings <command>`
+
+* `near settings`               : Displays settings in project and home directory, if they exist
+* `near settings set-default`   : Copies the project's settings into the home directory's settings
+* `near settings clear`         : Prompts user, then removes select settings file (in project or home)
+
 ### `near contract <command>`
 
 * `near contract deploy`    : Deploys the contract in the project directory (Default: `out/main.wasm`)
@@ -286,7 +294,7 @@ Shows information on current validators and fisherman in the environment detaile
 * `near validators prev`        : Previous validators and fisherman
 * `near validators proposals`   : Current proposals, also shows prospective threshold
 
-### `near tool <command`
+### `near tool <command>`
 
 Utilities added to `near-shell`
 
@@ -328,7 +336,7 @@ Reading from a file may be added to other commands in the future.
 
 Usage analytics will be used anonymously and purely to measure key performance indicators. Mixpanel will be the chosen integration at this time. No private data will ever be sent, only metrics on the command usage and possible crash reporting.
 
-There will be the ability to opt-out as well.
+There will be the ability to opt-out as well. While the majority of settings are project-level, this is an example of a setting that will be saved to the user's home directory settings. (Example: `~/.near-config/settings.js`)
 
 ### User Stories
 
