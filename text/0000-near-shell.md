@@ -18,6 +18,8 @@ These enhancements are intended to simplify and enhance developer and user produ
 # Guide-level explanation
 [guide-level-explanation]: #guide-level-explanation
 
+This NEP will jump straight into the concepts necessary to understand the components needed in `near-shell`, and generally an extensible CLI tool. Unlike other NEPs, the guide-level and reference-level explanations are combined. There is nothing overly technical in the following sections, but more conceptual in nature. With that, the discussion begins by separating the three types of stored information needed for a successful, long-term `near-shell`.
+
 ## Settings, config, and key management
 
 Shell-experience **settings**, connection **configuration**, and **key management** are the three types of stored data necessary for developers to reliably build and deploy projects.
@@ -36,7 +38,7 @@ Shell-experience **settings**, connection **configuration**, and **key managemen
 
 ### Definitions:
 
-#### Settings
+#### 1. Settings
 [shell-experience-settings]: #shell-experience-settings
 
 ---
@@ -71,7 +73,7 @@ As defined later, there is a command `near settings set-default` which copies th
 
 If a new project is created and has no project-level settings file yet, and the home directory has a settings file, the home directory's file will be used as the template. Otherwise, a project-level settings file will be created and populated based on the user prompts given during regular usage of `near-shell`. 
     
-#### Configuration
+#### 2. Configuration
 
 ---
 
@@ -108,7 +110,7 @@ will call the function `topPlayers` on the contract `near-game` that is deployed
 
 Users may add, remove, or modify connection environments using commands detailed later in this spec.
 
-#### Key management
+#### 3. Key management
 [key-management]: #key-management
 
 ---
@@ -221,31 +223,31 @@ An example of a migration script might be:
 
 ```javascript
 const upgrade = async (lastPatchVersion) => {
-    if (lastPatchVersion < 2) {
-      // implement essential logic that changed from x.x.0 to x.x.1
-      // Example: the new minor version 0.24.0 renames the neardev directory to .near-credentials
-      // Logic here that checks for the absence of .near-credentials, the existence of neardev, and renames accordingly
-    }
+  if (lastPatchVersion < 2) {
+    // implement essential logic that changed from x.x.0 to x.x.1
+    // Example: the new minor version 0.24.0 renames the neardev directory to .near-credentials
+    // Logic here that checks for the absence of .near-credentials, the existence of neardev, and renames accordingly
+  }
     
-    if (lastPatchVersion < 6) {
-        // implement essential logic that changed from x.x.2 to x.x.6
-        // Example: all keys in the .near-credentials need an additional key for "type"
-        // Logic to loop through adding the new key to existing key files
-    }
+  if (lastPatchVersion < 6) {
+    // implement essential logic that changed from x.x.2 to x.x.6
+    // Example: all keys in the .near-credentials need an additional key for "type"
+    // Logic to loop through files adding the new key
+  }
     
-    …
+  …
 };
 
 exports.upgrade = upgrade;
 ```
 
-Shown in the directory structure above is the file `shell-upgrade.js`. This file will, after comparing the current version to the last used version in `./.near-config/settings.js`, determine how many migration scripts are needed to run. It will loop through the necessary files calling the `upgrade()` function on them in the proper version order. When complete, it will update the `lastShellVersion` key in the project-level settings file. At this time the project is considered current.
+Shown in the directory structure above is the file `shell-upgrade.js`. This file will, after comparing the current version to the last used version in the project's `.near-config/settings.js` file, determine how many migration scripts are needed to run. It will loop through the necessary files calling the `upgrade()` function on them in the proper version order. When complete, it will update the `lastShellVersion` key in the project-level settings file. At this time the project is considered current.
 
 **Note**: migrations do not have to fix backwards-incompatible changes. Migrations can also improve experience by, for example, removing orphaned files, make safety checks and show warnings, etc.
 
 ## Prompts
 
-Various user prompts will enhance the experience of `near-shell` by providing options. These prompts have the option to save answers to that identical future prompts may be skipped if desired. As mentioned, the answers will be saved as **settings** on the project level.
+Various user prompts will enhance the experience of `near-shell` by providing options. These prompts can save answers so that they may be skipped in the future. As mentioned, the answers will be saved as **settings** on the project level.
 
 Example:
 `/Users/friend/near-projects/.near-config/settings.js` has:
@@ -322,10 +324,10 @@ Shows information on current validators and fisherman in the environment detaile
 
 ### `near tool <command>`
 
-Utilities added to `near-shell`
+Utility tools added to `near-shell`
 
 * `near tool repl`      : Read evaluate print loop tool
-* `near tool metrics`   : Allows user to opt-out or opt-in from metrics. (Default: opt-in)
+* `near tool metrics`   : Allows user to opt-out or opt-in from metrics
 
 ### Flags
 
