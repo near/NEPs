@@ -1,40 +1,39 @@
-
-## RuntimeConfig
+# RuntimeConfig
 
 The structure that holds the parameters of the runtime, mostly economics.
 
-### storage_cost_byte_per_block
+## storage_cost_byte_per_block
 
 _type: Balance_
 
 The cost to store one byte of storage per block.
 
-### storage_cost_byte_per_block
+## storage_cost_byte_per_block
 
 _type: Balance_
 
 Costs of different actions that need to be performed when sending and processing transaction
 and receipts.
 
-### poke_threshold
+## poke_threshold
 
 _type: BlockIndex_
 
 The minimum number of blocks of storage rent an account has to maintain to prevent forced deletion.
 
-### transaction_costs
+## transaction_costs
 
 _type: [RuntimeFeesConfig](RuntimeFeeConfig.md)_
 
 Costs of different actions that need to be performed when sending and processing transaction and receipts.
 
-### wasm_config
+## wasm_config
 
 _type: [VMConfig](VMConfig.md),_
 
 Config of wasm operations.
 
-### account_length_baseline_cost_per_block
+## account_length_baseline_cost_per_block
 
 _type: Balance_
 

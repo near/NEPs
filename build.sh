@@ -1,5 +1,4 @@
-#!/bin/bash
-set -e
+#!/bin/sh -e
 
+cargo install mdbook
 mdbook build
-cp CNAME docs/CNAME

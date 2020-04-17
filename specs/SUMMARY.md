@@ -38,4 +38,5 @@
       - [Fraction](GenesisConfig/RuntimeFeeConfig/Fraction.md)
     - [VMConfig](GenesisConfig/VMConfig.md)
       - [ExtCostsConfig](GenesisConfig/ExtCostsConfig.md)
+    - [StateRecord](GenesisConfig/StateRecord.md)
 - [Economics](Economics/README.md)
