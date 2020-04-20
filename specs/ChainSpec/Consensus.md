@@ -1,5 +1,23 @@
 # Consensus
 
+## Definitions and notation
+
+For the purpose of maintaining consensus, transactions are grouped into *blocks*. There is a single preconfigured block \(G\) called *genesis block*. Every block except \(G\) has a link pointing to the *previous block* \(prev(B)\), where \(B\) is the block, and \(G\) is reachable from every block by following those links (that is, there are no cycles).
+
+The links between blocks give rise to a partial order: for blocks \(A\) and \(B\), \(A < B\) means that \(A \ne B\) and \(A\) is reachable from \(B\) by following links to previous blocks, and \(A \le B\) means that \(A < B\) or \(A = B\). The relations \(>\) and \(\ge\) are defined as the reflected versions of \(<\) and \(\le\), respectively. Finally, \(A \sim B\) means that either \(A < B\), \(A = B\) or \(A > B\), and \(A \nsim B\) means the opposite.
+
+A *chain* \(chain(T)\) is a set of blocks reachable from block \(T\), which is called its *tip*. That is, \(chain(T) = \{B | B \le T\}\). For any blocks \(A\) and \(B\), there is a chain that both \(A\) and \(B\) belong to iff \(A \sim B\). In this case, \(A\) and \(B\) are said to be *on the same chain*.
+
+Each block has an integer *height* \(h(B)\). It is guaranteed that block heights are monotonic (that is, for any block \(B \ne G\), \(h(B) > h(prev(B))\)), but they need not be consecutive. Also, \(h(G)\) may not be zero. Each node keeps track of a valid block with the largest height it knows about, which is called its *head*.
+
+Blocks are grouped into *epochs*. In a chain, the set of blocks that belongs to some epoch forms a contiguous range: if blocks \(A\) and \(B\) such that \(A < B\) belong to the same epoch, then every block \(X\) such that \(A < X < B\) also belongs to that epoch. Epochs can be identified by sequential indices: \(G\) belongs to an epoch with index \(0\), and for every other block \(B\), the index of its epoch is either the same as that of \(prev(B)\), or one greater.
+
+Each epoch is associated with a set of block producers that are validating blocks in that epoch, as well as an assignment of block heights to block producers that are responsible for producing a block at that height. A block producer responsible for producing a block at height \(h\) is called *block proposer at \(h\)*. This information (the set and the assignment) for an epoch with index \(i \ge 2\) is determined by the last block of the epoch with index \(i-2\). For epochs with indices \(0\) and \(1\), this information is preconfigured. Therefore, if two chains share the last block of some epoch, they will have the same set and the same assignment for the next two epochs, but not necessarily for any epoch after that.
+
+The consensus protocol defines a notion of *finality*. Informally, if a block \(B\) is final, any future final blocks may only be built on top of \(B\). Therefore, transactions in \(B\) and preceding blocks are never going to be reversed. Finality is not a function of a block itself, rather, a block may be final or not final in some chain it is a member of. Specifically, \(final(B, T)\), where \(B \le T\), means that \(B\) is final in \(chain(T)\). A block that is final in a chain is final in all of its extensions: specifically, if \(final(B, T)\) is true, then \(final(B, T')\) is also true for all \(T' \ge T\).
+
+## Data structures
+
 The fields in the Block header relevant to the consensus process are:
 
 ```rust
@@ -13,14 +31,6 @@ struct BlockHeader {
     ...
 }
 ```
-
-Each block belongs to a particular epoch, and has a particular height. The largest height block accepted by a particular node is its head.
-
-Each epoch has a set of block producers who are assigned to produce blocks in the epoch, and has an assigned block producer for each height in the epoch (to whom we refer as *block proposer at `h`*). The block producers and the assignments in a particular epoch are known from the first block of the *preceding* epoch.
-
-Consecutive blocks do not necessarily have sequential heights. A block at height `h` can have as its previous block a block with height `h-1` or lower.
-
-If a block `B` at some height `h` builds on top of a block `B_prev` that has height `h-1`, and `B_prev` in turn builds on top of a block `B_prev_prev` that has height `h-2`, the block `B_prev_prev` is final, and cannot be reverted unless block producers with more than `1/3` cumulative stake deviate from the protocol. 
 
 Block producers in the particular epoch exchange many kinds of messages. The two kinds that are relevant to the consensus are **Blocks** and **Approvals**. The approval contains the following fields:
 
@@ -42,9 +52,9 @@ Where the parameter of the `Endorsement` is the hash of the approved block, the 
 
 ## Approvals Requirements
 
-A block `B` at height `h` that has some other block `B'` as its previous block must logically contain approvals of a form described in the next paragraph from block producers whose cumulative stake exceeds 2/3 of the total stake in the current epoch, and in specific conditions described in section [epoch switches](#epoch-switches) also the approvals of the same form from block producers whose cumulative stake exceeds 2/3 of the total stake in the next epoch.
+Every block \(B\) except the genesis block must logically contain approvals of a form described in the next paragraph from block producers whose cumulative stake exceeds \(\frac{2}{3}\) of the total stake in the current epoch, and in specific conditions described in section [epoch switches](#epoch-switches) also the approvals of the same form from block producers whose cumulative stake exceeds \(\frac{2}{3}\) of the total stake in the next epoch.
 
-If a block to be produced will have height `h` and previous block `B'`, the approvals logically included in it must be an `Endorsement` with the hash of `B'` if and only if `h == B'.height + 1`, otherwise it must be a `Skip` with the height of `B'`. See [this section](#approval-condition) below for details on why the endorsements must contain the hash of the previous block, and skips must contain the height.
+The approvals logically included in the block must be an `Endorsement` with the hash of \(prev(B)\) if and only if \(h(B) = h(prev(B))+1\), otherwise it must be a `Skip` with the height of \(prev(B)\). See [this section](#approval-condition) below for details on why the endorsements must contain the hash of the previous block, and skips must contain the height.
 
 Note that since each approval that is logically stored in the block is the same for each block producer (except for the `account_id` of the sender and the `signature`), it is redundant to store the full approvals. Instead physically we only store the signatures of the approvals. The specific way they are stored is the following: we first fetch the ordered set of block producers from the current epoch. If the block is on the epoch boundary and also needs to include approvals from the next epoch (see [epoch switches](#epoch-switches)), we add new accounts from the new epoch
 
@@ -66,7 +76,7 @@ The block then contains a vector of optional signatures of the same or smaller s
 
 ## Messages
 
-On receival of the approval message the participant just stores it in the collection of approval messages.
+On receipt of the approval message the participant just stores it in the collection of approval messages.
 
 ```python
 def on_approval(self, approval):
@@ -127,7 +137,7 @@ def send_approval(self, target_height):
         inner = Endorsement(self.head_hash)
     else:
         inner = Skip(self.head_height)
-    
+
     approval = Approval(inner, target_height)
     send(approval, to_whom = get_block_proposer(self.head_hash, target_height))
 ```
@@ -137,6 +147,7 @@ Where `get_block_proposer` returns the next block proposer given the previous bl
 It is also necessary that `ENDORSEMENT_DELAY < MIN_DELAY`. Moreover, while not necessary for correctness, we require that `ENDORSEMENT_DELAY * 2 <= MIN_DELAY`.
 
 ## Block Production
+
 We first define a convenience function to fetch approvals that can be included in a block at particular height:
 
 ```python
@@ -145,69 +156,49 @@ def get_approvals(self, target_height):
                      in self.approvals
                      if approval.target_height == target_height and
                         (isinstance(approval.inner, Skip) and approval.prev_height == self.head_height or
-                         isinstance(approval.inner, Endorsement) and approval.prev_hash == self.head_hash)
+                         isinstance(approval.inner, Endorsement) and approval.prev_hash == self.head_hash)]
 ```
 
 A block producer assigned for a particular height produces a block at that height whenever they have `get_approvals` return approvals from block producers whose stake collectively exceeds 2/3 of the total stake.
 
-## Epoch Switches
-There's a parameter `epoch_length` in genesis config that defines the expected length of an epoch. Say a particular epoch `e_cur` started at height `h`, and say the next epoch will be `e_next`. Say `BP(e)` is a set of block producers in epoch `e`. Say `last_final_height(B)` is the height of most recent block that is known to be final by observing the chain that ends in `B`.
+## Finality condition
 
-```python
-def last_final_height(B):
-    if B == genesis or prev(B) == genesis:
-        return height(genesis)
-    if height(B) == height(prev(B)) + 1 and height(prev(B)) == height(prev(prev(B))) + 1:
-        return height(B) - 2
-    else
-        return last_final_height(prev(B))
-```
+A block \(B\) is final in \(chain(T)\), where \(T \ge B\), when either \(B = G\) or there is a block \(X \le T\) such that \(B = prev(prev(X))\) and \(h(X) = h(prev(X))+1 = h(B)+2\). That is, either \(B\) is the genesis block, or \(chain(T)\) includes at least two blocks on top of \(B\), and these three blocks (\(B\) and the two following blocks) have consecutive heights.
 
-The following are the rules of what blocks contain approvals from what block producers, and belong to what epoch.
+## Epoch switches
 
-- Any block `B` with `height(prev(B)) < h + epoch_length - 3` is in the epoch `e_cur` and must have approvals from more than 2/3 of `BP(e_cur)` (stake-weighted).
-- Any block `B` with `height(prev(B)) >= h + epoch_length - 3` for which `last_final_height(prev(B)) < h + epoch_length - 3` is in the epoch `e_cur` and must logically include approvals from both more than 2/3 of `BP(e_cur)` and more than 2/3 of `BP(e_next)` (both stake-weighted).
-- The first block `B` with `last_final_height(prev(B)) >= h + epoch_length - 3` is in the epoch `e_next` and must logically include approvals from more than 2/3 of `BP(e_next)` (stake-weighted).
+There's a parameter \(epoch\_length \ge 3\) that defines the minimum length of an epoch. Suppose that a particular epoch \(e\_cur\) started at height \(h\), and say the next epoch will be \(e\_next\). Say \(BP(e)\) is a set of block producers in epoch \(e\). Say \(last\_final(T)\) is the highest final block in \(chain(T)\). The following are the rules of what blocks contain approvals from what block producers, and belong to what epoch.
+
+- Any block \(B\) with \(h(prev(B)) < h+epoch\_length-3\) is in the epoch `e_cur` and must have approvals from more than \(\frac{2}{3}\) of \(BP(e\_cur)\) (stake-weighted).
+- Any block \(B\) with \(h(prev(B)) \ge h+epoch\_length-3\) for which \(h(last\_final(prev(B))) < h+epoch\_length-3\) is in the epoch \(e\_cur\) and must logically include approvals from both more than \(frac{2}{3}\) of \(BP(e\_cur)\) and more than \(\frac{2}{3}\) of \(BP(e_next)\) (both stake-weighted).
+- The first block \(B\) with \(h(last\_final(prev(B))) >= h+epoch\_length-3\) is in the epoch \(e\_next\) and must logically include approvals from more than \(\frac{2}{3}\) of \(BP(e\_next)\) (stake-weighted).
 
 (see the definition of *logically including* approvals in [approval requirements](#approvals-requirements))
-
-```python
-def next_block_is_in_next_epoch(prev_block):
-    first_height = get_epoch_start_height(get_epoch(prev_block))
-    return last_final_height(prev_block) >= first_height + epoch_length - 3
-
-def next_block_needs_approvals_from_next_epoch(prev_block):
-    first_height = get_epoch_start_height(get_epoch(prev_block))
-    return height(prev_block) >= first_height + epoch_length - 2 and not next_block_is_in_next_epoch(prev_block)
-```
 
 ## Safety
 
 Note that with the implementation above a honest block producer can never produce two endorsements with the same `prev_height` (call this condition *conflicting endorsements*), neither can they produce a skip message `s` and an endorsement `e` such that `s.prev_height < e.prev_height and s.target_height >= e.target_height` (call this condition *conflicting skip and endorsement*).
 
-Say a block `B0` is final, i.e. there are blocks `B1` and `B2` that build on top of it and have sequential heights.
+**Theorem** Suppose that there are blocks \(B_1\), \(B_2\), \(T_1\) and \(T_2\) such that \(B_1 \nsim B_2\), \(final(B_1, T_1)\) and \(final(B_2, T_2)\). Then, more than \(\frac{1}{3}\) of the block producer in some epoch must have signed either conflicting endorsements or conflicting skip and endorsement.
 
-Let's show that there's no other block `Bx` that has height higher than `B0` and doesn't have `B0` in its ancestry. Say it is not the case and such block `Bx` exists. Say `Bx` has the smallest height among such blocks. Thus, its previous block `Bp` has height less or equal to the height of `B0`.
+**Proof** Without loss of generality, we can assume that these blocks are chosen such that their heights are smallest possible. Specifically, we can assume that \(h(T_1) = h(B_1)+2\) and \(h(T_2) = h(B_2)+2\). Also, letting \(B_c\) be the highest block that is an ancestor of both \(B_1\) and \(B_2\), we can assume that there is no block \(X\) such that \(final(X, T_1)\) and \(B_c < X < B_1\) or \(final(X, T_2)\) and \(B_c < X < B_2\).
 
-**`Bx` in the same epoch as `B0`**
+**Lemma** There is such an epoch \(E\) that all blocks \(X\) such that \(B_c < X \le T_1\) or \(B_c < X \le T_2\) include approvals from more than \(\frac{2}{3}\) of the block producers in \(E\).
 
-Consider the following three cases:
+**Proof** There are two cases.
 
-1. `Bp.height < B0.height`. Then each approval in `Bx` is a skip. For each block producer that included a skip in `Bx` and an endorsement in `B1` these two messages conflict, thus at least 1/3 of stake-weighted block producers deviated from the protocol.
-2. `Bp.height == B0.height and Bx.height == B1.height`. Then each approval in `B1` is an endorsement. For each block producer that included an endorsement in `Bx` and an endorsement in `B1` these two messages conflict, thus at least 1/3 of stake-weighted block producers deviated from the protocol.
-3. `Bp.height == B0.height and Bx.height > B1.height`. Then each approval in `Bx` is a skip. For each block producer that included a skip in `Bx` and an endorsement in `B2` these two messages conflict, thus at least 1/3 of stake-weighted block producers deviated from the protocol.
+Case 1: Blocks \(B_c\), \(T_1\) and \(T_2\) are all in the same epoch. Because the set of blocks in a given epoch in a given chain is a contiguous range, all blocks between them (specifically, all blocks \(X\) such that \(B_c < X < T_1\) or \(B_c < X < T_2\)) are also in the same epoch, so all those blocks include approvals from more than \(\frac{2}{3}\) of the block producers in that epoch.
 
-Thus, for any block with height higher than `B0.height` that doesn't have `B0` in its ancestry to be produced at least 1/3 of stake-weighted block producers must deviate from the protocol in a way that is cryptographically provable.
+Case 2: Blocks \(B_c\), \(T_1\) and \(T_2\) are not all in the same epoch. Suppose that \(B_c\) and \(T_1\) are in different epochs. Let \(E\) be the epoch of \(T_1\) and \(E_p\) be the preceding epoch (\(T_1\) cannot be in the same epoch as the genesis block). Let \(R\) and \(S\) be the first and the last block of \(E_p\) in \(chain(T_1)\). Then, there must exist a block \(F\) in epoch \(E_p\) such that \(h(F)+2 = h(S) < h(T_1)\). Because \(h(F) < h(T_1)-2\), we have \(F < B_1\), and since there are no final blocks \(X\) such that \(B_c < X < B_1\), we conclude that \(F \le B_c\). Because there are no epochs between \(E\) and \(E_p\), we conclude that \(B_c\) is in epoch \(E_p\). Also, \(h(B_c) \ge h(F) \ge h(R)+epoch\_length-3\). Thus, any block after \(B_c\) and until the end of \(E\) must include approvals from more than \(\frac{2}{3}\) of the block producers in \(E\). Applying the same argument to \(chain(T_2)\), we can determine that \(T_2\) is either in \(E\) or \(E_p\), and in both cases all blocks \(X\) such that \(B_c < X \le T_2\) include approvals from more than \(\frac{2}{3}\) of block producers in \(E\) (the set of block producers in \(E\) is the same in \(chain(T_1)\) and \(chain(T_2)\) because the last block of the epoch preceding \(E_p\), if any, is before \(B_c\) and thus is shared by both chains). The case where \(B_c\) and \(T_1\) are in the same epoch, but \(B_c\) and \(T_2\) are in different epochs is handled similarly. Thus, the lemma is proven.
 
-**`Bx` and `B0` are in two different epochs**
-
-TODO
+Now back to the theorem. Without loss of generality, assume that \(h(B_1) \le h(B_2)\). On the one hand, if \(chain(T_2)\) doesn't include a block at height \(h(B_1)\), then the first block at height greater than \(h(B_1)\) must include skips from more than \(\frac{2}{3}\) of the block producers in \(E\) which conflict with endorsements in \(prev(T_1)\), therefore, more than \(\frac{1}{3}\) of the block producers in \(E\) must have signed conflicting skip and endorsement. Similarly, if \(chain(T_2)\) doesn't include a block at height \(h(B_1)+1\), more than \(\frac{1}{3}\) of the block producers in \(E\) signed both an endorsement in \(T_1\) and a skip in the first block in \(chain(T_2)\) at height greater than \(h(T_1)\). On the other hand, if \(chain(T_2)\) includes both a block at height \(h(B_1)\) and a block at height \(h(B_1)+1\), the latter must include endorsements for the former, which conflict with endorsements for \(B_1\). Therefore, more than \(\frac{1}{3}\) of the block producers in \(E\) must have signed conflicting endorsements. Thus, the theorem is proven.
 
 ## Liveness
 
-See the proof of livness in [near.ai/doomslug](near.ai/doomslug). The consensus in this section differs in that it requires two consecutive blocks with endorsements. The proof in the linked paper trivially extends, by observing that once the delay is sufficiently long for a honest block producer to collect enough endorsements, the next block producer ought to have enough time to collect all the endorsements too.
+See the proof of liveness in [near.ai/doomslug](near.ai/doomslug). The consensus in this section differs in that it requires two consecutive blocks with endorsements. The proof in the linked paper trivially extends, by observing that once the delay is sufficiently long for a honest block producer to collect enough endorsements, the next block producer ought to have enough time to collect all the endorsements too.
 
 ## Approval condition
+
 The approval condition above
 
 > Any valid block must logically include approvals from block producers whose cumulative stake exceeds 2/3 of the total stake in the epoch. For a block `B` and its previous block `B'` each approval in `B` must be an `Endorsement` with the hash of `B'` if and only if `B.height == B'.height + 1`, otherwise it must be a `Skip` with the height of `B'`
