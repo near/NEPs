@@ -170,7 +170,7 @@ A block \\(B\\) is final in \\(chain(T)\\), where \\(T \\ge B\\), when either \\
 There's a parameter \\(epoch\\\_length \\ge 3\\) that defines the minimum length of an epoch. Suppose that a particular epoch \\(e\\\_cur\\) started at height \\(h\\), and say the next epoch will be \\(e\\\_next\\). Say \\(BP(e)\\) is a set of block producers in epoch \\(e\\). Say \\(last\\\_final(T)\\) is the highest final block in \\(chain(T)\\). The following are the rules of what blocks contain approvals from what block producers, and belong to what epoch.
 
 - Any block \\(B\\) with \\(h(prev(B)) < h+epoch\\\_length-3\\) is in the epoch \\(e\\\_cur\\) and must have approvals from more than \\(^2\\!/_3\\) of \\(BP(e\\\_cur)\\) (stake-weighted).
-- Any block \\(B\\) with \\(h(prev(B)) \\ge h+epoch\\\_length-3\\) for which \\(h(last\\\_final(prev(B))) < h+epoch\\\_length-3\\) is in the epoch \\(e\\\_cur\\) and must logically include approvals from both more than \\(^2\\!/_3\\) of \\(BP(e\\\_cur)\\) and more than \\(^2\\!/_3\\) of \\(BP(e\_next)\\) (both stake-weighted).
+- Any block \\(B\\) with \\(h(prev(B)) \\ge h+epoch\\\_length-3\\) for which \\(h(last\\\_final(prev(B))) < h+epoch\\\_length-3\\) is in the epoch \\(e\\\_cur\\) and must logically include approvals from both more than \\(^2\\!/_3\\) of \\(BP(e\\\_cur)\\) and more than \\(^2\\!/_3\\) of \\(BP(e\\\_next)\\) (both stake-weighted).
 - The first block \\(B\\) with \\(h(last\\\_final(prev(B))) >= h+epoch\\\_length-3\\) is in the epoch \\(e\\\_next\\) and must logically include approvals from more than \\(^2\\!/_3\\) of \\(BP(e\\\_next)\\) (stake-weighted).
 
 (see the definition of *logically including* approvals in [approval requirements](#approvals-requirements))
