@@ -124,6 +124,7 @@ The key file file contains the keys:
     - `native_linux`    : Private key stored with Linux-based system's key management 
     - `native_windows`  : Private key stored with Windows key management
 * `account_id`  : The NEAR account name
+* `network`     : The NEAR network (example, "betanet", "testnet", etc.)
 * `private_key` : The plain-text private key, used when `type = "unencrypted"` 
 
 `near-shell` will look for keys in a specific order. This list is in the prioritized order and can be understood to mean, "if the key is not found here, then try the next location/store."
