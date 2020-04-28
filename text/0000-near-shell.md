@@ -115,7 +115,7 @@ Users may add, remove, or modify connection environments using commands detailed
 
 ---
 
-The storage of an account id and a corresponding private key.
+The storage of an account id and a corresponding private key. When a user runs `near account login` the default destination is the home directory. This can be overridden as explained in a moment.
     
 The key file file contains the keys:
 * `type`        : Options include 
@@ -282,7 +282,7 @@ This category is used to create, select, and configure accounts on NEAR networks
 * `near account create-key` : Delete an account or sub-account.
 * `near account revoke-key` : Delete an account or sub-account.
 * `near account select` : Selects a default account from the list of accounts with keys. Stored in shell-experience settings with key `defaultAccount`.
-* `near account login`  : Log in the current active or specified account.
+* `near account login`  : Log in the current active or specified account. The default location of unencrypted key files is the home directory.
 * `near account stake`  : Stake Ⓝ to a given staking contract
 * `near account secure` : Finds the key file for an account name, converts it to use OS-level key management via a command line wizard/instructions.
 * `near account --help`
