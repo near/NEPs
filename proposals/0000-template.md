@@ -9,7 +9,7 @@
 This NEP proposes a way to implement voting contract on chain. This voting contract can be used for various types of
 governance activities, including but not limited to deciding when to unlock token transfer, when to upgrade the network, etc.
 More specifically, this contract allows anyone to make proposals (such as the height of the next network reset), but limits
-voting to validators. Once a proposal receives 2/3 of the total votes, it is considered final.
+voting to validators. Once a proposal receives a predefined fraction of the total votes, it is considered final.
 
 # Motivation
 [motivation]: #motivation
@@ -26,52 +26,59 @@ The structure of this contract looks like the following:
 
 ```rust
 pub type ProposalId = u64;
-pub type PollId = u64;
 
-pub struct VotingContract {
-    polls: Map<PollId, Poll>,
-}
-```
-
-On the top level we store a map of `PollId` to `Poll`. `Poll` contains information about a particular poll,
-including its topic and proposals for this poll.
-```rust
+#[near_bindgen]
 pub struct Poll {
-    topic: String,
+    /// Human readable description of the poll.
+    description: String,
     /// All proposals for this poll.
     proposals: Map<ProposalId, Proposal>,
     /// Accounts that have participated in this poll and the corresponding stake voted.
     accounts: Map<AccountId, Balance>,
-    /// The final result of this poll. `None` means it is still open.
-    result: Option<ProposalId>
-}
-```
-`Proposal` contains all the voting information on this particular proposal in addition to the actual content of the proposal:
-```rust
-pub struct Proposal {
-    content: String,
-    /// When this proposal expires
-    expiration_height: BlockHeight,
-    /// Current votes on this proposal
-    votes: Map<AccountId, Balance>,    
+    /// Next proposal id.
+    next_proposal_id: ProposalId,
+    /// Threshold for closing the poll, i.e, if the ratio of stake on a certain proposal over total stake reaches
+    /// threshold, the poll is closed.
+    threshold: Fraction,
+    /// Voting result. `None` means the poll is still open.
+    result: Option<ProposalId>,
 }
 ```
 
-For each poll, validators can vote on proposals based on their stake. Within a given poll, the total stake that a validator
-votes cannot exceed their current stake.
+On the top level we maintain a poll where there are multiple proposals that can be voted on. The poll keeps track of the
+proposals and accounts that have participated in the poll so far and their total voted stake. When the stake voted on a given
+proposal reaches the threshold for this poll, the proposal becomes final and the poll is closed.
+
+As an important constituent of the poll, `Proposal` contains all the voting information of this particular proposal,
+in addition to the actual content of the proposal:
+```rust
+pub struct Proposal {
+    /// Human readable description of the proposal.
+    description: String,
+    /// Serialized metadata of the proposal.
+    metadata: String,
+    /// When this proposal expires.
+    expiration_height: BlockHeight,
+    /// Current votes on this proposal.
+    votes: Map<AccountId, Balance>,    
+}
+```
+Here `metadata` is the json serialized content of the proposal. For example, if the poll is about when the network upgrade
+should happen, `metadata` will be something like `{"height": 10000}`. Validators can vote on multiple different proposals
+at the same time, provided that the sum of stake voted does not exceed their current stake.
 
 The voting contract has the following methods to allow creation of polls and proposals, as well as voting for proposals.
 
 ```rust
-impl VotingContract {
-    /// Create a poll on some topic.
-    pub fn create_poll(&mut self, topic: String);
+impl Poll {
+    /// Initialize the poll on some topic.
+    pub fn new(topic: String, threshold: Fraction) -> Self;
     /// Create a proposal for a given poll.
-    pub fn create_proposal(&mut self, poll_id: PollId, proposal: String);
+    pub fn create_proposal(&mut self, description: String, metadata: String);
     /// Vote on a given proposal with certain amont of stake.
-    pub fn vote(&mut self, poll_id: PollId, proposal_id: ProposalId, stake: Balance);
-    /// View poll
-    pub fn get_poll(&mut self, poll_id: PollId) -> Poll;
+    pub fn vote(&mut self, proposal_id: ProposalId, stake: Balance);
+    /// View proposal
+    pub fn get_proposal(&mut self, proposal_id: ProposalId) -> Proposal;
 }
 ```
 Notice that the `vote` function can also be used to withdraw a vote by putting 0 stake on the vote.
@@ -86,7 +93,7 @@ on some other proposal, it should fail. To address this, we introduce a helper f
 every epoch before any call to the contract:
 ```rust
 fn resolve(&mut self) {
-    // for each poll, go through all the proposals and for each account, scale the stake on votes to current stake, i.e,
+    // go through all the proposals and for each account, scale the stake on votes to current stake, i.e,
     // for each vote, its stake is changed to orginal_stake * current_total_account_stake / previous_total_account_stake.
     // Also clear proposals that have expired.
 }
@@ -128,20 +135,20 @@ and the total stake in the current epoch, which together are sufficient for calc
 # Drawbacks
 [drawbacks]: #drawbacks
 
-TBD
+- In the current proposal, we do not allow the contract to hold a number of polls. This reduces the complexity of the contract
+  and makes it easier to implement. However, it can be argued that having multiple polls in one place allows people to easily view and vote on different
+  polls at the same time, which is better for governance purposes.
 
 # Rationale and alternatives
 [rationale-and-alternatives]: #rationale-and-alternatives
 
-- In the current proposal, we allow the contract to hold a number of polls. This is partly due to the constraint imposed
-by the lockup contract that we will deploy in the beginning of mainnet, but it also makes sense from a governance point of
-view -- there is a central place for the community to vote on different things, rather than spreading too thin across multiple
-different contracts, potentially one per poll. On the other hand, the tradeoff is that this contract might grow too large
-if there are a lot of polls going on at the same time.
+-  In the current design, the weight on each vote is exactly the amount of stake allocated for this vote, which is very
+straightforward. We can consider some alternatives like quadratic voting which might be better in terms of
+expressing preferences.
 
 # Unresolved questions
 [unresolved-questions]: #unresolved-questions
 
-- For polls that are already finished, how long should we keep them?
+- After the poll is finished, how long should we keep them?
 - When the state of the contract is large (a lot of proposals), it is possible that `resolve` will not be able to finish
 in one function call due to gas limit.
