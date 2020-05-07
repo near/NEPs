@@ -25,7 +25,7 @@ validators as a community to make decisions on chain.
 The structure of this contract looks like the following:
 
 ```rust
-pub type ProposalId = u64;
+pub type ProposalId = U64;
 
 #[near_bindgen]
 pub struct Poll {
@@ -74,9 +74,9 @@ impl Poll {
     /// Initialize the poll on some topic.
     pub fn new(topic: String, threshold: Fraction) -> Self;
     /// Create a proposal for a given poll.
-    pub fn create_proposal(&mut self, description: String, metadata: String);
+    pub fn create_proposal(&mut self, description: String, metadata: String) -> ProposalId;
     /// Vote on a given proposal with certain amont of stake.
-    pub fn vote(&mut self, proposal_id: ProposalId, stake: Balance);
+    pub fn vote(&mut self, proposal_id: ProposalId, stake: U128);
     /// View proposal
     pub fn get_proposal(&mut self, proposal_id: ProposalId) -> Proposal;
 }
@@ -116,8 +116,8 @@ More specifically, we need the following two functions in `near-vm-logic`:
 /// `base + (read_memory_base + read_memory_byte) * num_bytes + utf8_decoding_base + utf8_decoding_byte * num_bytes + memory_write_base + memory_write_size * 16`
 pub fn validator_stake(
     &mut self,
-    account_len: u64,
-    account_ptr: u64,
+    account_id_len: u64,
+    account_id_ptr: u64,
     stake_ptr: u64,
 ) -> Result<()>;
 
