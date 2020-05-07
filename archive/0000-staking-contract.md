@@ -18,80 +18,142 @@ This is useful to implement delegation, custom reward dispersion, liquid staking
 [guide-level-explanation]: #guide-level-explanation
 
 The simplest example of staking contract would be a delegation contract.
-A validator `A` can create such contract and stake with it on their node.
-Any other user can send their money to it, which will be pooled together with `A`'s stake.
-These users would accrue rewards (subtracted `A`'s fee) and can withdraw their balance within the same unbonding period.
+
+Let's define actors:
+- The staking pool contract account `staking-pool`. A key-less account with the contract that pools funds.
+- The owner of the staking contract `owner`. Owner runs the validator node on behalf of the staking pool account.
+- A delegator `user1`. The account who wants to stake their fund to the pool.
+
+The owner can setup such contract and validate on behalf of this contract in their node.
+Any other user can send their tokens to the contract, which will be pooled together and increase the total stake.
+These users would accrue rewards (subtracted fees set by the owner).
+Then they can unstake and withdraw their balance after some unlocking period.
 
 More complex example can also issue token for deposited user's stake. This stake is the right to withdraw underlaying balance and rewards. This provides staking liquidity and allows to trade staked tokens.
 
 # Reference-level explanation
 [reference-level-explanation]: #reference-level-explanation
 
+## Staking contract guarantees:
+
+- The contract can't lose or lock tokens of users.
+- If a user deposited X, the user should be able to withdraw at least X.
+- If a user successfully staked X, the user can unstake at least X.
+- The contract should lock unstaked funds for longer than 4 epochs.
+
 ## Staking Contract spec
 
 Next interface is implemented by staking contract:
+```rust
+/******************/
+/* Change methods */
+/******************/
+
+/// Call to distribute rewards after the new epoch. It's automatically called before every
+/// changing action. But it's not called before the view methods, so one might need to call
+/// `ping` before calling view methods to get recent results.
+pub fn ping(&mut self);
+
+/// Deposits the attached amount into the inner account of the predecessor.
+#[payable]
+pub fn deposit(&mut self);
+
+/// Withdraws the non staked balance for given account.
+/// It's only allowed if the `unstake` action was not performed in the recent 4 epochs.
+pub fn withdraw(&mut self, amount: U128);
+
+/// Stakes the given amount from the inner account of the predecessor.
+/// The inner account should have enough unstaked balance.
+pub fn stake(&mut self, amount: U128);
+
+/// Unstakes the given amount from the inner account of the predecessor.
+/// The inner account should have enough staked balance.
+/// The new total unstaked balance will be available for withdrawal in 4 epochs.
+pub fn unstake(&mut self, amount: U128);
+
+/****************/
+/* View methods */
+/****************/
+
+/// Returns the unstaked balance of the given account.
+pub fn get_account_unstaked_balance(&self, account_id: AccountId) -> U128;
+
+/// Returns the staked balance of the given account.
+pub fn get_account_staked_balance(&self, account_id: AccountId) -> U128;
+
+/// Returns the total balance of the given account (including staked and unstaked balances).
+pub fn get_account_total_balance(&self, account_id: AccountId) -> U128;
+
+/// Returns `true` if the given account can withdraw unstaked tokens in the current epoch.
+pub fn is_account_unstaked_balance_available(&self, account_id: AccountId) -> bool;
+
+/// Returns the total staking balance.
+pub fn get_total_staked_balance(&self) -> U128;
 ```
-trait StakingContract { 
-    /// Initializes this contract with given owner and staking_public_key. 
-    /// This call doesn't take attached money, uses initial amount that is already on the contract.
-    fn new(owner: AccountId, staking_public_key: PublicKey) -> Self;
-    
-    /// A function that must be called every epoch to update the rewards across all deposits.
-    fn ping(&mut self);
 
-    /// Deposits on virtual balance for predessesor of this contract attached balance.
-    /// If this contract supports liquid staking, this would issue a token for this user.
-    fn deposit(&mut self);
+## User path
 
-    /// Withdraws from the account given amount if this users has enough money on virtual balance.
-    /// Different contracts can handle this differently, for example to require unstake first or maintain liqudiity and unstake automatically when this method is called.
-    fn withdraw(&mut self, amount: Balance);
-    
-    /// Stake given balance for predessesor user.
-    fn stake(&mut self, amount: Balance);
+A simple path for a user who wants to pool their funds can be the following:
 
-    /// Unstake given balance for predessesor user. Usually would proratated rewards for this amount.
-    fn unstake(&mut self, amount: Balance);
+##### Delegate money
 
-    /// Returns virutal balance that's not staked for given user.
-    fn get_user_balance(&mut self, account_id: AccountId) -> Balance;
+To deposit and stake 100 NEAR.
 
-    /// Returns virtual balance that's stake for given user.
-    fn get_user_stake(&mut self, account_id: AccountId) -> Balance;
-}
+```bash
+near call staking-pool deposit '{}' --accountId user1 --amount 100
+near call staking-pool stake '{"amount": "100000000000000000000000000"}' --accountId user1
 ```
 
-We suggest to at least have next internal state:
-* `owner: AccountId` - the account that has ability to change `staking_public_key` and stop this staking contract operation.
-* `staking_public_key: PublicKey` - current key that the contract stakes with. This is required as `stake` calls will be made to runtime and they require it as input.
-* `users: NearMap<AccountId, User>` - map of accounts that delegated the money to given contract with the state of delegation.
+Wait for a week, so the pool accumulate some rewards.
 
-Where `User` is represented in the next way:
-```
-struct User {
-    /// Amount of money deposited but not staked/locked.
-    amount: Balance,
-    /// Amount of money staked.
-    staked: Balance,
-    /// Block index at which the staking happend.
-    staked_at: BlockIndex,
-}
+##### Update internal state of the staking pool (optional)
+
+```bash
+near call staking-pool ping '{}' --accountId user1
 ```
 
-Simple path with internal state and actions:
-* Owner `A` creates staking contract `Q`.
-   Internal state: `users -> {}, balance: 0, locked: 0`
-* User `B` deposits `X1` NEAR into `Q` by calling `deposit`.
-   Internal state: `users -> {B: {balance: X1, stake: 0}}, balance: X1, locked: 0`
-* User `C` deposits `X2` NEAR into `Q` by calling `depoist`.
-   Internal state: `users -> {B: {balance: X1, stake: 0}, C: {balance: X2, stake: 0}}, balance: X1+X2, locked: 0`
-* User `B` calls `stake(X1)`.
-    Call to `Q.stake(X1)` is issued.
-    Internal state `users -> {B: {balance: 0, stake: X1}, C: {balance: X2, stake: 0}}, balance: X2, locked: X1`
+##### See current balance
 
-At this point we need to update internal state based on the results of validator selection and amount of rewards allocated to this validator:
+```bash
+# User1 total balance
+near view staking-pool get_account_total_balance '{"account_id": "user1"}'
+```
 
-* On `ping()` call, internal state gets updated, adding proportional rewards to all users who have staked epoch - 1 to the given epoch.
+##### Unstake some rewards and withdraw them
+
+Get the current staked balance
+
+```bash
+# User1 staked balance
+near view staking-pool get_account_staked_balance '{"account_id": "user1"}'
+```
+
+Let's say `user1` accumulated `0.6` NEAR and the total is `100.6` NEAR. The user decides to withdraw `0.5` NEAR.
+First the user has to unstake `0.5` NEAR.
+
+```bash
+near call staking-pool unstake '{"amount": "500000000000000000000000"}' --accountId user1
+```
+
+Let's check the unstaked balance.
+
+```bash
+# User1 unstaked balance
+near view staking-pool get_account_unstaked_balance '{"account_id": "user1"}'
+```
+
+Wait for 4 epochs. Check if the balance is liquid and can be withdrawn now.
+
+```bash
+# Whether @user1 can withdraw
+near view staking-pool is_account_unstaked_balance_available '{"account_id": "user1"}'
+```
+
+Now withdraw `0.5` NEAR back to the `user1` account.
+
+```bash
+near call staking-pool withdraw '{"amount": "500000000000000000000000"}' --accountId user1
+```
 
 # Drawbacks
 [drawbacks]: #drawbacks
@@ -104,7 +166,7 @@ General drawback of staking finance, is leverage of the stake. Someone can try t
 There a number of applications around DeFi and staking that are going to happened soon.
 Currently they require a separate set of multi-sig holders on a different chain. This creates new vectors of attack in addition to reducing visibility of security on chain.
 
-Because in NEAR contracts can stake, we can relatively easily add the support for any generic staking finance contracts.
+Because in NEAR contracts can stake, we can relatively easily add the support for any generic staking financial contracts.
 
 # Unresolved questions
 [unresolved-questions]: #unresolved-questions
