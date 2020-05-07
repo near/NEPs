@@ -24,16 +24,25 @@ transactions easily.
 # Reference-level explanation
 [reference-level-explanation]: #reference-level-explanation
 
+## Login into app with wallet
+
+App requests wallet to login 
+`{walletUrl}/login/?publicKey={publicKey}&contractId={contractId}&callback={callbackUrl}`
+- `publicKey` optional, base58 encoded public key to use as app specific key. If not specified – login is only choosing `accountId` and not adding access key
+- `walletUrl` is a base wallet URL that can be specified when creating wallet connection using nearlib.
+- `contractId` optional, account id of the contract app wants to add access key for. Not needed when `publicKey` is not specified. Means app wants unrestricted access (e.g. `near-shell`) otherwise.
+- `callbackUrl` callback URL provided by app that gets opened by wallet after flow completion.
+
+When `publicKey` wallet is expected to complete `addKey` transaction to add access key limited to given `contractId`. User can refuse to do it. This is not an error and will mean that callback only sends `accountId` selected by user back to app.
+
 ## Sign transaction with Web wallet
 
 App requests wallet to sign transaction by open following URL in the browser:
-`{walletUrl}/sign?transaction={transactionData}&callback={callbackUrl}`
+`{walletUrl}/sign?transactions={transactions}&callback={callbackUrl}`
 
 - `walletUrl` is a base wallet URL that can be specified when creating wallet connection using nearlib.
-- `transactionData` base64-encoded [`SignedTransaction` proto]( https://github.com/nearprotocol/nearcore/blob/master/core/protos/protos/signed_transaction.proto#L65). It's not signed yet, i.e. `signature` and `public_key` fields aren't set.
+- `transactions` comma-separatted list of base64-encoded [`Transaction` objects](https://github.com/near/near-api-js/blob/db51150b98f3e55c2893a410ad8e2379c10d8b73/src/transaction.ts#L83) serialized using [Borsh](https://borsh.io). 
 - `callbackUrl` callback URL provided by app that gets opened by wallet after flow completion.
-- `accountId` optional, account to use for signing
-- `publicKey` optional, base58 encoded public key to use for signing
 - `send` optional, `true` if wallet should send transaction after signing (wallet not required to support this)
 
 ### Callback URL
@@ -45,29 +54,14 @@ For error:
     - TODO: Error codes
 
 For success:
-- `accountId` account ID for account used to sign transaction
-- `signedTransaction` base64-encoded [`SignedTransaction` proto]( https://github.com/nearprotocol/nearcore/blob/master/core/protos/protos/signed_transaction.proto#L65)
+- `accountId` account ID for account used
+- `signatures` comma-separatted list of base64-encoded [`Signature` objects](https://github.com/near/near-api-js/blob/db51150b98f3e55c2893a410ad8e2379c10d8b73/src/transaction.ts#L78) serialized using [Borsh](https://borsh.io).
 - `sent` indicates whether transaction has been sent, `true` if sent. Wallet that doesn't support sending transactions always returns `false`.
 
 # Drawbacks
 [drawbacks]: #drawbacks
 
 TODO
-
-# Rationale and alternatives
-[rationale-and-alternatives]: #rationale-and-alternatives
-
-The url scheme that is live right now is the following, supporting a login operation:
-`{walletUrl}/login/?public_key={public_key}&contract_id={contract_id}&success_url={success_url}&failure_url={failure_url}&title={title}`
-- `contract_id` param is the id of the contract
-- `success_url` param is the url that the wallet will redirect to on success
-- `failure_url` param is the url that the wallet will redirect to on failure
-- `title` param is going to be deprecated soon. It is the human readable title of the app that is making the request (may need to be localized). This data should be available from contract metadata soon (please see contract metadata NEP)
-
-Wallet creates and signs the `addKey` transaction directly. It appends the following parameters to the success_url
-`?account_id={account_id}&public_key={public_key}`
-
-The main drawback of this design is the difficulty of adding new transaction types. Nearlib code to be updated to add a new urlpath (e.g. `/sign/`, `/send_money/`), and additional url params may need to be added to the scheme. Also, a composite transaction type (transaction consisting of multiple sub-transactions) may be too difficult to implement using this approach.
 
 # Unresolved questions
 [unresolved-questions]: #unresolved-questions
