@@ -35,6 +35,21 @@ App requests wallet to login
 
 When `publicKey` wallet is expected to complete `addKey` transaction to add access key limited to given `contractId`. User can refuse to do it. This is not an error and will mean that callback only sends `accountId` selected by user back to app.
 
+### Callback URL
+
+Wallet should open `callbackUrl` provided by app specifying following query paramers.
+
+For error:
+- `errorCode` unique identifier string for error
+  - `requestError` malformed request: missing fields, cannot parse transaction, etc
+  - `networkError` user approved transaction but it couldn't be submitted succesfully in allocated time (app still should check later whether it succeeded)
+  - `userRejected` user rejected sign in altogether (even not revealing `accountId`)
+- `errorDescription` wallet-specific description of error (for debugging purposes only)
+
+For success:
+- `accountId` account ID for account used
+- `publicKey` optional, public key added as an access key. Not provided if user wants to confirm every transaction explicitly.
+
 ## Sign transaction with Web wallet
 
 App requests wallet to sign transaction by open following URL in the browser:
@@ -43,7 +58,6 @@ App requests wallet to sign transaction by open following URL in the browser:
 - `walletUrl` is a base wallet URL that can be specified when creating wallet connection using nearlib.
 - `transactions` comma-separatted list of base64-encoded [`Transaction` objects](https://github.com/near/near-api-js/blob/db51150b98f3e55c2893a410ad8e2379c10d8b73/src/transaction.ts#L83) serialized using [Borsh](https://borsh.io). 
 - `callbackUrl` callback URL provided by app that gets opened by wallet after flow completion.
-- `send` optional, `true` if wallet should send transaction after signing (wallet not required to support this)
 
 ### Callback URL
 
@@ -51,12 +65,14 @@ Wallet should open `callbackUrl` provided by app specifying following query para
 
 For error:
 - `errorCode` unique identifier string for error
-    - TODO: Error codes
+  - `requestError` malformed request: missing fields, cannot parse transaction, etc
+  - `networkError` user approved transaction but it couldn't be submitted succesfully in allocated time (app still should check later whether it succeeded)
+  - `userRejected` user rejected transaction
+- `errorDescription` wallet-specific description of error (for debugging purposes only)
 
 For success:
 - `accountId` account ID for account used
 - `signatures` comma-separatted list of base64-encoded [`Signature` objects](https://github.com/near/near-api-js/blob/db51150b98f3e55c2893a410ad8e2379c10d8b73/src/transaction.ts#L78) serialized using [Borsh](https://borsh.io).
-- `sent` indicates whether transaction has been sent, `true` if sent. Wallet that doesn't support sending transactions always returns `false`.
 
 # Drawbacks
 [drawbacks]: #drawbacks
