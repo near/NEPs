@@ -72,23 +72,22 @@ For error:
 
 For success:
 - `accountId` account ID for account used
-- `signatures` comma-separatted list of base64-encoded [`Signature` objects](https://github.com/near/near-api-js/blob/db51150b98f3e55c2893a410ad8e2379c10d8b73/src/transaction.ts#L78) serialized using [Borsh](https://borsh.io).
+- `signatures` comma-separatted list of base64-encoded [`Signature` objects](https://github.com/near/near-api-js/blob/db51150b98f3e55c2893a410ad8e2379c10d8b73/src/transaction.ts#L78) serialized using [Borsh](https://borsh.io). Order must match `transactions`.
 
 # Drawbacks
 [drawbacks]: #drawbacks
 
-TODO
+There is limit on transaction size for calls based on URL redirects.
 
 # Unresolved questions
 [unresolved-questions]: #unresolved-questions
 
-- Does the wallet always send the transaction directly, or do we need to support a use case of generating a signature and returning it back to the app?
-  - Should allow caller to send transaction
-
-- TODO
+Some apps might prefer "checkout" flow where user doesn't have to login before deciding to send transaction. It is not supported by this proposal.
 
 # Future possibilities
 [future-possibilities]: #future-possibilities
 
-- TODO
-- Popup?
+- More different integration methods.
+- Checkout flow support (i.e. sign partially constructed transaction without preset info about account, nonce, etc)
+- More fine-grained error handling.
+- Multisig support.
