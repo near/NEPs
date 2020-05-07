@@ -71,8 +71,54 @@ For error:
 - `errorDescription` wallet-specific description of error (for debugging purposes only)
 
 For success:
-- `accountId` account ID for account used
-- `signatures` comma-separatted list of base64-encoded [`Signature` objects](https://github.com/near/near-api-js/blob/db51150b98f3e55c2893a410ad8e2379c10d8b73/src/transaction.ts#L78) serialized using [Borsh](https://borsh.io). Order must match `transactions`.
+- `transactionHashes` comma-separated list of transaction hashes serialized as base58 strings. 
+- `signatures` comma-separated list of base64-encoded [`Signature` objects](https://github.com/near/near-api-js/blob/db51150b98f3e55c2893a410ad8e2379c10d8b73/src/transaction.ts#L78) serialized using [Borsh](https://borsh.io). Order must match `transactions`.
+
+## Caveats
+
+- All unrecognized extra parameters must be ignored (i.e. not trigger `requestError`).
+- Wallet need to able to sign multiple transactiosn at one request.
+
+## Alternative integration points
+
+### App-specific URL scheme
+
+URL redirect API described above works for web-based wallets. However it's also applicable with small modification to mobile apps (iOS and Android). Instead of using `https://wallet.host.name/` as `walletUrl` it's possible to register app-specific URL scheme, e.g. `walletname:` and implement everything else in similar way.
+
+### Injected JS
+
+There are some contexts where there might be a way to communicate with wallet continuously vs through URL redirects:
+- desktop browser extension
+- in-wallet browser on mobile
+- web browser with built in wallet
+- wallet is available for apps as injectable JS component (e.g. Portis)
+
+In this case communication should happen through `window.nearWalletApi` object defining such methods:
+
+```
+async function login({ publicKey, contractId }) { 
+    // ...
+}
+
+async function sign({ transactions }) { 
+    // ...
+}
+```
+
+Everything else being the same as URL-based inplementation but with such differences:
+- parameters are passed as object properties intead of URL query parameters
+- "named parameters" using object are utilized (instead of positional) so that it's easy to add new ones later
+- instead of taking in `callbackUrl` and redirect promises are used
+- promise result should be object with same properties as otherwise would be passed through redirect URL
+- in case of error it is thrown with `errorCode` property. `errorDescription` should be used as error message. 
+
+### Examples
+
+```
+const { accountId, publicKey } = await nearWalletApi.login({ transactions });
+const { transactionHashes, signatures } = await nearWalletApi.sign({ transactions });
+```
+
 
 # Drawbacks
 [drawbacks]: #drawbacks
