@@ -321,7 +321,10 @@ Shows information on current validators and fisherman in the environment detaile
 
 * `near validators next`        : Next validators and fisherman
 * `near validators prev`        : Previous validators and fisherman
-* `near validators proposals`   : Current proposals, also shows prospective threshold
+
+### `near proposals <command>`
+
+* `near proposals`              : Current proposals by epoch
 
 ### `near tool <command>`
 
