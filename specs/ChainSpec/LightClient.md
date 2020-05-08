@@ -8,10 +8,25 @@ The state of the light client is defined by:
 Light clients operate by periodically fetching instances of `LightClientBlockView` via particular RPC end-point desdribed [below](#rpc-end-point).
 
 ```rust
+pub enum ApprovalInner {
+    Endorsement(CryptoHash),
+    Skip(BlockHeight)
+}
+
 pub struct ValidatorStakeView {
     pub account_id: AccountId,
     pub public_key: PublicKey,
     pub stake: Balance,
+}
+
+pub struct BlockHeaderInnerLiteView {
+    pub height: BlockHeight,
+    pub epoch_id: CryptoHash,
+    pub next_epoch_id: CryptoHash,
+    pub prev_state_root: CryptoHash,
+    pub outcome_root: CryptoHash,
+    pub timestamp: u64,
+    pub next_bp_hash: CryptoHash,
 }
 
 pub struct LightClientBlockView {
@@ -20,7 +35,6 @@ pub struct LightClientBlockView {
     pub inner_lite: BlockHeaderInnerLiteView,
     pub inner_rest_hash: CryptoHash,
     pub next_bps: Option<Vec<ValidatorStakeView>>,
-    pub approvals_next: Vec<Option<Signature>>,
     pub approvals_after_next: Vec<Option<Signature>>,
 }
 ```
@@ -37,7 +51,7 @@ sha256(concat(
 ))
 ```
 
-The fields `prev_block_hash`, `next_block_inner_hash` and `inner_rest_hash` are used to reconstruct the hashes of the current and next block in the following way (where `block_view` is an instance of `LightClientBlockView`):
+The fields `prev_block_hash`, `next_block_inner_hash` and `inner_rest_hash` are used to reconstruct the hashes of the current and next block, and the approvals that will be signed, in the following way (where `block_view` is an instance of `LightClientBlockView`):
 
 ```rust
 current_block_hash = sha256(concat(
@@ -52,6 +66,11 @@ next_block_hash = sha256(concat(
     current_block_hash,
     block_view.next_block_inner_hash
 ))
+
+approval_message = concat(
+    borsh(ApprovalInner::Endorsement(next_block_hash)),
+    big_endian(block_view.inner_lite.height + 2)
+)
 ```
 
 The light client updates its head with the information from `LightClientBlockView` iff:
@@ -59,17 +78,19 @@ The light client updates its head with the information from `LightClientBlockVie
 1. The height of the block is higher than the height of the current head;
 2. The epoch of the block is equal to the `epoch_id` or `next_epoch_id` known for the current head;
 3. If the epoch of the block is equal to the `next_epoch_id` of the head, then `next_bps` is not `None`;
-4. `approvals_next` and `approvals_after_next` contain signatures that check out against the block producers for the epoch of the block (see next section);
-5. The signatures present in both `approvals_next` and `approvals_after_next` correspond to more than 2/3 of the total stake.
+4. `approvals_after_next` contain valid signatures on `approval_message` from the block producers of the corresponding epoch (see next section);
+5. The signatures present in `approvals_after_next` correspond to more than 2/3 of the total stake (see next section).
 6. If `next_bps` is not none, `sha256(borsh(next_bps))` corresponds to the `next_bp_hash` in `inner_lite`.
 
 ## Signature verification
 
-By construction by the time the `LightClientBlockView` is being validated, the block producers set for its epoch is known.
+To simplify the protocol we require that the next block and the block after next are both in the same epoch as the block that `LightClientBlockView` corresponds to. It is guaranteed that each epoch has at least one final block for which the next two blocks that build on top of it are in the same epoch.
 
-If the `LightClientBlockView` corresponds to some block at height `h`, then the signatures in the `LightClientBlockView::approvals_next` are signatures on endorsements in the block at height `h+1`, and the signatures in the `LightClientBlockView::approvals_after_next` and signatures on endorsements in the block at height `h+2`. To simplify the protocol we require that the next block and the block after next are both in the same epoch as the block that `LightClientBlockView` corresponds to. It is guaranteed that each epoch has at least one final block for which the next two blocks that build on top of it are in the same epoch.
+By construction by the time the `LightClientBlockView` is being validated, the block producers set for its epoch is known. Specifically, when the first light client block view of the previous epoch was processed, due to (3) above the `next_bps` was not `None`, and due to (6) above it was corresponding to the `next_bp_hash` in the block header.
 
-Since both the hashes of the current and next block, and the block producers who signed them are known, the signatures can be validated.
+The sum of all the stakes of `next_bps` in the previous epoch is `total_stake` referred to in (5) above.
+
+The signatures in the `LightClientBlockView::approvals_after_next` are signatures on `approval_message`. The  `i`-th signature in `approvals_after_next`, if present, must validate against the `i`-th public key in `next_bps` from the previous epoch. `approvals_after_next` can contain fewer elements than `next_bps` in the previous epoch.
 
 ## RPC end-point
 
