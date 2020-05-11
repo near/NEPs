@@ -89,17 +89,14 @@ Notice that the `vote` function can also be used to withdraw a vote by putting 0
 A major difficulty in managing the votes comes from the fact that validator stake can change from epoch to epoch, which
 means that we need to carefully update validator votes. For example, if a validator has 100 stake in the previous epoch and
 they voted 80 on some proposal, but in the current epoch their stake has decreased to 80, and now if they try to vote 20
-on some other proposal, it should fail. To address this, we introduce a helper function `resolve`, which is called
-every epoch before any call to the contract:
+on some other proposal, it should fail. To address this, we introduce a helper function `resolve_proposal`, which is called
+before `vote` to ensure consistency of voted stake within a proposal:
 ```rust
-fn resolve(&mut self) {
-    // go through all the proposals and for each account, scale the stake on votes to current stake, i.e,
-    // for each vote, its stake is changed to orginal_stake * current_total_account_stake / previous_total_account_stake.
-    // Also clear proposals that have expired.
+fn resolve_proposal(&mut self, proposal_id: ProposalId) {
+    // if the epoch height has changed, then
+    // for each vote in the proposal, its stake is changed to orginal_stake * current_total_account_stake / previous_total_account_stake.
 }
 ```
-To properly keep track of epochs, we need to add a field `last_epoch_height: EpochHeight` to `VotingContract` and check
-if `env::epoch_height()` is the same as `last_epoch_height`.
 
 Since the contract requires knowing the stake of current validators, we need to augment our runtime to expose that information.
 More specifically, we need the following two functions in `near-vm-logic`:
