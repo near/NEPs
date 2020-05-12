@@ -29,7 +29,9 @@
 | `TOTAL_SEATS` | `100` |
 | `ONLINE_THRESHOLD_MIN` | `0.9` |
 | `ONLINE_THRESHOLD_MAX` | `0.99` |
-|
+| `BLOCK_PRODUCER_KICKOUT_THRESHOLD` | `0.9` |
+| `CHUNK_PRODUCER_KICKOUT_THRESHOLD` | `0.6` |
+
 ## General Variables
 
 | Name | Description | Initial value |
@@ -110,8 +112,8 @@ NEAR validators provide their resources in exchange for a reward `epochReward[t]
 
 | Name | Description |
 | - | - |
-| `proposals: Proposal[]` | The array of all new staking transactions that have happened during the epoch |
-| `prev_validators` | The array of all existing validators during the epoch |
+| `proposals: Proposal[]` | The array of all new staking transactions that have happened during the epoch (if one account has multiple only last one is used) |
+| `current_validators` | The array of all existing validators during the epoch |
 | `epoch[T]` | The epoch when validator[v] is selected from the `proposals` auction array |
 | `seat_price` | The minimum stake needed to become validator in epoch[T] |
 | `stake[v]` | The amount in NEAR tokens staked by validator[v] during the auction at the end of epoch[T-2], minus `INCLUSION_FEE` |
@@ -127,22 +129,25 @@ struct Proposal {
 }
 ```
 
-During the epoch, `proposals` are collected, in the form of `Proposal`s.
+During the epoch, outcome of staking transactions produce `proposals`, which are collected, in the form of `Proposal`s.
 At the end of every epoch `T`, next algorithm gets executed to determine validators for epoch `T + 2`:
 
-1. For every validator in `prev_validators` determine `num_blocks_produced`, `num_chunks_produced` based on what they produced during the epoch.
-2.`Remove validators, for whom `(num_blocks_produced / num_blocks_expected + num_chunks_produced / num_chunks_expected) / 2 < ONLINE_THRESHOLD_MIN`.
-3. Add validators from `proposals`.
-4. Find seat price `seat_price = findSeatPrice(prev_validators - kickedout_validators + proposals, num_seats)`
+1. For every validator in `current_validators` determine `num_blocks_produced`, `num_chunks_produced` based on what they produced during the epoch.
+2. Remove validators, for whom `num_blocks_produced < num_blocks_expected * BLOCK_PRODUCER_KICKOUT_THRESHOLD` or `num_chunks_produced < num_chunks_expected * CHUNK_PRODUCER_KICKOUT_THRESHOLD`.
+3. Add validators from `proposals`, if validator is also in `current_validators`, considered stake of the proposal is `0 if proposal.stake == 0 else proposal.stake + reward[proposal.account_id]`.
+4. Find seat price `seat_price = findSeatPrice(current_validators - kickedout_validators + proposals, num_seats)`, where each validator gets `floor(stake[v] / seat_price)` seats and `seat_price` is highest integer number such that total number of seats is at least `num_seats`.
 5. Filter validators and proposals to only those with stake greater or equal than seat price.
-6. For every validator, replicate them by number of seats they get `stake[v] / seat_price`.
-7. Randomly shuffle (TODO: define random number sampler) with seed from randomness generated on this block.
+6. For every validator, replicate them by number of seats they get `floor(stake[v] / seat_price)`.
+7. Randomly shuffle (TODO: define random number sampler) with seed from randomness generated on the last block of current epoch (via `VRF(block_producer.private_key, block_hash)`).
 8. Cut off all seats which are over the `num_seats` needed.
 9. Use this set for block producers and shifting window over it as chunk producers.
 
 ```python
 def findSeatPrice(stakes, num_seats):
-    """Find seat price given set of stakes and number of seats required."""
+    """Find seat price given set of stakes and number of seats required.
+    
+    Seat price is highest integer number such that if you sum `floor(stakes[i] / seat_price)` it is at least `num_seats`.
+    """
     stakes = sorted(stakes)
     total_stakes = sum(stakes)
     assert total_stakes >= num_seats, "Total stakes should be above number of seats"
@@ -165,6 +170,8 @@ def findSeatPrice(stakes, num_seats):
 | Name | Value |
 | - | - |
 | `epochFee[t]` | `sum([(1 - DEVELOPER_PCT_PER_YEAR) * txFee[i]])`, where [i] represents any considered block within the epoch[t] |
+
+Note: all calculations are done in Rational numbers first with final result converted into integer with rounding down.
 
 Total reward every epoch `t` is equal to:
 ```python
