@@ -1,3 +1,6 @@
 # Chain Specification
 
-TBD
+Next section with more details:
+* [Upgradability](Upgradability.md)
+* [Consensus](Consensus.md)
+* [Transactions](Transactions.md)
