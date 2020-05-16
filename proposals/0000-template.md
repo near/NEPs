@@ -79,9 +79,25 @@ impl Poll {
     pub fn vote(&mut self, proposal_id: ProposalId, stake: U128);
     /// View proposal
     pub fn get_proposal(&mut self, proposal_id: ProposalId) -> Proposal;
+    /// Get result of the poll. `None` if the poll is still open.
+    pub fn get_result(&mut self) -> Option<PollResult>;
 }
 ```
 Notice that the `vote` function can also be used to withdraw a vote by putting 0 stake on the vote.
+
+When a majority agreed on some proposal and the poll ends, we record the result in `PollResult`, which includes not only
+the winning proposal but also some context such as block height and block timestamp:
+
+```rust
+pub struct PollResult {
+    /// Id of the winning prooposal.
+    pub proposal_id: ProposalId,
+    /// Block height at which the poll ends.
+    pub block_height: BlockHeight,
+    /// Timestamp of the block at which the poll ends.
+    pub block_timestamp: u64
+}
+```
 
 # Reference-level explanation
 [reference-level-explanation]: #reference-level-explanation
