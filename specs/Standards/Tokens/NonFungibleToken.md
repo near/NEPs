@@ -49,7 +49,6 @@ There are a few concepts in the scenarios above:
 - Jeraldo's account is `jerry`
 - The NFT contract has been initialized with a nonzero token supply
 - There exists a token with the ID of `3`
-
 #### **High-level**
 
 Alice needs to issue one transaction to the Corgi NFT contract to transfer one corgi token to Jeraldo.

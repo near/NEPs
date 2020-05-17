@@ -43,3 +43,4 @@
 - [Economics](Economics/README.md)
 - [Standards](Standards/README.md)
   - [Fungible Token](Standards/Tokens/FungibleToken.md)
+  - [Nonfungible Token](Standards/Tokens/NonfungibleToken.md)

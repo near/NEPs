@@ -12,4 +12,4 @@ For the overview of the NEAR Protocol, read the following documents in numerical
 
 ## Standards
 
-Standards such as Fungible Token Standard can be found in [Standards](Standards/README.md) page.
+Standards such as the Fungible Token Standard and the Nonfungible Token standard can be found in [Standards](Standards/README.md) page.
