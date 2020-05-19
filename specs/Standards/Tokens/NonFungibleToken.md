@@ -135,7 +135,7 @@ At time of writing, this standard is established with several constraints found 
   /* VIEW METHODS */
   /****************/
 
-  // Returns `true` or `false` based on caller of the function (`predecessor_id) having access to a user's tokens
+  // Returns `true` or `false` based on caller of the function (`predecessor_id`) having access to a user's tokens
   export function check_access(account_id: string): boolean;
 
   // Get an individual owner by given `tokenId`.
