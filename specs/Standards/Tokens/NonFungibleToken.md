@@ -47,7 +47,7 @@ There are a few concepts in the scenarios above:
 - the Corgi nft contract is `corgi`
 - Alice's account is `alice`
 - Jeraldo's account is `jerry`
-- The NFT contract has been initialized with a nonzero token supply
+- The NFT contract has been initialized with a non-zero token supply
 - There exists a token with the ID of `3`
 
 #### **High-level**
@@ -69,7 +69,7 @@ Alice wants to transfer one Corgi NFT through a third party escrow to Jeraldo in
 - Alice's account is `alice`
 - Jeraldo's account is `jerry`
 - The Escrow contract is `escrow`
-- The NFT contract has been initialized with a nonzero token supply
+- The NFT contract has been initialized with a non-zero token supply
 - There exists a Corgi token with the ID of `3` and a Sausage token with the ID of `5`
 - The Escrow contract manages how the transfer is facilitated and guarantees requirements are met for transfer
 
