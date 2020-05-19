@@ -24,13 +24,13 @@ Prior art:
 
 This token should allow the following:
 
-- Initialize contract once. The given total supply will be owned by the given account ID.
 - Get the total supply of created tokens per contract.
 - Transfer a token to a new owner.
-- Grant access to all token to a third party.
+- Grant access to all tokens to a third party.
   - A third party account ID will be able to transfer the tokens that they have access to
-- Get current balance for a given account ID.
 - Transfer tokens from one user to another.
+- Get current number of tokens for a given account ID. (Not in template).
+- Initialize contract once. The given total supply will be owned by the given account ID. (Not in template).
 
 There are a few concepts in the scenarios above:
 
@@ -49,6 +49,7 @@ There are a few concepts in the scenarios above:
 - Jeraldo's account is `jerry`
 - The NFT contract has been initialized with a nonzero token supply
 - There exists a token with the ID of `3`
+
 #### **High-level**
 
 Alice needs to issue one transaction to the Corgi NFT contract to transfer one corgi token to Jeraldo.
@@ -59,7 +60,7 @@ Alice needs to issue one transaction to the Corgi NFT contract to transfer one c
 
 ### **Token swap through a third party escrow**
 
-Alice wants to transfer one Corgi NFT through a third party escrow to Jeraldo in exchange for one Sausage NFT.
+Alice wants to transfer one Corgi NFT through a third party escrow to Jeraldo in exchange for one Sausage NFT. NOTE: This standard does not include how escrow handles anything outside of the explicit transfer of tokens. Any call on an escrow account is illustrative, but not standardized. Escrow can be a trusted individual who acts as an intermediary.
 
 #### **Assumptions**
 
@@ -82,11 +83,11 @@ Both Alice and Jerry will issue asynchronous transactions to their respective co
 #### **Technical calls**
 
 1. `alice` makes an async call to `corgi::grant_access({"escrow_account_id":"escrow"})`
-2. `jerry`  makes an async call to ``sausage::grant_access({"escrow_account_id":"escrow"})`
+2. `jerry`  makes an async call to `sausage::grant_access({"escrow_account_id":"escrow"})`
 3. `escrow` calls `sausage::transfer_from({"owner_id":"jerry", "new_owner_id:"escrow", "token_id": 5})`
-    - attaches callback `escrow::on_transfer({"owner_id":"jerry", "token_contract":"sausage", "token_id": 5})`
+    - Recommondation: attach callback `escrow::on_transfer({"owner_id":"jerry", "token_contract":"sausage", "token_id": 5})`
 4. `escrow` calls `corgi::transfer_from({"owner_id":"alice", "new_owner_id:"escrow", "token_id": 3})`
-    - attaches callback `escrow::on_transfer({"owner_id":"alice", "token_contract":"corgi", "token_id": 3})`
+    - Recommendation: attach callback `escrow::on_transfer({"owner_id":"alice", "token_contract":"corgi", "token_id": 3})`
 5. In one Promise:
     1. `escrow` calls `corgi::transfer_from({"owner_id":"escrow", "new_owner_id:"jerry", "token_id": 3})`
         - attaches callback `escrow::on_transfer({"owner_id":"alice", "token_contract:"corgi", "token_id": 3})`
@@ -103,15 +104,15 @@ Both Alice and Jerry will issue asynchronous transactions to their respective co
 At time of writing, this standard is established with several constraints found in AssemblyScript. The first is that interfaces are not an implemented feature of AssemblyScript, and the second is that classes are not exported in the conversion from AssemblyScript to WASM. This means that the entire contract could be implemented as a class, which might be better for code organization, but it would be deceiving in function.
 
 ```TypeScript
-  type TokenId = u64;
+  type TokenId = u128;
 
   /******************/
   /* CHANGE METHODS */
   /******************/
   
-  // Grant the access to the given `accountId` for the given `tokenId`.
+  // Grant the access to the given `accountId` for all tokens that account has.
   // Requirements:
-  // * The caller of the function (`predecessor_id`) should have access to the token.
+  // * The caller of the function (`predecessor_id`) should have access to the tokens.
   export function grant_access(escrow_account_id: string): void;
 
   // Revoke the access to the given `accountId` for the given `tokenId`.
@@ -122,7 +123,7 @@ At time of writing, this standard is established with several constraints found 
   // Transfer the given `tokenId` from the given `accountId`.  Account `newAccountId` becomes the new owner.
   // Requirements:
   // * The caller of the function (`predecessor_id`) should have access to the token.
-  export function transfer_from(, owner_id: string, new_owner_id: string, tokenId: TokenId): void;
+  export function transfer_from(owner_id: string, new_owner_id: string, tokenId: TokenId): void;
 
 
   // Transfer the given `tokenId` to the given `accountId`.  Account `accountId` becomes the new owner.
@@ -134,11 +135,12 @@ At time of writing, this standard is established with several constraints found 
   /* VIEW METHODS */
   /****************/
 
-// Returns `true` or `false` based on caller of the function (`predecessor_id) having access to the token
-  export function check_access(token_id: TokenId): boolean;
+  // Returns `true` or `false` based on caller of the function (`predecessor_id) having access to a user's tokens
+  export function check_access(account_id: string): boolean;
 
   // Get an individual owner by given `tokenId`.
   export function get_token_owner(token_id: TokenId): string;
+
 
 ```
 
