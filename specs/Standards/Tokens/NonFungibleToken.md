@@ -125,11 +125,11 @@ export function revoke_access(escrow_account_id: string): void;
 // * The caller of the function (`predecessor_id`) should have access to the token.
 export function transfer_from(owner_id: string, new_owner_id: string, tokenId: TokenId): void;
 
-
 // Transfer the given `tokenId` to the given `accountId`.  Account `accountId` becomes the new owner.
 // Requirements:
 // * The caller of the function (`predecessor_id`) should have access to the token.
 export function transfer(new_owner_id: string, token_id: TokenId): void;
+
 
 /****************/
 /* VIEW METHODS */
