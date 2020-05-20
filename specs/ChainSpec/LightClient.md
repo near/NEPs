@@ -94,7 +94,8 @@ The light client updates its head with the information from `LightClientBlockVie
 6. If `next_bps` is not none, `sha256(borsh(next_bps))` corresponds to the `next_bp_hash` in `inner_lite`.
 
 ```python
-def validate_llight_client_block_view(head, block_view):
+def validate_and_update_head(block_view):
+    global head
     global epoch_block_producers_map
 
     current_block_hash, next_block_hash, approval_message = reconstruct_light_client_block_view_fields
@@ -140,6 +141,8 @@ def validate_llight_client_block_view(head, block_view):
             return False
         
         epoch_block_producers_map[block_view.inner_lite.next_epoch_id] = block_view.next_bps
+
+    head = block_view
 ```
 
 ## Signature verification
