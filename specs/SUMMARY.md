@@ -9,7 +9,7 @@
 - [Architecture](Architecture.md)
 - Chain specification
   - [Consensus](ChainSpec/Consensus.md)
-  - [Consensus](ChainSpec/Upgradability.md)
+  - [Upgradability](ChainSpec/Upgradability.md)
   - [Transactions](ChainSpec/Transactions.md)
 - [Runtime specification](RuntimeSpec/README.md)
   - [FunctionCall](RuntimeSpec/FunctionCall.md)
