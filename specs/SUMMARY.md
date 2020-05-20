@@ -8,6 +8,8 @@
   - [Transaction](DataStructures/Transaction.md)
 - [Architecture](Architecture.md)
 - [Chain specification](ChainSpec/README.md)
+  - [Network specification](ChainSpec/NetworkSpec.md)
+    - [Messages](ChainSpec/Messages.md)
   - [Consensus](ChainSpec/Consensus.md)
   - [Transactions](ChainSpec/Transactions.md)
 - [Runtime specification](RuntimeSpec/README.md)
