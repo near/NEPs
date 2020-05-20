@@ -35,6 +35,7 @@ pub struct BlockHeaderInnerLiteView {
     pub outcome_root: CryptoHash,
     pub timestamp: u64,
     pub next_bp_hash: CryptoHash,
+    pub block_merkle_root: CryptoHash,
 }
 
 pub struct LightClientBlockView {
