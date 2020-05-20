@@ -33,24 +33,24 @@ General recommendation is to store version in the database and on binary start, 
 
 Generally, we handle data structure upgradability via enum wrapper around it. See `BlockHeader` structure for example.
 
-### Block structure
+### Versioned data structures
+
+Given we expect many data structures to change or get updated as protocol evolves, few changes are required to support that.
+
+The major one is adding backward compatible `Versioned` data structures like this one:
 
 ```rust
-/// Updatable BlockHeader structure.
-/// Allows to decode and store old versions.
-/// Supports up to 256 versions. After that will need to reuse.
-enum BlockHeader {
+enum VersionedBlockHeader {
     BlockHeaderV1(BlockHeaderV1),
-    BlockHeaderV2(BlockHeaderV2),
-}
-
-/// Add `version` into block header.
-struct BlockHeaderInnerRest {
-    ...
-    /// Latest version that current producing node binary is running on.
-    version: ProtocolVersion,
+    /// Current version, where `BlockHeader` is used internally for all operations.
+    BlockHeaderV2(BlockHeader),
 }
 ```
+
+Where `VersionedBlockHeader` will be stored on disk and sent over the wire.
+This allows to encode and decode old versions (up to 256 given https://borsh.io specficiation). If some data structures has more than 256 versions, old versions are probably can be retired and reused.
+
+Internally current version is used. Previous versions either much interfaces / traits that are defined by different components or are up-casted into the next version (saving for hash validation).
 
 ### Consensus
 
@@ -59,7 +59,18 @@ struct BlockHeaderInnerRest {
 | `PROTOCOL_UPGRADE_BLOCK_THRESHOLD` | `80%` |
 | `PROTOCOL_UPGRADE_NUM_EPOCHS` | `2` |
 
-The condition to switch to next protocol version is based on % of blocks in previous epoch:
+The way the version will be indicated by validators, will be via 
+
+```rust
+/// Add `version` into block header.
+struct BlockHeaderInnerRest {
+    ...
+    /// Latest version that current producing node binary is running on.
+    version: ProtocolVersion,
+}
+```
+
+The condition to switch to next protocol version is based on % of stake `PROTOCOL_UPGRADE_NUM_EPOCHS` epochs prior indicated about switching to the next version:
 
 ```python
 def next_epoch_protocol_version(last_block):
@@ -82,7 +93,7 @@ def next_epoch_protocol_version(last_block):
     for author in authors:
         versions[authors[author] += epoch_manager.validators[author].stake
     (version, stake) = max(versions.items(), key=lambda x: x[1])
-    if stake > PROTOCOL_UPGRADE_BLOCK_THRESHOLD * epoch_info.total_stake:
+    if stake > PROTOCOL_UPGRADE_BLOCK_THRESHOLD * epoch_info.total_block_producer_stake:
         return version
     # Otherwise return version that was used in that deciding epoch.
     return epoch_info.version
