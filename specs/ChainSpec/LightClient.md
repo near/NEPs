@@ -98,7 +98,7 @@ def validate_and_update_head(block_view):
     global head
     global epoch_block_producers_map
 
-    current_block_hash, next_block_hash, approval_message = reconstruct_light_client_block_view_fields
+    current_block_hash, next_block_hash, approval_message = reconstruct_light_client_block_view_fields(block_view)
 
     # (1)
     if block_view.inner_lite.height <= head.inner_lite.height:
