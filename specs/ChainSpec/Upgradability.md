@@ -35,7 +35,7 @@ Generally, we handle data structure upgradability via enum wrapper around it. Se
 
 ### Versioned data structures
 
-Given we expect many data structures to change or get updated as protocol evolves, few changes are required to support that.
+Given we expect many data structures to change or get updated as protocol evolves, a few changes are required to support that.
 
 The major one is adding backward compatible `Versioned` data structures like this one:
 
