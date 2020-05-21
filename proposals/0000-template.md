@@ -40,6 +40,8 @@ pub struct Poll {
     /// Threshold for closing the poll, i.e, if the ratio of stake on a certain proposal over total stake reaches
     /// threshold, the poll is closed.
     threshold: Fraction,
+    /// Fee required to submit a proposal to avoid spamming the state.
+    proposal_init_fee: Balance,
     /// Voting result. `None` means the poll is still open.
     result: Option<ProposalId>,
 }
@@ -72,8 +74,9 @@ The voting contract has the following methods to allow creation of polls and pro
 ```rust
 impl Poll {
     /// Initialize the poll on some topic.
-    pub fn new(topic: String, threshold: Fraction) -> Self;
+    pub fn new(topic: String, threshold: Fraction, proposal_init_fee: U128) -> Self;
     /// Create a proposal for a given poll.
+    #[payable]
     pub fn create_proposal(&mut self, description: String, metadata: String) -> ProposalId;
     /// Vote on a given proposal with certain amont of stake.
     pub fn vote(&mut self, proposal_id: ProposalId, stake: U128);
@@ -83,6 +86,11 @@ impl Poll {
     pub fn get_result(&mut self) -> Option<PollResult>;
 }
 ```
+
+Anyone can create a proposal by calling `create_proposal`, provided that they also pay a fee for submitting this proposal
+specified by this poll.
+
+Validators then use `vote` function to vote on proposals. 
 Notice that the `vote` function can also be used to withdraw a vote by putting 0 stake on the vote.
 
 When a majority agreed on some proposal and the poll ends, we record the result in `PollResult`, which includes not only
@@ -123,10 +131,10 @@ More specifically, we need the following two functions in `near-vm-logic`:
 /// # Cost
 ///
 /// For not nul-terminated account id:
-/// `base + read_memory_base + read_memory_byte * num_bytes + utf8_decoding_base + utf8_decoding_byte * num_bytes + memory_write_base + memory_write_size * 16`
+/// `base + read_memory_base + read_memory_byte * num_bytes + utf8_decoding_base + utf8_decoding_byte * num_bytes + memory_write_base + memory_write_size * 16 + validator_stake_base`
 ///
-/// For nul-terminated account id :
-/// `base + (read_memory_base + read_memory_byte) * num_bytes + utf8_decoding_base + utf8_decoding_byte * num_bytes + memory_write_base + memory_write_size * 16`
+/// For nul-terminated account id:
+/// `base + (read_memory_base + read_memory_byte) * num_bytes + utf8_decoding_base + utf8_decoding_byte * num_bytes + memory_write_base + memory_write_size * 16 + validator_stake_base`
 pub fn validator_stake(
     &mut self,
     account_id_len: u64,
@@ -138,7 +146,7 @@ pub fn validator_stake(
 ///
 /// # Cost
 ///
-/// `base + memory_write_base + memory_write_size * 16`
+/// `base + memory_write_base + memory_write_size * 16 + validator_total_stake_base`
 pub fn validator_total_stake(&mut self, stake_ptr: u64) -> Result<()>;
 ```
 
