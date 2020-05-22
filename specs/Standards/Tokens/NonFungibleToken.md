@@ -77,21 +77,21 @@ Alice wants to transfer one Corgi NFT through a third party escrow to Jeraldo in
 
 Both Alice and Jerry will issue asynchronous transactions to their respective contracts, `corgi` and `sausage` to grant access to the escrow to trade tokens on their behalf. `escrow` will call the `sasuage` token contract asynchrounously to transfer the Sausage token to `escrow`. After, `escrow` will also call the `corgi` contract to asynchornously transfer the Corgi token to `escrow`. Then, `escrow` will conduct a transfer to both parties.
 
-- If both of the `transfer_from` calls succeed, then Alice will now own one Sausage token and Jerry will own one Corgi token.
-- If one or both of the final `transfer_from` calls fail, then nothing will happen and `escrow` should attempt reissuing the failed transaction.
+- If both of the `transfer` calls succeed, then Alice will now own one Sausage token and Jerry will own one Corgi token.
+- If one or both of the final `transfer` calls fail, then nothing will happen and `escrow` should attempt reissuing the failed transaction.
 
 #### **Technical calls**
 
 1. `alice` makes an async call to `corgi::grant_access({"escrow_account_id":"escrow"})`
 2. `jerry`  makes an async call to `sausage::grant_access({"escrow_account_id":"escrow"})`
-3. `escrow` calls `sausage::transfer_from({"owner_id":"jerry", "new_owner_id:"escrow", "token_id": 5})`
+3. `escrow` calls `sausage::transfer({"new_owner_id:"escrow", "token_id": 5})`
     - Recommondation: attach callback `escrow::on_transfer({"owner_id":"jerry", "token_contract":"sausage", "token_id": 5})`
-4. `escrow` calls `corgi::transfer_from({"owner_id":"alice", "new_owner_id:"escrow", "token_id": 3})`
+4. `escrow` calls `corgi::transfer({"new_owner_id:"escrow", "token_id": 3})`
     - Recommendation: attach callback `escrow::on_transfer({"owner_id":"alice", "token_contract":"corgi", "token_id": 3})`
 5. In one Promise:
-    1. `escrow` calls `corgi::transfer_from({"owner_id":"escrow", "new_owner_id:"jerry", "token_id": 3})`
+    1. `escrow` calls `corgi::transfer({"new_owner_id:"jerry", "token_id": 3})`
         - attaches callback `escrow::on_transfer({"owner_id":"alice", "token_contract:"corgi", "token_id": 3})`
-    2. `escrow` calls `sausage::transfer_from({"owner_id":"jerry", "new_owner_id:"escrow", "token_id": 5})`
+    2. `escrow` calls `sausage::transfer({"new_owner_id:"escrow", "token_id": 5})`
         - attaches callback `escrow::on_transfer({"owner_id":"jerry", "token_contract":"corgi", "token_id": 3})`
 
 
@@ -120,10 +120,10 @@ export function grant_access(escrow_account_id: string): void;
 // * The caller of the function (`predecessor_id`) should have access to the token.
 export function revoke_access(escrow_account_id: string): void;
 
-// Transfer the given `tokenId` from the given `accountId`.  Account `newAccountId` becomes the new owner.
+// Transfer the given `tokenId`. Account `newAccountId` becomes the new owner.
 // Requirements:
 // * The caller of the function (`predecessor_id`) should have access to the token.
-export function transfer_from(owner_id: string, new_owner_id: string, tokenId: TokenId): void;
+export function transfer(new_owner_id: string, tokenId: TokenId): void;
 
 // Transfer the given `tokenId` to the given `accountId`.  Account `accountId` becomes the new owner.
 // Requirements:
