@@ -10,6 +10,7 @@
 - [Chain specification](ChainSpec/README.md)
   - [Consensus](ChainSpec/Consensus.md)
   - [Transactions](ChainSpec/Transactions.md)
+  - [Light Client](ChainSpec/LightClient.md)
 - [Runtime specification](RuntimeSpec/README.md)
   - [FunctionCall](RuntimeSpec/FunctionCall.md)
   - [Transactions](RuntimeSpec/Transactions.md)
