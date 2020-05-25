@@ -4,6 +4,14 @@ All message sent in the network are of type `PeerMessage`. They are encoded usin
 
 Check [Borsh specification](https://github.com/nearprotocol/borsh#specification) details to see how it handles `enum`, `struct` and basic data types.
 
+## PeerID
+
+The id of a peer in the network is its [PublicKey](https://github.com/nearprotocol/nearcore/blob/master/core/crypto/src/signature.rs).
+
+```rust
+struct PeerId(PublicKey);
+```
+
 ## PeerMessage
 
 ```rust
@@ -94,5 +102,36 @@ struct RoutedMessage {
     ttl: u8,
     /// Message
     body: RoutedMessageBody,
+}
+```
+
+## RoutedMessageBody
+
+```rust
+enum RoutedMessageBody {
+    BlockApproval(Approval),
+    ForwardTx(SignedTransaction),
+
+    TxStatusRequest(AccountId, CryptoHash),
+    TxStatusResponse(FinalExecutionOutcomeView),
+    QueryRequest {
+        query_id: String,
+        block_id_or_finality: BlockIdOrFinality,
+        request: QueryRequest,
+    },
+    QueryResponse {
+        query_id: String,
+        response: Result<QueryResponse, String>,
+    },
+    ReceiptOutcomeRequest(CryptoHash),
+    ReceiptOutComeResponse(ExecutionOutcomeWithIdAndProof),
+    StateRequestHeader(ShardId, CryptoHash),
+    StateRequestPart(ShardId, CryptoHash, u64),
+    StateResponse(StateResponseInfo),
+    PartialEncodedChunkRequest(PartialEncodedChunkRequestMsg),
+    PartialEncodedChunkResponse(PartialEncodedChunkResponseMsg),
+    PartialEncodedChunk(PartialEncodedChunk),
+    Ping(Ping),
+    Pong(Pong),
 }
 ```
