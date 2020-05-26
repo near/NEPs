@@ -1,10 +1,16 @@
 # Messages
 
-All message sent in the network are of type `PeerMessage`. They are encoded using [Borsh](https://borsh.io/) which allows a rich structure, small size and fast encoding/decoding. For deatils about data structure used as part of the message see the [reference code](https://github.com/nearprotocol/nearcore).
+All message sent in the network are of type `PeerMessage`. They are encoded using [Borsh](https://borsh.io/) which allows a rich structure, small size and fast encoding/decoding. For details about data structures used as part of the message see the [reference code](https://github.com/nearprotocol/nearcore).
 
-Check [Borsh specification](https://github.com/nearprotocol/borsh#specification) details to see how it handles `enum`, `struct` and basic data types.
+## Encoding
 
-## PeerID
+A `PeerMessage` is converted into an array of bytes (`Vec<u8>`) using borsh serialization. An encoded message is conformed by 4 bytes with the length of the serialized `PeerMessage` concatenated with the serialized `PeerMessage`.
+
+Check [Borsh specification](https://github.com/nearprotocol/borsh#specification) details to see how it handles each data structure.
+
+## Data structures
+
+### PeerID
 
 The id of a peer in the network is its [PublicKey](https://github.com/nearprotocol/nearcore/blob/master/core/crypto/src/signature.rs).
 
@@ -12,7 +18,26 @@ The id of a peer in the network is its [PublicKey](https://github.com/nearprotoc
 struct PeerId(PublicKey);
 ```
 
-## PeerMessage
+### PeerInfo
+
+
+```rust
+struct PeerInfo {
+    id: PeerId,
+    addr: Option<SocketAddr>,
+    account_id: Option<AccountId>,
+}
+```
+
+`PeerInfo` contains relevant information to try to connect to other peer. [`SocketAddr`](https://doc.rust-lang.org/std/net/enum.SocketAddr.html) is a tuple of the form: `IP:port`.
+
+### AccountID
+
+```rust
+type AccountId = String;
+```
+
+### PeerMessage
 
 ```rust
 enum PeerMessage {
@@ -38,7 +63,24 @@ enum PeerMessage {
 }
 ```
 
-## Handshake
+### AnnounceAccount
+
+Each peer should announce its account
+
+```rust
+struct AnnounceAccount {
+    /// AccountId to be announced.
+    account_id: AccountId,
+    /// PeerId from the owner of the account.
+    peer_id: PeerId,
+    /// This announcement is only valid for this `epoch`.
+    epoch_id: EpochId,
+    /// Signature using AccountId associated secret key.
+    signature: Signature,
+}
+```
+
+### Handshake
 
 ```rust
 struct Handshake {
@@ -57,7 +99,9 @@ struct Handshake {
 }
 ```
 
-## Edge
+<!-- TODO: Make diagram about handshake process, since it is very complex -->
+
+### Edge
 
 ```rust
 struct Edge {
@@ -76,7 +120,7 @@ struct Edge {
 }
 ```
 
-## EdgeInfo
+### EdgeInfo
 
 ```rust
 struct EdgeInfo {
@@ -85,7 +129,7 @@ struct EdgeInfo {
 }
 ```
 
-## RoutedMessage
+### RoutedMessage
 
 ```rust
 struct RoutedMessage {
@@ -105,7 +149,7 @@ struct RoutedMessage {
 }
 ```
 
-## RoutedMessageBody
+### RoutedMessageBody
 
 ```rust
 enum RoutedMessageBody {
@@ -134,4 +178,27 @@ enum RoutedMessageBody {
     Ping(Ping),
     Pong(Pong),
 }
+```
+
+## CryptoHash
+
+`CryptoHash` are objects with 256 bits of information.
+
+```rust
+pub struct Digest(pub [u8; 32]);
+
+pub struct CryptoHash(pub Digest);
+```
+
+Usually `CryptoHash` are obtained using `hash_struct`.
+
+```python
+def borsh_serialize(object):
+    """ Serialize an object using borsh into an array of bytes.
+    """
+
+def hash_struct(object):
+    serialized = borsh_serialize(object)
+    crypto_hash = sha256(serialized)
+    return crypto_hash
 ```
