@@ -6,7 +6,7 @@ This document should serve as reference for all the clients to implement network
 
 ## Messages
 
-Data structures used for messages between peers are enumerated in [Message](Messages.md). You can find in the bottom the definition of [`hash_struct`](Messages.md#cryptohash), a function that is used to obtain a unique identifier from an object.
+Data structures used for messages between peers are enumerated in [Message](Messages.md).
 
 ## Discovering the network
 
@@ -136,10 +136,10 @@ The hash of a `RoutedMessage` to be stored on the map `route_back` is computed a
 
 ```python
 def route_back_hash(routed_message):
-    return hash_struct((
-        routed_message.target,
-        routed_message.author,
-        routed_message.body
+    return sha256(concat(
+        borsh(routed_message.target),
+        borsh(routed_message.author),
+        borsh(routed_message.body)
     ))
 ```
 

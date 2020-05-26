@@ -189,16 +189,3 @@ pub struct Digest(pub [u8; 32]);
 
 pub struct CryptoHash(pub Digest);
 ```
-
-Usually `CryptoHash` are obtained using `hash_struct`.
-
-```python
-def borsh_serialize(object):
-    """ Serialize an object using borsh into an array of bytes.
-    """
-
-def hash_struct(object):
-    serialized = borsh_serialize(object)
-    crypto_hash = sha256(serialized)
-    return crypto_hash
-```
