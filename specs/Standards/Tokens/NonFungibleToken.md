@@ -104,42 +104,36 @@ Both Alice and Jerry will issue asynchronous transactions to their respective co
 At time of writing, this standard is established with several constraints found in AssemblyScript. The first is that interfaces are not an implemented feature of AssemblyScript, and the second is that classes are not exported in the conversion from AssemblyScript to WASM. This means that the entire contract could be implemented as a class, which might be better for code organization, but it would be deceiving in function.
 
 ```TypeScript
-type TokenId = u128;
 
 /******************/
 /* CHANGE METHODS */
 /******************/
 
-// Grant the access to the given `accountId` for all tokens that account has.
+// Grant access to the given `escrow_account_id` for all tokens that account has.
 // Requirements:
 // * The caller of the function (`predecessor_id`) should have access to the tokens.
 export function grant_access(escrow_account_id: string): void;
 
-// Revoke the access to the given `accountId` for the given `tokenId`.
+// Revoke the access to the given `account_id` for the given `token_id`.
 // Requirements:
 // * The caller of the function (`predecessor_id`) should have access to the token.
 export function revoke_access(escrow_account_id: string): void;
 
-// Transfer the given `tokenId`. Account `newAccountId` becomes the new owner.
+// Transfer the given `token_id`. Account `new_account_id` becomes the new owner.
 // Requirements:
 // * The caller of the function (`predecessor_id`) should have access to the token.
-export function transfer(new_owner_id: string, tokenId: TokenId): void;
-
-// Transfer the given `tokenId` to the given `accountId`.  Account `accountId` becomes the new owner.
-// Requirements:
-// * The caller of the function (`predecessor_id`) should have access to the token.
-export function transfer(new_owner_id: string, token_id: TokenId): void;
-
+export function transfer(new_owner_id: string, token_id: u128): void;
 
 /****************/
 /* VIEW METHODS */
 /****************/
 
-// Returns `true` or `false` based on caller of the function (`predecessor_id`) having access to a user's tokens
-export function check_access(account_id: string): boolean;
+// Returns `true` or `false` based on `escrow_account_id` having access to tokens owned by `owner_id`
+export function check_access(escrow_account_id: string, owner_id: string): boolean;
 
-// Get an individual owner by given `tokenId`.
-export function get_token_owner(token_id: TokenId): string;
+// Get an individual owner by given `token_id`.
+export function get_token_owner(token_id: u128): string;
+
 ```
 
 ## Drawbacks
@@ -148,7 +142,7 @@ export function get_token_owner(token_id: TokenId): string;
 
 The major design choice to not use a system of approvals for escrow in favor of performance means that it is up to implementors of markets to decide how they manage escrow themselves. This is a dilemma because it increases freedom, while increasing risk of making a mistake on the market side. Ultimately, it will be up to markets and their users to find the best solution to escrow, and we don't believe that approvals is the way to do it. This allows for that solution to be discovered with trail and error. The standard for the market will change, but not the token itself.
 This token standard has been whittled down to the simplest fundamental use cases. It relies on extensions and design decisions to be useable.
-There are some things that have been in contention in the design of this standard. Namely, the tokenId system relies on unique indices to function. This might cause a problem with use cases that need the `lock` and `unlock` functionality.
+There are some things that have been in contention in the design of this standard. Namely, the token_id system relies on unique indices to function. This might cause a problem with use cases that need the `lock` and `unlock` functionality.
 In addition, the `grant_access` and `revoke_access` functions act similarly to approvals, but must operate asynchronously and in batch transactions where appropriate.
 
 ## Rationale and alternatives
