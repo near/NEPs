@@ -27,10 +27,11 @@ _Requirements:_
 
 `CreateAccountAction` doesn't take any additional arguments, it uses `receiver_id` from Transaction. `receiver_id` is an ID for an account to be created. Account ID should be [valid](Account.md#account-id) and **unique** throughout the system.
 
+If `receiver_id` has length == 64, this account id is considered to be `hex(public_key)`, meaning creation of account only succeeds if followed up with `AddKey(public_key)` action.
+
 **Outcome**:
 - creates an account with `id` = `receiver_id`
 - sets Account `storage_usage` to `account_cost` (genesis config)
-- sets Account `storage_paid_at` to the current block height
 
 NOTE: for the all subsequent actions in the transaction the `signer_id` becomes `receiver_id` until [DeleteAccountAction](#DeleteAccountAction). It allows to execute actions on behalf of the just created account.
 

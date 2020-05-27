@@ -9,14 +9,17 @@ NEAR Protocol has an account names system. Account ID is similar to a username. 
 ### Account ID Rules
 
 - minimum length is 2
-- maximum length is 64
+- maximum length is 63
 - **Account ID** consists of **Account ID parts** separated by `.`
 - **Account ID part** consists of lowercase alphanumeric symbols separated by either `_` or `-`.
+- **Account ID** that is 64 characters long is required to be `hex(public_key)`.
 
 Account names are similar to a domain names.
-Anyone can create a top level account (TLA) without separators, e.g. `near`.
+Top level account (TLA) like `near`, `com`, `eth` can only be created by `registrar` account (see next section for more details).
 Only `near` can create `alice.near`. And only `alice.near` can create `app.alice.near` and so on.
 Note, `near` can NOT create `app.alice.near` directly.
+
+Additionally, there is an implicit account creation path. Account ids, that are 64 character long, can only be created with `AccessKey` that matches account id via `hex` derivation. Allowing to create new key pair - and the sender of funds to this account to actually create an account.
 
 Regex for a full account ID, without checking for length:
 
