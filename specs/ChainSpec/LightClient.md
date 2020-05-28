@@ -52,11 +52,11 @@ Recall that the hash of the block is
 
 ```rust
 sha256(concat(
-    prev_hash,
     sha256(concat(
         sha256(borsh(inner_lite)),
         sha256(borsh(inner_rest))
-    ))
+    )),
+    prev_hash
 ))
 ```
 
@@ -65,11 +65,11 @@ The fields `prev_block_hash`, `next_block_inner_hash` and `inner_rest_hash` are 
 ```python
 def reconstruct_light_client_block_view_fields(block_view):
     current_block_hash = sha256(concat(
-        block_view.prev_block_hash,
         sha256(concat(
             sha256(borsh(block_view.inner_lite)),
             block_view.inner_rest_hash,
-        ))
+        )),
+        block_view.prev_block_hash
     ))
 
     next_block_hash = sha256(concat(
