@@ -73,8 +73,8 @@ def reconstruct_light_client_block_view_fields(block_view):
     ))
 
     next_block_hash = sha256(concat(
-        current_block_hash,
-        block_view.next_block_inner_hash
+        block_view.next_block_inner_hash,
+        current_block_hash
     ))
 
     approval_message = concat(
