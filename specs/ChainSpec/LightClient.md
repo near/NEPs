@@ -38,6 +38,13 @@ pub struct BlockHeaderInnerLiteView {
     pub block_merkle_root: CryptoHash,
 }
 
+pub struct LightClientBlockLiteView {
+    pub prev_block_hash: CryptoHash,
+    pub inner_rest_hash: CryptoHash,
+    pub inner_lite: BlockHeaderInnerLiteView,
+}
+
+
 pub struct LightClientBlockView {
     pub prev_block_hash: CryptoHash,
     pub next_block_inner_hash: CryptoHash,
@@ -156,7 +163,70 @@ The sum of all the stakes of `next_bps` in the previous epoch is `total_stake` r
 
 The signatures in the `LightClientBlockView::approvals_after_next` are signatures on `approval_message`. The  `i`-th signature in `approvals_after_next`, if present, must validate against the `i`-th public key in `next_bps` from the previous epoch. `approvals_after_next` can contain fewer elements than `next_bps` in the previous epoch.
 
-## RPC end-point
+## Proof Verification
+
+[transaction-outcome-proof](Transaction Outcome Proofs)
+### Transaction Outcome Proofs
+
+To verify that a transaction or receipt happens on chain, a light client can request a proof through rpc by providing `id`, which is of type
+```rust
+pub enum TransactionOrReceiptId {
+    Transaction { hash: CryptoHash, sender: AccountId },
+    Receipt { id: CryptoHash, receiver: AccountId },
+}
+```
+and the block hash of light client head. The rpc will return the following struct
+```rust
+pub struct RpcLightClientExecutionProofResponse {
+    /// Proof of execution outcome
+    pub outcome_proof: ExecutionOutcomeWithIdView,
+    /// Proof of shard execution outcome root
+    pub outcome_root_proof: MerklePath,
+    /// A light weight representation of block that contains the outcome root
+    pub block_header_lite: LightClientBlockLiteView,
+    /// Proof of the existence of the block in the block merkle tree,
+    /// which consists of blocks up to the light client head
+    pub block_proof: MerklePath,
+}
+```
+which includes everything that a light client needs to prove the execution outcome of the given transaction or receipt.
+The proof verification can be broken down into two steps, execution outcome root verification and block merkle root
+verification.
+ 
+#### Execution Outcome Root Verification
+If the outcome root of the transaction or receipt is included in block `H`, then `outcome_proof` includes the block hash
+of `H`, as well as the merkle proof of the execution outcome in its given shard. The outcome root in `H` can be
+reconstructed by
+```python
+shard_outcome_root = compute_root(sha256(borsh(execution_outcome)), outcome_proof.proof)
+block_outcome_root = compute_root(sha256(borsh(shard_outcome_root)), outcome_root_proof)
+```
+
+This outcome root must match the outcome root in `block_header_lite.inner_lite`.
+
+#### Block Merkle Root Verification
+
+Recall that block hash can be computed from `LightClientBlockLiteView` by
+```rust
+sha256(concat(
+    sha256(concat(
+        sha256(borsh(inner_lite)),
+        sha256(borsh(inner_rest))
+    )),
+    prev_hash
+))
+```
+
+The expected block merkle root can be computed by
+```python
+block_hash = compute_block_hash(block_header_lite)
+block_merkle_root = compute_root(block_hash, block_proof)
+```
+which must match the block merkle root in the light client block of the light client head.
+
+## RPC end-points
+
+### Light Client Block
 
 There's a single end-point that full nodes exposed that light clients can use to fetch new `LightClientBlockView`s:
 
@@ -169,3 +239,14 @@ The RPC returns the `LightClientBlock` for the block as far into the future from
 A standalone light client would bootstrap by requesting next blocks until it receives an empty result, and then periodically request the next light client block.
 
 A smart contract-based light client that enables a bridge to NEAR on a different blockchain naturally cannot request blocks itself. Instead external oracles query the next light client block from one of the full nodes, and submit it to the light client smart contract. The smart contract-based light client performs the same checks described above, so the oracle doesn't need to be trusted.
+
+### Light Client Proof
+
+The following rpc end-point returns `RpcLightClientExecutionProofResponse` that a light client needs for verifying execution outcomes:
+
+```
+http post http://127.0.0.1:3030/ jsonrpc=2.0 method=EXPERIMENTAL_light_client_proof params:="{"type": <proof_type>, "id": <id>, "sender": <sender>, "light_client_head": <light_client_head>}" id="dontcare"
+```
+
+Note that the above command shows the case for querying proof for transaction outcome. For receipt outcome, "sender" should
+be replaced by "receiver".
