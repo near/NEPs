@@ -165,7 +165,7 @@ The signatures in the `LightClientBlockView::approvals_after_next` are signature
 
 ## Proof Verification
 
-[transaction-outcome-proof](Transaction Outcome Proofs)
+[Transaction Outcome Proof]: #transaction-outcome-proofs
 ### Transaction Outcome Proofs
 
 To verify that a transaction or receipt happens on chain, a light client can request a proof through rpc by providing `id`, which is of type
@@ -190,6 +190,20 @@ pub struct RpcLightClientExecutionProofResponse {
 }
 ```
 which includes everything that a light client needs to prove the execution outcome of the given transaction or receipt.
+Here `ExecutionOutcomeWithIdView` is
+```rust
+pub struct ExecutionOutcomeWithIdView {
+    /// Proof of the execution outcome
+    pub proof: MerklePath,
+    /// Block hash of the block that contains the outcome root
+    pub block_hash: CryptoHash,
+    /// Id of the execution (transaction or receipt)
+    pub id: CryptoHash,
+    /// The actual outcome
+    pub outcome: ExecutionOutcomeView,
+}
+```
+
 The proof verification can be broken down into two steps, execution outcome root verification and block merkle root
 verification.
  
@@ -242,11 +256,16 @@ A smart contract-based light client that enables a bridge to NEAR on a different
 
 ### Light Client Proof
 
-The following rpc end-point returns `RpcLightClientExecutionProofResponse` that a light client needs for verifying execution outcomes:
+The following rpc end-point returns `RpcLightClientExecutionProofResponse` that a light client needs for verifying execution outcomes.
+
+For transaction execution outcome, the rpc is
 
 ```
-http post http://127.0.0.1:3030/ jsonrpc=2.0 method=EXPERIMENTAL_light_client_proof params:="{"type": <proof_type>, "id": <id>, "sender": <sender>, "light_client_head": <light_client_head>}" id="dontcare"
+http post http://127.0.0.1:3030/ jsonrpc=2.0 method=EXPERIMENTAL_light_client_proof params:="{"type": "transaction", "transaction_hash": <transaction_hash>, "sender_id": <sender_id>, "light_client_head": <light_client_head>}" id="dontcare"
 ```
 
-Note that the above command shows the case for querying proof for transaction outcome. For receipt outcome, "sender" should
-be replaced by "receiver".
+For receipt execution outcome, the rpc is
+
+```
+http post http://127.0.0.1:3030/ jsonrpc=2.0 method=EXPERIMENTAL_light_client_proof params:="{"type": "receipt", "receipt_id": <receipt_id>, "receiver_id": <receiver_id>, "light_client_head": <light_client_head>}" id="dontcare"
+```
