@@ -1,9 +1,20 @@
 # Fungible Token
 
+Version `0.2.0`
+
 ## Summary
 [summary]: #summary
 
 A standard interface for fungible tokens allowing for ownership, escrow and transfer, specifically targeting third-party marketplace integration.
+
+## Changelog
+
+### `0.2.0`
+
+- Introduce storage deposits. Make every method payable. Require caller to attach enough deposit to cover potential storage increase. See [core-contracts/#47](https://github.com/near/core-contracts/issues/47)
+- Replace `set_allowance` with `inc_allowance` and `dec_allowance` to address the issue of allowance front-running. See [core-contracts/#49](https://github.com/near/core-contracts/issues/49)
+- Validate `owner_id` account ID. See [core-contracts/#54](https://github.com/near/core-contracts/issues/54)
+- Enforce that the `new_owner_id` is different from the current `owner_id` for transfer. See [core-contracts/#55](https://github.com/near/core-contracts/issues/55)
 
 ## Motivation
 [motivation]: #motivation
@@ -47,6 +58,11 @@ There are a few concepts in the scenarios above:
 
 Note, that the precision is not part of the default standard, since it's not required to perform actions. The minimum
 value is always 1 token.
+
+The standard acknowledges NEAR storage staking model and accounts for the difference in storage that can be introduced
+by actions on this contract. Since multiple users use the contract, the contract has to account for potential
+storage increase. That's why every change method of the contract that can change the amount of storage has to be payable.
+See reference implementation for storage deposits and refunds.
 
 ### Simple transfer
 
@@ -147,13 +163,18 @@ When called, DEX makes 2 async transfers calls to exchange corresponding tokens.
 ## Reference-level explanation
 [reference-level-explanation]: #reference-level-explanation
 
-The full implementation in Rust can be found there: https://github.com/nearprotocol/near-sdk-rs/blob/master/examples/fungible-token/src/lib.rs
+The full implementation in Rust can be found there: [fungible-token](https://github.com/nearprotocol/near-sdk-rs/blob/master/examples/fungible-token/src/lib.rs)
 
 **NOTES:**
-- All amounts, balances and allowance are limited by U128 (max value `2**128 - 1`).
+- All amounts, balances and allowance are limited by `U128` (max value `2**128 - 1`).
 - Token standard uses JSON for serialization of arguments and results.
 - Amounts in arguments and results have are serialized as Base-10 strings, e.g. `"100"`. This is done to avoid
 JSON limitation of max integer value of `2**53`.
+- The contract tracks storage difference before and after the call. If the storage increases, the contract requires
+the caller of the contract to attach enough deposit to the function call to cover the storage stake difference.
+It's done to prevent denial of service attack on the contract by taking all available storage.
+If the storage decreases, the contract will issue a refund for the storage stake difference.
+The unused tokens from the attached deposit are also going to be refunded, so it's safe to attach more deposit than required.
 
 Interface:
 
@@ -162,9 +183,21 @@ Interface:
 /* CHANGE METHODS */
 /******************/
 
-/// Sets the `allowance` for `escrow_account_id` on the account of the caller of this contract
+/// Increments the `allowance` for `escrow_account_id` by `amount` on the account of the caller of this contract
 /// (`predecessor_id`) who is the balance owner.
-pub fn set_allowance(&mut self, escrow_account_id: AccountId, allowance: U128);
+/// Requirements:
+/// * Caller of the method has to attach deposit enough to cover storage difference at the
+///   fixed storage price defined in the contract.
+#[payable]
+pub fn inc_allowance(&mut self, escrow_account_id: AccountId, amount: U128);
+
+/// Decrements the `allowance` for `escrow_account_id` by `amount` on the account of the caller of this contract
+/// (`predecessor_id`) who is the balance owner.
+/// Requirements:
+/// * Caller of the method has to attach deposit enough to cover storage difference at the
+///   fixed storage price defined in the contract.
+#[payable]
+pub fn dec_allowance(&mut self, escrow_account_id: AccountId, amount: U128);
 
 /// Transfers the `amount` of tokens from `owner_id` to the `new_owner_id`.
 /// Requirements:
@@ -173,6 +206,9 @@ pub fn set_allowance(&mut self, escrow_account_id: AccountId, allowance: U128);
 /// * If this function is called by an escrow account (`owner_id != predecessor_account_id`),
 ///   then the allowance of the caller of the function (`predecessor_account_id`) on
 ///   the account of `owner_id` should be greater or equal than the transfer `amount`.
+/// * Caller of the method has to attach deposit enough to cover storage difference at the
+///   fixed storage price defined in the contract.
+#[payable]
 pub fn transfer_from(&mut self, owner_id: AccountId, new_owner_id: AccountId, amount: U128);
 
 
@@ -180,6 +216,10 @@ pub fn transfer_from(&mut self, owner_id: AccountId, new_owner_id: AccountId, am
 /// `new_owner_id`.
 /// Act the same was as `transfer_from` with `owner_id` equal to the caller of the contract
 /// (`predecessor_id`).
+/// Requirements:
+/// * Caller of the method has to attach deposit enough to cover storage difference at the
+///   fixed storage price defined in the contract.
+#[payable]
 pub fn transfer(&mut self, new_owner_id: AccountId, amount: U128);
 
 /****************/
