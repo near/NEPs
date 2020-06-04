@@ -85,7 +85,7 @@ Both Alice and Jerry will issue asynchronous transactions to their respective co
 1. `alice` makes an async call to `corgi::grant_access({"escrow_account_id":"escrow"})`
 2. `jerry`  makes an async call to `sausage::grant_access({"escrow_account_id":"escrow"})`
 3. `escrow` calls `sausage::transfer({"new_owner_id:"escrow", "token_id": 5})`
-    - Recommondation: attach callback `escrow::on_transfer({"owner_id":"jerry", "token_contract":"sausage", "token_id": 5})`
+    - Recommendation: attach callback `escrow::on_transfer({"owner_id":"jerry", "token_contract":"sausage", "token_id": 5})`
 4. `escrow` calls `corgi::transfer({"new_owner_id:"escrow", "token_id": 3})`
     - Recommendation: attach callback `escrow::on_transfer({"owner_id":"alice", "token_contract":"corgi", "token_id": 3})`
 5. In one Promise:
