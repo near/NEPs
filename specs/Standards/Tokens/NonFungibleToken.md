@@ -137,7 +137,7 @@ export function transfer(new_owner_id: string, token_id: TokenId): void;
 // Returns `true` or `false` based on `escrow_account_id` having access to tokens owned by `owner_id`
 export function check_access(escrow_account_id: string, owner_id: string): boolean;
 
-// Get the owner's account ID of the given `token_id`.
+// Get the owner's account ID for the given `token_id`.
 export function get_token_owner(token_id: u128): string;
 
 ```
