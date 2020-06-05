@@ -207,7 +207,7 @@ In this standard we're trying to avoid enforcing locks, since most actions can s
 value is always 1 token.</p>
 <p>The standard acknowledges NEAR storage staking model and accounts for the difference in storage that can be introduced
 by actions on this contract. Since multiple users use the contract, the contract has to account for potential
-storage increase. That's why every change method of the contract that can change the amount of storage has to be payable.
+storage increase. Thus every change method of the contract that can change the amount of storage must be payable.
 See reference implementation for storage deposits and refunds.</p>
 <h3><a class="header" href="#simple-transfer" id="simple-transfer">Simple transfer</a></h3>
 <p>Alice wants to send 5 wBTC tokens to Bob.</p>
@@ -311,7 +311,7 @@ Charlie calls the DEX</p>
 </li>
 </ol>
 <h2><a class="header" href="#reference-level-explanation" id="reference-level-explanation">Reference-level explanation</a></h2>
-<p>The full implementation in Rust can be found there: <a href="https://github.com/nearprotocol/near-sdk-rs/blob/master/examples/fungible-token/src/lib.rs">fungible-token</a></p>
+<p>The full implementation in Rust can be found here: <a href="https://github.com/nearprotocol/near-sdk-rs/blob/master/examples/fungible-token/src/lib.rs">fungible-token</a></p>
 <p><strong>NOTES:</strong></p>
 <ul>
 <li>All amounts, balances and allowance are limited by <code>U128</code> (max value <code>2**128 - 1</code>).</li>
@@ -322,6 +322,8 @@ JSON limitation of max integer value of <code>2**53</code>.</li>
 the contract requires the caller of the contract to attach enough deposit to the function call
 to cover the storage cost.
 This is done to prevent a denial of service attack on the contract by taking all available storage.
+It's because the gas cost of adding new escrow account is cheap, many escrow allowances can be added until the contract
+runs out of storage.
 If the storage decreases, the contract will issue a refund for the cost of the released storage.
 The unused tokens from the attached deposit are also refunded, so it's safe to attach more deposit than required.</li>
 <li>To prevent the deployed contract from being modified or deleted, it should not have any access

@@ -174,6 +174,8 @@ JSON limitation of max integer value of `2**53`.
 the contract requires the caller of the contract to attach enough deposit to the function call
 to cover the storage cost.
 This is done to prevent a denial of service attack on the contract by taking all available storage.
+It's because the gas cost of adding new escrow account is cheap, many escrow allowances can be added until the contract
+runs out of storage.
 If the storage decreases, the contract will issue a refund for the cost of the released storage.
 The unused tokens from the attached deposit are also refunded, so it's safe to attach more deposit than required.
 - To prevent the deployed contract from being modified or deleted, it should not have any access
