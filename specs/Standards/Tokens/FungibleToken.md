@@ -61,7 +61,7 @@ value is always 1 token.
 
 The standard acknowledges NEAR storage staking model and accounts for the difference in storage that can be introduced
 by actions on this contract. Since multiple users use the contract, the contract has to account for potential
-storage increase. That's why every change method of the contract that can change the amount of storage has to be payable.
+storage increase. Thus every change method of the contract that can change the amount of storage must be payable.
 See reference implementation for storage deposits and refunds.
 
 ### Simple transfer
@@ -163,7 +163,7 @@ When called, DEX makes 2 async transfers calls to exchange corresponding tokens.
 ## Reference-level explanation
 [reference-level-explanation]: #reference-level-explanation
 
-The full implementation in Rust can be found there: [fungible-token](https://github.com/nearprotocol/near-sdk-rs/blob/master/examples/fungible-token/src/lib.rs)
+The full implementation in Rust can be found here: [fungible-token](https://github.com/nearprotocol/near-sdk-rs/blob/master/examples/fungible-token/src/lib.rs)
 
 **NOTES:**
 - All amounts, balances and allowance are limited by `U128` (max value `2**128 - 1`).
