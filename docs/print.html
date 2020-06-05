@@ -973,7 +973,6 @@ pub struct LightClientBlockView {
 <p>The sum of all the stakes of <code>next_bps</code> in the previous epoch is <code>total_stake</code> referred to in (5) above.</p>
 <p>The signatures in the <code>LightClientBlockView::approvals_after_next</code> are signatures on <code>approval_message</code>. The  <code>i</code>-th signature in <code>approvals_after_next</code>, if present, must validate against the <code>i</code>-th public key in <code>next_bps</code> from the previous epoch. <code>approvals_after_next</code> can contain fewer elements than <code>next_bps</code> in the previous epoch.</p>
 <h2><a class="header" href="#proof-verification" id="proof-verification">Proof Verification</a></h2>
-<p>[transaction-outcome-proof](Transaction Outcome Proofs)</p>
 <h3><a class="header" href="#transaction-outcome-proofs" id="transaction-outcome-proofs">Transaction Outcome Proofs</a></h3>
 <p>To verify that a transaction or receipt happens on chain, a light client can request a proof through rpc by providing <code>id</code>, which is of type</p>
 <pre><pre class="playpen"><code class="language-rust">
@@ -1003,7 +1002,23 @@ pub struct LightClientBlockView {
 <span class="boring">}
 </span></code></pre></pre>
 <p>which includes everything that a light client needs to prove the execution outcome of the given transaction or receipt.
-The proof verification can be broken down into two steps, execution outcome root verification and block merkle root
+Here <code>ExecutionOutcomeWithIdView</code> is</p>
+<pre><pre class="playpen"><code class="language-rust">
+<span class="boring">#![allow(unused_variables)]
+</span><span class="boring">fn main() {
+</span>pub struct ExecutionOutcomeWithIdView {
+    /// Proof of the execution outcome
+    pub proof: MerklePath,
+    /// Block hash of the block that contains the outcome root
+    pub block_hash: CryptoHash,
+    /// Id of the execution (transaction or receipt)
+    pub id: CryptoHash,
+    /// The actual outcome
+    pub outcome: ExecutionOutcomeView,
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>The proof verification can be broken down into two steps, execution outcome root verification and block merkle root
 verification.</p>
 <h4><a class="header" href="#execution-outcome-root-verification" id="execution-outcome-root-verification">Execution Outcome Root Verification</a></h4>
 <p>If the outcome root of the transaction or receipt is included in block <code>H</code>, then <code>outcome_proof</code> includes the block hash
@@ -1041,11 +1056,13 @@ block_merkle_root = compute_root(block_hash, block_proof)
 <p>A standalone light client would bootstrap by requesting next blocks until it receives an empty result, and then periodically request the next light client block.</p>
 <p>A smart contract-based light client that enables a bridge to NEAR on a different blockchain naturally cannot request blocks itself. Instead external oracles query the next light client block from one of the full nodes, and submit it to the light client smart contract. The smart contract-based light client performs the same checks described above, so the oracle doesn't need to be trusted.</p>
 <h3><a class="header" href="#light-client-proof" id="light-client-proof">Light Client Proof</a></h3>
-<p>The following rpc end-point returns <code>RpcLightClientExecutionProofResponse</code> that a light client needs for verifying execution outcomes:</p>
-<pre><code>http post http://127.0.0.1:3030/ jsonrpc=2.0 method=EXPERIMENTAL_light_client_proof params:=&quot;{&quot;type&quot;: &lt;proof_type&gt;, &quot;id&quot;: &lt;id&gt;, &quot;sender&quot;: &lt;sender&gt;, &quot;light_client_head&quot;: &lt;light_client_head&gt;}&quot; id=&quot;dontcare&quot;
+<p>The following rpc end-point returns <code>RpcLightClientExecutionProofResponse</code> that a light client needs for verifying execution outcomes.</p>
+<p>For transaction execution outcome, the rpc is</p>
+<pre><code>http post http://127.0.0.1:3030/ jsonrpc=2.0 method=EXPERIMENTAL_light_client_proof params:=&quot;{&quot;type&quot;: &quot;transaction&quot;, &quot;transaction_hash&quot;: &lt;transaction_hash&gt;, &quot;sender_id&quot;: &lt;sender_id&gt;, &quot;light_client_head&quot;: &lt;light_client_head&gt;}&quot; id=&quot;dontcare&quot;
 </code></pre>
-<p>Note that the above command shows the case for querying proof for transaction outcome. For receipt outcome, &quot;sender&quot; should
-be replaced by &quot;receiver&quot;.</p>
+<p>For receipt execution outcome, the rpc is</p>
+<pre><code>http post http://127.0.0.1:3030/ jsonrpc=2.0 method=EXPERIMENTAL_light_client_proof params:=&quot;{&quot;type&quot;: &quot;receipt&quot;, &quot;receipt_id&quot;: &lt;receipt_id&gt;, &quot;receiver_id&quot;: &lt;receiver_id&gt;, &quot;light_client_head&quot;: &lt;light_client_head&gt;}&quot; id=&quot;dontcare&quot;
+</code></pre>
 <h1><a class="header" href="#runtime-specification" id="runtime-specification">Runtime Specification</a></h1>
 <h1><a class="header" href="#function-call" id="function-call">Function Call</a></h1>
 <p>In this section we provide an explanation how the <code>FunctionCall</code> action execution works, what are the inputs and what are the outputs. Suppose runtime received the following ActionReceipt:</p>
@@ -3464,8 +3481,17 @@ def end_of_epoch(..., reward):
 <li><a href="Standards/Tokens/FungibleToken.html">Fungible Token Standard</a></li>
 </ul>
 <h1><a class="header" href="#fungible-token" id="fungible-token">Fungible Token</a></h1>
+<p>Version <code>0.2.0</code></p>
 <h2><a class="header" href="#summary" id="summary">Summary</a></h2>
 <p>A standard interface for fungible tokens allowing for ownership, escrow and transfer, specifically targeting third-party marketplace integration.</p>
+<h2><a class="header" href="#changelog" id="changelog">Changelog</a></h2>
+<h3><a class="header" href="#020" id="020"><code>0.2.0</code></a></h3>
+<ul>
+<li>Introduce storage deposits. Make every change method payable (able receive attached deposits with the function calls). It requires the caller to attach enough deposit to cover potential storage increase. See <a href="https://github.com/near/core-contracts/issues/47">core-contracts/#47</a></li>
+<li>Replace <code>set_allowance</code> with <code>inc_allowance</code> and <code>dec_allowance</code> to address the issue of allowance front-running. See <a href="https://github.com/near/core-contracts/issues/49">core-contracts/#49</a></li>
+<li>Validate <code>owner_id</code> account ID. See <a href="https://github.com/near/core-contracts/issues/54">core-contracts/#54</a></li>
+<li>Enforce that the <code>new_owner_id</code> is different from the current <code>owner_id</code> for transfer. See <a href="https://github.com/near/core-contracts/issues/55">core-contracts/#55</a></li>
+</ul>
 <h2><a class="header" href="#motivation" id="motivation">Motivation</a></h2>
 <p>NEAR Protocol uses an asynchronous sharded Runtime. This means the following:</p>
 <ul>
@@ -3509,6 +3535,10 @@ In this standard we're trying to avoid enforcing locks, since most actions can s
 </ul>
 <p>Note, that the precision is not part of the default standard, since it's not required to perform actions. The minimum
 value is always 1 token.</p>
+<p>The standard acknowledges NEAR storage staking model and accounts for the difference in storage that can be introduced
+by actions on this contract. Since multiple users use the contract, the contract has to account for potential
+storage increase. Thus every change method of the contract that can change the amount of storage must be payable.
+See reference implementation for storage deposits and refunds.</p>
 <h3><a class="header" href="#simple-transfer" id="simple-transfer">Simple transfer</a></h3>
 <p>Alice wants to send 5 wBTC tokens to Bob.</p>
 <p><strong>Assumptions</strong></p>
@@ -3611,13 +3641,23 @@ Charlie calls the DEX</p>
 </li>
 </ol>
 <h2><a class="header" href="#reference-level-explanation" id="reference-level-explanation">Reference-level explanation</a></h2>
-<p>The full implementation in Rust can be found there: https://github.com/nearprotocol/near-sdk-rs/blob/master/examples/fungible-token/src/lib.rs</p>
+<p>The full implementation in Rust can be found here: <a href="https://github.com/nearprotocol/near-sdk-rs/blob/master/examples/fungible-token/src/lib.rs">fungible-token</a></p>
 <p><strong>NOTES:</strong></p>
 <ul>
-<li>All amounts, balances and allowance are limited by U128 (max value <code>2**128 - 1</code>).</li>
+<li>All amounts, balances and allowance are limited by <code>U128</code> (max value <code>2**128 - 1</code>).</li>
 <li>Token standard uses JSON for serialization of arguments and results.</li>
 <li>Amounts in arguments and results have are serialized as Base-10 strings, e.g. <code>&quot;100&quot;</code>. This is done to avoid
 JSON limitation of max integer value of <code>2**53</code>.</li>
+<li>The contract tracks the change in storage before and after the call. If the storage increases,
+the contract requires the caller of the contract to attach enough deposit to the function call
+to cover the storage cost.
+This is done to prevent a denial of service attack on the contract by taking all available storage.
+It's because the gas cost of adding new escrow account is cheap, many escrow allowances can be added until the contract
+runs out of storage.
+If the storage decreases, the contract will issue a refund for the cost of the released storage.
+The unused tokens from the attached deposit are also refunded, so it's safe to attach more deposit than required.</li>
+<li>To prevent the deployed contract from being modified or deleted, it should not have any access
+keys on its account.</li>
 </ul>
 <p>Interface:</p>
 <pre><pre class="playpen"><code class="language-rust">
@@ -3627,9 +3667,21 @@ JSON limitation of max integer value of <code>2**53</code>.</li>
 /* CHANGE METHODS */
 /******************/
 
-/// Sets the `allowance` for `escrow_account_id` on the account of the caller of this contract
+/// Increments the `allowance` for `escrow_account_id` by `amount` on the account of the caller of this contract
 /// (`predecessor_id`) who is the balance owner.
-pub fn set_allowance(&amp;mut self, escrow_account_id: AccountId, allowance: U128);
+/// Requirements:
+/// * Caller of the method has to attach deposit enough to cover storage difference at the
+///   fixed storage price defined in the contract.
+#[payable]
+pub fn inc_allowance(&amp;mut self, escrow_account_id: AccountId, amount: U128);
+
+/// Decrements the `allowance` for `escrow_account_id` by `amount` on the account of the caller of this contract
+/// (`predecessor_id`) who is the balance owner.
+/// Requirements:
+/// * Caller of the method has to attach deposit enough to cover storage difference at the
+///   fixed storage price defined in the contract.
+#[payable]
+pub fn dec_allowance(&amp;mut self, escrow_account_id: AccountId, amount: U128);
 
 /// Transfers the `amount` of tokens from `owner_id` to the `new_owner_id`.
 /// Requirements:
@@ -3638,6 +3690,9 @@ pub fn set_allowance(&amp;mut self, escrow_account_id: AccountId, allowance: U12
 /// * If this function is called by an escrow account (`owner_id != predecessor_account_id`),
 ///   then the allowance of the caller of the function (`predecessor_account_id`) on
 ///   the account of `owner_id` should be greater or equal than the transfer `amount`.
+/// * Caller of the method has to attach deposit enough to cover storage difference at the
+///   fixed storage price defined in the contract.
+#[payable]
 pub fn transfer_from(&amp;mut self, owner_id: AccountId, new_owner_id: AccountId, amount: U128);
 
 
@@ -3645,6 +3700,10 @@ pub fn transfer_from(&amp;mut self, owner_id: AccountId, new_owner_id: AccountId
 /// `new_owner_id`.
 /// Act the same was as `transfer_from` with `owner_id` equal to the caller of the contract
 /// (`predecessor_id`).
+/// Requirements:
+/// * Caller of the method has to attach deposit enough to cover storage difference at the
+///   fixed storage price defined in the contract.
+#[payable]
 pub fn transfer(&amp;mut self, new_owner_id: AccountId, amount: U128);
 
 /****************/
