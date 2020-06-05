@@ -11,7 +11,7 @@ A standard interface for fungible tokens allowing for ownership, escrow and tran
 
 ### `0.2.0`
 
-- Introduce storage deposits. Make every method payable. Require caller to attach enough deposit to cover potential storage increase. See [core-contracts/#47](https://github.com/near/core-contracts/issues/47)
+- Introduce storage deposits. Make every change method payable (able receive attached deposits with the function calls). It requires the caller to attach enough deposit to cover potential storage increase. See [core-contracts/#47](https://github.com/near/core-contracts/issues/47)
 - Replace `set_allowance` with `inc_allowance` and `dec_allowance` to address the issue of allowance front-running. See [core-contracts/#49](https://github.com/near/core-contracts/issues/49)
 - Validate `owner_id` account ID. See [core-contracts/#54](https://github.com/near/core-contracts/issues/54)
 - Enforce that the `new_owner_id` is different from the current `owner_id` for transfer. See [core-contracts/#55](https://github.com/near/core-contracts/issues/55)
@@ -170,13 +170,14 @@ The full implementation in Rust can be found there: [fungible-token](https://git
 - Token standard uses JSON for serialization of arguments and results.
 - Amounts in arguments and results have are serialized as Base-10 strings, e.g. `"100"`. This is done to avoid
 JSON limitation of max integer value of `2**53`.
-- The contract tracks storage difference before and after the call. If the storage increases, the contract requires
-the caller of the contract to attach enough deposit to the function call to cover the storage stake difference.
-It's done to prevent denial of service attack on the contract by taking all available storage.
-If the storage decreases, the contract will issue a refund for the storage stake difference.
-The unused tokens from the attached deposit are also going to be refunded, so it's safe to attach more deposit than required.
-- The deployed contract has to be locked. It means it should not have any access keys on the account of the contract,
-to prevent contract from being modified or deleted.
+- The contract tracks the change in storage before and after the call. If the storage increases,
+the contract requires the caller of the contract to attach enough deposit to the function call
+to cover the storage cost.
+This is done to prevent a denial of service attack on the contract by taking all available storage.
+If the storage decreases, the contract will issue a refund for the cost of the released storage.
+The unused tokens from the attached deposit are also refunded, so it's safe to attach more deposit than required.
+- To prevent the deployed contract from being modified or deleted, it should not have any access
+keys on its account.
 
 
 Interface:

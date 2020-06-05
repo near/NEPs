@@ -157,7 +157,7 @@
 <h2><a class="header" href="#changelog" id="changelog">Changelog</a></h2>
 <h3><a class="header" href="#020" id="020"><code>0.2.0</code></a></h3>
 <ul>
-<li>Introduce storage deposits. Make every method payable. Require caller to attach enough deposit to cover potential storage increase. See <a href="https://github.com/near/core-contracts/issues/47">core-contracts/#47</a></li>
+<li>Introduce storage deposits. Make every change method payable (able receive attached deposits with the function calls). It requires the caller to attach enough deposit to cover potential storage increase. See <a href="https://github.com/near/core-contracts/issues/47">core-contracts/#47</a></li>
 <li>Replace <code>set_allowance</code> with <code>inc_allowance</code> and <code>dec_allowance</code> to address the issue of allowance front-running. See <a href="https://github.com/near/core-contracts/issues/49">core-contracts/#49</a></li>
 <li>Validate <code>owner_id</code> account ID. See <a href="https://github.com/near/core-contracts/issues/54">core-contracts/#54</a></li>
 <li>Enforce that the <code>new_owner_id</code> is different from the current <code>owner_id</code> for transfer. See <a href="https://github.com/near/core-contracts/issues/55">core-contracts/#55</a></li>
@@ -318,13 +318,14 @@ Charlie calls the DEX</p>
 <li>Token standard uses JSON for serialization of arguments and results.</li>
 <li>Amounts in arguments and results have are serialized as Base-10 strings, e.g. <code>&quot;100&quot;</code>. This is done to avoid
 JSON limitation of max integer value of <code>2**53</code>.</li>
-<li>The contract tracks storage difference before and after the call. If the storage increases, the contract requires
-the caller of the contract to attach enough deposit to the function call to cover the storage stake difference.
-It's done to prevent denial of service attack on the contract by taking all available storage.
-If the storage decreases, the contract will issue a refund for the storage stake difference.
-The unused tokens from the attached deposit are also going to be refunded, so it's safe to attach more deposit than required.</li>
-<li>The deployed contract has to be locked. It means it should not have any access keys on the account of the contract,
-to prevent contract from being modified or deleted.</li>
+<li>The contract tracks the change in storage before and after the call. If the storage increases,
+the contract requires the caller of the contract to attach enough deposit to the function call
+to cover the storage cost.
+This is done to prevent a denial of service attack on the contract by taking all available storage.
+If the storage decreases, the contract will issue a refund for the cost of the released storage.
+The unused tokens from the attached deposit are also refunded, so it's safe to attach more deposit than required.</li>
+<li>To prevent the deployed contract from being modified or deleted, it should not have any access
+keys on its account.</li>
 </ul>
 <p>Interface:</p>
 <pre><pre class="playpen"><code class="language-rust">
