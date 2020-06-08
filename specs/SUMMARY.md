@@ -7,8 +7,9 @@
   - [Access Key](DataStructures/AccessKey.md)
   - [Transaction](DataStructures/Transaction.md)
 - [Architecture](Architecture.md)
-- [Chain specification](ChainSpec/README.md)
+- Chain specification
   - [Consensus](ChainSpec/Consensus.md)
+  - [Upgradability](ChainSpec/Upgradability.md)
   - [Transactions](ChainSpec/Transactions.md)
   - [Light Client](ChainSpec/LightClient.md)
 - [Runtime specification](RuntimeSpec/README.md)
