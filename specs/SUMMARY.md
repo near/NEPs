@@ -9,6 +9,7 @@
 - [Architecture](Architecture.md)
 - Chain specification
   - [Consensus](ChainSpec/Consensus.md)
+  - [Selecting Block Producers](ChainSpec/SelectingBlockProducers.md)
   - [Upgradability](ChainSpec/Upgradability.md)
   - [Transactions](ChainSpec/Transactions.md)
   - [Light Client](ChainSpec/LightClient.md)
