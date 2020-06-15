@@ -2,14 +2,14 @@
 
 ## Background
 
-Near is intended to be a permissionless proof-of-stake blockchain, however during each epoch a specific set of block producers must be chosen (and held accountable for producing the blocks during that epoch). To this end, we specify the algorithm by which the block producers are selected, and the schedule in which they should produce blocks is determined, based on the stake proposals from nodes in the network. Additionally, because Near is a sharded system, we also give the algorithm assigning block producers to shards and the schedule for them to produce "chunks" for that shard.
+Near is intended to be a permissionless proof-of-stake blockchain, however during each epoch a specific set of block producers must be chosen (and held accountable for producing the blocks during that epoch). To this end, we specify the algorithm by which the block producers are selected, and how the schedule in which they should produce blocks is determined, based on the stake proposals from nodes in the network. Additionally, because Near is a sharded system, we also give the algorithm assigning block producers to shards and the schedule for them to produce "chunks" for that shard.
 
 There are several desiderata for this algorithm:
 * Larger stakes should be preferred (more staked tokens means more security)
 * The frequency with which a given block producer is selected to produce a particular block is proportional to that producer’s stake
 * All validators selected as block producers should be selected to produce at least one block during the epoch
 * It should be possible to determine which block producer is supposed to produce the block at height \\( h \\), for any \\( h \\) within the epoch, in constant time
-* The block producer chosen at height h should have been a chunk producer for some shard at height \\( h - 1 \\), this minimizes network communication between chunk producers and block producers
+* The block producer chosen at height \\( h \\) should have been a chunk producer for some shard at height \\( h - 1 \\), this minimizes network communication between chunk producers and block producers
 * The number of distinct block producers should be as large as is allowed by the scalability in the consensus algorithm (too large and the system would be too slow, too small and the system would be too centralized)\\( ^{\dagger} \\)
 
 > \\( \dagger \\) Note: By “distinct block producers” we mean the number of different signing keys. We recognize it is possible for a single “logical entity” to split their stake into two or more proposals (Sybil attack), however steps to prevent this kind of attack against centralization are out of scope for this document.
@@ -27,7 +27,8 @@ There are several desiderata for this algorithm:
 
 * `MAX_NUM_VALIDATORS: u16` (see Assumptions above for definition)
 * `epoch_length: u64`
-* `PROBABILITY_NEVER_SELECTED: Ratio<u128>` ([Ratio](https://docs.rs/num-rational/0.2.4/num_rational/struct.Ratio.html) is defined in a rust library)
+* `PROBABILITY_NEVER_SELECTED: Ratio<u128>`
+  - `Ratio<u128>` means a fraction where the numerator and denominator are represented by unsigned 128-bit numbers
 * `validator_proposals: Vec<ValidatorStake>` (proposed stakes for the next epoch from nodes sending staking transactions)
 
 ### Output
@@ -125,12 +126,17 @@ return block_producers[index];
 
 ### Steps
 
-This algorithm is more complex than the others, so we do not present the pseudo-code here. Instead we have a [proof-of-concept (PoC) on GitHub](https://github.com/birchmd/bp-shard-assign-poc). What follows is only a high level summary of the algorithm.
+* While any shard has fewer than `min_validators_per_shard` validators assigned to it:
+  - Let `bp_i` be the next element of `block_producers` (cycle back to the beginning as needed)
+  - Let `shard_id` be the shard with the fewest number of assigned validators such that `bp_i` has not been assigned to `shard_id`
+  - Assign `bp_i` to `shard_id`
+* While there are any validators which have not been assigned to any shard:
+  - Let `bp_i` be the next validator not assigned to any shard
+  - Let `shard_id` be the shard with the least total stake (total stake = sum of stakes of all validators assigned to that shard)
+  - Assign `bp_i` to `shard_id`
+* Return the shard assignments
 
-1. Assign validators to shards, prioritizing keeping the number of validators in each shard equal (picking the one with less stake in the case of a tie), until all shards have the minimum number of validators.
-2. If some validators have not yet been assigned then assign validators to shards prioritizing keeping the stakes equal.
-
-The algorithm also ensures a validator is not assigned to the same shard twice (could happen in the case there are more shards than validators).
+In addition to the above description, we have a [proof-of-concept (PoC) on GitHub](https://github.com/birchmd/bp-shard-assign-poc).
 
 ## Algorithm for selection of chunk producer at height `h` for shard `shard_id`
 
