@@ -40,31 +40,28 @@ There are several desiderata for this algorithm:
 
 ### Steps
 
-```rust
-let sorted_proposals =
-    validator_proposals.sort_by_descending(|v| (v.stake, v.account_id));
+```python
+sorted_proposals =
+    sorted_descending(validator_proposals, key=lambda v: (v.stake, v.account_id))
 
-// smallest value of s_min / S such that
-// (1 - (s_min / S))^epoch_length < PROBABILITY_NEVER_SELECTED
-let min_stake_fraction: Ratio<u128> =
-    1 - exp(ln(PROBABILITY_NEVER_SELECTED) / epoch_length );
+# smallest value of s_min / S such that
+# (1 - (s_min / S))^epoch_length < PROBABILITY_NEVER_SELECTED
+min_stake_fraction =
+    1 - exp(ln(PROBABILITY_NEVER_SELECTED) / epoch_length)
 
-let mut total_stake = 0;
+total_stake = 0
 
-let block_producers = 
-    sorted_proposals
-        .iter()
-        .take(MAX_NUM_VALIDATORS)
-        .take_while(|v| {
-            total_stake += v.stake;
-            (v.stake / total_stake) > min_stake_fraction
-        })
-        .collect();
+block_producers = []
+for v in sorted_proposals[0..MAX_NUM_VALIDATORS]:
+    total_stake += v.stake
+    if (v.stake / total_stake) > min_stake_fraction:
+        block_producers.append(v)
+    else:
+        break
 
-let block_producer_sampler =
-    WeightedIndex::new(block_producers.iter().map(|v| v.stake).collect());
+block_producer_sampler = WeightedIndex([v.stake for v in block_producers])
 
-return (block_producers, block_producer_sampler);
+return (block_producers, block_producer_sampler)
 ```
 
 ## Algorithm for selecting producer of block at height \\( h \\)
@@ -85,30 +82,27 @@ return (block_producers, block_producer_sampler);
 
 ### Steps
 
-```rust
-// Concatenates the bytes of the epoch seed with the height,
-// then computes the sha256 hash.
-let block_seed: [u8; 32] = combine(epoch_rng_seed, h);
+```python
+# Concatenates the bytes of the epoch seed with the height,
+# then computes the sha256 hash.
+block_seed = combine(epoch_rng_seed, h)
 
-// The hash is used as an entropy source for the random numbers.
-// The first 8 bytes select a block producer uniformly.
-let uniform_index = block_seed[0..8].as_usize() % block_producers.len();
+# The hash is used as an entropy source for the random numbers.
+# The first 8 bytes select a block producer uniformly.
+uniform_index = int.from_bytes(block_seed[0..8], byteorder='little') % len(block_producers)
 
-// The next 16 bytes uniformly pick some weight between 0 and the total
-// weight (i.e. stake) of all block producers.
-let uniform_weight =
-    block_seed[8..24].as_u128() % block_producer_sampler.weight_sum();
+# The next 16 bytes uniformly pick some weight between 0 and the total
+# weight (i.e. stake) of all block producers.
+let uniform_weight = int.from_bytes(block_seed[8..24], byteorder='little') \
+    % block_producer_sampler.weight_sum()
 
-// Return either the uniformly selected block producer, or its "alias"
-// depending on the uniformly selected weight.
-let index =
-    if uniform_weight  < block_producer_sampler.no_alias_odds[uniform_index] {
-        uniform_index
-    } else {
-        block_producer_sampler.aliases[uniform_index]
-    };
+# Return either the uniformly selected block producer, or its "alias"
+# depending on the uniformly selected weight.
+index = uniform_index \
+    if uniform_weight < block_producer_sampler.no_alias_odds[uniform_index] \
+    else block_producer_sampler.aliases[uniform_index]
 
-return block_producers[index];
+return block_producers[index]
 ```
 
 ## Algorithm for assigning block producers to shards
@@ -152,21 +146,20 @@ In addition to the above description, we have a [proof-of-concept (PoC) on GitHu
 
 ### Steps
 
-```rust
-let bp = block_producer_at_height(
+```python
+bp = block_producer_at_height(
     h + 1,
     block_producers,
     block_producer_sampler,
     epoch_rng_seed,
-);
+)
 
-if validator_shard_assignments[shard_id].contains(bp) {
-    // ensure a block producer at height h + 1 is a chunk producer at height h
-    return bp;
-}
+if validator_shard_assignments[shard_id].contains(bp):
+    # ensure a block producer at height h + 1 is a chunk producer at height h
+    return bp
 
-// otherwise, select a chunk producer by cycling through
-let candidates = validator_shard_assignments[shard_id];
-let index = h % candidates.len();
-return candidates[index];
+# otherwise, select a chunk producer by cycling through
+candidates = validator_shard_assignments[shard_id]
+index = h % candidates.len()
+return candidates[index]
 ```
