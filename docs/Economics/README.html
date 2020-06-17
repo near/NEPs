@@ -187,7 +187,7 @@
 <h2><a class="header" href="#issuance" id="issuance">Issuance</a></h2>
 <p>The protocol sets a ceiling for the maximum issuance of tokens, and dynamically decreases this issuance depending on the amount of total fees in the system.</p>
 <table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody>
-<tr><td><code>reward[t]</code></td><td><code>totalSupply[t]</code> * ((<code>1 - REWARD_PCT_PER_YEAR</code>) ** (<code>1/EPOCHS_A_YEAR</code>) - <code>1</code>)</td></tr>
+<tr><td><code>reward[t]</code></td><td><code>totalSupply[t]</code> * ((<code>1 + REWARD_PCT_PER_YEAR</code>) ** (<code>1/EPOCHS_A_YEAR</code>) - <code>1</code>)</td></tr>
 <tr><td><code>epochFee[t]</code></td><td><code>sum([(1 - DEVELOPER_PCT_PER_YEAR) * block.txFee + block.stateFee for block in epoch[t]])</code></td></tr>
 <tr><td><code>issuance[t]</code></td><td>The amount of token issued at a certain epoch[t], <code>issuance[t] = reward[t] - epochFee[t]</code></td></tr>
 </tbody></table>
