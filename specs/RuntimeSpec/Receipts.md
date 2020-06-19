@@ -31,6 +31,7 @@ Each `Receipt` has the following fields:
 - **`type`**: `AccountId`
 
 The account_id which issued a receipt.
+In case of a gas or deposit refund, the account ID is `system`.
 
 #### receiver_id
 
@@ -48,7 +49,7 @@ An unique id for the receipt.
 
 - **`type`**: [ActionReceipt](#actionreceipt) | [DataReceipt](#datareceipt)
 
-There is a 2 types of Receipts in Near: [ActionReceipt](#actionreceipt) and [DataReceipt](#datareceipt). ActionReceipt is a request to apply [Actions](Actions.md), while DataReceipt is a result of application of these actions.
+There is a 2 types of Receipts: [ActionReceipt](#actionreceipt) and [DataReceipt](#datareceipt). ActionReceipt is a request to apply [Actions](Actions.md), while DataReceipt is a result of application of these actions.
 
 ## ActionReceipt
 
@@ -59,12 +60,14 @@ There is a 2 types of Receipts in Near: [ActionReceipt](#actionreceipt) and [Dat
 - **`type`**: `AccountId`
 
 An account_id which signed the original [transaction](Transaction.md).
+In case of a deposit refund, the account ID is `system`.
 
 #### signer_public_key
 
 - **`type`**: `PublicKey`
 
-An [AccessKey](../Primitives/AccessKey.md) which was used to sign the original transaction.
+The public key of an [AccessKey](../Primitives/AccessKey.md) which was used to sign the original transaction.
+In case of a deposit refund, the public key is empty (all bytes are 0).
 
 #### gas_price
 
