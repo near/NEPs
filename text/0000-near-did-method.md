@@ -162,6 +162,11 @@ NEAR DID documents should be limited to verification methods and service endpoin
 
 A reference implementation of NEAR DID scheme is currently under development.
 
+NEAR DID document specification: https://github.com/ontology-tech/DID-spec-near/blob/master/NEAR/NEAR-DID-spec.md
+
+NEAR DID reference implementation: https://github.com/ontology-tech/DID-NEAR-rust
+
+
 # References
 [references]: #references
 
