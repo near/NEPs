@@ -7,13 +7,24 @@
         
         <meta name="robots" content="noindex" />
         
+        
+
+
+        <!-- Custom HTML head -->
+        
+
 
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
         <meta name="description" content="Specification of the NEAR Protocol">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff" />
 
+        
+        <link rel="icon" href="favicon.svg">
+        
+        
         <link rel="shortcut icon" href="favicon.png">
+        
         <link rel="stylesheet" href="css/variables.css">
         <link rel="stylesheet" href="css/general.css">
         <link rel="stylesheet" href="css/chrome.css">
@@ -21,8 +32,9 @@
 
         <!-- Fonts -->
         <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
-        <link href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" rel="stylesheet" type="text/css">
-        <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro:500" rel="stylesheet" type="text/css">
+        
+        <link rel="stylesheet" href="fonts/fonts.css">
+        
 
         <!-- Highlight.js Stylesheets -->
         <link rel="stylesheet" href="highlight.css">
@@ -41,7 +53,7 @@
         <!-- Provide site root to javascript -->
         <script type="text/javascript">
             var path_to_root = "";
-            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "light" : "light";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
         </script>
 
         <!-- Work around some values being stored in localStorage wrapped in quotes -->
@@ -86,7 +98,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="README.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="Terminology.html"><strong aria-hidden="true">2.</strong> Terminology</a></li><li class="chapter-item expanded "><a href="DataStructures/README.html"><strong aria-hidden="true">3.</strong> Data Structures</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="DataStructures/Account.html"><strong aria-hidden="true">3.1.</strong> Account</a></li><li class="chapter-item expanded "><a href="DataStructures/AccessKey.html"><strong aria-hidden="true">3.2.</strong> Access Key</a></li><li class="chapter-item expanded "><a href="DataStructures/Transaction.html"><strong aria-hidden="true">3.3.</strong> Transaction</a></li></ol></li><li class="chapter-item expanded "><a href="Architecture.html"><strong aria-hidden="true">4.</strong> Architecture</a></li><li class="chapter-item expanded "><a href="ChainSpec/README.html"><strong aria-hidden="true">5.</strong> Chain specification</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ChainSpec/Consensus.html"><strong aria-hidden="true">5.1.</strong> Consensus</a></li><li class="chapter-item expanded "><a href="ChainSpec/Upgradability.html"><strong aria-hidden="true">5.2.</strong> Upgradability</a></li><li class="chapter-item expanded "><a href="ChainSpec/Transactions.html"><strong aria-hidden="true">5.3.</strong> Transactions</a></li><li class="chapter-item expanded "><a href="ChainSpec/LightClient.html"><strong aria-hidden="true">5.4.</strong> Light Client</a></li></ol></li><li class="chapter-item expanded "><a href="RuntimeSpec/README.html"><strong aria-hidden="true">6.</strong> Runtime specification</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="RuntimeSpec/Runtime.html"><strong aria-hidden="true">6.1.</strong> Runtime</a></li><li class="chapter-item expanded "><a href="RuntimeSpec/FunctionCall.html"><strong aria-hidden="true">6.2.</strong> FunctionCall</a></li><li class="chapter-item expanded "><a href="RuntimeSpec/Transactions.html"><strong aria-hidden="true">6.3.</strong> Transactions</a></li><li class="chapter-item expanded "><a href="RuntimeSpec/Actions.html"><strong aria-hidden="true">6.4.</strong> Actions</a></li><li class="chapter-item expanded "><a href="RuntimeSpec/Receipts.html"><strong aria-hidden="true">6.5.</strong> Receipts</a></li><li class="chapter-item expanded "><a href="RuntimeSpec/Refunds.html"><strong aria-hidden="true">6.6.</strong> Refunds</a></li><li class="chapter-item expanded "><a href="RuntimeSpec/Scenarios/Scenarios.html"><strong aria-hidden="true">6.7.</strong> Scenarios</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="RuntimeSpec/Scenarios/FinancialTransaction.html"><strong aria-hidden="true">6.7.1.</strong> Financial Transaction</a></li><li class="chapter-item expanded "><a href="RuntimeSpec/Scenarios/CrossContractCall.html"><strong aria-hidden="true">6.7.2.</strong> Cross-Contract Call</a></li></ol></li><li class="chapter-item expanded "><a href="RuntimeSpec/Components/Components.html"><strong aria-hidden="true">6.8.</strong> Components</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="RuntimeSpec/Components/RuntimeCrate.html"><strong aria-hidden="true">6.8.1.</strong> Runtime crate</a></li><li class="chapter-item expanded "><a href="RuntimeSpec/Components/BindingsSpec/BindingsSpec.html"><strong aria-hidden="true">6.8.2.</strong> Bindings Specification</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="RuntimeSpec/Components/BindingsSpec/RegistersAPI.html"><strong aria-hidden="true">6.8.2.1.</strong> Registers API</a></li><li class="chapter-item expanded "><a href="RuntimeSpec/Components/BindingsSpec/TrieAPI.html"><strong aria-hidden="true">6.8.2.2.</strong> Trie API</a></li><li class="chapter-item expanded "><a href="RuntimeSpec/Components/BindingsSpec/PromisesAPI.html"><strong aria-hidden="true">6.8.2.3.</strong> Promises API</a></li><li class="chapter-item expanded "><a href="RuntimeSpec/Components/BindingsSpec/ContextAPI.html"><strong aria-hidden="true">6.8.2.4.</strong> Context API</a></li><li class="chapter-item expanded "><a href="RuntimeSpec/Components/BindingsSpec/EconomicsAPI.html"><strong aria-hidden="true">6.8.2.5.</strong> Economics API</a></li><li class="chapter-item expanded "><a href="RuntimeSpec/Components/BindingsSpec/MathAPI.html"><strong aria-hidden="true">6.8.2.6.</strong> Math API</a></li><li class="chapter-item expanded "><a href="RuntimeSpec/Components/BindingsSpec/MiscellaneousAPI.html"><strong aria-hidden="true">6.8.2.7.</strong> Miscellaneous API</a></li></ol></li></ol></li></ol></li><li class="chapter-item expanded "><a href="GenesisConfig/GenesisConfig.html"><strong aria-hidden="true">7.</strong> GenesisConfig</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="GenesisConfig/RuntimeConfig.html"><strong aria-hidden="true">7.1.</strong> RuntimeConfig</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="GenesisConfig/RuntimeFeeConfig.html"><strong aria-hidden="true">7.1.1.</strong> RuntimeFeeConfig</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="GenesisConfig/RuntimeFeeConfig/AccessKeyCreationConfig.html"><strong aria-hidden="true">7.1.1.1.</strong> AccessKeyCreationConfig</a></li><li class="chapter-item expanded "><a href="GenesisConfig/RuntimeFeeConfig/ActionCreationConfig.html"><strong aria-hidden="true">7.1.1.2.</strong> ActionCreationConfig</a></li><li class="chapter-item expanded "><a href="GenesisConfig/RuntimeFeeConfig/DataReceiptCreationConfig.html"><strong aria-hidden="true">7.1.1.3.</strong> DataReceiptCreationConfig</a></li><li class="chapter-item expanded "><a href="GenesisConfig/RuntimeFeeConfig/StorageUsageConfig.html"><strong aria-hidden="true">7.1.1.4.</strong> StorageUsageConfig</a></li><li class="chapter-item expanded "><a href="GenesisConfig/RuntimeFeeConfig/Fee.html"><strong aria-hidden="true">7.1.1.5.</strong> Fee</a></li><li class="chapter-item expanded "><a href="GenesisConfig/RuntimeFeeConfig/Fraction.html"><strong aria-hidden="true">7.1.1.6.</strong> Fraction</a></li></ol></li><li class="chapter-item expanded "><a href="GenesisConfig/VMConfig.html"><strong aria-hidden="true">7.1.2.</strong> VMConfig</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="GenesisConfig/ExtCostsConfig.html"><strong aria-hidden="true">7.1.2.1.</strong> ExtCostsConfig</a></li></ol></li><li class="chapter-item expanded "><a href="GenesisConfig/StateRecord.html"><strong aria-hidden="true">7.1.3.</strong> StateRecord</a></li></ol></li></ol></li><li class="chapter-item expanded "><a href="Economics/README.html"><strong aria-hidden="true">8.</strong> Economics</a></li><li class="chapter-item expanded "><a href="Standards/README.html"><strong aria-hidden="true">9.</strong> Standards</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="Standards/Tokens/FungibleToken.html"><strong aria-hidden="true">9.1.</strong> Fungible Token</a></li></ol></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="README.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="Terminology.html"><strong aria-hidden="true">2.</strong> Terminology</a></li><li class="chapter-item expanded "><a href="DataStructures/README.html"><strong aria-hidden="true">3.</strong> Data Structures</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="DataStructures/Account.html"><strong aria-hidden="true">3.1.</strong> Account</a></li><li class="chapter-item expanded "><a href="DataStructures/AccessKey.html"><strong aria-hidden="true">3.2.</strong> Access Key</a></li><li class="chapter-item expanded "><a href="DataStructures/Transaction.html"><strong aria-hidden="true">3.3.</strong> Transaction</a></li></ol></li><li class="chapter-item expanded "><a href="Architecture.html"><strong aria-hidden="true">4.</strong> Architecture</a></li><li class="chapter-item expanded "><a href="ChainSpec/README.html"><strong aria-hidden="true">5.</strong> Chain specification</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ChainSpec/Consensus.html"><strong aria-hidden="true">5.1.</strong> Consensus</a></li><li class="chapter-item expanded "><a href="ChainSpec/Upgradability.html"><strong aria-hidden="true">5.2.</strong> Upgradability</a></li><li class="chapter-item expanded "><a href="ChainSpec/Transactions.html"><strong aria-hidden="true">5.3.</strong> Transactions</a></li><li class="chapter-item expanded "><a href="ChainSpec/LightClient.html"><strong aria-hidden="true">5.4.</strong> Light Client</a></li></ol></li><li class="chapter-item expanded "><a href="RuntimeSpec/README.html"><strong aria-hidden="true">6.</strong> Runtime specification</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="RuntimeSpec/Runtime.html"><strong aria-hidden="true">6.1.</strong> Runtime</a></li><li class="chapter-item expanded "><a href="RuntimeSpec/FunctionCall.html"><strong aria-hidden="true">6.2.</strong> FunctionCall</a></li><li class="chapter-item expanded "><a href="RuntimeSpec/Transactions.html"><strong aria-hidden="true">6.3.</strong> Transactions</a></li><li class="chapter-item expanded "><a href="RuntimeSpec/Actions.html"><strong aria-hidden="true">6.4.</strong> Actions</a></li><li class="chapter-item expanded "><a href="RuntimeSpec/Receipts.html"><strong aria-hidden="true">6.5.</strong> Receipts</a></li><li class="chapter-item expanded "><a href="RuntimeSpec/Refunds.html"><strong aria-hidden="true">6.6.</strong> Refunds</a></li><li class="chapter-item expanded "><a href="RuntimeSpec/Scenarios/Scenarios.html"><strong aria-hidden="true">6.7.</strong> Scenarios</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="RuntimeSpec/Scenarios/FinancialTransaction.html"><strong aria-hidden="true">6.7.1.</strong> Financial Transaction</a></li><li class="chapter-item expanded "><a href="RuntimeSpec/Scenarios/CrossContractCall.html"><strong aria-hidden="true">6.7.2.</strong> Cross-Contract Call</a></li></ol></li><li class="chapter-item expanded "><a href="RuntimeSpec/Components/Components.html"><strong aria-hidden="true">6.8.</strong> Components</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="RuntimeSpec/Components/RuntimeCrate.html"><strong aria-hidden="true">6.8.1.</strong> Runtime crate</a></li><li class="chapter-item expanded "><a href="RuntimeSpec/Components/BindingsSpec/BindingsSpec.html"><strong aria-hidden="true">6.8.2.</strong> Bindings Specification</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="RuntimeSpec/Components/BindingsSpec/RegistersAPI.html"><strong aria-hidden="true">6.8.2.1.</strong> Registers API</a></li><li class="chapter-item expanded "><a href="RuntimeSpec/Components/BindingsSpec/TrieAPI.html"><strong aria-hidden="true">6.8.2.2.</strong> Trie API</a></li><li class="chapter-item expanded "><a href="RuntimeSpec/Components/BindingsSpec/PromisesAPI.html"><strong aria-hidden="true">6.8.2.3.</strong> Promises API</a></li><li class="chapter-item expanded "><a href="RuntimeSpec/Components/BindingsSpec/ContextAPI.html"><strong aria-hidden="true">6.8.2.4.</strong> Context API</a></li><li class="chapter-item expanded "><a href="RuntimeSpec/Components/BindingsSpec/EconomicsAPI.html"><strong aria-hidden="true">6.8.2.5.</strong> Economics API</a></li><li class="chapter-item expanded "><a href="RuntimeSpec/Components/BindingsSpec/MathAPI.html"><strong aria-hidden="true">6.8.2.6.</strong> Math API</a></li><li class="chapter-item expanded "><a href="RuntimeSpec/Components/BindingsSpec/MiscellaneousAPI.html"><strong aria-hidden="true">6.8.2.7.</strong> Miscellaneous API</a></li></ol></li><li class="chapter-item expanded "><a href="RuntimeSpec/Components/Precompiles/README.html"><strong aria-hidden="true">6.8.3.</strong> Pre-compiles</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="RuntimeSpec/Components/Precompiles/EVM.html"><strong aria-hidden="true">6.8.3.1.</strong> EVM</a></li></ol></li></ol></li></ol></li><li class="chapter-item expanded "><a href="GenesisConfig/GenesisConfig.html"><strong aria-hidden="true">7.</strong> GenesisConfig</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="GenesisConfig/RuntimeConfig.html"><strong aria-hidden="true">7.1.</strong> RuntimeConfig</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="GenesisConfig/RuntimeFeeConfig.html"><strong aria-hidden="true">7.1.1.</strong> RuntimeFeeConfig</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="GenesisConfig/RuntimeFeeConfig/AccessKeyCreationConfig.html"><strong aria-hidden="true">7.1.1.1.</strong> AccessKeyCreationConfig</a></li><li class="chapter-item expanded "><a href="GenesisConfig/RuntimeFeeConfig/ActionCreationConfig.html"><strong aria-hidden="true">7.1.1.2.</strong> ActionCreationConfig</a></li><li class="chapter-item expanded "><a href="GenesisConfig/RuntimeFeeConfig/DataReceiptCreationConfig.html"><strong aria-hidden="true">7.1.1.3.</strong> DataReceiptCreationConfig</a></li><li class="chapter-item expanded "><a href="GenesisConfig/RuntimeFeeConfig/StorageUsageConfig.html"><strong aria-hidden="true">7.1.1.4.</strong> StorageUsageConfig</a></li><li class="chapter-item expanded "><a href="GenesisConfig/RuntimeFeeConfig/Fee.html"><strong aria-hidden="true">7.1.1.5.</strong> Fee</a></li><li class="chapter-item expanded "><a href="GenesisConfig/RuntimeFeeConfig/Fraction.html"><strong aria-hidden="true">7.1.1.6.</strong> Fraction</a></li></ol></li><li class="chapter-item expanded "><a href="GenesisConfig/VMConfig.html"><strong aria-hidden="true">7.1.2.</strong> VMConfig</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="GenesisConfig/ExtCostsConfig.html"><strong aria-hidden="true">7.1.2.1.</strong> ExtCostsConfig</a></li></ol></li><li class="chapter-item expanded "><a href="GenesisConfig/StateRecord.html"><strong aria-hidden="true">7.1.3.</strong> StateRecord</a></li></ol></li></ol></li><li class="chapter-item expanded "><a href="Economics/README.html"><strong aria-hidden="true">8.</strong> Economics</a></li><li class="chapter-item expanded "><a href="Standards/README.html"><strong aria-hidden="true">9.</strong> Standards</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="Standards/Tokens/FungibleToken.html"><strong aria-hidden="true">9.1.</strong> Fungible Token</a></li></ol></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -286,8 +298,8 @@ Each access key contains a unique nonce to differentiate or order transactions s
 <h1><a class="header" href="#access-keys-1" id="access-keys-1">Access Keys</a></h1>
 <p>Access key provides an access for a particular account. Each access key belongs to some account and
 is identified by a unique (within the account) public key. Access keys are stored as <code>account_id,public_key</code> in a trie state. Account can have from <a href="DataStructures/AccessKey.html#account-without-access-keys">zero</a> to multiple access keys.</p>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>pub struct AccessKey {
     /// The nonce for this access key.
@@ -301,8 +313,8 @@ is identified by a unique (within the account) public key. Access keys are store
 <span class="boring">}
 </span></code></pre></pre>
 <p>There are 2 types of <code>AccessKeyPermission</code> in Near currently: <code>FullAccess</code> and <code>FunctionCall</code>. <code>FunctionCall</code> grants a permission to issue any action on account like <a href="DataStructures/Transaction#DeployContract">DeployContract</a>, <a href="DataStructures/Transaction#Transfer">Transfer</a> tokens to other account, call functions <a href="DataStructures/Transaction#FunctionCall">FunctionCall</a>, <a href="DataStructures/Transaction#Stake">Stake</a> and even delete account <a href="DataStructures/Transaction#DeleteAccountAction">DeleteAccountAction</a>. <code>FullAccess</code> also allow to manage access keys. <code>AccessKeyPermission::FunctionCall</code> limits to do only contract calls.</p>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>pub enum AccessKeyPermission {
     FunctionCall(FunctionCallPermission),
@@ -312,8 +324,8 @@ is identified by a unique (within the account) public key. Access keys are store
 </span></code></pre></pre>
 <h2><a class="header" href="#accesskeypermissionfunctioncall" id="accesskeypermissionfunctioncall">AccessKeyPermission::FunctionCall</a></h2>
 <p>Grants limited permission to make <a href="DataStructures/Transaction#FunctionCall">FunctionCall</a> to a specified <code>receiver_id</code> and methods of a particular contract with a limit of allowed balance to spend.</p>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>pub struct FunctionCallPermission {
     /// Allowance is a balance limit to use by this access key to pay for function call gas and
@@ -421,8 +433,8 @@ has an indirect knowledge of them through the computation of the tokens-to-gas e
 <p>The consensus protocol defines a notion of <em>finality</em>. Informally, if a block \(B\) is final, any future final blocks may only be built on top of \(B\). Therefore, transactions in \(B\) and preceding blocks are never going to be reversed. Finality is not a function of a block itself, rather, a block may be final or not final in some chain it is a member of. Specifically, \(final(B, T)\), where \(B \le T\), means that \(B\) is final in \(chain(T)\). A block that is final in a chain is final in all of its extensions: specifically, if \(final(B, T)\) is true, then \(final(B, T')\) is also true for all \(T' \ge T\).</p>
 <h2><a class="header" href="#data-structures" id="data-structures">Data structures</a></h2>
 <p>The fields in the Block header relevant to the consensus process are:</p>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>struct BlockHeader {
     ...
@@ -436,8 +448,8 @@ has an indirect knowledge of them through the computation of the tokens-to-gas e
 <span class="boring">}
 </span></code></pre></pre>
 <p>Block producers in the particular epoch exchange many kinds of messages. The two kinds that are relevant to the consensus are <strong>Blocks</strong> and <strong>Approvals</strong>. The approval contains the following fields:</p>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>enum ApprovalInner {
     Endorsement(BlockHash),
@@ -583,8 +595,8 @@ def send_approval(self, target_height):
 <li>Version of binary defines it's internal data structures / database and configs. This version is client specific and doesn't need to be matching between nodes.</li>
 <li>Version of the protocol, defining the &quot;language&quot; nodes are speaking.</li>
 </ul>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>/// Latest version of protocol that this binary can work with.
 type ProtocolVersion = u32;
@@ -605,8 +617,8 @@ General recommendation is to store version in the database and on binary start, 
 <h3><a class="header" href="#versioned-data-structures" id="versioned-data-structures">Versioned data structures</a></h3>
 <p>Given we expect many data structures to change or get updated as protocol evolves, a few changes are required to support that.</p>
 <p>The major one is adding backward compatible <code>Versioned</code> data structures like this one:</p>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>enum VersionedBlockHeader {
     BlockHeaderV1(BlockHeaderV1),
@@ -624,8 +636,8 @@ This allows to encode and decode old versions (up to 256 given https://borsh.io 
 <tr><td><code>PROTOCOL_UPGRADE_NUM_EPOCHS</code></td><td><code>2</code></td></tr>
 </tbody></table>
 <p>The way the version will be indicated by validators, will be via </p>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>/// Add `version` into block header.
 struct BlockHeaderInnerRest {
@@ -703,8 +715,8 @@ It pulls transactions from the group in order from the smallest nonce to largest
 For every transaction group, the runtime adapter keeps pulling transactions until the valid transaction is found.
 If the transaction group becomes empty, then it's skipped.</p>
 <p>The runtime adapter may implement the following code to pull all valid transactions:</p>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>let mut valid_transactions = vec![];
 let mut pool_iter = pool.pool_iterator();
@@ -870,8 +882,8 @@ This transaction belongs to the next batch.</p>
 If there are no transaction with the same key in the N batch, then the order is invalid.</p>
 <p>We also enforce the order of the sequence of transactions for the same key, the nonces of them should be in strictly increasing order.</p>
 <p>Here is the algorithm that validates the order:</p>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>fn validate_order(txs: &amp;Vec&lt;Transaction&gt;) -&gt; bool {
     let mut nonces: HashMap&lt;Key, Nonce&gt; = HashMap::new();
@@ -922,8 +934,8 @@ If there are no transaction with the same key in the N batch, then the order is 
 <p>Light client does't need to receive <code>LightClientBlockView</code> for all the blocks. Having the <code>LightClientBlockView</code> for block <code>B</code> is sufficient to be able to verify any statement about state or outcomes in any block in the ancestry of <code>B</code> (including <code>B</code> itself). In particular, having the <code>LightClientBlockView</code> for the head is sufficient to locally verify any statement about state or outcomes in any block on the canonical chain.</p>
 <p>However, to verify the validity of a particular <code>LightClientBlockView</code>, the light client must have verified a <code>LightClientBlockView</code> for at least one block in the preceding epoch, thus to sync to the head the light client will have to fetch and verify a <code>LightClientBlockView</code> per epoch passed.</p>
 <h2><a class="header" href="#validating-light-client-block-views" id="validating-light-client-block-views">Validating Light Client Block Views</a></h2>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>pub enum ApprovalInner {
     Endorsement(CryptoHash),
@@ -965,8 +977,8 @@ pub struct LightClientBlockView {
 <span class="boring">}
 </span></code></pre></pre>
 <p>Recall that the hash of the block is</p>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>sha256(concat(
     sha256(concat(
@@ -1066,8 +1078,8 @@ pub struct LightClientBlockView {
 <h2><a class="header" href="#proof-verification" id="proof-verification">Proof Verification</a></h2>
 <h3><a class="header" href="#transaction-outcome-proofs" id="transaction-outcome-proofs">Transaction Outcome Proofs</a></h3>
 <p>To verify that a transaction or receipt happens on chain, a light client can request a proof through rpc by providing <code>id</code>, which is of type</p>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>pub enum TransactionOrReceiptId {
     Transaction { hash: CryptoHash, sender: AccountId },
@@ -1076,8 +1088,8 @@ pub struct LightClientBlockView {
 <span class="boring">}
 </span></code></pre></pre>
 <p>and the block hash of light client head. The rpc will return the following struct</p>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>pub struct RpcLightClientExecutionProofResponse {
     /// Proof of execution outcome
@@ -1094,8 +1106,8 @@ pub struct LightClientBlockView {
 </span></code></pre></pre>
 <p>which includes everything that a light client needs to prove the execution outcome of the given transaction or receipt.
 Here <code>ExecutionOutcomeWithIdView</code> is</p>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>pub struct ExecutionOutcomeWithIdView {
     /// Proof of the execution outcome
@@ -1121,8 +1133,8 @@ block_outcome_root = compute_root(sha256(borsh(shard_outcome_root)), outcome_roo
 <p>This outcome root must match the outcome root in <code>block_header_lite.inner_lite</code>.</p>
 <h4><a class="header" href="#block-merkle-root-verification" id="block-merkle-root-verification">Block Merkle Root Verification</a></h4>
 <p>Recall that block hash can be computed from <code>LightClientBlockLiteView</code> by</p>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>sha256(concat(
     sha256(concat(
@@ -1206,8 +1218,8 @@ The specification is defined in <code>near-vm-logic</code>, but it is exposed to
 </ul>
 <h1><a class="header" href="#function-call" id="function-call">Function Call</a></h1>
 <p>In this section we provide an explanation how the <code>FunctionCall</code> action execution works, what are the inputs and what are the outputs. Suppose runtime received the following ActionReceipt:</p>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>ActionReceipt {
      id: &quot;A1&quot;,
@@ -1249,6 +1261,16 @@ The specification is defined in <code>near-vm-logic</code>, but it is exposed to
 <li>sets the return data</li>
 <li>creates new receipts through <a href="RuntimeSpec/Components/BindingsSpec/PromisesAPI.html">PromisesAPI</a></li>
 </ul>
+<h2><a class="header" href="#pre-compiled-contracts" id="pre-compiled-contracts">Pre-compiled contracts</a></h2>
+<p>Pre-compiled contracts (&quot;pre-compiles&quot;) are contracts that are natively built within the client's binary.</p>
+<p>They are identified by special <code>code_hash</code> in <code>Account</code> structure.
+When <code>FunctionCall</code> is executed, first it's checked if the account's <code>code_hash</code> is in the matching pre-compiles codes. Then instead of WASM, given pre-compile will be used.</p>
+<p>Pre-compiles should initialize with <code>default</code> and have two public function calls:</p>
+<ul>
+<li><code>function_call(&amp;mut self, method_name: String, args: &amp;[u8])</code> to execute a function call that might change state.</li>
+<li><code>view_call(&amp;self, method_name: String, args: &amp;[u8])</code> to run a view call.</li>
+</ul>
+<p><a href="RuntimeSpec/./Components/Precompiles/README.html">See full list of pre-compiles</a></p>
 <h2><a class="header" href="#output" id="output">Output</a></h2>
 <p>The output of the <code>FunctionCall</code>:</p>
 <ul>
@@ -1267,8 +1289,8 @@ The specification is defined in <code>near-vm-logic</code>, but it is exposed to
 <p>Successful result could not return any Value, but generates a bunch of new ActionReceipts instead. One example could be a callback. In this case, we assume the the new Receipt will send its Value Result to the <a href="RuntimeSpec/Receitps.html#output_data_receivers"><code>output_data_receivers</code></a> of the current <code>ActionReceipt</code>.</p>
 <h1><a class="header" href="#transactions" id="transactions">Transactions</a></h1>
 <p>A transaction in Near is a list of <a href="RuntimeSpec/Actions.html">actions</a> and additional information:</p>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>pub struct Transaction {
     /// An account on which behalf transaction is signed
@@ -1289,8 +1311,8 @@ The specification is defined in <code>near-vm-logic</code>, but it is exposed to
 </span></code></pre></pre>
 <h2><a class="header" href="#signed-transaction" id="signed-transaction">Signed Transaction</a></h2>
 <p><code>SignedTransaction</code> is what the node receives from a wallet through JSON-RPC endpoint and then routed to the shard where <code>receiver_id</code> account lives. Signature proves an ownership of the corresponding <code>public_key</code> (which is an AccessKey for a particular account) as well as authenticity of the transaction itself.</p>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>pub struct SignedTransaction {
     pub transaction: Transaction,
@@ -1301,8 +1323,8 @@ The specification is defined in <code>near-vm-logic</code>, but it is exposed to
 <p>Take a look some <a href="RuntimeSpec/Scenarios/Scenarios.html">scenarios</a> how transaction can be applied.</p>
 <h1><a class="header" href="#actions" id="actions">Actions</a></h1>
 <p>There are a several action types in Near:</p>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>pub enum Action {
     CreateAccount(CreateAccountAction),
@@ -1332,8 +1354,8 @@ The specification is defined in <code>near-vm-logic</code>, but it is exposed to
 <li>sets Account <code>storage_paid_at</code> to the current block height</li>
 </ul>
 <p>NOTE: for the all subsequent actions in the transaction the <code>signer_id</code> becomes <code>receiver_id</code> until <a href="RuntimeSpec/Actions.html#DeleteAccountAction">DeleteAccountAction</a>. It allows to execute actions on behalf of the just created account.</p>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>pub struct CreateAccountAction {}
 <span class="boring">}
@@ -1348,8 +1370,8 @@ The specification is defined in <code>near-vm-logic</code>, but it is exposed to
 <ul>
 <li>sets a code for account</li>
 </ul>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>pub struct DeployContractAction {
     pub code: Vec&lt;u8&gt;, // a valid WebAssembly code
@@ -1362,8 +1384,8 @@ The specification is defined in <code>near-vm-logic</code>, but it is exposed to
 <li><em><code>tx.public_key</code> to be <code>AccessKeyPermission::FullAccess</code> or <code>AccessKeyPermission::FunctionCall</code></em></li>
 </ul>
 <p>Calls a method of a particular contract. See <a href="RuntimeSpec/./FunctionCall.html">details</a>.</p>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>pub struct FunctionCallAction {
     /// Name of exported Wasm function
@@ -1386,8 +1408,8 @@ The specification is defined in <code>near-vm-logic</code>, but it is exposed to
 <ul>
 <li>transfers amount specified in <code>deposit</code> from <code>tx.signer</code> to a <code>tx.receiver_id</code> account</li>
 </ul>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>pub struct TransferAction {
     /// Amount of tokens to transfer to a receiver_id
@@ -1401,8 +1423,8 @@ The specification is defined in <code>near-vm-logic</code>, but it is exposed to
 <li><em><code>tx.signer_id</code> to be equal to <code>receiver_id</code></em></li>
 <li><em><code>tx.public_key</code> to be <code>AccessKeyPermission::FullAccess</code> for the <code>singer_id</code></em></li>
 </ul>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>pub struct StakeAction {
     // Amount of tokens to stake
@@ -1422,8 +1444,8 @@ The specification is defined in <code>near-vm-logic</code>, but it is exposed to
 <li><em><code>tx.public_key</code> to be <code>AccessKeyPermission::FullAccess</code> for the <code>singer_id</code></em></li>
 </ul>
 <p>Associates an <a href="RuntimeSpec/AccessKey">AccessKey</a> with a <code>public_key</code> provided.</p>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>pub struct AddKeyAction {
     pub public_key: PublicKey,
@@ -1437,8 +1459,8 @@ The specification is defined in <code>near-vm-logic</code>, but it is exposed to
 <li><em><code>tx.signer_id</code> to be equal to <code>receiver_id</code></em></li>
 <li><em><code>tx.public_key</code> to be <code>AccessKeyPermission::FullAccess</code> for the <code>singer_id</code></em></li>
 </ul>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>pub struct DeleteKeyAction {
     pub public_key: PublicKey,
@@ -1452,8 +1474,8 @@ The specification is defined in <code>near-vm-logic</code>, but it is exposed to
 <li><em><code>tx.public_key</code> to be <code>AccessKeyPermission::FullAccess</code> for the <code>singer_id</code></em></li>
 <li><em><code>tx.account shouldn't have any locked balance</code></em></li>
 </ul>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>pub struct DeleteAccountAction {
     /// The remaining account balance will be transferred to the AccountId below
@@ -2136,8 +2158,8 @@ value is read from register 1, and result is saved to register 2.</p>
 <p>Note, we allow multiple registers on the host, identified with <code>u64</code> number. The guest does not have to use them in
 order and can for instance save some blob in register <code>5000</code> and another value in register <code>1</code>.</p>
 <h4><a class="header" href="#specification" id="specification">Specification</a></h4>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>read_register(register_id: u64, ptr: u64)
 <span class="boring">}
@@ -2154,8 +2176,8 @@ order and can for instance save some blob in register <code>5000</code> and anot
 wrong location this function will overwrite memory that it is not supposed to overwrite causing an undefined behavior.</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>register_len(register_id: u64) -&gt; u64
 <span class="boring">}
@@ -2170,8 +2192,8 @@ wrong location this function will overwrite memory that it is not supposed to ov
 <p>Here we provide a specification of trie API. After this NEP is merged, the cases where our current implementation does
 not follow the specification are considered to be bugs that need to be fixed.</p>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>storage_write(key_len: u64, key_ptr: u64, value_len: u64, value_ptr: u64, register_id: u64) -&gt; u64
 <span class="boring">}
@@ -2202,8 +2224,8 @@ however the actual implementation does not return error at all, <a href="https:/
 <li>Does not return into the registers.</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>storage_read(key_len: u64, key_ptr: u64, register_id: u64) -&gt; u64
 <span class="boring">}
@@ -2229,8 +2251,8 @@ however the actual implementation does not return error at all, <a href="https:/
 <li>This function currently does not exist.</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>storage_remove(key_len: u64, key_ptr: u64, register_id: u64) -&gt; u64
 <span class="boring">}
@@ -2258,8 +2280,8 @@ however the actual implementation does not return error at all, <a href="https:/
 <li>Does not return into the registers.</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>storage_has_key(key_len: u64, key_ptr: u64) -&gt; u64
 <span class="boring">}
@@ -2275,8 +2297,8 @@ however the actual implementation does not return error at all, <a href="https:/
 <li>If <code>key_len + key_ptr</code> exceeds the memory container it panics with <code>MemoryAccessViolation</code>;</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>storage_iter_prefix(prefix_len: u64, prefix_ptr: u64) -&gt; u64
 <span class="boring">}
@@ -2295,8 +2317,8 @@ order of the bytes in the keys. If there are no keys, it creates an empty iterat
 <li>If <code>prefix_len + prefix_ptr</code> exceeds the memory container it panics with <code>MemoryAccessViolation</code>;</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>storage_iter_range(start_len: u64, start_ptr: u64, end_len: u64, end_ptr: u64) -&gt; u64
 <span class="boring">}
@@ -2313,8 +2335,8 @@ Iterates over all key-values such that keys are between <code>start</code> and <
 <li>If <code>start_len + start_ptr</code> or <code>end_len + end_ptr</code> exceeds the memory container or points to an unused register it panics with <code>MemoryAccessViolation</code>;</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>storage_iter_next(iterator_id: u64, key_register_id: u64, value_register_id: u64) -&gt; u64
 <span class="boring">}
@@ -2341,8 +2363,8 @@ Advances iterator and saves the next key and value in the register.</p>
 the purpose, but have unspecified behavior.</li>
 </ul>
 <h1><a class="header" href="#promises-api" id="promises-api">Promises API</a></h1>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>promise_create(account_id_len: u64,
                account_id_ptr: u64,
@@ -2367,8 +2389,8 @@ or <code>amount_ptr + 16</code> points outside the memory of the guest or host, 
 <li>Index of the new promise that uniquely identifies it within the current execution of the method.</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>promise_then(promise_idx: u64,
              account_id_len: u64,
@@ -2394,8 +2416,8 @@ or <code>amount_ptr + 16</code> points outside the memory of the guest or host, 
 <li>Index of the new promise that uniquely identifies it within the current execution of the method.</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>promise_and(promise_idx_ptr: u64, promise_idx_count: u64) -&gt; u64
 <span class="boring">}
@@ -2414,8 +2436,8 @@ The array contains indices of promises that need to be waited on jointly.</p>
 <li>Index of the new promise that uniquely identifies it within the current execution of the method.</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>promise_results_count() -&gt; u64
 <span class="boring">}
@@ -2434,8 +2456,8 @@ caused the callback. This function returns the number of complete and incomplete
 <li>If called in a view function panics with <code>ProhibitedInView</code>.</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>promise_result(result_idx: u64, register_id: u64) -&gt; u64
 <span class="boring">}
@@ -2464,8 +2486,8 @@ caused the callback. This function returns the result in blob format and places 
 <li>We currently have two separate functions to check for result completion and copy it.</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>promise_return(promise_idx: u64)
 <span class="boring">}
@@ -2479,8 +2501,8 @@ caused the callback. This function returns the result in blob format and places 
 <ul>
 <li>The current name <code>return_promise</code> is inconsistent with the naming convention of Promise API.</li>
 </ul>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>promise_batch_create(account_id_len: u64, account_id_ptr: u64) -&gt; u64
 <span class="boring">}
@@ -2496,8 +2518,8 @@ caused the callback. This function returns the result in blob format and places 
 <li>Index of the new promise that uniquely identifies it within the current execution of the method.</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>promise_batch_then(promise_idx: u64, account_id_len: u64, account_id_ptr: u64) -&gt; u64
 <span class="boring">}
@@ -2514,8 +2536,8 @@ caused the callback. This function returns the result in blob format and places 
 <li>Index of the new promise that uniquely identifies it within the current execution of the method.</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>promise_batch_action_create_account(promise_idx: u64)
 <span class="boring">}
@@ -2529,8 +2551,8 @@ Details for the action: https://github.com/nearprotocol/NEPs/pull/8/files#diff-1
 <li>If called in a view function panics with <code>ProhibitedInView</code>.</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>promise_batch_action_deploy_contract(promise_idx: u64, code_len: u64, code_ptr: u64)
 <span class="boring">}
@@ -2545,8 +2567,8 @@ Details for the action: https://github.com/nearprotocol/NEPs/pull/8/files#diff-1
 <li>If called in a view function panics with <code>ProhibitedInView</code>.</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>promise_batch_action_function_call(promise_idx: u64,
                                    method_name_len: u64,
@@ -2569,8 +2591,8 @@ or <code>amount_ptr + 16</code> points outside the memory of the guest or host, 
 <li>If called in a view function panics with <code>ProhibitedInView</code>.</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>promise_batch_action_transfer(promise_idx: u64, amount_ptr: u64)
 <span class="boring">}
@@ -2585,8 +2607,8 @@ Details for the action: https://github.com/nearprotocol/NEPs/pull/8/files#diff-1
 <li>If called in a view function panics with <code>ProhibitedInView</code>.</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>promise_batch_action_stake(promise_idx: u64,
                            amount_ptr: u64,
@@ -2605,8 +2627,8 @@ Details for the action: https://github.com/nearprotocol/NEPs/pull/8/files#diff-1
 <li>If called in a view function panics with <code>ProhibitedInView</code>.</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>promise_batch_action_add_key_with_full_access(promise_idx: u64,
                                               public_key_len: u64,
@@ -2626,8 +2648,8 @@ The access key will have <code>FullAccess</code> permission, details: https://gi
 <li>If called in a view function panics with <code>ProhibitedInView</code>.</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>promise_batch_action_add_key_with_function_call(promise_idx: u64,
                                                 public_key_len: u64,
@@ -2658,8 +2680,8 @@ The access key will have <code>FunctionCall</code> permission, details: https://
 <li>If called in a view function panics with <code>ProhibitedInView</code>.</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>promise_batch_action_delete_key(promise_idx: u64,
                                 public_key_len: u64,
@@ -2677,8 +2699,8 @@ Details for the action: https://github.com/nearprotocol/NEPs/pull/8/files#diff-1
 <li>If called in a view function panics with <code>ProhibitedInView</code>.</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>promise_batch_action_delete_account(promise_idx: u64,
                                     beneficiary_id_len: u64,
@@ -2712,8 +2734,8 @@ execute anyway.</li>
 </ul>
 <p>However there is one reason to not have <code>data_read</code> -- it makes <code>API</code> more human-like which is a general direction Wasm APIs, like WASI are moving towards to.</p>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>current_account_id(register_id: u64)
 <span class="boring">}
@@ -2724,8 +2746,8 @@ execute anyway.</li>
 <li>If the registers exceed the memory limit panics with <code>MemoryAccessViolation</code>;</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>signer_account_id(register_id: u64)
 <span class="boring">}
@@ -2746,8 +2768,8 @@ some access key and submitted into a memory pool (either through the wallet usin
 <li>Currently we conflate <code>originator_id</code> and <code>sender_id</code> in our code base.</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>signer_account_pk(register_id: u64)
 <span class="boring">}
@@ -2765,8 +2787,8 @@ e.g. to increase the allowance or manipulate with the public key.</p>
 <li>Not implemented.</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>predecessor_account_id(register_id: u64)
 <span class="boring">}
@@ -2787,8 +2809,8 @@ that does function invocation on the contract or another contract as a result of
 <li>Not implemented.</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>input(register_id: u64)
 <span class="boring">}
@@ -2814,32 +2836,32 @@ that does function invocation on the contract or another contract as a result of
 be used to read all</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>block_index() -&gt; u64
 <span class="boring">}
 </span></code></pre></pre>
 <p>Returns the current block height from genesis.</p>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>block_timestamp() -&gt; u64
 <span class="boring">}
 </span></code></pre></pre>
 <p>Returns the current block timestamp (number of non-leap-nanoseconds since January 1, 1970 0:00:00 UTC).</p>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>epoch_height() -&gt; u64
 <span class="boring">}
 </span></code></pre></pre>
 <p>Returns the current epoch height from genesis.</p>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>storage_usage() -&gt; u64
 <span class="boring">}
@@ -2865,8 +2887,8 @@ the contract execution starts;</li>
 <p>If contract execution fails <code>prepaid_gas - used_gas</code> is refunded back to <code>signer_account_id</code> and <code>attached_deposit</code>
 is refunded back to <code>predecessor_account_id</code>.</p>
 <p>The following spec is the same for all functions:</p>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>account_balance(balance_ptr: u64)
 attached_deposit(balance_ptr: u64)
@@ -2884,8 +2906,8 @@ attached_deposit(balance_ptr: u64)
 <li>Use a different name;</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>prepaid_gas() -&gt; u64
 used_gas() -&gt; u64
@@ -2896,8 +2918,8 @@ used_gas() -&gt; u64
 <li>If called in a view function panics with <code>ProhibitedInView</code>.</li>
 </ul>
 <h1><a class="header" href="#math-api" id="math-api">Math API</a></h1>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>random_seed(register_id: u64)
 <span class="boring">}
@@ -2908,8 +2930,8 @@ used_gas() -&gt; u64
 <li>If the size of the registers exceed the set limit <code>MemoryAccessViolation</code>;</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>sha256(value_len: u64, value_ptr: u64, register_id: u64)
 <span class="boring">}
@@ -2920,8 +2942,8 @@ used_gas() -&gt; u64
 <li>If <code>value_len + value_ptr</code> points outside the memory or the registers use more memory than the limit with <code>MemoryAccessViolation</code>.</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>keccak256(value_len: u64, value_ptr: u64, register_id: u64)
 <span class="boring">}
@@ -2932,8 +2954,8 @@ used_gas() -&gt; u64
 <li>If <code>value_len + value_ptr</code> points outside the memory or the registers use more memory than the limit with <code>MemoryAccessViolation</code>.</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>keccak512(value_len: u64, value_ptr: u64, register_id: u64)
 <span class="boring">}
@@ -2944,8 +2966,8 @@ used_gas() -&gt; u64
 <li>If <code>value_len + value_ptr</code> points outside the memory or the registers use more memory than the limit with <code>MemoryAccessViolation</code>.</li>
 </ul>
 <h1><a class="header" href="#miscellaneous-api" id="miscellaneous-api">Miscellaneous API</a></h1>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>value_return(value_len: u64, value_ptr: u64)
 <span class="boring">}
@@ -2956,16 +2978,16 @@ used_gas() -&gt; u64
 <li>If <code>value_len + value_ptr</code> exceeds the memory container or points to an unused register it panics with <code>MemoryAccessViolation</code>;</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>panic()
 <span class="boring">}
 </span></code></pre></pre>
 <p>Terminates the execution of the program with panic <code>GuestPanic(&quot;explicit guest panic&quot;)</code>.</p>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>panic_utf8(len: u64, ptr: u64)
 <span class="boring">}
@@ -2980,8 +3002,8 @@ used_gas() -&gt; u64
 <li>If string length without null-termination symbol is larger than <code>config.max_log_len</code> returns <code>BadUtf8</code>.</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>log_utf8(len: u64, ptr: u64)
 <span class="boring">}
@@ -2996,8 +3018,8 @@ used_gas() -&gt; u64
 <li>If string length without null-termination symbol is larger than <code>config.max_log_len</code> returns <code>BadUtf8</code>.</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>log_utf16(len: u64, ptr: u64)
 <span class="boring">}
@@ -3011,8 +3033,8 @@ See https://stackoverflow.com/a/5923961 that explains that null termination is n
 <li>If string extends outside the memory of the guest with <code>MemoryAccessViolation</code>;</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>abort(msg_ptr: u32, filename_ptr: u32, line: u32, col: u32)
 <span class="boring">}
@@ -3023,14 +3045,28 @@ called by the code generated by AssemblyScript.</p>
 <p>In the future we can have some of the registers to be on the guest.
 For instance a guest can tell the host that it has some pre-allocated memory that it wants to be used for the register,
 e.g.</p>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>set_guest_register(register_id: u64, register_ptr: u64, max_register_size: u64)
 <span class="boring">}
 </span></code></pre></pre>
 <p>will assign <code>register_id</code> to a span of memory on the guest. Host then would also know the size of that buffer on guest
 and can throw a panic if there is an attempted copying that exceeds the guest register size.</p>
+<h1><a class="header" href="#precompiles" id="precompiles">Precompiles</a></h1>
+<p>See more details about pre-compiles in <a href="RuntimeSpec/Components/Precompiles/../../FunctionCall.html#pre-compiled-contracts">FunctionCall section</a>.</p>
+<p>Available pre-compiles:</p>
+<ul>
+<li>0x0: No Op contract</li>
+<li>0x1: <a href="RuntimeSpec/Components/Precompiles/./EVM.html">Ethereum Virtual Machine</a></li>
+</ul>
+<h1><a class="header" href="#evm-pre-compile" id="evm-pre-compile">EVM pre-compile</a></h1>
+<p>This provides interface and details of the implementing EVM pre-compile.
+See more details about pre-compiles in <a href="RuntimeSpec/Components/Precompiles/../../FunctionCall.html#pre-compiled-contracts">FunctionCall section</a>.</p>
+<h2><a class="header" href="#details" id="details">Details</a></h2>
+<p>TBD</p>
+<h3><a class="header" href="#pre-compiles-inside-evm" id="pre-compiles-inside-evm">Pre-compiles inside EVM</a></h3>
+<p>There are a list of pre-compiles in EVM that provide an interface to native functions.</p>
 <h1><a class="header" href="#genesisconfig" id="genesisconfig">GenesisConfig</a></h1>
 <h2><a class="header" href="#protocol_version" id="protocol_version">protocol_version</a></h2>
 <p><em>type: u32</em></p>
@@ -3568,8 +3604,8 @@ The only way to recover it in this case is by sending extra funds from a differe
 <tr><td><code>num_allocated_seats[v]</code></td><td>Number of seats assigned to validator[v], calculated from stake[v]/seatPrice</td></tr>
 <tr><td><code>validatorAssignments</code></td><td>The resulting ordered array of all <code>proposals</code> with a stake higher than <code>seatPrice</code></td></tr>
 </tbody></table>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>struct Proposal {
     account_id: AccountId,
@@ -3850,8 +3886,8 @@ The unused tokens from the attached deposit are also refunded, so it's safe to a
 keys on its account.</li>
 </ul>
 <p>Interface:</p>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>/******************/
 /* CHANGE METHODS */
@@ -3954,10 +3990,10 @@ It should be possible if we introduce <code>transfer_with</code> function that t
         
 
         
-        
+
         
         <script type="text/javascript">
-            window.playpen_copyable = true;
+            window.playground_copyable = true;
         </script>
         
 
