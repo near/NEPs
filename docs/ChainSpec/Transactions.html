@@ -5,13 +5,24 @@
         <meta charset="UTF-8">
         <title>Transactions - NEAR Protocol Specification</title>
         
+        
+
+
+        <!-- Custom HTML head -->
+        
+
 
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
         <meta name="description" content="Specification of the NEAR Protocol">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff" />
 
+        
+        <link rel="icon" href="../favicon.svg">
+        
+        
         <link rel="shortcut icon" href="../favicon.png">
+        
         <link rel="stylesheet" href="../css/variables.css">
         <link rel="stylesheet" href="../css/general.css">
         <link rel="stylesheet" href="../css/chrome.css">
@@ -19,8 +30,9 @@
 
         <!-- Fonts -->
         <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
-        <link href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" rel="stylesheet" type="text/css">
-        <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro:500" rel="stylesheet" type="text/css">
+        
+        <link rel="stylesheet" href="../fonts/fonts.css">
+        
 
         <!-- Highlight.js Stylesheets -->
         <link rel="stylesheet" href="../highlight.css">
@@ -39,7 +51,7 @@
         <!-- Provide site root to javascript -->
         <script type="text/javascript">
             var path_to_root = "../";
-            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "light" : "light";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
         </script>
 
         <!-- Work around some values being stored in localStorage wrapped in quotes -->
@@ -192,8 +204,8 @@ It pulls transactions from the group in order from the smallest nonce to largest
 For every transaction group, the runtime adapter keeps pulling transactions until the valid transaction is found.
 If the transaction group becomes empty, then it's skipped.</p>
 <p>The runtime adapter may implement the following code to pull all valid transactions:</p>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>let mut valid_transactions = vec![];
 let mut pool_iter = pool.pool_iterator();
@@ -359,8 +371,8 @@ This transaction belongs to the next batch.</p>
 If there are no transaction with the same key in the N batch, then the order is invalid.</p>
 <p>We also enforce the order of the sequence of transactions for the same key, the nonces of them should be in strictly increasing order.</p>
 <p>Here is the algorithm that validates the order:</p>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>fn validate_order(txs: &amp;Vec&lt;Transaction&gt;) -&gt; bool {
     let mut nonces: HashMap&lt;Key, Nonce&gt; = HashMap::new();
@@ -443,10 +455,10 @@ If there are no transaction with the same key in the N batch, then the order is 
         
 
         
-        
+
         
         <script type="text/javascript">
-            window.playpen_copyable = true;
+            window.playground_copyable = true;
         </script>
         
 

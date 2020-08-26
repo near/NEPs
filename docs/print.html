@@ -7,13 +7,24 @@
         
         <meta name="robots" content="noindex" />
         
+        
+
+
+        <!-- Custom HTML head -->
+        
+
 
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
         <meta name="description" content="Specification of the NEAR Protocol">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff" />
 
+        
+        <link rel="icon" href="favicon.svg">
+        
+        
         <link rel="shortcut icon" href="favicon.png">
+        
         <link rel="stylesheet" href="css/variables.css">
         <link rel="stylesheet" href="css/general.css">
         <link rel="stylesheet" href="css/chrome.css">
@@ -21,8 +32,9 @@
 
         <!-- Fonts -->
         <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
-        <link href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" rel="stylesheet" type="text/css">
-        <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro:500" rel="stylesheet" type="text/css">
+        
+        <link rel="stylesheet" href="fonts/fonts.css">
+        
 
         <!-- Highlight.js Stylesheets -->
         <link rel="stylesheet" href="highlight.css">
@@ -41,7 +53,7 @@
         <!-- Provide site root to javascript -->
         <script type="text/javascript">
             var path_to_root = "";
-            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "light" : "light";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
         </script>
 
         <!-- Work around some values being stored in localStorage wrapped in quotes -->
@@ -286,8 +298,8 @@ Each access key contains a unique nonce to differentiate or order transactions s
 <h1><a class="header" href="#access-keys-1" id="access-keys-1">Access Keys</a></h1>
 <p>Access key provides an access for a particular account. Each access key belongs to some account and
 is identified by a unique (within the account) public key. Access keys are stored as <code>account_id,public_key</code> in a trie state. Account can have from <a href="DataStructures/AccessKey.html#account-without-access-keys">zero</a> to multiple access keys.</p>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>pub struct AccessKey {
     /// The nonce for this access key.
@@ -301,8 +313,8 @@ is identified by a unique (within the account) public key. Access keys are store
 <span class="boring">}
 </span></code></pre></pre>
 <p>There are 2 types of <code>AccessKeyPermission</code> in Near currently: <code>FullAccess</code> and <code>FunctionCall</code>. <code>FunctionCall</code> grants a permission to issue any action on account like <a href="DataStructures/Transaction#DeployContract">DeployContract</a>, <a href="DataStructures/Transaction#Transfer">Transfer</a> tokens to other account, call functions <a href="DataStructures/Transaction#FunctionCall">FunctionCall</a>, <a href="DataStructures/Transaction#Stake">Stake</a> and even delete account <a href="DataStructures/Transaction#DeleteAccountAction">DeleteAccountAction</a>. <code>FullAccess</code> also allow to manage access keys. <code>AccessKeyPermission::FunctionCall</code> limits to do only contract calls.</p>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>pub enum AccessKeyPermission {
     FunctionCall(FunctionCallPermission),
@@ -312,8 +324,8 @@ is identified by a unique (within the account) public key. Access keys are store
 </span></code></pre></pre>
 <h2><a class="header" href="#accesskeypermissionfunctioncall" id="accesskeypermissionfunctioncall">AccessKeyPermission::FunctionCall</a></h2>
 <p>Grants limited permission to make <a href="DataStructures/Transaction#FunctionCall">FunctionCall</a> to a specified <code>receiver_id</code> and methods of a particular contract with a limit of allowed balance to spend.</p>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>pub struct FunctionCallPermission {
     /// Allowance is a balance limit to use by this access key to pay for function call gas and
@@ -421,8 +433,8 @@ has an indirect knowledge of them through the computation of the tokens-to-gas e
 <p>The consensus protocol defines a notion of <em>finality</em>. Informally, if a block \(B\) is final, any future final blocks may only be built on top of \(B\). Therefore, transactions in \(B\) and preceding blocks are never going to be reversed. Finality is not a function of a block itself, rather, a block may be final or not final in some chain it is a member of. Specifically, \(final(B, T)\), where \(B \le T\), means that \(B\) is final in \(chain(T)\). A block that is final in a chain is final in all of its extensions: specifically, if \(final(B, T)\) is true, then \(final(B, T')\) is also true for all \(T' \ge T\).</p>
 <h2><a class="header" href="#data-structures" id="data-structures">Data structures</a></h2>
 <p>The fields in the Block header relevant to the consensus process are:</p>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>struct BlockHeader {
     ...
@@ -436,8 +448,8 @@ has an indirect knowledge of them through the computation of the tokens-to-gas e
 <span class="boring">}
 </span></code></pre></pre>
 <p>Block producers in the particular epoch exchange many kinds of messages. The two kinds that are relevant to the consensus are <strong>Blocks</strong> and <strong>Approvals</strong>. The approval contains the following fields:</p>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>enum ApprovalInner {
     Endorsement(BlockHash),
@@ -583,8 +595,8 @@ def send_approval(self, target_height):
 <li>Version of binary defines it's internal data structures / database and configs. This version is client specific and doesn't need to be matching between nodes.</li>
 <li>Version of the protocol, defining the &quot;language&quot; nodes are speaking.</li>
 </ul>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>/// Latest version of protocol that this binary can work with.
 type ProtocolVersion = u32;
@@ -605,8 +617,8 @@ General recommendation is to store version in the database and on binary start, 
 <h3><a class="header" href="#versioned-data-structures" id="versioned-data-structures">Versioned data structures</a></h3>
 <p>Given we expect many data structures to change or get updated as protocol evolves, a few changes are required to support that.</p>
 <p>The major one is adding backward compatible <code>Versioned</code> data structures like this one:</p>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>enum VersionedBlockHeader {
     BlockHeaderV1(BlockHeaderV1),
@@ -624,8 +636,8 @@ This allows to encode and decode old versions (up to 256 given https://borsh.io 
 <tr><td><code>PROTOCOL_UPGRADE_NUM_EPOCHS</code></td><td><code>2</code></td></tr>
 </tbody></table>
 <p>The way the version will be indicated by validators, will be via </p>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>/// Add `version` into block header.
 struct BlockHeaderInnerRest {
@@ -703,8 +715,8 @@ It pulls transactions from the group in order from the smallest nonce to largest
 For every transaction group, the runtime adapter keeps pulling transactions until the valid transaction is found.
 If the transaction group becomes empty, then it's skipped.</p>
 <p>The runtime adapter may implement the following code to pull all valid transactions:</p>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>let mut valid_transactions = vec![];
 let mut pool_iter = pool.pool_iterator();
@@ -870,8 +882,8 @@ This transaction belongs to the next batch.</p>
 If there are no transaction with the same key in the N batch, then the order is invalid.</p>
 <p>We also enforce the order of the sequence of transactions for the same key, the nonces of them should be in strictly increasing order.</p>
 <p>Here is the algorithm that validates the order:</p>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>fn validate_order(txs: &amp;Vec&lt;Transaction&gt;) -&gt; bool {
     let mut nonces: HashMap&lt;Key, Nonce&gt; = HashMap::new();
@@ -922,8 +934,8 @@ If there are no transaction with the same key in the N batch, then the order is 
 <p>Light client does't need to receive <code>LightClientBlockView</code> for all the blocks. Having the <code>LightClientBlockView</code> for block <code>B</code> is sufficient to be able to verify any statement about state or outcomes in any block in the ancestry of <code>B</code> (including <code>B</code> itself). In particular, having the <code>LightClientBlockView</code> for the head is sufficient to locally verify any statement about state or outcomes in any block on the canonical chain.</p>
 <p>However, to verify the validity of a particular <code>LightClientBlockView</code>, the light client must have verified a <code>LightClientBlockView</code> for at least one block in the preceding epoch, thus to sync to the head the light client will have to fetch and verify a <code>LightClientBlockView</code> per epoch passed.</p>
 <h2><a class="header" href="#validating-light-client-block-views" id="validating-light-client-block-views">Validating Light Client Block Views</a></h2>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>pub enum ApprovalInner {
     Endorsement(CryptoHash),
@@ -965,8 +977,8 @@ pub struct LightClientBlockView {
 <span class="boring">}
 </span></code></pre></pre>
 <p>Recall that the hash of the block is</p>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>sha256(concat(
     sha256(concat(
@@ -1066,8 +1078,8 @@ pub struct LightClientBlockView {
 <h2><a class="header" href="#proof-verification" id="proof-verification">Proof Verification</a></h2>
 <h3><a class="header" href="#transaction-outcome-proofs" id="transaction-outcome-proofs">Transaction Outcome Proofs</a></h3>
 <p>To verify that a transaction or receipt happens on chain, a light client can request a proof through rpc by providing <code>id</code>, which is of type</p>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>pub enum TransactionOrReceiptId {
     Transaction { hash: CryptoHash, sender: AccountId },
@@ -1076,8 +1088,8 @@ pub struct LightClientBlockView {
 <span class="boring">}
 </span></code></pre></pre>
 <p>and the block hash of light client head. The rpc will return the following struct</p>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>pub struct RpcLightClientExecutionProofResponse {
     /// Proof of execution outcome
@@ -1094,8 +1106,8 @@ pub struct LightClientBlockView {
 </span></code></pre></pre>
 <p>which includes everything that a light client needs to prove the execution outcome of the given transaction or receipt.
 Here <code>ExecutionOutcomeWithIdView</code> is</p>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>pub struct ExecutionOutcomeWithIdView {
     /// Proof of the execution outcome
@@ -1121,8 +1133,8 @@ block_outcome_root = compute_root(sha256(borsh(shard_outcome_root)), outcome_roo
 <p>This outcome root must match the outcome root in <code>block_header_lite.inner_lite</code>.</p>
 <h4><a class="header" href="#block-merkle-root-verification" id="block-merkle-root-verification">Block Merkle Root Verification</a></h4>
 <p>Recall that block hash can be computed from <code>LightClientBlockLiteView</code> by</p>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>sha256(concat(
     sha256(concat(
@@ -1206,8 +1218,8 @@ The specification is defined in <code>near-vm-logic</code>, but it is exposed to
 </ul>
 <h1><a class="header" href="#function-call" id="function-call">Function Call</a></h1>
 <p>In this section we provide an explanation how the <code>FunctionCall</code> action execution works, what are the inputs and what are the outputs. Suppose runtime received the following ActionReceipt:</p>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>ActionReceipt {
      id: &quot;A1&quot;,
@@ -1265,10 +1277,158 @@ The specification is defined in <code>near-vm-logic</code>, but it is exposed to
 <p>If applied <code>ActionReceipt</code> contains <a href="RuntimeSpec/Receitps.html#output_data_receivers"><code>output_data_receivers</code></a>, runtime will create <code>DataReceipt</code> for each of <code>data_id</code> and <code>receiver_id</code> and <code>data</code> equals returned value. Eventually, these <code>DataReceipt</code> will be delivered to the corresponding receivers.</p>
 <h3><a class="header" href="#receiptindex-result" id="receiptindex-result">ReceiptIndex Result</a></h3>
 <p>Successful result could not return any Value, but generates a bunch of new ActionReceipts instead. One example could be a callback. In this case, we assume the the new Receipt will send its Value Result to the <a href="RuntimeSpec/Receitps.html#output_data_receivers"><code>output_data_receivers</code></a> of the current <code>ActionReceipt</code>.</p>
+<h3><a class="header" href="#errors" id="errors">Errors</a></h3>
+<p>There can be three types of errors returned when applying a function call action:
+<code>FunctionCallError</code>, <code>ExternalError</code>, and <code>StorageError</code>.</p>
+<ul>
+<li><code>FunctionCallError</code> includes everything from around the execution of the wasm binary,
+from compiling wasm to native to traps occurred while executing the compiled native binary. More specifically,
+it includes the following errors:</li>
+</ul>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub enum FunctionCallError {
+    /// Wasm compilation error
+    CompilationError(CompilationError),
+    /// Wasm binary env link error
+    LinkError {
+        msg: String,
+    },
+    /// Import/export resolve error
+    MethodResolveError(MethodResolveError),
+    /// A trap happened during execution of a binary
+    WasmTrap(WasmTrap),
+    WasmUnknownError,   
+    HostError(HostError),
+}
+<span class="boring">}
+</span></code></pre></pre>
+<ul>
+<li><code>CompilationError</code> includes errors that can occur during the compilation of wasm binary. </li>
+<li><code>LinkError</code> is returned when wasmer runtime is unable to link the wasm module with provided imports.</li>
+<li><code>MethodResolveError</code> occurs when the method in the action cannot be found in the contract code.</li>
+<li><code>WasmTrap</code> error happens when a trap occurs during the execution of the binary. Traps here include</li>
+</ul>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub enum WasmTrap {
+    /// An `unreachable` opcode was executed.
+    Unreachable,
+    /// Call indirect incorrect signature trap.
+    IncorrectCallIndirectSignature,
+    /// Memory out of bounds trap.
+    MemoryOutOfBounds,
+    /// Call indirect out of bounds trap.
+    CallIndirectOOB,
+    /// An arithmetic exception, e.g. divided by zero.
+    IllegalArithmetic,
+    /// Misaligned atomic access trap.
+    MisalignedAtomicAccess,
+    /// Breakpoint trap.
+    BreakpointTrap,
+    /// Stack overflow.
+    StackOverflow,
+    /// Generic trap.
+    GenericTrap,
+}
+<span class="boring">}
+</span></code></pre></pre>
+<ul>
+<li><code>WasmUnknownError</code> occurs when something inside wasmer goes wrong</li>
+<li><code>HostError</code> includes errors that might be returned during the execution of a host function. Those errors are</li>
+</ul>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub enum HostError {
+    /// String encoding is bad UTF-16 sequence
+    BadUTF16,
+    /// String encoding is bad UTF-8 sequence
+    BadUTF8,
+    /// Exceeded the prepaid gas
+    GasExceeded,
+    /// Exceeded the maximum amount of gas allowed to burn per contract
+    GasLimitExceeded,
+    /// Exceeded the account balance
+    BalanceExceeded,
+    /// Tried to call an empty method name
+    EmptyMethodName,
+    /// Smart contract panicked
+    GuestPanic { panic_msg: String },
+    /// IntegerOverflow happened during a contract execution
+    IntegerOverflow,
+    /// `promise_idx` does not correspond to existing promises
+    InvalidPromiseIndex { promise_idx: u64 },
+    /// Actions can only be appended to non-joint promise.
+    CannotAppendActionToJointPromise,
+    /// Returning joint promise is currently prohibited
+    CannotReturnJointPromise,
+    /// Accessed invalid promise result index
+    InvalidPromiseResultIndex { result_idx: u64 },
+    /// Accessed invalid register id
+    InvalidRegisterId { register_id: u64 },
+    /// Iterator `iterator_index` was invalidated after its creation by performing a mutable operation on trie
+    IteratorWasInvalidated { iterator_index: u64 },
+    /// Accessed memory outside the bounds
+    MemoryAccessViolation,
+    /// VM Logic returned an invalid receipt index
+    InvalidReceiptIndex { receipt_index: u64 },
+    /// Iterator index `iterator_index` does not exist
+    InvalidIteratorIndex { iterator_index: u64 },
+    /// VM Logic returned an invalid account id
+    InvalidAccountId,
+    /// VM Logic returned an invalid method name
+    InvalidMethodName,
+    /// VM Logic provided an invalid public key
+    InvalidPublicKey,
+    /// `method_name` is not allowed in view calls
+    ProhibitedInView { method_name: String },
+    /// The total number of logs will exceed the limit.
+    NumberOfLogsExceeded { limit: u64 },
+    /// The storage key length exceeded the limit.
+    KeyLengthExceeded { length: u64, limit: u64 },
+    /// The storage value length exceeded the limit.
+    ValueLengthExceeded { length: u64, limit: u64 },
+    /// The total log length exceeded the limit.
+    TotalLogLengthExceeded { length: u64, limit: u64 },
+    /// The maximum number of promises within a FunctionCall exceeded the limit.
+    NumberPromisesExceeded { number_of_promises: u64, limit: u64 },
+    /// The maximum number of input data dependencies exceeded the limit.
+    NumberInputDataDependenciesExceeded { number_of_input_data_dependencies: u64, limit: u64 },
+    /// The returned value length exceeded the limit.
+    ReturnedValueLengthExceeded { length: u64, limit: u64 },
+    /// The contract size for DeployContract action exceeded the limit.
+    ContractSizeExceeded { size: u64, limit: u64 },
+    /// The host function was deprecated.
+    Deprecated { method_name: String },
+}
+<span class="boring">}
+</span></code></pre></pre>
+<ul>
+<li><code>ExternalError</code> includes errors that occur during the execution inside <code>External</code>, which is an interface between runtime
+and the rest of the system. The possible errors are:</li>
+</ul>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub enum ExternalError {
+    /// Unexpected error which is typically related to the node storage corruption.
+    /// It's possible the input state is invalid or malicious.
+    StorageError(StorageError),
+    /// Error when accessing validator information. Happens inside epoch manager.
+    ValidatorError(EpochError),
+}
+<span class="boring">}
+</span></code></pre></pre>
+<ul>
+<li><code>StorageError</code> occurs when state or storage is corrupted.</li>
+</ul>
 <h1><a class="header" href="#transactions" id="transactions">Transactions</a></h1>
 <p>A transaction in Near is a list of <a href="RuntimeSpec/Actions.html">actions</a> and additional information:</p>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>pub struct Transaction {
     /// An account on which behalf transaction is signed
@@ -1289,8 +1449,8 @@ The specification is defined in <code>near-vm-logic</code>, but it is exposed to
 </span></code></pre></pre>
 <h2><a class="header" href="#signed-transaction" id="signed-transaction">Signed Transaction</a></h2>
 <p><code>SignedTransaction</code> is what the node receives from a wallet through JSON-RPC endpoint and then routed to the shard where <code>receiver_id</code> account lives. Signature proves an ownership of the corresponding <code>public_key</code> (which is an AccessKey for a particular account) as well as authenticity of the transaction itself.</p>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>pub struct SignedTransaction {
     pub transaction: Transaction,
@@ -1299,10 +1459,22 @@ The specification is defined in <code>near-vm-logic</code>, but it is exposed to
 <span class="boring">}
 </span></code></pre></pre>
 <p>Take a look some <a href="RuntimeSpec/Scenarios/Scenarios.html">scenarios</a> how transaction can be applied.</p>
+<h2><a class="header" href="#batched-transaction" id="batched-transaction">Batched Transaction</a></h2>
+<p>A <code>Transaction</code> can contain a list of actions. When there are more than one action in a transaction, we refer to such
+transaction as batched transaction. When such a transaction is applied, it is equivalent to applying each of the actions
+separately, except:</p>
+<ul>
+<li>After processing a <code>CreateAccount</code> action, the rest of the action is applied on behalf of the account that is just created.
+This allows one to, in one transaction, create an account, deploy a contract to the account, and call some initialization
+function on the contract.</li>
+<li><code>DeleteAccount</code> action, if present, must be the last action in the transaction.</li>
+</ul>
+<p>The number of actions in one transaction is limited by <code>VMLimitConfig::max_actions_per_receipt</code>, the current value of which
+is 100.</p>
 <h1><a class="header" href="#actions" id="actions">Actions</a></h1>
 <p>There are a several action types in Near:</p>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>pub enum Action {
     CreateAccount(CreateAccountAction),
@@ -1316,13 +1488,27 @@ The specification is defined in <code>near-vm-logic</code>, but it is exposed to
 }
 <span class="boring">}
 </span></code></pre></pre>
-<p>Each transaction consists a list of actions to be performed on the <code>receiver_id</code> side. Sometimes the <code>singer_id</code> equals to <code>receiver_id</code>. There is a set of action types when <code>signer_id</code> and <code>receiver_id</code> are required to be equal. Actions requires arguments and use data from the <code>Transaction</code> itself.</p>
-<p>// TODO: how to introduce the concept of <code>sender_id</code></p>
+<p>Each transaction consists a list of actions to be performed on the <code>receiver_id</code> side. Sometimes <code>signer_id</code> equals to <code>receiver_id</code>. 
+For the following actions, <code>signer_id</code> and <code>receiver_id</code> are required to be equal:</p>
+<ul>
+<li><code>DeployContract</code></li>
+<li><code>Stake</code></li>
+<li><code>AddKey</code></li>
+<li><code>DeleteKey</code></li>
+<li><code>DeleteAccount</code></li>
+</ul>
+<p>Actions requires arguments and use data from the <code>Transaction</code> itself.</p>
 <h2><a class="header" href="#createaccountaction" id="createaccountaction">CreateAccountAction</a></h2>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub struct CreateAccountAction {}
+<span class="boring">}
+</span></code></pre></pre>
 <p><em>Requirements:</em></p>
 <ul>
 <li><em>unique <code>tx.receiver_id</code></em></li>
-<li><em><code>public_key</code> to be <code>AccessKeyPermission::FullAccess</code> for the <code>singer_id</code></em></li>
+<li><em><code>public_key</code> to be <code>AccessKeyPermission::FullAccess</code> for the <code>signer_id</code></em></li>
 </ul>
 <p><code>CreateAccountAction</code> doesn't take any additional arguments, it uses <code>receiver_id</code> from Transaction. <code>receiver_id</code> is an ID for an account to be created. Account ID should be <a href="RuntimeSpec/Account.html#account-id">valid</a> and <strong>unique</strong> throughout the system.</p>
 <p><strong>Outcome</strong>:</p>
@@ -1331,39 +1517,59 @@ The specification is defined in <code>near-vm-logic</code>, but it is exposed to
 <li>sets Account <code>storage_usage</code> to <code>account_cost</code> (genesis config)</li>
 <li>sets Account <code>storage_paid_at</code> to the current block height</li>
 </ul>
-<p>NOTE: for the all subsequent actions in the transaction the <code>signer_id</code> becomes <code>receiver_id</code> until <a href="RuntimeSpec/Actions.html#DeleteAccountAction">DeleteAccountAction</a>. It allows to execute actions on behalf of the just created account.</p>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<p><strong>Errors</strong>:</p>
+<ul>
+<li>If the action tries to create a top level account whose length is no greater than 32 characters, and <code>predecessor_id</code> is not
+<code>registrar_account_id</code>, the following error will be returned</li>
+</ul>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
-</span>pub struct CreateAccountAction {}
+</span>/// A top-level account ID can only be created by registrar.
+CreateAccountOnlyByRegistrar {
+    account_id: AccountId,
+    registrar_account_id: AccountId,
+    predecessor_id: AccountId,
+}
 <span class="boring">}
 </span></code></pre></pre>
+<ul>
+<li>If the action tries to create an account that is neither a top-level account or a subaccount of <code>predecessor_id</code>,
+the following error will be returned</li>
+</ul>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>/// A newly created account must be under a namespace of the creator account
+CreateAccountNotAllowed { account_id: AccountId, predecessor_id: AccountId },
+<span class="boring">}
+</span></code></pre></pre>
+<p>NOTE: for the all subsequent actions in the transaction the <code>signer_id</code> becomes <code>receiver_id</code> until <a href="RuntimeSpec/Actions.html#DeleteAccountAction">DeleteAccountAction</a>. It allows to execute actions on behalf of the just created account.</p>
 <h2><a class="header" href="#deploycontractaction" id="deploycontractaction">DeployContractAction</a></h2>
-<p><em>Requirements:</em></p>
-<ul>
-<li><em><code>tx.signer_id</code> to be equal to <code>receiver_id</code></em></li>
-<li><em><code>tx.public_key</code> to be <code>AccessKeyPermission::FullAccess</code> for the <code>singer_id</code></em></li>
-</ul>
-<p><strong>Outcome</strong>:</p>
-<ul>
-<li>sets a code for account</li>
-</ul>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>pub struct DeployContractAction {
     pub code: Vec&lt;u8&gt;, // a valid WebAssembly code
 }
 <span class="boring">}
 </span></code></pre></pre>
-<h2><a class="header" href="#functioncallaction" id="functioncallaction">FunctionCallAction</a></h2>
 <p><em>Requirements:</em></p>
 <ul>
-<li><em><code>tx.public_key</code> to be <code>AccessKeyPermission::FullAccess</code> or <code>AccessKeyPermission::FunctionCall</code></em></li>
+<li><em><code>tx.signer_id</code> to be equal to <code>receiver_id</code></em></li>
+<li><em><code>tx.public_key</code> to be <code>AccessKeyPermission::FullAccess</code> for the <code>signer_id</code></em></li>
 </ul>
-<p>Calls a method of a particular contract. See <a href="RuntimeSpec/./FunctionCall.html">details</a>.</p>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<p><strong>Outcome</strong>:</p>
+<ul>
+<li>sets the contract code for account</li>
+</ul>
+<p><strong>Errors</strong></p>
+<ul>
+<li>If state or storage is corrupted, it may return <code>StorageError</code>. Otherwise this action should not lead to errors.</li>
+</ul>
+<h2><a class="header" href="#functioncallaction" id="functioncallaction">FunctionCallAction</a></h2>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>pub struct FunctionCallAction {
     /// Name of exported Wasm function
@@ -1377,7 +1583,21 @@ The specification is defined in <code>near-vm-logic</code>, but it is exposed to
 }
 <span class="boring">}
 </span></code></pre></pre>
+<p><em>Requirements:</em></p>
+<ul>
+<li><em><code>tx.public_key</code> to be <code>AccessKeyPermission::FullAccess</code> or <code>AccessKeyPermission::FunctionCall</code></em></li>
+</ul>
+<p>Calls a method of a particular contract. See <a href="RuntimeSpec/./FunctionCall.html">details</a>.</p>
 <h2><a class="header" href="#transferaction" id="transferaction">TransferAction</a></h2>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub struct TransferAction {
+    /// Amount of tokens to transfer to a receiver_id
+    pub deposit: Balance,
+}
+<span class="boring">}
+</span></code></pre></pre>
 <p><em>Requirements:</em></p>
 <ul>
 <li><em><code>tx.public_key</code> to be <code>AccessKeyPermission::FullAccess</code> for the <code>singer_id</code></em></li>
@@ -1386,23 +1606,14 @@ The specification is defined in <code>near-vm-logic</code>, but it is exposed to
 <ul>
 <li>transfers amount specified in <code>deposit</code> from <code>tx.signer</code> to a <code>tx.receiver_id</code> account</li>
 </ul>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
-</span><span class="boring">fn main() {
-</span>pub struct TransferAction {
-    /// Amount of tokens to transfer to a receiver_id
-    pub deposit: Balance,
-}
-<span class="boring">}
-</span></code></pre></pre>
-<h2><a class="header" href="#stakeaction" id="stakeaction">StakeAction</a></h2>
-<p><em>Requirements:</em></p>
+<p><strong>Errors</strong>:</p>
 <ul>
-<li><em><code>tx.signer_id</code> to be equal to <code>receiver_id</code></em></li>
-<li><em><code>tx.public_key</code> to be <code>AccessKeyPermission::FullAccess</code> for the <code>singer_id</code></em></li>
+<li>If the deposit amount plus the existing amount on the receiver account exceeds <code>u128::MAX</code>,
+a <code>StorageInconsistentState(&quot;Account balance integer overflow&quot;)</code> error will be returned.</li>
 </ul>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<h2><a class="header" href="#stakeaction" id="stakeaction">StakeAction</a></h2>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>pub struct StakeAction {
     // Amount of tokens to stake
@@ -1412,18 +1623,62 @@ The specification is defined in <code>near-vm-logic</code>, but it is exposed to
 }
 <span class="boring">}
 </span></code></pre></pre>
-<p><strong>Outcome</strong>:</p>
-<pre><code>// TODO: cover staking
-</code></pre>
-<h2><a class="header" href="#addkeyaction" id="addkeyaction">AddKeyAction</a></h2>
 <p><em>Requirements:</em></p>
 <ul>
 <li><em><code>tx.signer_id</code> to be equal to <code>receiver_id</code></em></li>
 <li><em><code>tx.public_key</code> to be <code>AccessKeyPermission::FullAccess</code> for the <code>singer_id</code></em></li>
 </ul>
-<p>Associates an <a href="RuntimeSpec/AccessKey">AccessKey</a> with a <code>public_key</code> provided.</p>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<p><strong>Outcome</strong>:</p>
+<ul>
+<li>A validator proposal that contains the staking public key and the staking amount is generated and will be included
+in the next block.</li>
+</ul>
+<p><strong>Errors</strong>:</p>
+<ul>
+<li>If an account has not staked but it tries to unstake, the following error will be returned:</li>
+</ul>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>/// Account is not yet staked, but tries to unstake
+TriesToUnstake { account_id: AccountId },
+<span class="boring">}
+</span></code></pre></pre>
+<ul>
+<li>If an account tries to stake more than the amount of tokens it has, the following error will be returned:</li>
+</ul>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>/// The account doesn't have enough balance to increase the stake.
+TriesToStake {
+    account_id: AccountId,
+    stake: Balance,
+    locked: Balance,
+    balance: Balance,
+}
+<span class="boring">}
+</span></code></pre></pre>
+<ul>
+<li>If the staked amount is below the minimum stake threshold, the following error will be returned:</li>
+</ul>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>InsufficientStake {
+    account_id: AccountId,
+    stake: Balance,
+    minimum_stake: Balance,
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>The minimum stake is determined by <code>last_epoch_seat_price / minimum_stake_divisor</code> where <code>last_epoch_seat_price</code> is the
+seat price determined at the end of last epoch and <code>minimum_stake_divisor</code> is a genesis config parameter and its current
+value is 10.</p>
+<h2><a class="header" href="#addkeyaction" id="addkeyaction">AddKeyAction</a></h2>
+<p><em>Requirements:</em></p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>pub struct AddKeyAction {
     pub public_key: PublicKey,
@@ -1431,29 +1686,63 @@ The specification is defined in <code>near-vm-logic</code>, but it is exposed to
 }
 <span class="boring">}
 </span></code></pre></pre>
-<h2><a class="header" href="#deletekeyaction" id="deletekeyaction">DeleteKeyAction</a></h2>
-<p><em>Requirements:</em></p>
 <ul>
 <li><em><code>tx.signer_id</code> to be equal to <code>receiver_id</code></em></li>
-<li><em><code>tx.public_key</code> to be <code>AccessKeyPermission::FullAccess</code> for the <code>singer_id</code></em></li>
+<li><em><code>tx.public_key</code> to be <code>AccessKeyPermission::FullAccess</code> for the <code>signer_id</code></em></li>
 </ul>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<p><strong>Outcome</strong>:</p>
+<ul>
+<li>Associates an <a href="RuntimeSpec/AccessKey">AccessKey</a> with a <code>public_key</code> provided.</li>
+</ul>
+<p><strong>Errors</strong>:</p>
+<ul>
+<li>If an account tries to add an access key that already exists, the following error will be returned</li>
+</ul>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>/// The public key is already used for an existing access key
+AddKeyAlreadyExists { account_id: AccountId, public_key: PublicKey }
+<span class="boring">}
+</span></code></pre></pre>
+<ul>
+<li>If state or storage is corrupted, a <code>StorageError</code> will be returned.</li>
+</ul>
+<h2><a class="header" href="#deletekeyaction" id="deletekeyaction">DeleteKeyAction</a></h2>
+<p><em>Requirements:</em></p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>pub struct DeleteKeyAction {
     pub public_key: PublicKey,
 }
 <span class="boring">}
 </span></code></pre></pre>
-<h2><a class="header" href="#deleteaccountaction" id="deleteaccountaction">DeleteAccountAction</a></h2>
-<p><em>Requirements:</em></p>
 <ul>
 <li><em><code>tx.signer_id</code> to be equal to <code>receiver_id</code></em></li>
-<li><em><code>tx.public_key</code> to be <code>AccessKeyPermission::FullAccess</code> for the <code>singer_id</code></em></li>
-<li><em><code>tx.account shouldn't have any locked balance</code></em></li>
+<li><em><code>tx.public_key</code> to be <code>AccessKeyPermission::FullAccess</code> for the <code>signer_id</code></em></li>
 </ul>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<p><strong>Outcome</strong>:</p>
+<ul>
+<li>Deletes the <a href="RuntimeSpec/AccessKey">AccessKey</a> associated with <code>public_key</code>.</li>
+</ul>
+<p><strong>Errors</strong>:</p>
+<ul>
+<li>When an account tries to delete an access key that doesn't exist, the following error is returned</li>
+</ul>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>/// Account tries to remove an access key that doesn't exist
+DeleteKeyDoesNotExist { account_id: AccountId, public_key: PublicKey }
+<span class="boring">}
+</span></code></pre></pre>
+<ul>
+<li><code>StorageError</code> is returned if state or storage is corrupted.</li>
+</ul>
+<h2><a class="header" href="#deleteaccountaction" id="deleteaccountaction">DeleteAccountAction</a></h2>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>pub struct DeleteAccountAction {
     /// The remaining account balance will be transferred to the AccountId below
@@ -1461,6 +1750,20 @@ The specification is defined in <code>near-vm-logic</code>, but it is exposed to
 }
 <span class="boring">}
 </span></code></pre></pre>
+<p><em>Requirements:</em></p>
+<ul>
+<li><em><code>tx.signer_id</code> to be equal to <code>receiver_id</code></em></li>
+<li><em><code>tx.public_key</code> to be <code>AccessKeyPermission::FullAccess</code> for the <code>signer_id</code></em></li>
+<li><em><code>tx.account shouldn't have any locked balance</code></em></li>
+</ul>
+<p><strong>Outcomes</strong>:</p>
+<ul>
+<li>The account, as well as all the data stored under the account, is deleted and the tokens are transferred to <code>beneficiary_id</code>.</li>
+</ul>
+<p><strong>Errors</strong>:</p>
+<ul>
+<li>If state or storage is corrupted, a <code>StorageError</code> is returned.</li>
+</ul>
 <h1><a class="header" href="#receipt" id="receipt">Receipt</a></h1>
 <p>All cross-contract (we assume that each account lives in it's own shard) communication in Near happens trough Receipts.
 Receipts are stateful in a sense that they serve not only as messages between accounts but also can be stored in the account storage to await DataReceipts.</p>
@@ -2136,8 +2439,8 @@ value is read from register 1, and result is saved to register 2.</p>
 <p>Note, we allow multiple registers on the host, identified with <code>u64</code> number. The guest does not have to use them in
 order and can for instance save some blob in register <code>5000</code> and another value in register <code>1</code>.</p>
 <h4><a class="header" href="#specification" id="specification">Specification</a></h4>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>read_register(register_id: u64, ptr: u64)
 <span class="boring">}
@@ -2154,8 +2457,8 @@ order and can for instance save some blob in register <code>5000</code> and anot
 wrong location this function will overwrite memory that it is not supposed to overwrite causing an undefined behavior.</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>register_len(register_id: u64) -&gt; u64
 <span class="boring">}
@@ -2170,8 +2473,8 @@ wrong location this function will overwrite memory that it is not supposed to ov
 <p>Here we provide a specification of trie API. After this NEP is merged, the cases where our current implementation does
 not follow the specification are considered to be bugs that need to be fixed.</p>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>storage_write(key_len: u64, key_ptr: u64, value_len: u64, value_ptr: u64, register_id: u64) -&gt; u64
 <span class="boring">}
@@ -2202,8 +2505,8 @@ however the actual implementation does not return error at all, <a href="https:/
 <li>Does not return into the registers.</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>storage_read(key_len: u64, key_ptr: u64, register_id: u64) -&gt; u64
 <span class="boring">}
@@ -2229,8 +2532,8 @@ however the actual implementation does not return error at all, <a href="https:/
 <li>This function currently does not exist.</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>storage_remove(key_len: u64, key_ptr: u64, register_id: u64) -&gt; u64
 <span class="boring">}
@@ -2258,8 +2561,8 @@ however the actual implementation does not return error at all, <a href="https:/
 <li>Does not return into the registers.</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>storage_has_key(key_len: u64, key_ptr: u64) -&gt; u64
 <span class="boring">}
@@ -2275,8 +2578,8 @@ however the actual implementation does not return error at all, <a href="https:/
 <li>If <code>key_len + key_ptr</code> exceeds the memory container it panics with <code>MemoryAccessViolation</code>;</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>storage_iter_prefix(prefix_len: u64, prefix_ptr: u64) -&gt; u64
 <span class="boring">}
@@ -2295,8 +2598,8 @@ order of the bytes in the keys. If there are no keys, it creates an empty iterat
 <li>If <code>prefix_len + prefix_ptr</code> exceeds the memory container it panics with <code>MemoryAccessViolation</code>;</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>storage_iter_range(start_len: u64, start_ptr: u64, end_len: u64, end_ptr: u64) -&gt; u64
 <span class="boring">}
@@ -2313,8 +2616,8 @@ Iterates over all key-values such that keys are between <code>start</code> and <
 <li>If <code>start_len + start_ptr</code> or <code>end_len + end_ptr</code> exceeds the memory container or points to an unused register it panics with <code>MemoryAccessViolation</code>;</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>storage_iter_next(iterator_id: u64, key_register_id: u64, value_register_id: u64) -&gt; u64
 <span class="boring">}
@@ -2341,8 +2644,8 @@ Advances iterator and saves the next key and value in the register.</p>
 the purpose, but have unspecified behavior.</li>
 </ul>
 <h1><a class="header" href="#promises-api" id="promises-api">Promises API</a></h1>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>promise_create(account_id_len: u64,
                account_id_ptr: u64,
@@ -2367,8 +2670,8 @@ or <code>amount_ptr + 16</code> points outside the memory of the guest or host, 
 <li>Index of the new promise that uniquely identifies it within the current execution of the method.</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>promise_then(promise_idx: u64,
              account_id_len: u64,
@@ -2394,8 +2697,8 @@ or <code>amount_ptr + 16</code> points outside the memory of the guest or host, 
 <li>Index of the new promise that uniquely identifies it within the current execution of the method.</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>promise_and(promise_idx_ptr: u64, promise_idx_count: u64) -&gt; u64
 <span class="boring">}
@@ -2414,8 +2717,8 @@ The array contains indices of promises that need to be waited on jointly.</p>
 <li>Index of the new promise that uniquely identifies it within the current execution of the method.</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>promise_results_count() -&gt; u64
 <span class="boring">}
@@ -2434,8 +2737,8 @@ caused the callback. This function returns the number of complete and incomplete
 <li>If called in a view function panics with <code>ProhibitedInView</code>.</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>promise_result(result_idx: u64, register_id: u64) -&gt; u64
 <span class="boring">}
@@ -2464,8 +2767,8 @@ caused the callback. This function returns the result in blob format and places 
 <li>We currently have two separate functions to check for result completion and copy it.</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>promise_return(promise_idx: u64)
 <span class="boring">}
@@ -2479,8 +2782,8 @@ caused the callback. This function returns the result in blob format and places 
 <ul>
 <li>The current name <code>return_promise</code> is inconsistent with the naming convention of Promise API.</li>
 </ul>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>promise_batch_create(account_id_len: u64, account_id_ptr: u64) -&gt; u64
 <span class="boring">}
@@ -2496,8 +2799,8 @@ caused the callback. This function returns the result in blob format and places 
 <li>Index of the new promise that uniquely identifies it within the current execution of the method.</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>promise_batch_then(promise_idx: u64, account_id_len: u64, account_id_ptr: u64) -&gt; u64
 <span class="boring">}
@@ -2514,8 +2817,8 @@ caused the callback. This function returns the result in blob format and places 
 <li>Index of the new promise that uniquely identifies it within the current execution of the method.</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>promise_batch_action_create_account(promise_idx: u64)
 <span class="boring">}
@@ -2529,8 +2832,8 @@ Details for the action: https://github.com/nearprotocol/NEPs/pull/8/files#diff-1
 <li>If called in a view function panics with <code>ProhibitedInView</code>.</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>promise_batch_action_deploy_contract(promise_idx: u64, code_len: u64, code_ptr: u64)
 <span class="boring">}
@@ -2545,8 +2848,8 @@ Details for the action: https://github.com/nearprotocol/NEPs/pull/8/files#diff-1
 <li>If called in a view function panics with <code>ProhibitedInView</code>.</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>promise_batch_action_function_call(promise_idx: u64,
                                    method_name_len: u64,
@@ -2569,8 +2872,8 @@ or <code>amount_ptr + 16</code> points outside the memory of the guest or host, 
 <li>If called in a view function panics with <code>ProhibitedInView</code>.</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>promise_batch_action_transfer(promise_idx: u64, amount_ptr: u64)
 <span class="boring">}
@@ -2585,8 +2888,8 @@ Details for the action: https://github.com/nearprotocol/NEPs/pull/8/files#diff-1
 <li>If called in a view function panics with <code>ProhibitedInView</code>.</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>promise_batch_action_stake(promise_idx: u64,
                            amount_ptr: u64,
@@ -2605,8 +2908,8 @@ Details for the action: https://github.com/nearprotocol/NEPs/pull/8/files#diff-1
 <li>If called in a view function panics with <code>ProhibitedInView</code>.</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>promise_batch_action_add_key_with_full_access(promise_idx: u64,
                                               public_key_len: u64,
@@ -2626,8 +2929,8 @@ The access key will have <code>FullAccess</code> permission, details: https://gi
 <li>If called in a view function panics with <code>ProhibitedInView</code>.</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>promise_batch_action_add_key_with_function_call(promise_idx: u64,
                                                 public_key_len: u64,
@@ -2658,8 +2961,8 @@ The access key will have <code>FunctionCall</code> permission, details: https://
 <li>If called in a view function panics with <code>ProhibitedInView</code>.</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>promise_batch_action_delete_key(promise_idx: u64,
                                 public_key_len: u64,
@@ -2677,8 +2980,8 @@ Details for the action: https://github.com/nearprotocol/NEPs/pull/8/files#diff-1
 <li>If called in a view function panics with <code>ProhibitedInView</code>.</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>promise_batch_action_delete_account(promise_idx: u64,
                                     beneficiary_id_len: u64,
@@ -2712,8 +3015,8 @@ execute anyway.</li>
 </ul>
 <p>However there is one reason to not have <code>data_read</code> -- it makes <code>API</code> more human-like which is a general direction Wasm APIs, like WASI are moving towards to.</p>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>current_account_id(register_id: u64)
 <span class="boring">}
@@ -2724,8 +3027,8 @@ execute anyway.</li>
 <li>If the registers exceed the memory limit panics with <code>MemoryAccessViolation</code>;</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>signer_account_id(register_id: u64)
 <span class="boring">}
@@ -2746,8 +3049,8 @@ some access key and submitted into a memory pool (either through the wallet usin
 <li>Currently we conflate <code>originator_id</code> and <code>sender_id</code> in our code base.</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>signer_account_pk(register_id: u64)
 <span class="boring">}
@@ -2765,8 +3068,8 @@ e.g. to increase the allowance or manipulate with the public key.</p>
 <li>Not implemented.</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>predecessor_account_id(register_id: u64)
 <span class="boring">}
@@ -2787,8 +3090,8 @@ that does function invocation on the contract or another contract as a result of
 <li>Not implemented.</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>input(register_id: u64)
 <span class="boring">}
@@ -2814,32 +3117,32 @@ that does function invocation on the contract or another contract as a result of
 be used to read all</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>block_index() -&gt; u64
 <span class="boring">}
 </span></code></pre></pre>
 <p>Returns the current block height from genesis.</p>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>block_timestamp() -&gt; u64
 <span class="boring">}
 </span></code></pre></pre>
 <p>Returns the current block timestamp (number of non-leap-nanoseconds since January 1, 1970 0:00:00 UTC).</p>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>epoch_height() -&gt; u64
 <span class="boring">}
 </span></code></pre></pre>
 <p>Returns the current epoch height from genesis.</p>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>storage_usage() -&gt; u64
 <span class="boring">}
@@ -2865,8 +3168,8 @@ the contract execution starts;</li>
 <p>If contract execution fails <code>prepaid_gas - used_gas</code> is refunded back to <code>signer_account_id</code> and <code>attached_deposit</code>
 is refunded back to <code>predecessor_account_id</code>.</p>
 <p>The following spec is the same for all functions:</p>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>account_balance(balance_ptr: u64)
 attached_deposit(balance_ptr: u64)
@@ -2884,8 +3187,8 @@ attached_deposit(balance_ptr: u64)
 <li>Use a different name;</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>prepaid_gas() -&gt; u64
 used_gas() -&gt; u64
@@ -2896,8 +3199,8 @@ used_gas() -&gt; u64
 <li>If called in a view function panics with <code>ProhibitedInView</code>.</li>
 </ul>
 <h1><a class="header" href="#math-api" id="math-api">Math API</a></h1>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>random_seed(register_id: u64)
 <span class="boring">}
@@ -2908,8 +3211,8 @@ used_gas() -&gt; u64
 <li>If the size of the registers exceed the set limit <code>MemoryAccessViolation</code>;</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>sha256(value_len: u64, value_ptr: u64, register_id: u64)
 <span class="boring">}
@@ -2920,8 +3223,8 @@ used_gas() -&gt; u64
 <li>If <code>value_len + value_ptr</code> points outside the memory or the registers use more memory than the limit with <code>MemoryAccessViolation</code>.</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>keccak256(value_len: u64, value_ptr: u64, register_id: u64)
 <span class="boring">}
@@ -2932,8 +3235,8 @@ used_gas() -&gt; u64
 <li>If <code>value_len + value_ptr</code> points outside the memory or the registers use more memory than the limit with <code>MemoryAccessViolation</code>.</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>keccak512(value_len: u64, value_ptr: u64, register_id: u64)
 <span class="boring">}
@@ -2944,8 +3247,8 @@ used_gas() -&gt; u64
 <li>If <code>value_len + value_ptr</code> points outside the memory or the registers use more memory than the limit with <code>MemoryAccessViolation</code>.</li>
 </ul>
 <h1><a class="header" href="#miscellaneous-api" id="miscellaneous-api">Miscellaneous API</a></h1>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>value_return(value_len: u64, value_ptr: u64)
 <span class="boring">}
@@ -2956,16 +3259,16 @@ used_gas() -&gt; u64
 <li>If <code>value_len + value_ptr</code> exceeds the memory container or points to an unused register it panics with <code>MemoryAccessViolation</code>;</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>panic()
 <span class="boring">}
 </span></code></pre></pre>
 <p>Terminates the execution of the program with panic <code>GuestPanic(&quot;explicit guest panic&quot;)</code>.</p>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>panic_utf8(len: u64, ptr: u64)
 <span class="boring">}
@@ -2980,8 +3283,8 @@ used_gas() -&gt; u64
 <li>If string length without null-termination symbol is larger than <code>config.max_log_len</code> returns <code>BadUtf8</code>.</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>log_utf8(len: u64, ptr: u64)
 <span class="boring">}
@@ -2996,8 +3299,8 @@ used_gas() -&gt; u64
 <li>If string length without null-termination symbol is larger than <code>config.max_log_len</code> returns <code>BadUtf8</code>.</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>log_utf16(len: u64, ptr: u64)
 <span class="boring">}
@@ -3011,8 +3314,8 @@ See https://stackoverflow.com/a/5923961 that explains that null termination is n
 <li>If string extends outside the memory of the guest with <code>MemoryAccessViolation</code>;</li>
 </ul>
 <hr />
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>abort(msg_ptr: u32, filename_ptr: u32, line: u32, col: u32)
 <span class="boring">}
@@ -3023,8 +3326,8 @@ called by the code generated by AssemblyScript.</p>
 <p>In the future we can have some of the registers to be on the guest.
 For instance a guest can tell the host that it has some pre-allocated memory that it wants to be used for the register,
 e.g.</p>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>set_guest_register(register_id: u64, register_ptr: u64, max_register_size: u64)
 <span class="boring">}
@@ -3568,8 +3871,8 @@ The only way to recover it in this case is by sending extra funds from a differe
 <tr><td><code>num_allocated_seats[v]</code></td><td>Number of seats assigned to validator[v], calculated from stake[v]/seatPrice</td></tr>
 <tr><td><code>validatorAssignments</code></td><td>The resulting ordered array of all <code>proposals</code> with a stake higher than <code>seatPrice</code></td></tr>
 </tbody></table>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>struct Proposal {
     account_id: AccountId,
@@ -3850,8 +4153,8 @@ The unused tokens from the attached deposit are also refunded, so it's safe to a
 keys on its account.</li>
 </ul>
 <p>Interface:</p>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>/******************/
 /* CHANGE METHODS */
@@ -3954,10 +4257,10 @@ It should be possible if we introduce <code>transfer_with</code> function that t
         
 
         
-        
+
         
         <script type="text/javascript">
-            window.playpen_copyable = true;
+            window.playground_copyable = true;
         </script>
         
 

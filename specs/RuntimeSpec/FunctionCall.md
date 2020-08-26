@@ -66,3 +66,134 @@ If applied `ActionReceipt` contains [`output_data_receivers`](Receitps.md#output
 ### ReceiptIndex Result
 
 Successful result could not return any Value, but generates a bunch of new ActionReceipts instead. One example could be a callback. In this case, we assume the the new Receipt will send its Value Result to the [`output_data_receivers`](Receitps.md#output_data_receivers) of the current `ActionReceipt`.
+
+### Errors
+
+There can be three types of errors returned when applying a function call action:
+`FunctionCallError`, `ExternalError`, and `StorageError`.
+
+* `FunctionCallError` includes everything from around the execution of the wasm binary,
+from compiling wasm to native to traps occurred while executing the compiled native binary. More specifically,
+it includes the following errors:
+```rust
+pub enum FunctionCallError {
+    /// Wasm compilation error
+    CompilationError(CompilationError),
+    /// Wasm binary env link error
+    LinkError {
+        msg: String,
+    },
+    /// Import/export resolve error
+    MethodResolveError(MethodResolveError),
+    /// A trap happened during execution of a binary
+    WasmTrap(WasmTrap),
+    WasmUnknownError,   
+    HostError(HostError),
+}
+```
+- `CompilationError` includes errors that can occur during the compilation of wasm binary. 
+- `LinkError` is returned when wasmer runtime is unable to link the wasm module with provided imports.
+- `MethodResolveError` occurs when the method in the action cannot be found in the contract code.
+- `WasmTrap` error happens when a trap occurs during the execution of the binary. Traps here include
+```rust
+pub enum WasmTrap {
+    /// An `unreachable` opcode was executed.
+    Unreachable,
+    /// Call indirect incorrect signature trap.
+    IncorrectCallIndirectSignature,
+    /// Memory out of bounds trap.
+    MemoryOutOfBounds,
+    /// Call indirect out of bounds trap.
+    CallIndirectOOB,
+    /// An arithmetic exception, e.g. divided by zero.
+    IllegalArithmetic,
+    /// Misaligned atomic access trap.
+    MisalignedAtomicAccess,
+    /// Breakpoint trap.
+    BreakpointTrap,
+    /// Stack overflow.
+    StackOverflow,
+    /// Generic trap.
+    GenericTrap,
+}
+```
+- `WasmUnknownError` occurs when something inside wasmer goes wrong
+- `HostError` includes errors that might be returned during the execution of a host function. Those errors are
+```rust
+pub enum HostError {
+    /// String encoding is bad UTF-16 sequence
+    BadUTF16,
+    /// String encoding is bad UTF-8 sequence
+    BadUTF8,
+    /// Exceeded the prepaid gas
+    GasExceeded,
+    /// Exceeded the maximum amount of gas allowed to burn per contract
+    GasLimitExceeded,
+    /// Exceeded the account balance
+    BalanceExceeded,
+    /// Tried to call an empty method name
+    EmptyMethodName,
+    /// Smart contract panicked
+    GuestPanic { panic_msg: String },
+    /// IntegerOverflow happened during a contract execution
+    IntegerOverflow,
+    /// `promise_idx` does not correspond to existing promises
+    InvalidPromiseIndex { promise_idx: u64 },
+    /// Actions can only be appended to non-joint promise.
+    CannotAppendActionToJointPromise,
+    /// Returning joint promise is currently prohibited
+    CannotReturnJointPromise,
+    /// Accessed invalid promise result index
+    InvalidPromiseResultIndex { result_idx: u64 },
+    /// Accessed invalid register id
+    InvalidRegisterId { register_id: u64 },
+    /// Iterator `iterator_index` was invalidated after its creation by performing a mutable operation on trie
+    IteratorWasInvalidated { iterator_index: u64 },
+    /// Accessed memory outside the bounds
+    MemoryAccessViolation,
+    /// VM Logic returned an invalid receipt index
+    InvalidReceiptIndex { receipt_index: u64 },
+    /// Iterator index `iterator_index` does not exist
+    InvalidIteratorIndex { iterator_index: u64 },
+    /// VM Logic returned an invalid account id
+    InvalidAccountId,
+    /// VM Logic returned an invalid method name
+    InvalidMethodName,
+    /// VM Logic provided an invalid public key
+    InvalidPublicKey,
+    /// `method_name` is not allowed in view calls
+    ProhibitedInView { method_name: String },
+    /// The total number of logs will exceed the limit.
+    NumberOfLogsExceeded { limit: u64 },
+    /// The storage key length exceeded the limit.
+    KeyLengthExceeded { length: u64, limit: u64 },
+    /// The storage value length exceeded the limit.
+    ValueLengthExceeded { length: u64, limit: u64 },
+    /// The total log length exceeded the limit.
+    TotalLogLengthExceeded { length: u64, limit: u64 },
+    /// The maximum number of promises within a FunctionCall exceeded the limit.
+    NumberPromisesExceeded { number_of_promises: u64, limit: u64 },
+    /// The maximum number of input data dependencies exceeded the limit.
+    NumberInputDataDependenciesExceeded { number_of_input_data_dependencies: u64, limit: u64 },
+    /// The returned value length exceeded the limit.
+    ReturnedValueLengthExceeded { length: u64, limit: u64 },
+    /// The contract size for DeployContract action exceeded the limit.
+    ContractSizeExceeded { size: u64, limit: u64 },
+    /// The host function was deprecated.
+    Deprecated { method_name: String },
+}
+```
+
+* `ExternalError` includes errors that occur during the execution inside `External`, which is an interface between runtime
+and the rest of the system. The possible errors are:
+```rust
+pub enum ExternalError {
+    /// Unexpected error which is typically related to the node storage corruption.
+    /// It's possible the input state is invalid or malicious.
+    StorageError(StorageError),
+    /// Error when accessing validator information. Happens inside epoch manager.
+    ValidatorError(EpochError),
+}
+```
+
+* `StorageError` occurs when state or storage is corrupted.

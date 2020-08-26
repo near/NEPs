@@ -33,3 +33,15 @@ pub struct SignedTransaction {
 
 Take a look some [scenarios](Scenarios/Scenarios.md) how transaction can be applied.
 
+## Batched Transaction
+
+A `Transaction` can contain a list of actions. When there are more than one action in a transaction, we refer to such
+transaction as batched transaction. When such a transaction is applied, it is equivalent to applying each of the actions
+separately, except:
+* After processing a `CreateAccount` action, the rest of the action is applied on behalf of the account that is just created.
+This allows one to, in one transaction, create an account, deploy a contract to the account, and call some initialization
+function on the contract.
+* `DeleteAccount` action, if present, must be the last action in the transaction.
+
+The number of actions in one transaction is limited by `VMLimitConfig::max_actions_per_receipt`, the current value of which
+is 100.

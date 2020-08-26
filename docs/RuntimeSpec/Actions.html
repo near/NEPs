@@ -5,13 +5,24 @@
         <meta charset="UTF-8">
         <title>Actions - NEAR Protocol Specification</title>
         
+        
+
+
+        <!-- Custom HTML head -->
+        
+
 
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
         <meta name="description" content="Specification of the NEAR Protocol">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff" />
 
+        
+        <link rel="icon" href="../favicon.svg">
+        
+        
         <link rel="shortcut icon" href="../favicon.png">
+        
         <link rel="stylesheet" href="../css/variables.css">
         <link rel="stylesheet" href="../css/general.css">
         <link rel="stylesheet" href="../css/chrome.css">
@@ -19,8 +30,9 @@
 
         <!-- Fonts -->
         <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
-        <link href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" rel="stylesheet" type="text/css">
-        <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro:500" rel="stylesheet" type="text/css">
+        
+        <link rel="stylesheet" href="../fonts/fonts.css">
+        
 
         <!-- Highlight.js Stylesheets -->
         <link rel="stylesheet" href="../highlight.css">
@@ -39,7 +51,7 @@
         <!-- Provide site root to javascript -->
         <script type="text/javascript">
             var path_to_root = "../";
-            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "light" : "light";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
         </script>
 
         <!-- Work around some values being stored in localStorage wrapped in quotes -->
@@ -152,8 +164,8 @@
                     <main>
                         <h1><a class="header" href="#actions" id="actions">Actions</a></h1>
 <p>There are a several action types in Near:</p>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>pub enum Action {
     CreateAccount(CreateAccountAction),
@@ -167,13 +179,27 @@
 }
 <span class="boring">}
 </span></code></pre></pre>
-<p>Each transaction consists a list of actions to be performed on the <code>receiver_id</code> side. Sometimes the <code>singer_id</code> equals to <code>receiver_id</code>. There is a set of action types when <code>signer_id</code> and <code>receiver_id</code> are required to be equal. Actions requires arguments and use data from the <code>Transaction</code> itself.</p>
-<p>// TODO: how to introduce the concept of <code>sender_id</code></p>
+<p>Each transaction consists a list of actions to be performed on the <code>receiver_id</code> side. Sometimes <code>signer_id</code> equals to <code>receiver_id</code>. 
+For the following actions, <code>signer_id</code> and <code>receiver_id</code> are required to be equal:</p>
+<ul>
+<li><code>DeployContract</code></li>
+<li><code>Stake</code></li>
+<li><code>AddKey</code></li>
+<li><code>DeleteKey</code></li>
+<li><code>DeleteAccount</code></li>
+</ul>
+<p>Actions requires arguments and use data from the <code>Transaction</code> itself.</p>
 <h2><a class="header" href="#createaccountaction" id="createaccountaction">CreateAccountAction</a></h2>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub struct CreateAccountAction {}
+<span class="boring">}
+</span></code></pre></pre>
 <p><em>Requirements:</em></p>
 <ul>
 <li><em>unique <code>tx.receiver_id</code></em></li>
-<li><em><code>public_key</code> to be <code>AccessKeyPermission::FullAccess</code> for the <code>singer_id</code></em></li>
+<li><em><code>public_key</code> to be <code>AccessKeyPermission::FullAccess</code> for the <code>signer_id</code></em></li>
 </ul>
 <p><code>CreateAccountAction</code> doesn't take any additional arguments, it uses <code>receiver_id</code> from Transaction. <code>receiver_id</code> is an ID for an account to be created. Account ID should be <a href="Account.html#account-id">valid</a> and <strong>unique</strong> throughout the system.</p>
 <p><strong>Outcome</strong>:</p>
@@ -182,39 +208,59 @@
 <li>sets Account <code>storage_usage</code> to <code>account_cost</code> (genesis config)</li>
 <li>sets Account <code>storage_paid_at</code> to the current block height</li>
 </ul>
-<p>NOTE: for the all subsequent actions in the transaction the <code>signer_id</code> becomes <code>receiver_id</code> until <a href="#DeleteAccountAction">DeleteAccountAction</a>. It allows to execute actions on behalf of the just created account.</p>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<p><strong>Errors</strong>:</p>
+<ul>
+<li>If the action tries to create a top level account whose length is no greater than 32 characters, and <code>predecessor_id</code> is not
+<code>registrar_account_id</code>, the following error will be returned</li>
+</ul>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
-</span>pub struct CreateAccountAction {}
+</span>/// A top-level account ID can only be created by registrar.
+CreateAccountOnlyByRegistrar {
+    account_id: AccountId,
+    registrar_account_id: AccountId,
+    predecessor_id: AccountId,
+}
 <span class="boring">}
 </span></code></pre></pre>
+<ul>
+<li>If the action tries to create an account that is neither a top-level account or a subaccount of <code>predecessor_id</code>,
+the following error will be returned</li>
+</ul>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>/// A newly created account must be under a namespace of the creator account
+CreateAccountNotAllowed { account_id: AccountId, predecessor_id: AccountId },
+<span class="boring">}
+</span></code></pre></pre>
+<p>NOTE: for the all subsequent actions in the transaction the <code>signer_id</code> becomes <code>receiver_id</code> until <a href="#DeleteAccountAction">DeleteAccountAction</a>. It allows to execute actions on behalf of the just created account.</p>
 <h2><a class="header" href="#deploycontractaction" id="deploycontractaction">DeployContractAction</a></h2>
-<p><em>Requirements:</em></p>
-<ul>
-<li><em><code>tx.signer_id</code> to be equal to <code>receiver_id</code></em></li>
-<li><em><code>tx.public_key</code> to be <code>AccessKeyPermission::FullAccess</code> for the <code>singer_id</code></em></li>
-</ul>
-<p><strong>Outcome</strong>:</p>
-<ul>
-<li>sets a code for account</li>
-</ul>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>pub struct DeployContractAction {
     pub code: Vec&lt;u8&gt;, // a valid WebAssembly code
 }
 <span class="boring">}
 </span></code></pre></pre>
-<h2><a class="header" href="#functioncallaction" id="functioncallaction">FunctionCallAction</a></h2>
 <p><em>Requirements:</em></p>
 <ul>
-<li><em><code>tx.public_key</code> to be <code>AccessKeyPermission::FullAccess</code> or <code>AccessKeyPermission::FunctionCall</code></em></li>
+<li><em><code>tx.signer_id</code> to be equal to <code>receiver_id</code></em></li>
+<li><em><code>tx.public_key</code> to be <code>AccessKeyPermission::FullAccess</code> for the <code>signer_id</code></em></li>
 </ul>
-<p>Calls a method of a particular contract. See <a href="./FunctionCall.html">details</a>.</p>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<p><strong>Outcome</strong>:</p>
+<ul>
+<li>sets the contract code for account</li>
+</ul>
+<p><strong>Errors</strong></p>
+<ul>
+<li>If state or storage is corrupted, it may return <code>StorageError</code>. Otherwise this action should not lead to errors.</li>
+</ul>
+<h2><a class="header" href="#functioncallaction" id="functioncallaction">FunctionCallAction</a></h2>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>pub struct FunctionCallAction {
     /// Name of exported Wasm function
@@ -228,7 +274,21 @@
 }
 <span class="boring">}
 </span></code></pre></pre>
+<p><em>Requirements:</em></p>
+<ul>
+<li><em><code>tx.public_key</code> to be <code>AccessKeyPermission::FullAccess</code> or <code>AccessKeyPermission::FunctionCall</code></em></li>
+</ul>
+<p>Calls a method of a particular contract. See <a href="./FunctionCall.html">details</a>.</p>
 <h2><a class="header" href="#transferaction" id="transferaction">TransferAction</a></h2>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub struct TransferAction {
+    /// Amount of tokens to transfer to a receiver_id
+    pub deposit: Balance,
+}
+<span class="boring">}
+</span></code></pre></pre>
 <p><em>Requirements:</em></p>
 <ul>
 <li><em><code>tx.public_key</code> to be <code>AccessKeyPermission::FullAccess</code> for the <code>singer_id</code></em></li>
@@ -237,23 +297,14 @@
 <ul>
 <li>transfers amount specified in <code>deposit</code> from <code>tx.signer</code> to a <code>tx.receiver_id</code> account</li>
 </ul>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
-</span><span class="boring">fn main() {
-</span>pub struct TransferAction {
-    /// Amount of tokens to transfer to a receiver_id
-    pub deposit: Balance,
-}
-<span class="boring">}
-</span></code></pre></pre>
-<h2><a class="header" href="#stakeaction" id="stakeaction">StakeAction</a></h2>
-<p><em>Requirements:</em></p>
+<p><strong>Errors</strong>:</p>
 <ul>
-<li><em><code>tx.signer_id</code> to be equal to <code>receiver_id</code></em></li>
-<li><em><code>tx.public_key</code> to be <code>AccessKeyPermission::FullAccess</code> for the <code>singer_id</code></em></li>
+<li>If the deposit amount plus the existing amount on the receiver account exceeds <code>u128::MAX</code>,
+a <code>StorageInconsistentState(&quot;Account balance integer overflow&quot;)</code> error will be returned.</li>
 </ul>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<h2><a class="header" href="#stakeaction" id="stakeaction">StakeAction</a></h2>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>pub struct StakeAction {
     // Amount of tokens to stake
@@ -263,18 +314,62 @@
 }
 <span class="boring">}
 </span></code></pre></pre>
-<p><strong>Outcome</strong>:</p>
-<pre><code>// TODO: cover staking
-</code></pre>
-<h2><a class="header" href="#addkeyaction" id="addkeyaction">AddKeyAction</a></h2>
 <p><em>Requirements:</em></p>
 <ul>
 <li><em><code>tx.signer_id</code> to be equal to <code>receiver_id</code></em></li>
 <li><em><code>tx.public_key</code> to be <code>AccessKeyPermission::FullAccess</code> for the <code>singer_id</code></em></li>
 </ul>
-<p>Associates an <a href="AccessKey">AccessKey</a> with a <code>public_key</code> provided.</p>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<p><strong>Outcome</strong>:</p>
+<ul>
+<li>A validator proposal that contains the staking public key and the staking amount is generated and will be included
+in the next block.</li>
+</ul>
+<p><strong>Errors</strong>:</p>
+<ul>
+<li>If an account has not staked but it tries to unstake, the following error will be returned:</li>
+</ul>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>/// Account is not yet staked, but tries to unstake
+TriesToUnstake { account_id: AccountId },
+<span class="boring">}
+</span></code></pre></pre>
+<ul>
+<li>If an account tries to stake more than the amount of tokens it has, the following error will be returned:</li>
+</ul>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>/// The account doesn't have enough balance to increase the stake.
+TriesToStake {
+    account_id: AccountId,
+    stake: Balance,
+    locked: Balance,
+    balance: Balance,
+}
+<span class="boring">}
+</span></code></pre></pre>
+<ul>
+<li>If the staked amount is below the minimum stake threshold, the following error will be returned:</li>
+</ul>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>InsufficientStake {
+    account_id: AccountId,
+    stake: Balance,
+    minimum_stake: Balance,
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>The minimum stake is determined by <code>last_epoch_seat_price / minimum_stake_divisor</code> where <code>last_epoch_seat_price</code> is the
+seat price determined at the end of last epoch and <code>minimum_stake_divisor</code> is a genesis config parameter and its current
+value is 10.</p>
+<h2><a class="header" href="#addkeyaction" id="addkeyaction">AddKeyAction</a></h2>
+<p><em>Requirements:</em></p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>pub struct AddKeyAction {
     pub public_key: PublicKey,
@@ -282,29 +377,63 @@
 }
 <span class="boring">}
 </span></code></pre></pre>
-<h2><a class="header" href="#deletekeyaction" id="deletekeyaction">DeleteKeyAction</a></h2>
-<p><em>Requirements:</em></p>
 <ul>
 <li><em><code>tx.signer_id</code> to be equal to <code>receiver_id</code></em></li>
-<li><em><code>tx.public_key</code> to be <code>AccessKeyPermission::FullAccess</code> for the <code>singer_id</code></em></li>
+<li><em><code>tx.public_key</code> to be <code>AccessKeyPermission::FullAccess</code> for the <code>signer_id</code></em></li>
 </ul>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<p><strong>Outcome</strong>:</p>
+<ul>
+<li>Associates an <a href="AccessKey">AccessKey</a> with a <code>public_key</code> provided.</li>
+</ul>
+<p><strong>Errors</strong>:</p>
+<ul>
+<li>If an account tries to add an access key that already exists, the following error will be returned</li>
+</ul>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>/// The public key is already used for an existing access key
+AddKeyAlreadyExists { account_id: AccountId, public_key: PublicKey }
+<span class="boring">}
+</span></code></pre></pre>
+<ul>
+<li>If state or storage is corrupted, a <code>StorageError</code> will be returned.</li>
+</ul>
+<h2><a class="header" href="#deletekeyaction" id="deletekeyaction">DeleteKeyAction</a></h2>
+<p><em>Requirements:</em></p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>pub struct DeleteKeyAction {
     pub public_key: PublicKey,
 }
 <span class="boring">}
 </span></code></pre></pre>
-<h2><a class="header" href="#deleteaccountaction" id="deleteaccountaction">DeleteAccountAction</a></h2>
-<p><em>Requirements:</em></p>
 <ul>
 <li><em><code>tx.signer_id</code> to be equal to <code>receiver_id</code></em></li>
-<li><em><code>tx.public_key</code> to be <code>AccessKeyPermission::FullAccess</code> for the <code>singer_id</code></em></li>
-<li><em><code>tx.account shouldn't have any locked balance</code></em></li>
+<li><em><code>tx.public_key</code> to be <code>AccessKeyPermission::FullAccess</code> for the <code>signer_id</code></em></li>
 </ul>
-<pre><pre class="playpen"><code class="language-rust">
-<span class="boring">#![allow(unused_variables)]
+<p><strong>Outcome</strong>:</p>
+<ul>
+<li>Deletes the <a href="AccessKey">AccessKey</a> associated with <code>public_key</code>.</li>
+</ul>
+<p><strong>Errors</strong>:</p>
+<ul>
+<li>When an account tries to delete an access key that doesn't exist, the following error is returned</li>
+</ul>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>/// Account tries to remove an access key that doesn't exist
+DeleteKeyDoesNotExist { account_id: AccountId, public_key: PublicKey }
+<span class="boring">}
+</span></code></pre></pre>
+<ul>
+<li><code>StorageError</code> is returned if state or storage is corrupted.</li>
+</ul>
+<h2><a class="header" href="#deleteaccountaction" id="deleteaccountaction">DeleteAccountAction</a></h2>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>pub struct DeleteAccountAction {
     /// The remaining account balance will be transferred to the AccountId below
@@ -312,6 +441,20 @@
 }
 <span class="boring">}
 </span></code></pre></pre>
+<p><em>Requirements:</em></p>
+<ul>
+<li><em><code>tx.signer_id</code> to be equal to <code>receiver_id</code></em></li>
+<li><em><code>tx.public_key</code> to be <code>AccessKeyPermission::FullAccess</code> for the <code>signer_id</code></em></li>
+<li><em><code>tx.account shouldn't have any locked balance</code></em></li>
+</ul>
+<p><strong>Outcomes</strong>:</p>
+<ul>
+<li>The account, as well as all the data stored under the account, is deleted and the tokens are transferred to <code>beneficiary_id</code>.</li>
+</ul>
+<p><strong>Errors</strong>:</p>
+<ul>
+<li>If state or storage is corrupted, a <code>StorageError</code> is returned.</li>
+</ul>
 
                     </main>
 
@@ -355,10 +498,10 @@
         
 
         
-        
+
         
         <script type="text/javascript">
-            window.playpen_copyable = true;
+            window.playground_copyable = true;
         </script>
         
 
