@@ -69,6 +69,35 @@ Successful result could not return any Value, but generates a bunch of new Actio
 
 ### Errors
 
+As with other actions, errors can be divided into two categories: validation error and execution error.
+
+#### Validation Error
+
+- If there is zero gas attached to the function call, a
+```rust
+/// The attached amount of gas in a FunctionCall action has to be a positive number.
+FunctionCallZeroAttachedGas,
+```
+error will be returned
+
+- If the length of the method name to be called exceeds `max_length_method_name`, a genesis parameter whose current value
+is `256`, a
+```rust
+/// The length of the method name exceeded the limit in a Function Call action.
+FunctionCallMethodNameLengthExceeded { length: u64, limit: u64 }
+```
+error is returned.
+
+- If the length of the argument to the function call exceeds `max_arguments_length`, a genesis parameter whose current
+value is `4194304` (4MB), a
+```rust
+/// The length of the arguments exceeded the limit in a Function Call action.
+FunctionCallArgumentsLengthExceeded { length: u64, limit: u64 }
+```
+error is returned.
+
+#### Execution Error
+
 There can be three types of errors returned when applying a function call action:
 `FunctionCallError`, `ExternalError`, and `StorageError`.
 

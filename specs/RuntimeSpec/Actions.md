@@ -15,15 +15,19 @@ pub enum Action {
 }
 ```
 
-Each transaction consists a list of actions to be performed on the `receiver_id` side. Sometimes `signer_id` equals to `receiver_id`. 
-For the following actions, `signer_id` and `receiver_id` are required to be equal:
+Each transaction consists a list of actions to be performed on the `receiver_id` side. Since transactions are first
+converted to receipts when they are processed, we will mostly concern ourselves with actions in the context of receipt
+processing.
+ 
+For the following actions, `predecessor_id` and `receiver_id` are required to be equal:
 - `DeployContract`
 - `Stake`
 - `AddKey`
 - `DeleteKey`
 - `DeleteAccount`
 
-Actions requires arguments and use data from the `Transaction` itself.
+NOTE: if the first action in the action list is `CreateAccount`, `predecessor_id` becomes `receiver_id`
+for the rest of the actions until `DeleteAccount`. This gives permission by another account to act on the newly created account.
 
 ## CreateAccountAction
 
@@ -31,21 +35,15 @@ Actions requires arguments and use data from the `Transaction` itself.
 pub struct CreateAccountAction {}
 ```
 
-_Requirements:_
-
-- _unique `tx.receiver_id`_
-- _`public_key` to be `AccessKeyPermission::FullAccess` for the `signer_id`_
-
-`CreateAccountAction` doesn't take any additional arguments, it uses `receiver_id` from Transaction. `receiver_id` is an ID for an account to be created. Account ID should be [valid](Account.md#account-id) and **unique** throughout the system.
-
 **Outcome**:
 - creates an account with `id` = `receiver_id`
 - sets Account `storage_usage` to `account_cost` (genesis config)
-- sets Account `storage_paid_at` to the current block height
 
-**Errors**:
+### Errors
+
+**Execution Error**:
 - If the action tries to create a top level account whose length is no greater than 32 characters, and `predecessor_id` is not
-`registrar_account_id`, the following error will be returned
+`registrar_account_id`, which is defined by the protocol, the following error will be returned
 ```rust
 /// A top-level account ID can only be created by registrar.
 CreateAccountOnlyByRegistrar {
@@ -62,27 +60,28 @@ the following error will be returned
 CreateAccountNotAllowed { account_id: AccountId, predecessor_id: AccountId },
 ```
 
-NOTE: for the all subsequent actions in the transaction the `signer_id` becomes `receiver_id` until [DeleteAccountAction](#DeleteAccountAction). It allows to execute actions on behalf of the just created account.
-
 ## DeployContractAction
 
 ```rust
 pub struct DeployContractAction {
-    pub code: Vec<u8>, // a valid WebAssembly code
+    pub code: Vec<u8>
 }
 ```
-
-_Requirements:_
-
-- _`tx.signer_id` to be equal to `receiver_id`_
-- _`tx.public_key` to be `AccessKeyPermission::FullAccess` for the `signer_id`_
 
 **Outcome**:
 - sets the contract code for account
 
-**Errors**
+### Errors
 
-- If state or storage is corrupted, it may return `StorageError`. Otherwise this action should not lead to errors.
+**Validation Error**:
+- if the length of `code` exceeds `max_contract_size`, which is a genesis parameter, the following error will be returned:
+```rust
+/// The size of the contract code exceeded the limit in a DeployContract action.
+ContractSizeExceeded { size: u64, limit: u64 },
+```
+
+**Execution Error**:
+- If state or storage is corrupted, it may return `StorageError`.
 
 ## FunctionCallAction
 
@@ -99,10 +98,6 @@ pub struct FunctionCallAction {
 }
 ```
 
-_Requirements:_
-
-- _`tx.public_key` to be `AccessKeyPermission::FullAccess` or `AccessKeyPermission::FunctionCall`_
-
 Calls a method of a particular contract. See [details](./FunctionCall.md).
 
 ## TransferAction
@@ -114,14 +109,12 @@ pub struct TransferAction {
 }
 ```
 
-_Requirements:_
-
-- _`tx.public_key` to be `AccessKeyPermission::FullAccess` for the `singer_id`_
-
 **Outcome**:
-- transfers amount specified in `deposit` from `tx.signer` to a `tx.receiver_id` account
+- transfers amount specified in `deposit` from `predecessor_id` to a `receiver_id` account
 
-**Errors**:
+### Errors
+
+**Execution Error**:
 - If the deposit amount plus the existing amount on the receiver account exceeds `u128::MAX`,
 a `StorageInconsistentState("Account balance integer overflow")` error will be returned.
 
@@ -136,17 +129,20 @@ pub struct StakeAction {
 }
 ```
 
-_Requirements:_
-
-- _`tx.signer_id` to be equal to `receiver_id`_
-- _`tx.public_key` to be `AccessKeyPermission::FullAccess` for the `singer_id`_
-
-
 **Outcome**:
 - A validator proposal that contains the staking public key and the staking amount is generated and will be included
 in the next block.
 
-**Errors**:
+### Errors
+
+**Validation Error**:
+- If the `public_key` is not an ed25519 key, the following error will be returned:
+```rust
+/// An attempt to stake with a public key that is not convertible to ristretto.
+UnsuitableStakingKey { public_key: PublicKey },
+```
+
+**Execution Error**:
 - If an account has not staked but it tries to unstake, the following error will be returned:
 ```rust
 /// Account is not yet staked, but tries to unstake
@@ -172,14 +168,11 @@ InsufficientStake {
     minimum_stake: Balance,
 }
 ```
-
 The minimum stake is determined by `last_epoch_seat_price / minimum_stake_divisor` where `last_epoch_seat_price` is the
 seat price determined at the end of last epoch and `minimum_stake_divisor` is a genesis config parameter and its current
 value is 10.
 
 ## AddKeyAction
-
-_Requirements:_
 
 ```rust
 pub struct AddKeyAction {
@@ -188,13 +181,35 @@ pub struct AddKeyAction {
 }
 ```
 
-- _`tx.signer_id` to be equal to `receiver_id`_
-- _`tx.public_key` to be `AccessKeyPermission::FullAccess` for the `signer_id`_
-
 **Outcome**:
 - Associates an [AccessKey](AccessKey) with a `public_key` provided.
 
-**Errors**:
+### Errors:
+
+**Validation Error**:
+
+If the access key is of type `FunctionCallPermission`, the following errors can happen
+- If `receiver_id` in `access_key` is not a valid account id, the following error will be returned 
+```rust
+/// Invalid account ID.
+InvalidAccountId { account_id: AccountId },
+```
+
+- If the length of some method name exceed `max_length_method_name`, which is a genesis parameter (current value is 256),
+the following error will be returned 
+```rust
+/// The length of some method name exceeded the limit in a Add Key action.
+AddKeyMethodNameLengthExceeded { length: u64, limit: u64 },
+```
+
+- If the sum of length of method names exceeds `max_number_bytes_method_names`, which is a genesis parameter (current value is 2000),
+the following error will be returned
+```rust
+/// The total number of bytes of the method names exceeded the limit in a Add Key action.
+AddKeyMethodNamesNumberOfBytesExceeded { total_number_of_bytes: u64, limit: u64 }
+```
+
+**Execution Error**:
 - If an account tries to add an access key that already exists, the following error will be returned
 ```rust
 /// The public key is already used for an existing access key
@@ -204,21 +219,19 @@ AddKeyAlreadyExists { account_id: AccountId, public_key: PublicKey }
 
 ## DeleteKeyAction
 
-_Requirements:_
-
 ```rust
 pub struct DeleteKeyAction {
     pub public_key: PublicKey,
 }
 ```
 
-- _`tx.signer_id` to be equal to `receiver_id`_
-- _`tx.public_key` to be `AccessKeyPermission::FullAccess` for the `signer_id`_
-
 **Outcome**:
 - Deletes the [AccessKey](AccessKey) associated with `public_key`.
 
-**Errors**:
+### Errors
+
+**Execution Error**:
+
 - When an account tries to delete an access key that doesn't exist, the following error is returned
 ```rust
 /// Account tries to remove an access key that doesn't exist
@@ -235,14 +248,29 @@ pub struct DeleteAccountAction {
 }
 ```
 
-_Requirements:_
-
-- _`tx.signer_id` to be equal to `receiver_id`_
-- _`tx.public_key` to be `AccessKeyPermission::FullAccess` for the `signer_id`_
-- _`tx.account shouldn't have any locked balance`_
-
 **Outcomes**:
 - The account, as well as all the data stored under the account, is deleted and the tokens are transferred to `beneficiary_id`.
 
-**Errors**:
+### Errors
+
+**Validation Error**
+- If `beneficiary_id` is not a valid account id, the following error will be returned
+```rust
+/// Invalid account ID.
+InvalidAccountId { account_id: AccountId },
+```
+
+- If this action is not the last action in the action list of a receipt, the following error will be returned
+```rust
+/// The delete action must be a final action in transaction
+DeleteActionMustBeFinal
+```
+
+- If the account still has locked balance, the following error will be returned
+```rust
+/// Account is staking and can not be deleted
+DeleteAccountStaking { account_id: AccountId }
+```
+
+**Execution Error**:
 - If state or storage is corrupted, a `StorageError` is returned.

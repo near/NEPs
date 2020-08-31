@@ -1278,6 +1278,44 @@ The specification is defined in <code>near-vm-logic</code>, but it is exposed to
 <h3><a class="header" href="#receiptindex-result" id="receiptindex-result">ReceiptIndex Result</a></h3>
 <p>Successful result could not return any Value, but generates a bunch of new ActionReceipts instead. One example could be a callback. In this case, we assume the the new Receipt will send its Value Result to the <a href="RuntimeSpec/Receitps.html#output_data_receivers"><code>output_data_receivers</code></a> of the current <code>ActionReceipt</code>.</p>
 <h3><a class="header" href="#errors" id="errors">Errors</a></h3>
+<p>As with other actions, errors can be divided into two categories: validation error and execution error.</p>
+<h4><a class="header" href="#validation-error" id="validation-error">Validation Error</a></h4>
+<ul>
+<li>If there is zero gas attached to the function call, a</li>
+</ul>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>/// The attached amount of gas in a FunctionCall action has to be a positive number.
+FunctionCallZeroAttachedGas,
+<span class="boring">}
+</span></code></pre></pre>
+<p>error will be returned</p>
+<ul>
+<li>If the length of the method name to be called exceeds <code>max_length_method_name</code>, a genesis parameter whose current value
+is <code>256</code>, a</li>
+</ul>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>/// The length of the method name exceeded the limit in a Function Call action.
+FunctionCallMethodNameLengthExceeded { length: u64, limit: u64 }
+<span class="boring">}
+</span></code></pre></pre>
+<p>error is returned.</p>
+<ul>
+<li>If the length of the argument to the function call exceeds <code>max_arguments_length</code>, a genesis parameter whose current
+value is <code>4194304</code> (4MB), a</li>
+</ul>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>/// The length of the arguments exceeded the limit in a Function Call action.
+FunctionCallArgumentsLengthExceeded { length: u64, limit: u64 }
+<span class="boring">}
+</span></code></pre></pre>
+<p>error is returned.</p>
+<h4><a class="header" href="#execution-error" id="execution-error">Execution Error</a></h4>
 <p>There can be three types of errors returned when applying a function call action:
 <code>FunctionCallError</code>, <code>ExternalError</code>, and <code>StorageError</code>.</p>
 <ul>
@@ -1471,6 +1509,180 @@ function on the contract.</li>
 </ul>
 <p>The number of actions in one transaction is limited by <code>VMLimitConfig::max_actions_per_receipt</code>, the current value of which
 is 100.</p>
+<h2><a class="header" href="#transaction-validation-and-errors" id="transaction-validation-and-errors">Transaction Validation and Errors</a></h2>
+<p>When a transaction is received, various checks will be performed to ensure its validity. This section lists the checks
+and potentially errors returned when they fail.</p>
+<h3><a class="header" href="#basic-validation" id="basic-validation">Basic Validation</a></h3>
+<p>Basic validation of a transaction can be done without the state. Such validation includes</p>
+<ul>
+<li>Whether <code>signer_id</code> is valid. If not, a </li>
+</ul>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>/// TX signer_id is not in a valid format or not satisfy requirements see `near_core::primitives::utils::is_valid_account_id`
+InvalidSignerId { signer_id: AccountId },
+<span class="boring">}
+</span></code></pre></pre>
+<p>error is returned.</p>
+<ul>
+<li>Whether <code>receiver_id</code> is valid. If not, a</li>
+</ul>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>/// TX receiver_id is not in a valid format or not satisfy requirements see `near_core::primitives::utils::is_valid_account_id`
+InvalidReceiverId { receiver_id: AccountId },
+<span class="boring">}
+</span></code></pre></pre>
+<p>error is returned.</p>
+<ul>
+<li>Whether <code>signature</code> is signed by <code>public_key</code>. If not, a</li>
+</ul>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>/// TX signature is not valid
+InvalidSignature
+<span class="boring">}
+</span></code></pre></pre>
+<p>error is returned.</p>
+<ul>
+<li>Whether the number of actions included in the transaction is no greater than <code>max_actions_per_receipt</code>. If not, a</li>
+</ul>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span> /// The number of actions exceeded the given limit.
+TotalNumberOfActionsExceeded { total_number_of_actions: u64, limit: u64 }
+<span class="boring">}
+</span></code></pre></pre>
+<p>is returned.</p>
+<ul>
+<li>Among the actions in the transaction, whether <code>DeleteAccount</code>, if present, is the last action. If not, a</li>
+</ul>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>/// The delete action must be a final aciton in transaction
+DeleteActionMustBeFinal
+<span class="boring">}
+</span></code></pre></pre>
+<p>error is returned.</p>
+<ul>
+<li>Whether total prepaid gas does not exceed <code>max_total_prepaid_gas</code>. If not, a</li>
+</ul>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>/// The total prepaid gas (for all given actions) exceeded the limit.
+TotalPrepaidGasExceeded { total_prepaid_gas: Gas, limit: Gas }
+<span class="boring">}
+</span></code></pre></pre>
+<p>error is returned.</p>
+<ul>
+<li>Whether each action included is valid. Details of such check can be found in <a href="RuntimeSpec/Actions.html">action</a>.</li>
+</ul>
+<h3><a class="header" href="#validation-with-state" id="validation-with-state">Validation With State</a></h3>
+<p>After the basic validation is done, we check the transaction against current state to perform further validation. This includes</p>
+<ul>
+<li>Whether <code>signer_id</code> exists. If not, a</li>
+</ul>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>/// TX signer_id is not found in a storage
+SignerDoesNotExist { signer_id: AccountId },
+<span class="boring">}
+</span></code></pre></pre>
+<p>error is returned.</p>
+<ul>
+<li>Whether the transaction nonce is greater than the existing nonce on the access key. If not, a</li>
+</ul>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>/// Transaction nonce must be account[access_key].nonce + 1
+InvalidNonce { tx_nonce: Nonce, ak_nonce: Nonce },
+<span class="boring">}
+</span></code></pre></pre>
+<p>error is returned.</p>
+<ul>
+<li>If <code>signer_id</code> account has enough balance to cover the cost of the transaction. If not, a</li>
+</ul>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span> /// Account does not have enough balance to cover TX cost
+NotEnoughBalance {
+    signer_id: AccountId,
+    balance: Balance,
+    cost: Balance,
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>error is returned.</p>
+<ul>
+<li>If the transaction is signed by a function call access key and the function call access key does not have enough
+allowance to cover the cost of the transaction, a</li>
+</ul>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>/// Access Key does not have enough allowance to cover transaction cost
+NotEnoughAllowance {
+    account_id: AccountId,
+    public_key: PublicKey,
+    allowance: Balance,
+    cost: Balance,
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>error is returned.</p>
+<ul>
+<li>If <code>signer_id</code> account does not have enough balance to cover its storage after paying for the cost of the transaction, a</li>
+</ul>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>/// Signer account doesn't have enough balance after transaction.
+LackBalanceForState {
+    /// An account which doesn't have enough balance to cover storage.
+    signer_id: AccountId,
+    /// Required balance to cover the state.
+    amount: Balance,
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>error is returned.</p>
+<ul>
+<li>If a transaction is signed by a function call access key, the following errors are possible:</li>
+</ul>
+<ul>
+<li><code>InvalidAccessKeyError::RequiresFullAccess</code> if the transaction contains more than one action or if the only action it
+contains is not a <code>FunctionCall</code> action.</li>
+<li><code>InvalidAccessKeyError::DepositWithFunctionCall</code> if the function call action has nonzero <code>deposit</code>.</li>
+<li></li>
+</ul>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>/// Transaction `receiver_id` doesn't match the access key receiver_id
+InvalidAccessKeyError::ReceiverMismatch { tx_receiver: AccountId, ak_receiver: AccountId },
+<span class="boring">}
+</span></code></pre></pre>
+<p>is returned when transaction's <code>receiver_id</code> does not match the <code>receiver_id</code> of the access key.</p>
+<ul>
+<li></li>
+</ul>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>/// Transaction method name isn't allowed by the access key
+InvalidAccessKeyError::MethodNameMismatch { method_name: String },
+<span class="boring">}
+</span></code></pre></pre>
+<p>is returned if the name of the method that the transaction tries to call is not allowed by the access key. </p>
 <h1><a class="header" href="#actions" id="actions">Actions</a></h1>
 <p>There are a several action types in Near:</p>
 <pre><pre class="playground"><code class="language-rust">
@@ -1488,8 +1700,10 @@ is 100.</p>
 }
 <span class="boring">}
 </span></code></pre></pre>
-<p>Each transaction consists a list of actions to be performed on the <code>receiver_id</code> side. Sometimes <code>signer_id</code> equals to <code>receiver_id</code>. 
-For the following actions, <code>signer_id</code> and <code>receiver_id</code> are required to be equal:</p>
+<p>Each transaction consists a list of actions to be performed on the <code>receiver_id</code> side. Since transactions are first
+converted to receipts when they are processed, we will mostly concern ourselves with actions in the context of receipt
+processing.</p>
+<p>For the following actions, <code>predecessor_id</code> and <code>receiver_id</code> are required to be equal:</p>
 <ul>
 <li><code>DeployContract</code></li>
 <li><code>Stake</code></li>
@@ -1497,7 +1711,8 @@ For the following actions, <code>signer_id</code> and <code>receiver_id</code> a
 <li><code>DeleteKey</code></li>
 <li><code>DeleteAccount</code></li>
 </ul>
-<p>Actions requires arguments and use data from the <code>Transaction</code> itself.</p>
+<p>NOTE: if the first action in the action list is <code>CreateAccount</code>, <code>predecessor_id</code> becomes <code>receiver_id</code>
+for the rest of the actions until <code>DeleteAccount</code>. This gives permission by another account to act on the newly created account.</p>
 <h2><a class="header" href="#createaccountaction" id="createaccountaction">CreateAccountAction</a></h2>
 <pre><pre class="playground"><code class="language-rust">
 <span class="boring">#![allow(unused)]
@@ -1505,22 +1720,16 @@ For the following actions, <code>signer_id</code> and <code>receiver_id</code> a
 </span>pub struct CreateAccountAction {}
 <span class="boring">}
 </span></code></pre></pre>
-<p><em>Requirements:</em></p>
-<ul>
-<li><em>unique <code>tx.receiver_id</code></em></li>
-<li><em><code>public_key</code> to be <code>AccessKeyPermission::FullAccess</code> for the <code>signer_id</code></em></li>
-</ul>
-<p><code>CreateAccountAction</code> doesn't take any additional arguments, it uses <code>receiver_id</code> from Transaction. <code>receiver_id</code> is an ID for an account to be created. Account ID should be <a href="RuntimeSpec/Account.html#account-id">valid</a> and <strong>unique</strong> throughout the system.</p>
 <p><strong>Outcome</strong>:</p>
 <ul>
 <li>creates an account with <code>id</code> = <code>receiver_id</code></li>
 <li>sets Account <code>storage_usage</code> to <code>account_cost</code> (genesis config)</li>
-<li>sets Account <code>storage_paid_at</code> to the current block height</li>
 </ul>
-<p><strong>Errors</strong>:</p>
+<h3><a class="header" href="#errors-1" id="errors-1">Errors</a></h3>
+<p><strong>Execution Error</strong>:</p>
 <ul>
 <li>If the action tries to create a top level account whose length is no greater than 32 characters, and <code>predecessor_id</code> is not
-<code>registrar_account_id</code>, the following error will be returned</li>
+<code>registrar_account_id</code>, which is defined by the protocol, the following error will be returned</li>
 </ul>
 <pre><pre class="playground"><code class="language-rust">
 <span class="boring">#![allow(unused)]
@@ -1544,28 +1753,34 @@ the following error will be returned</li>
 CreateAccountNotAllowed { account_id: AccountId, predecessor_id: AccountId },
 <span class="boring">}
 </span></code></pre></pre>
-<p>NOTE: for the all subsequent actions in the transaction the <code>signer_id</code> becomes <code>receiver_id</code> until <a href="RuntimeSpec/Actions.html#DeleteAccountAction">DeleteAccountAction</a>. It allows to execute actions on behalf of the just created account.</p>
 <h2><a class="header" href="#deploycontractaction" id="deploycontractaction">DeployContractAction</a></h2>
 <pre><pre class="playground"><code class="language-rust">
 <span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>pub struct DeployContractAction {
-    pub code: Vec&lt;u8&gt;, // a valid WebAssembly code
+    pub code: Vec&lt;u8&gt;
 }
 <span class="boring">}
 </span></code></pre></pre>
-<p><em>Requirements:</em></p>
-<ul>
-<li><em><code>tx.signer_id</code> to be equal to <code>receiver_id</code></em></li>
-<li><em><code>tx.public_key</code> to be <code>AccessKeyPermission::FullAccess</code> for the <code>signer_id</code></em></li>
-</ul>
 <p><strong>Outcome</strong>:</p>
 <ul>
 <li>sets the contract code for account</li>
 </ul>
-<p><strong>Errors</strong></p>
+<h3><a class="header" href="#errors-2" id="errors-2">Errors</a></h3>
+<p><strong>Validation Error</strong>:</p>
 <ul>
-<li>If state or storage is corrupted, it may return <code>StorageError</code>. Otherwise this action should not lead to errors.</li>
+<li>if the length of <code>code</code> exceeds <code>max_contract_size</code>, which is a genesis parameter, the following error will be returned:</li>
+</ul>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>/// The size of the contract code exceeded the limit in a DeployContract action.
+ContractSizeExceeded { size: u64, limit: u64 },
+<span class="boring">}
+</span></code></pre></pre>
+<p><strong>Execution Error</strong>:</p>
+<ul>
+<li>If state or storage is corrupted, it may return <code>StorageError</code>.</li>
 </ul>
 <h2><a class="header" href="#functioncallaction" id="functioncallaction">FunctionCallAction</a></h2>
 <pre><pre class="playground"><code class="language-rust">
@@ -1583,10 +1798,6 @@ CreateAccountNotAllowed { account_id: AccountId, predecessor_id: AccountId },
 }
 <span class="boring">}
 </span></code></pre></pre>
-<p><em>Requirements:</em></p>
-<ul>
-<li><em><code>tx.public_key</code> to be <code>AccessKeyPermission::FullAccess</code> or <code>AccessKeyPermission::FunctionCall</code></em></li>
-</ul>
 <p>Calls a method of a particular contract. See <a href="RuntimeSpec/./FunctionCall.html">details</a>.</p>
 <h2><a class="header" href="#transferaction" id="transferaction">TransferAction</a></h2>
 <pre><pre class="playground"><code class="language-rust">
@@ -1598,15 +1809,12 @@ CreateAccountNotAllowed { account_id: AccountId, predecessor_id: AccountId },
 }
 <span class="boring">}
 </span></code></pre></pre>
-<p><em>Requirements:</em></p>
-<ul>
-<li><em><code>tx.public_key</code> to be <code>AccessKeyPermission::FullAccess</code> for the <code>singer_id</code></em></li>
-</ul>
 <p><strong>Outcome</strong>:</p>
 <ul>
-<li>transfers amount specified in <code>deposit</code> from <code>tx.signer</code> to a <code>tx.receiver_id</code> account</li>
+<li>transfers amount specified in <code>deposit</code> from <code>predecessor_id</code> to a <code>receiver_id</code> account</li>
 </ul>
-<p><strong>Errors</strong>:</p>
+<h3><a class="header" href="#errors-3" id="errors-3">Errors</a></h3>
+<p><strong>Execution Error</strong>:</p>
 <ul>
 <li>If the deposit amount plus the existing amount on the receiver account exceeds <code>u128::MAX</code>,
 a <code>StorageInconsistentState(&quot;Account balance integer overflow&quot;)</code> error will be returned.</li>
@@ -1623,17 +1831,24 @@ a <code>StorageInconsistentState(&quot;Account balance integer overflow&quot;)</
 }
 <span class="boring">}
 </span></code></pre></pre>
-<p><em>Requirements:</em></p>
-<ul>
-<li><em><code>tx.signer_id</code> to be equal to <code>receiver_id</code></em></li>
-<li><em><code>tx.public_key</code> to be <code>AccessKeyPermission::FullAccess</code> for the <code>singer_id</code></em></li>
-</ul>
 <p><strong>Outcome</strong>:</p>
 <ul>
 <li>A validator proposal that contains the staking public key and the staking amount is generated and will be included
 in the next block.</li>
 </ul>
-<p><strong>Errors</strong>:</p>
+<h3><a class="header" href="#errors-4" id="errors-4">Errors</a></h3>
+<p><strong>Validation Error</strong>:</p>
+<ul>
+<li>If the <code>public_key</code> is not an ed25519 key, the following error will be returned:</li>
+</ul>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>/// An attempt to stake with a public key that is not convertible to ristretto.
+UnsuitableStakingKey { public_key: PublicKey },
+<span class="boring">}
+</span></code></pre></pre>
+<p><strong>Execution Error</strong>:</p>
 <ul>
 <li>If an account has not staked but it tries to unstake, the following error will be returned:</li>
 </ul>
@@ -1676,7 +1891,6 @@ TriesToStake {
 seat price determined at the end of last epoch and <code>minimum_stake_divisor</code> is a genesis config parameter and its current
 value is 10.</p>
 <h2><a class="header" href="#addkeyaction" id="addkeyaction">AddKeyAction</a></h2>
-<p><em>Requirements:</em></p>
 <pre><pre class="playground"><code class="language-rust">
 <span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
@@ -1686,15 +1900,46 @@ value is 10.</p>
 }
 <span class="boring">}
 </span></code></pre></pre>
-<ul>
-<li><em><code>tx.signer_id</code> to be equal to <code>receiver_id</code></em></li>
-<li><em><code>tx.public_key</code> to be <code>AccessKeyPermission::FullAccess</code> for the <code>signer_id</code></em></li>
-</ul>
 <p><strong>Outcome</strong>:</p>
 <ul>
 <li>Associates an <a href="RuntimeSpec/AccessKey">AccessKey</a> with a <code>public_key</code> provided.</li>
 </ul>
-<p><strong>Errors</strong>:</p>
+<h3><a class="header" href="#errors-5" id="errors-5">Errors:</a></h3>
+<p><strong>Validation Error</strong>:</p>
+<p>If the access key is of type <code>FunctionCallPermission</code>, the following errors can happen</p>
+<ul>
+<li>If <code>receiver_id</code> in <code>access_key</code> is not a valid account id, the following error will be returned </li>
+</ul>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>/// Invalid account ID.
+InvalidAccountId { account_id: AccountId },
+<span class="boring">}
+</span></code></pre></pre>
+<ul>
+<li>If the length of some method name exceed <code>max_length_method_name</code>, which is a genesis parameter (current value is 256),
+the following error will be returned </li>
+</ul>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>/// The length of some method name exceeded the limit in a Add Key action.
+AddKeyMethodNameLengthExceeded { length: u64, limit: u64 },
+<span class="boring">}
+</span></code></pre></pre>
+<ul>
+<li>If the sum of length of method names exceeds <code>max_number_bytes_method_names</code>, which is a genesis parameter (current value is 2000),
+the following error will be returned</li>
+</ul>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>/// The total number of bytes of the method names exceeded the limit in a Add Key action.
+AddKeyMethodNamesNumberOfBytesExceeded { total_number_of_bytes: u64, limit: u64 }
+<span class="boring">}
+</span></code></pre></pre>
+<p><strong>Execution Error</strong>:</p>
 <ul>
 <li>If an account tries to add an access key that already exists, the following error will be returned</li>
 </ul>
@@ -1709,7 +1954,6 @@ AddKeyAlreadyExists { account_id: AccountId, public_key: PublicKey }
 <li>If state or storage is corrupted, a <code>StorageError</code> will be returned.</li>
 </ul>
 <h2><a class="header" href="#deletekeyaction" id="deletekeyaction">DeleteKeyAction</a></h2>
-<p><em>Requirements:</em></p>
 <pre><pre class="playground"><code class="language-rust">
 <span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
@@ -1718,15 +1962,12 @@ AddKeyAlreadyExists { account_id: AccountId, public_key: PublicKey }
 }
 <span class="boring">}
 </span></code></pre></pre>
-<ul>
-<li><em><code>tx.signer_id</code> to be equal to <code>receiver_id</code></em></li>
-<li><em><code>tx.public_key</code> to be <code>AccessKeyPermission::FullAccess</code> for the <code>signer_id</code></em></li>
-</ul>
 <p><strong>Outcome</strong>:</p>
 <ul>
 <li>Deletes the <a href="RuntimeSpec/AccessKey">AccessKey</a> associated with <code>public_key</code>.</li>
 </ul>
-<p><strong>Errors</strong>:</p>
+<h3><a class="header" href="#errors-6" id="errors-6">Errors</a></h3>
+<p><strong>Execution Error</strong>:</p>
 <ul>
 <li>When an account tries to delete an access key that doesn't exist, the following error is returned</li>
 </ul>
@@ -1750,17 +1991,43 @@ DeleteKeyDoesNotExist { account_id: AccountId, public_key: PublicKey }
 }
 <span class="boring">}
 </span></code></pre></pre>
-<p><em>Requirements:</em></p>
-<ul>
-<li><em><code>tx.signer_id</code> to be equal to <code>receiver_id</code></em></li>
-<li><em><code>tx.public_key</code> to be <code>AccessKeyPermission::FullAccess</code> for the <code>signer_id</code></em></li>
-<li><em><code>tx.account shouldn't have any locked balance</code></em></li>
-</ul>
 <p><strong>Outcomes</strong>:</p>
 <ul>
 <li>The account, as well as all the data stored under the account, is deleted and the tokens are transferred to <code>beneficiary_id</code>.</li>
 </ul>
-<p><strong>Errors</strong>:</p>
+<h3><a class="header" href="#errors-7" id="errors-7">Errors</a></h3>
+<p><strong>Validation Error</strong></p>
+<ul>
+<li>If <code>beneficiary_id</code> is not a valid account id, the following error will be returned</li>
+</ul>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>/// Invalid account ID.
+InvalidAccountId { account_id: AccountId },
+<span class="boring">}
+</span></code></pre></pre>
+<ul>
+<li>If this action is not the last action in the action list of a receipt, the following error will be returned</li>
+</ul>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>/// The delete action must be a final action in transaction
+DeleteActionMustBeFinal
+<span class="boring">}
+</span></code></pre></pre>
+<ul>
+<li>If the account still has locked balance, the following error will be returned</li>
+</ul>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>/// Account is staking and can not be deleted
+DeleteAccountStaking { account_id: AccountId }
+<span class="boring">}
+</span></code></pre></pre>
+<p><strong>Execution Error</strong>:</p>
 <ul>
 <li>If state or storage is corrupted, a <code>StorageError</code> is returned.</li>
 </ul>

@@ -224,6 +224,44 @@
 <h3><a class="header" href="#receiptindex-result" id="receiptindex-result">ReceiptIndex Result</a></h3>
 <p>Successful result could not return any Value, but generates a bunch of new ActionReceipts instead. One example could be a callback. In this case, we assume the the new Receipt will send its Value Result to the <a href="Receitps.html#output_data_receivers"><code>output_data_receivers</code></a> of the current <code>ActionReceipt</code>.</p>
 <h3><a class="header" href="#errors" id="errors">Errors</a></h3>
+<p>As with other actions, errors can be divided into two categories: validation error and execution error.</p>
+<h4><a class="header" href="#validation-error" id="validation-error">Validation Error</a></h4>
+<ul>
+<li>If there is zero gas attached to the function call, a</li>
+</ul>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>/// The attached amount of gas in a FunctionCall action has to be a positive number.
+FunctionCallZeroAttachedGas,
+<span class="boring">}
+</span></code></pre></pre>
+<p>error will be returned</p>
+<ul>
+<li>If the length of the method name to be called exceeds <code>max_length_method_name</code>, a genesis parameter whose current value
+is <code>256</code>, a</li>
+</ul>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>/// The length of the method name exceeded the limit in a Function Call action.
+FunctionCallMethodNameLengthExceeded { length: u64, limit: u64 }
+<span class="boring">}
+</span></code></pre></pre>
+<p>error is returned.</p>
+<ul>
+<li>If the length of the argument to the function call exceeds <code>max_arguments_length</code>, a genesis parameter whose current
+value is <code>4194304</code> (4MB), a</li>
+</ul>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>/// The length of the arguments exceeded the limit in a Function Call action.
+FunctionCallArgumentsLengthExceeded { length: u64, limit: u64 }
+<span class="boring">}
+</span></code></pre></pre>
+<p>error is returned.</p>
+<h4><a class="header" href="#execution-error" id="execution-error">Execution Error</a></h4>
 <p>There can be three types of errors returned when applying a function call action:
 <code>FunctionCallError</code>, <code>ExternalError</code>, and <code>StorageError</code>.</p>
 <ul>
