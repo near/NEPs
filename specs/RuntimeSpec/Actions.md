@@ -182,7 +182,7 @@ pub struct AddKeyAction {
 ```
 
 **Outcome**:
-- Associates an [AccessKey](AccessKey) with a `public_key` provided.
+- Adds a new [AccessKey](AccessKey) to the receiver's account and associates it with a `public_key` provided.
 
 ### Errors:
 
