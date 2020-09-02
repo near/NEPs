@@ -264,3 +264,29 @@ del pending_data_receipt_count["alice,5e73d4"]
 del pending_data_receipt_store["alice,7448d8"]
 apply_receipt(postponed_receipt)
 ```
+
+## Receipt Validation Error
+
+Some postprocessing validation is done after an action receipt is applied. The validation includes:
+* Whether the generated receipts are valid. A generated receipt can be invalid, if, for example, a function call
+generates a receipt to call another function on some other contract, but the contract name is invalid. Here there are
+mainly two types of errors:
+- account id is invalid. If the receiver id of the receipt is invalid, a
+```rust
+/// The `receiver_id` of a Receipt is not valid.
+InvalidReceiverId { account_id: AccountId },
+``` 
+error is returned.
+- some action is invalid. The errors returned here are the same as the validation errors mentioned in [actions](Actions.md).
+* Whether the account still has enough balance to pay for storage. If, for example, the execution of one function call
+action leads to some receipts that require transfer to be generated as a result, the account may no longer have enough
+balance after the transferred amount is deducted. In this case, a
+```rust
+/// ActionReceipt can't be completed, because the remaining balance will not be enough to cover storage.
+LackBalanceForState {
+    /// An account which needs balance
+    account_id: AccountId,
+    /// Balance required to complete an action.
+    amount: Balance,
+},
+```
