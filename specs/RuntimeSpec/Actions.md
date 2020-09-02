@@ -266,7 +266,7 @@ InvalidAccountId { account_id: AccountId },
 DeleteActionMustBeFinal
 ```
 
-- If the account still has locked balance, the following error will be returned
+- If the account still has locked balance due to staking, the following error will be returned
 ```rust
 /// Account is staking and can not be deleted
 DeleteAccountStaking { account_id: AccountId }
