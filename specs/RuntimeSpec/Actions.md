@@ -210,7 +210,7 @@ AddKeyMethodNamesNumberOfBytesExceeded { total_number_of_bytes: u64, limit: u64 
 ```
 
 **Execution Error**:
-- If an account tries to add an access key that already exists, the following error will be returned
+- If an account tries to add an access key with a given public key, but an existing access key with this public key already exists, the following error will be returned
 ```rust
 /// The public key is already used for an existing access key
 AddKeyAlreadyExists { account_id: AccountId, public_key: PublicKey }
