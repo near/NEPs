@@ -136,7 +136,7 @@ in the next block.
 ### Errors
 
 **Validation Error**:
-- If the `public_key` is not an ed25519 key, the following error will be returned:
+- If the `public_key` is not an ristretto compatible ed25519 key, the following error will be returned:
 ```rust
 /// An attempt to stake with a public key that is not convertible to ristretto.
 UnsuitableStakingKey { public_key: PublicKey },
