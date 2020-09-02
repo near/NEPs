@@ -202,7 +202,7 @@ the following error will be returned
 AddKeyMethodNameLengthExceeded { length: u64, limit: u64 },
 ```
 
-- If the sum of length of method names exceeds `max_number_bytes_method_names`, which is a genesis parameter (current value is 2000),
+- If the sum of length of method names (with 1 extra character for every method name) exceeds `max_number_bytes_method_names`, which is a genesis parameter (current value is 2000),
 the following error will be returned
 ```rust
 /// The total number of bytes of the method names exceeded the limit in a Add Key action.
