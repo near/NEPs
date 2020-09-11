@@ -46,7 +46,7 @@ The protocol sets a ceiling for the maximum issuance of tokens, and dynamically 
 
 | Name | Description |
 | - | - |
-| `reward[t]` | `totalSupply[t]` * ((`1 - REWARD_PCT_PER_YEAR`) ** (`1/EPOCHS_A_YEAR`) - `1`) |
+| `reward[t]` | `totalSupply[t]` * ((`1 + REWARD_PCT_PER_YEAR`) ** (`1/EPOCHS_A_YEAR`) - `1`) |
 | `epochFee[t]` | `sum([(1 - DEVELOPER_PCT_PER_YEAR) * block.txFee + block.stateFee for block in epoch[t]])` |
 | `issuance[t]` | The amount of token issued at a certain epoch[t], `issuance[t] = reward[t] - epochFee[t]` |
 

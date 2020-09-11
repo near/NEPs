@@ -25,9 +25,9 @@ The utility crates are:
 
 - `near-runtime-fees` -- a convenience crate that encapsulates configuration of fees. We might get rid ot it later;
 - `near-vm-errors` -- contains the hierarchy of errors that can be occurred during transaction or receipt processing;
-- `near-vm-runner-standalone` -- a runnable tool that allows running the runtime without the blockhain, e.g. for
+- `near-vm-runner-standalone` -- a runnable tool that allows running the runtime without the blockchain, e.g. for
   integration testing of L2 projects;
-- `runtime-params-estimator` -- bechmarks the runtime and generates the config with the fees.
+- `runtime-params-estimator` -- benchmarks the runtime and generates the config with the fees.
 
 Separately, from the components we describe [the Bindings Specification](BindingsSpec/BindingsSpec.md) which is an
 important part of the runtime that specifies the functions that the smart contract can call from its host -- the runtime.
