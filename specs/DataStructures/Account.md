@@ -9,10 +9,10 @@ NEAR Protocol has an account names system. Account ID is similar to a username. 
 ### Account ID Rules
 
 - minimum length is 2
-- maximum length is 63
+- maximum length is 64
 - **Account ID** consists of **Account ID parts** separated by `.`
 - **Account ID part** consists of lowercase alphanumeric symbols separated by either `_` or `-`.
-- **Account ID** that is 64 characters long is required to be `hex(public_key)`.
+- **Account ID** that is 64 characters long consists of lowercase hex characters is a specific **implicit account ID**.
 
 Account names are similar to a domain names.
 Top level account (TLA) like `near`, `com`, `eth` can only be created by `registrar` account (see next section for more details).
@@ -88,6 +88,29 @@ me@google.com    // @ is not allowed (it was allowed in the past)
 // TOO LONG:
 abcdefghijklmnopqrstuvwxyz.abcdefghijklmnopqrstuvwxyz.abcdefghijklmnopqrstuvwxyz
 ```
+
+
+## Implicit account IDs
+
+Implicit accounts work similarly to Bitcoin/Ethereum accounts.
+It allows you to reserve an account ID before it's created by generating a ED25519 key-pair locally.
+This key-pair has a public key that maps to the account ID. The account ID is a lowercase hex representation of the public key.
+ED25519 Public key contains 32 bytes that maps to 64 characters account ID.
+
+Example: public key in base58 `BGCCDDHfysuuVnaNVtEhhqeT4k9Muyem3Kpgq2U1m9HX` will map to an account ID `98793cd91a3f870fb126f66285808c7e094afcfc4eda8a970f6648cdf0dbd6de`.
+
+The corresponding secret key allows you to sign transactions on behalf of this account once it's created on chain.
+
+### Implicit account creation
+
+An account with implicit account ID can only be created by sending a transaction/receipt with a single `Transfer` action to the implicit account ID receiver:
+- The account will be created with the account ID.
+- The account will have a new full access key with the ED25519-curve public key of `decode_hex(account_id)` and nonce `0`.
+- The account balance will have a transfer balance deposited to it.
+
+This account can not be created using `CreateAccount` action to avoid being able to hijack the account without having the corresponding private key.
+
+Once an implicit account is created it acts as a regular account until it's deleted.
 
 ## Account
 
