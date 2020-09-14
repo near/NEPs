@@ -38,6 +38,10 @@ _type: Fee_
 
 Base cost of making a transfer.
 
+NOTE: If the account ID is an implicit account ID (64-length hex account ID), then the cost of the transfer fee
+will be `transfer_cost + create_account_cost + add_key_cost.full_access_cost`.
+This is needed to account for the implicit account creation costs.
+
 ## stake_cost
 
 _type: Fee_

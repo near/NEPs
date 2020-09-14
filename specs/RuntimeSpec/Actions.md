@@ -35,6 +35,8 @@ for the rest of the actions until `DeleteAccount`. This gives permission by anot
 pub struct CreateAccountAction {}
 ```
 
+If `receiver_id` has length == 64, this account id is considered to be `hex(public_key)`, meaning creation of account only succeeds if followed up with `AddKey(public_key)` action.
+
 **Outcome**:
 - creates an account with `id` = `receiver_id`
 - sets Account `storage_usage` to `account_cost` (genesis config)
