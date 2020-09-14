@@ -95,7 +95,7 @@ abcdefghijklmnopqrstuvwxyz.abcdefghijklmnopqrstuvwxyz.abcdefghijklmnopqrstuvwxyz
 Implicit accounts work similarly to Bitcoin/Ethereum accounts.
 It allows you to reserve an account ID before it's created by generating a ED25519 key-pair locally.
 This key-pair has a public key that maps to the account ID. The account ID is a lowercase hex representation of the public key.
-ED25519 Public key contains 32 bytes that maps to 64 characters account ID.
+ED25519 Public key is 32 bytes that maps to 64 characters account ID.
 
 Example: public key in base58 `BGCCDDHfysuuVnaNVtEhhqeT4k9Muyem3Kpgq2U1m9HX` will map to an account ID `98793cd91a3f870fb126f66285808c7e094afcfc4eda8a970f6648cdf0dbd6de`.
 
