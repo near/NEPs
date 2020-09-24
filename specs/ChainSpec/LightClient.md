@@ -161,7 +161,9 @@ By construction by the time the `LightClientBlockView` is being validated, the b
 
 The sum of all the stakes of `next_bps` in the previous epoch is `total_stake` referred to in (5) above.
 
-The signatures in the `LightClientBlockView::approvals_after_next` are signatures on `approval_message`. The  `i`-th signature in `approvals_after_next`, if present, must validate against the `i`-th public key in `next_bps` from the previous epoch. `approvals_after_next` can contain fewer elements than `next_bps` in the previous epoch.
+The signatures in the `LightClientBlockView::approvals_after_next` are signatures on `approval_message`. The  `i`-th signature in `approvals_after_next`, if present, must validate against the `i`-th public key in `next_bps` from the previous epoch. `approvals_after_next` can contain fewer elements than `next_bps` in the previous epoch. 
+
+`approvals_after_next` can also contain more signatures than the length of `next_bps` in the previous epoch. This is due to the fact that, as per [consensus specification](./Consensus.md), the last blocks in each epoch contain signatures from both the block producers of the current epoch, and the next epoch. The trailing signatures can be safely ignored by the light client implementation.
 
 ## Proof Verification
 
