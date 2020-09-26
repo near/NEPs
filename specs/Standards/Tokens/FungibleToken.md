@@ -1,4 +1,4 @@
-# Fungible Token
+# Fungible Token ([NEP-21](https://github.com/nearprotocol/NEPs/pull/21))
 
 Version `0.2.0`
 
