@@ -19,6 +19,7 @@
   - [Actions](RuntimeSpec/Actions.md)
   - [Receipts](RuntimeSpec/Receipts.md)
   - [Refunds](RuntimeSpec/Refunds.md)
+  - [Runtime Fees](RuntimeSpec/Fees/Fees.md)
   - [Scenarios](RuntimeSpec/Scenarios/Scenarios.md)
     - [Financial Transaction](RuntimeSpec/Scenarios/FinancialTransaction.md)
     - [Cross-Contract Call](RuntimeSpec/Scenarios/CrossContractCall.md)
