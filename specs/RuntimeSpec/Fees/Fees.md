@@ -134,3 +134,5 @@ let total_transaction_fee = burnt_gas +
 ```
 
 This `total_transaction_fee` is the amount of gas required to create a new receipt from the transaction.
+
+NOTE: There are extra amounts required to prepay for deposit in `TransferAction` and gas in `FunctionCallAction`, but this is not part of the total transaction fee.
