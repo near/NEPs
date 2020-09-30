@@ -3,7 +3,7 @@
 Runtime fees are measured in Gas. The price of gas is determined from the previous block header `block_header.inner_rest.gas_price`.
 Gas price will be discussed separately.
 
-When a transaction is converted into a Receipt. The signer account is charged for the full cost of the transaction.
+When a transaction is converted into a receipt, the signer account is charged for the full cost of the transaction.
 
 The total transaction fee is the sum of the following:
 - A fee for creation of the receipt
