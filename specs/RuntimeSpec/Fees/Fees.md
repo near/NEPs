@@ -1,9 +1,9 @@
 # Runtime Fees
 
-Runtime fees are measured in Gas. The price of gas is determined from the previous block header `block_header.inner_rest.gas_price`.
-Gas price will be discussed separately.
+Runtime fees are measured in Gas. Gas price will be discussed separately.
 
 When a transaction is converted into a receipt, the signer account is charged for the full cost of the transaction.
+This cost consists of extra attached gas, attached deposits and the transaction fee.
 
 The total transaction fee is the sum of the following:
 - A fee for creation of the receipt
@@ -110,27 +110,27 @@ We assume `code` in `DeployContractAction` contains `128000` bytes. And `Functio
 `method_name` with length of `3` and `args` length of `26`, so total of `29`.
 
 First let's compute the the amount that will be burned immediately for sending a receipt.
-```rust
-let burnt_gas =
-    config.action_receipt_creation_config.send_not_sir +
-    config.action_creation_config.create_account_cost.send_not_sir +
-    config.action_creation_config.transfer_cost.send_not_sir +
-    config.action_creation_config.deploy_contract_cost.send_not_sir +
-    128000 * config.action_creation_config.deploy_contract_cost_per_byte.send_not_sir +
-    config.action_creation_config.function_call_cost.send_not_sir +
-    29 * config.action_creation_config.function_call_cost_per_byte.send_not_sir;
+```python
+burnt_gas = \
+    config.action_receipt_creation_config.send_not_sir + \
+    config.action_creation_config.create_account_cost.send_not_sir + \
+    config.action_creation_config.transfer_cost.send_not_sir + \
+    config.action_creation_config.deploy_contract_cost.send_not_sir + \
+    128000 * config.action_creation_config.deploy_contract_cost_per_byte.send_not_sir + \
+    config.action_creation_config.function_call_cost.send_not_sir + \
+    29 * config.action_creation_config.function_call_cost_per_byte.send_not_sir
 ```
 
 Now, by using `burnt_gas`, we can calculate the total transaction fee
-```rust
-let total_transaction_fee = burnt_gas +
-    config.action_receipt_creation_config.execution +
-    config.action_creation_config.create_account_cost.execution +
-    config.action_creation_config.transfer_cost.execution +
-    config.action_creation_config.deploy_contract_cost.execution +
-    128000 * config.action_creation_config.deploy_contract_cost_per_byte.execution +
-    config.action_creation_config.function_call_cost.execution +
-    29 * config.action_creation_config.function_call_cost_per_byte.execution;
+```python
+total_transaction_fee = burnt_gas + \
+    config.action_receipt_creation_config.execution + \
+    config.action_creation_config.create_account_cost.execution + \
+    config.action_creation_config.transfer_cost.execution + \
+    config.action_creation_config.deploy_contract_cost.execution + \
+    128000 * config.action_creation_config.deploy_contract_cost_per_byte.execution + \
+    config.action_creation_config.function_call_cost.execution + \
+    29 * config.action_creation_config.function_call_cost_per_byte.execution
 ```
 
 This `total_transaction_fee` is the amount of gas required to create a new receipt from the transaction.
