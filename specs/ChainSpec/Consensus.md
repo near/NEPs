@@ -6,7 +6,7 @@ For the purpose of maintaining consensus, transactions are grouped into *blocks*
 
 The links between blocks give rise to a partial order: for blocks \\(A\\) and \\(B\\), \\(A < B\\) means that \\(A \\ne B\\) and \\(A\\) is reachable from \\(B\\) by following links to previous blocks, and \\(A \\le B\\) means that \\(A < B\\) or \\(A = B\\). The relations \\(>\\) and \\(\\ge\\) are defined as the reflected versions of \\(<\\) and \\(\\le\\), respectively. Finally, \\(A \\sim B\\) means that either \\(A < B\\), \\(A = B\\) or \\(A > B\\), and \\(A \\nsim B\\) means the opposite.
 
-A *chain* \\(\\operatorname{chain}(T)\\) is a set of blocks reachable from block \\(T\\), which is called its *tip*. That is, \\(\\operatorname{chain}(T) = \\{B | B \\le T\\}\\). For any blocks \\(A\\) and \\(B\\), there is a chain that both \\(A\\) and \\(B\\) belong to iff \\(A \\sim B\\). In this case, \\(A\\) and \\(B\\) are said to be *on the same chain*.
+A *chain* \\(\\operatorname{chain}(T)\\) is a set of blocks reachable from block \\(T\\), which is called its *tip*. That is, \\(\\operatorname{chain}(T) = \\{B \\mid B \\le T\\}\\). For any blocks \\(A\\) and \\(B\\), there is a chain that both \\(A\\) and \\(B\\) belong to iff \\(A \\sim B\\). In this case, \\(A\\) and \\(B\\) are said to be *on the same chain*.
 
 Each block has an integer *height* \\(\\operatorname{h}(B)\\). It is guaranteed that block heights are monotonic (that is, for any block \\(B \\ne G\\), \\(\\operatorname{h}(B) > \\operatorname{h}(\\operatorname{prev}(B))\\)), but they need not be consecutive. Also, \\(\\operatorname{h}(G)\\) may not be zero. Each node keeps track of a valid block with the largest height it knows about, which is called its *head*.
 
