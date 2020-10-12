@@ -72,7 +72,7 @@ Amount of `NEAR` on the account represents right for this account to take portio
 def check_storage_cost(account):
     # Compute requiredAmount given size of the account.
     requiredAmount = sizeOf(account) * storageAmountPerByte
-    return Ok() if account.amount + account.locked < requiredAmount else Error(requiredAmount)
+    return Ok() if account.amount + account.locked >= requiredAmount else Error(requiredAmount)
 
 # Check when transaction is received to verify that it is valid.
 def verify_transaction(tx, signer_account):
@@ -145,7 +145,7 @@ At the end of every epoch `T`, next algorithm gets executed to determine validat
 ```python
 def findSeatPrice(stakes, num_seats):
     """Find seat price given set of stakes and number of seats required.
-    
+
     Seat price is highest integer number such that if you sum `floor(stakes[i] / seat_price)` it is at least `num_seats`.
     """
     stakes = sorted(stakes)
@@ -158,7 +158,7 @@ def findSeatPrice(stakes, num_seats):
         mid = (left + right) // 2
         sum = 0
         for stake in stakes:
-            sum += stake // mid 
+            sum += stake // mid
             if sum >= num_seats:
                 left = mid
                 break
@@ -217,7 +217,7 @@ def end_of_epoch_update_validators(validators):
 #### ChunkState
 
 ```python
-# Check that chunk header post state root is invalid, 
+# Check that chunk header post state root is invalid,
 # because the execution of previous chunk doesn't lead to it.
 def chunk_state_condition(prev_chunk, prev_state, chunk_header):
     # TODO
