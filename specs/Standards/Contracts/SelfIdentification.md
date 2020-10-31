@@ -116,7 +116,7 @@ Bob wants to trade with fully-trustable NEP-21 tokens. He receives an account na
 
 * call `get_contract_info`
 
-* verify the contract supports NEP21 `standards.include("NEP21")`
+* verify the contract supports NEP-21 `standards.include("NEP-21")`
 
 * call `get_contract_audits`
 
@@ -126,7 +126,7 @@ Bob wants to trade with fully-trustable NEP-21 tokens. He receives an account na
 
 * verify deployed contract code hash
 
-If all the obove succeed, his code adds the contract as a fully-trustable, non-upgradeable NEP21 Token.
+If all the obove succeed, his code adds the contract as a fully-trustable, non-upgradeable NEP-21 Token.
 
 
 ## Reference-level explanation
@@ -160,7 +160,7 @@ public function get_contract_info():string {
       "name":"${CONTRACT_NAME}",
       "version":"${CONTRACT_VERSION}", 
       "source":"http://github.com/luciotato/fun-tok-amm",
-      "standards":["NEP21","NEP122","NEP301"], 
+      "standards":["NEP-21","NEP-122","NEP-301"], 
       "authorAccountId":"${AUTHOR_ACCOUNT_ID}"
       }` 
 }
@@ -168,7 +168,7 @@ public function get_contract_info():string {
 /// returns audit information about this contract
 /// data must be a JSON string according to [NEP-xxx](https://github.com/nearprotocol/NEPs/pull/xx)
 public function get_audit_info():string {
-    return env.store.get("audits_NEPxx").toString()
+    return env.store.get("audits-NEP-xx").toString()
 }
 
 // Sets audit information about this contract
@@ -176,7 +176,7 @@ public function get_audit_info():string {
 // Owner's method
 public function set_audit_info(auditData:string) {
     assertOwner()
-    env.store.set("audits_NEPxx",data)
+    env.store.set("audits-NEP-xx",data)
 }
 
 //Distribute gas benefits (typescript/pseudocode)
