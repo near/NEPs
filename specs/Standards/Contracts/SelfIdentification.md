@@ -31,15 +31,17 @@ Prior art:
 [guide-level-explanation]: #guide-level-explanation
 
 A contract implementing this standard would allow users to:
-- Determine name, version & source code of the contract, e.g. `name:"fungible-token", version:"1.0.0"`
+- Determine name, version & source code of the contract, e.g.<br>
+ `name:"fungible-token", version:"1.0.0"`
 - Get a list of standards this contract satisfies, e.g. `standards:["NEP-21","NEP-211"]`
-- Get the url of the contract code, e.g. `source:"http://github.com/author/contract"`
-- Get the author near account 
+- Get the url of the contract code, e.g.<br>`source:"http://github.com/author/contract"`
+- Get the url to interact with the contract, e.g.<br>`webAppUrl:"http://Narwallets.com/div-pool/"`
+- Get the developers near account
 - Get the auditor near account (possibly for contract hash validation via aditor's provided mechanisms)
 
 To satisfy this NEP the contract must implement 1 (one) method: 
 
-1. `get_contract_info():string as ContractInfo` returning a JSON structure as described below (typescript):
+1. `get_contract_info() -> ContractInfo` returning a JSON structure as described below (typescript):
 
 ```typescript
 type ContractInfo = {
@@ -47,8 +49,9 @@ type ContractInfo = {
    name: string = ""; // contract-code short name
    version: string = "0.0.1"; //contract-code semver
    source: string = ""; //contract source code URL, e.g. http://github.com/author/contract
+   webAppUrl: string=""; //web URL where the DApp can be accessed e.g. http://Narwallets.com/div-pool/
    standards: string[] = []; // standards this contract satisfies
-   authorAccountId: string=""; //near account of the author of the code
+   developersAccountId: string=""; //near account of the author of the code
    auditorAccountId: string=""; //near account of the auditor of the code
 }
 ```
@@ -74,14 +77,55 @@ If all the above is correct, her code adds the contract as an audited NEP-21 Tok
 ## Reference-level explanation
 [reference-level-explanation]: #reference-level-explanation
 
-* Contract side:
+### Reference Implementations:
 
-  * Reference implementation in Rust: TODO 
-  * Reference implementation in AS: TODO 
+#### Rust:
+```rust
+// ---------------------------------
+// -- CONTRACT Self Identification --
+// ---------------------------------
+// [NEP-129](https://github.com/nearprotocol/NEPs/pull/129)
+// see also pub fn get_contract_info
+pub const CONTRACT_NAME: &str = "diversifying staking pool";
+pub const CONTRACT_VERSION: &str = "0.1.0";
+pub const DEVELOPERS_ACCOUNT_ID: &str = "developers.near"; 
+pub const DEFAULT_WEB_APP_URL: &str = "http://div-pool.narwallets.com";
+pub const DEFAULT_AUDITOR_ACCOUNT_ID: &str = "auditors.near";
 
+/// NEP-129 get information about this contract
+/// returns JSON string according to [NEP-129](https://github.com/nearprotocol/NEPs/pull/129)
+/// Rewards fee fraction structure for the staking pool contract.
+#[derive(Serialize)]
+#[serde(crate = "near_sdk::serde")]
+#[allow(non_snake_case)]
+pub struct NEP129Response {
+    pub dataVersion:u16,
+    pub name:String,
+    pub version:String,
+    pub developersAccountId:String,
+    pub source:String,
+    pub standards:Vec<String>,
+    pub webAppUrl:String,
+    pub auditorAccountId:String,
+}
 
-### Interface Example (ts/pseudocode):
+/// NEP-129 get information about this contract
+/// returns JSON string according to [NEP-129](https://github.com/nearprotocol/NEPs/pull/129)
+pub fn get_contract_info(&self) -> NEP129Response {
+    return NEP129Response {
+        dataVersion:1,
+        name: CONTRACT_NAME.into(),
+        version:CONTRACT_VERSION.into(),
+        developersAccountId:DEVELOPERS_ACCOUNT_ID.into(),
+        source:"https://github.com/Narwallets/diversifying-staking-pool".into(), 
+        standards:vec!("NEP-129".into()),  
+        webAppUrl:self.web_app_url.clone(),
+        auditorAccountId:self.auditor_account_id.clone()
+    }
+}
+```
 
+####  ts/pseudocode:
 ```typescript
 /********************************/
 /* CONTRACT Self Identification */
@@ -120,7 +164,7 @@ TBD
 ## Unresolved questions
 [unresolved-questions]: #unresolved-questions
 
-- Reference implementations
+TBD
 
 ## Future possibilities
 [future-possibilities]: #future-possibilities
