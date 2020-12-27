@@ -12,6 +12,7 @@ A standard interface for contract allowing self-identification, version informat
 ### `0.1.0`
 
 - Heavy simplification. Only contract identification.
+- added webAppUrl per @vgrichina suggestion
 
 ### `0.0.1`
 
@@ -35,7 +36,7 @@ A contract implementing this standard would allow users to:
  `name:"fungible-token", version:"1.0.0"`
 - Get a list of standards this contract satisfies, e.g. `standards:["NEP-21","NEP-211"]`
 - Get the url of the contract code, e.g.<br>`source:"http://github.com/author/contract"`
-- Get the url to interact with the contract, e.g.<br>`webAppUrl:"http://Narwallets.com/div-pool/"`
+- Get the url of the web app / DApp to interact with this deployment, e.g.<br>`webAppUrl:"http://Narwallets.com/div-pool/"`
 - Get the developers near account
 - Get the auditor near account (possibly for contract hash validation via aditor's provided mechanisms)
 
@@ -46,6 +47,7 @@ To satisfy this NEP the contract must implement 1 (one) method:
 ```typescript
 type ContractInfo = {
    dataVersion: number = 1; // determines the rest of the fields
+   webAppUrl: string = ""; // url for the webApp/DApp for this contract
    name: string = ""; // contract-code short name
    version: string = "0.0.1"; //contract-code semver
    source: string = ""; //contract source code URL, e.g. http://github.com/author/contract
@@ -71,7 +73,7 @@ Alice wants to trade only with audited NEP-21 tokens. She receives an account na
 
 * use `auditorAccountId` to check the contracts code hash and audit info (depending on the auditor's mechanism to do that)
 
-If all the above is correct, her code adds the contract as an audited NEP-21 Token.
+If all the above is correct, her code adds the contract as an audited NEP-21 Token and the user can interact with it via `contractInfo.webAppUrl`
 
 
 ## Reference-level explanation
@@ -133,7 +135,10 @@ pub fn get_contract_info(&self) -> NEP129Response {
 const CONTRACT_NAME = "FunTokAMM"
 const CONTRACT_VERSION = "0.0.1"
 const AUTHOR_ACCOUNT_ID = "luciotato.near"
-var AuditorAccountId = "auditors.near"
+var WebAppUrl = "www.funtok.io" //cannonical app url, can be changed after deployment
+var AuditorAccountId = "auditors.near" //auditor account Id, can be changed after deployment
+var OwnerAccountId: string; //set at contract initialization
+
 /// get information about this contract
 /// returns JSON string according to [NEP-129](https://github.com/nearprotocol/NEPs/pull/129)
 public function get_contract_info():string {
@@ -141,6 +146,7 @@ public function get_contract_info():string {
       "dataVersion":1, 
       "name":"${CONTRACT_NAME}",
       "version":"${CONTRACT_VERSION}", 
+      "webAppUrl":"${WebAppUrl}",
       "source":"http://github.com/luciotato/fun-tok-amm",
       "standards":["NEP-129","NEP-21","NEP-122","NEP-301"], 
       "authorAccountId":"${AUTHOR_ACCOUNT_ID}",
@@ -148,9 +154,28 @@ public function get_contract_info():string {
       }` 
 }
 
+function checkOwner(){
+  if (env.predecessor_account_id!==OwnerAccountId) throw Error("only the owner can call this function")
+}
+
+/// set web app url for this deployment
+public function set_web_app_url(url:string) {
+  checkOwner();
+  WebAppUrl=url;
+  saveState();
+}
+
 /// set auditor information for this contract
 public function set_auditor_account_id(accountId:string) {
+  checkOwner();
   AuditorAccountId=accountId;
+  saveState();
+}
+
+/// transfer ownership
+public function set_owner(accountId:string) {
+  checkOwner();
+  OwnerAccountId=accountId;
   saveState();
 }
 
