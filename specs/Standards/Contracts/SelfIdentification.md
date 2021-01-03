@@ -47,14 +47,13 @@ To satisfy this NEP the contract must implement 1 (one) method:
 ```typescript
 type ContractInfo = {
    dataVersion: number = 1; // determines the rest of the fields
-   webAppUrl: string = ""; // url for the webApp/DApp for this contract
    name: string = ""; // contract-code short name
    version: string = "0.0.1"; //contract-code semver
    source: string = ""; //contract source code URL, e.g. http://github.com/author/contract
-   webAppUrl: string=""; //web URL where the DApp can be accessed e.g. http://Narwallets.com/div-pool/
    standards: string[] = []; // standards this contract satisfies
    developersAccountId: string=""; //near account of the author of the code
-   auditorAccountId: string=""; //near account of the auditor of the code
+   webAppUrl?: string; //web URL where the DApp can be accessed e.g. http://Narwallets.com/div-pool/
+   auditorAccountId?: string=""; //near account of the auditor of the code
 }
 ```
 
@@ -107,8 +106,8 @@ pub struct NEP129Response {
     pub developersAccountId:String,
     pub source:String,
     pub standards:Vec<String>,
-    pub webAppUrl:String,
-    pub auditorAccountId:String,
+    pub webAppUrl:Option<String>,
+    pub auditorAccountId:Option<String>,
 }
 
 /// NEP-129 get information about this contract
