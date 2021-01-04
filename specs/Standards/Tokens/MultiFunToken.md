@@ -20,7 +20,7 @@ This standard does not include functions to mint and burn tokens. It only declar
 
 1. The combination of scaling by sharding and the cross-contract calls mechanics in NEAR (async, no 2PC) create certain condiions where in some cases is recommendable to manage multiple tokens in the same contract instead of the standard Ethereum-way of a contract per token.
 
-2. The [diversifying-pool contract](https://narwallets.github.io/diversifying-staking-pool/) is an example of this kind of situations. The contract manages three "tokens": NEAR, SKASH and G-SKASH.
+2. The [diversifying-pool contract](https://narwallets.github.io/diversifying-staking-pool/) is an example of this kind of situation. The contract manages three "tokens": NEAR, SKASH and G-SKASH.
 
 Prior art:
 - [#136 NEP Interactive Fungible Token](https://github.com/robert-zaremba/nep-136-fungible-token),
@@ -73,7 +73,7 @@ Alice needs to issue one transaction to transfer 5 tokens to Bob.
 
 **Technical calls**
 
-1. `alice` calls `transfer_to_user({"receiver_id": "bob", "symbol":"wBTC, "amount": "50000000000000000000000"})`.
+1. `alice` calls `transfer_to_user({"receiver_id": "bob", "symbol":"wBTC", "amount": "50000000000000000000000"})`.
 
 ### Token deposit to a contract
 
@@ -117,13 +117,13 @@ Charlie wants to exchange 80 wLTC for at least 530 wBTC, both tokens are managed
 
 **High-level explanation**
 
-- Alex calls `swap('wLTC',80*1e24, 'wBTC',530*1e24) -> u128String`
-- If the price allows the output token amount to be at least the amount requested, a swap is made using the liquidity pool, the fn returns the actual `wBTC` amount trasnferred to Alex (>= of the amount requested, that is >= 530*1e24).
-- If the price does not allows the output token requested amount, the transaction is rejected asking Alex to lower his required amount
+- Charlie calls `swap('wLTC',80*1e24, 'wBTC',530*1e24) -> u128String`
+- If the price allows the output token amount to be at least the amount requested, a swap is made using the liquidity pool, the fn returns the actual `wBTC` amount trasnferred to Charlie (>= of the amount requested, that is >= 530*1e24).
+- If the price does not allows the output token requested amount, the transaction is rejected asking Charlie to lower his required amount
 
 **Technical calls**
 
-1. `swap({"input_symbol": "wLTC", "input_amount":80*1e24, "output_symbol":"wBTC", "output_amount":530*1e24}) -> U128 //recevied output amount`.
+1. `swap({"input_symbol": "wLTC", "input_amount":80*1e24, "output_symbol":"wBTC", "output_amount":530*1e24}) -> U128String //recevied output amount`.
 
 ## Reference-level explanation
 [reference-level-explanation]: #reference-level-explanation
