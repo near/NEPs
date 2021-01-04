@@ -65,7 +65,7 @@ Alice wants to send 5 wBTC tokens to Bob.
 
 - Alice's account is `alice`.
 - Bob's account is `bob`.
-- The 5 tokens is `5 * 10^24`, a 5 followed by 24 zeros.
+- The 5 tokens is `5 * 10^24`, a 5 followed by 24 zeroes.
 
 **High-level explanation**
 
@@ -81,7 +81,7 @@ Alice wants to deposit 1000 nDAI tokens to a compound interest contract to earn 
 
 **Assumptions**
 
-- The DAI token contract is `dai`.
+- The nDAI token symbol is `nDAI`.
 - Alice's account is `alice`.
 - The compound interest contract is `compound.near`.
 - The 1000 tokens is `1000 * 10^24` or 10 followed by 24 zeroes.
@@ -100,7 +100,7 @@ The receiving contract must process alice's deposit and complete the call. If th
 
 **Technical calls**
 
-1. `alice` calls `transfer_to_contract({"receiver_id": "compound.near", "symbol":"nDAI, "amount": "100000000000000000000000"})`.
+1. `alice` calls `transfer_to_contract({"receiver_id": "compound.near", "symbol":"nDAI", "amount": "100000000000000000000000"})`.
 1. The multi-fun-tok contract transfers from `alice` to `compound.near`
    1. The multi-fun-tok contract calls `compound.nearcompound.near.on_multifuntok_transfer(sender_id: "alice', symbol:"nDAI", amount: "100000000000000000000000", memo:'xxxx')`
    1. If the call fails, the multi-fun-tok contract undoes the transfer, transferring back from `compound.near` to `alice` 
@@ -111,25 +111,27 @@ Charlie wants to exchange 80 wLTC for at least 530 wBTC, both tokens are managed
 
 **Assumptions**
 
-- The wLTC token symbol is `wltc`.
-- The wBTC token symbol is `wbtc`.
-- Charlie's account is `charlie`.
-- There's an `wltc/wbtc` Liquidity Pool.
+- The wLTC token symbol is `wLTC`.
+- The wBTC token symbol is `wBTC`.
+- There's an `wLTC/wBTC` Liquidity Pool.
 
 **High-level explanation**
 
-- Alex calls `swap('wltc',80*1e24, 'wbtc',530*1e24)`
-- If the price is within the range requested, a swap is made using the liquidity pool
-- If the price is not, the transaction is rejected asking Alex to lower his required amount
+- Alex calls `swap('wLTC',80*1e24, 'wBTC',530*1e24) -> u128String`
+- If the price allows the output token amount to be at least the amount requested, a swap is made using the liquidity pool, the fn returns the actual `wBTC` amount trasnferred to Alex (>= of the amount requested, that is >= 530*1e24).
+- If the price does not allows the output token requested amount, the transaction is rejected asking Alex to lower his required amount
 
+**Technical calls**
+
+1. `swap({"input_symbol": "wLTC", "input_amount":80*1e24, "output_symbol":"wBTC", "output_amount":530*1e24}) -> U128 //recevied output amount`.
 
 ## Reference-level explanation
 [reference-level-explanation]: #reference-level-explanation
 
 * All amounts, balances and allowance are limited by U128 (max value 2**128 - 1).
-* Token standard uses JSON for serialization of arguments and results.
-* u128 Amounts in arguments and results have are serialized as Base-10 strings, e.g. "100". This is done to avoid JSON limitation of max integer value of 2**53.
-* The contract requires users to create accounts before operating. The create_account call migth require the user to attach enough NEAR to cover the storage cost of creating an account. This is done to prevent a denial of service attack on the contract by taking all available storage. The unused tokens from the attached deposit are also refunded, so it's safe to attach more deposit than required.
+* All tokens use 24 decimal places as precision, to mimic native NEAR preceision, simplify mamangement, log interpretations, comparisions, and wallets showing token balances.
+* u128 Amounts in arguments and results are serialized as Base-10 strings (U128String), e.g. 100_000_000_000:u128 => "100000000000":U128String. This is done to avoid JSON limitation of max precision of 15 digits (f64), versus 38 digits for u128.
+* The contract migth require users to create accounts before operating. The create_account call migth require the user to attach enough NEAR to cover the storage cost of creating an account. This is done to prevent a denial of service attack on the contract by taking all available storage. The unused tokens from the attached deposit are also refunded, so it's safe to attach more deposit than required.
 * The contract can choose to not enforce the previous requirement up-to a certain point or for some kind of accounts. For example, the diversifying-pool can waive this requirement for lockup-accounts or for all accounts to ease the oboarding of users.
 * To prevent the deployed contract from being modified or deleted, it should not have any access keys on its account.
 
@@ -157,13 +159,11 @@ pub trait MultiFunToken {
     /// Creates a new Fungible Token 
     /// Requirements:
     /// * Caller can only by the main owner
-    /// * Caller must attach enough NEAR to cover storage cost at the fixed storage price defined in the contract.
-    [#payable]
     pub fn create_token(&mut self, symbol_info: SymbolInfo);
 
     /// Deletes a Fungible Token 
     /// Requirements:
-    /// * Caller can only by the main owner
+    /// * Caller can be the main owner or the token owner
     /// * Symbol.total_supply == 0
     pub fn delete_token(&mut self, symbol: String);
 
