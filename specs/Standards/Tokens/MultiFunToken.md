@@ -1,4 +1,4 @@
-# Multi-Fungible-Tok Contract ([NEP-xxx](https://github.com/nearprotocol/NEPs/pull/xxx))
+# Multi-Fungible-Tok Contract ([NEP-138](https://github.com/nearprotocol/NEPs/pull/138))
 
 Version `0.1.0`
 
@@ -23,7 +23,7 @@ This standard does not include functions to mint and burn tokens. It only declar
 2. The [diversifying-pool contract](https://narwallets.github.io/diversifying-staking-pool/) is an example of this kind of situations. The contract manages three "tokens": NEAR, SKASH and G-SKASH.
 
 Prior art:
-- [#136 NEP Initeractive Fungible Token](https://github.com/robert-zaremba/nep-136-fungible-token),
+- [#136 NEP Interactive Fungible Token](https://github.com/robert-zaremba/nep-136-fungible-token),
 [#122 Allowance-free vault-based token](https://github.com/near/NEPs/issues/122), [#21 Fungible Token](https://github.com/near/NEPs/blob/master/specs/Standards/Tokens/FungibleToken.md)
 
 ## Guide-level explanation
@@ -151,7 +151,7 @@ struct SymbolInfo {
     reference: String,  // URL to additional resources about the token.
 }
 
-/// NEP
+/// NEP-138 Multiple Fungible Tokens Contract
 pub trait MultiFunToken {
     
     //---------TOKENS---------------
