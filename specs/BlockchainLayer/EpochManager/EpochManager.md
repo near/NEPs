@@ -69,11 +69,11 @@ the following way:
 1. If an account is in the slash set as of the end of `T`, or gets kicked out for `NotEnoughBlocks/NotEnoughChunks` in epoch `T`,
   its proposal is ignored.
 3. If a validator is in `validators[T+1]`, and didn't make a proposal, add an implicit proposal with its stake in `T+1`.
-2. If a validator is in both `validators[T]` and `validators[T+1]`, and made a proposal in `T`,
+2. If a validator is in both `validators[T]` and `validators[T+1]`, and made a proposal in `T` (including implicit),
   then its reward for epoch `T` is automatically added to the proposal.
 
 The adjusted set of proposals is used to compute the seat price, and determine `validators`,`block_producers_settlement`,
 `chunk_producers_settlement`sets. This algorithm is described in [Economics](../../Economics/README.md#validator-selection).
 
 ### Validator reward
-Rewards calculation is described in the [Economics](../../Economics/README.md#rewards-calculation) section
+Rewards calculation is described in the [Economics](../../Economics/README.md#rewards-calculation) section.

@@ -6,9 +6,8 @@ happens at epoch boundaries.
 Genesis block is in its own epoch. After that, a block is either in its parent's epoch or
 starts a new epoch if it meets certain conditions.
 
-### BlockHeight
-Each block has a height. Genesis block has height 0, the height of each block is greater than
-the height of its parent. Within one epoch, each height has a block producer assigned to it.
+Within one epoch, validator assignment is based on block height: each height has a block producer assigned to it, and
+each height and shard have a chunk producer.
 
 ### End of an epoch
 A block is defined to be the last block in its epoch if it's the genesis block or if the following conditions are met:
@@ -16,7 +15,7 @@ A block is defined to be the last block in its epoch if it's the genesis block o
 - `block.height + 1 >= estimated_next_epoch_start`
 - `block.last_finalized_height + 3 >= estimated_next_epoch_start`
 
-`epoch_length` is defined in `genesis_config` and has a value of `43200` blocks on mainnet (12 hours at 1 block per second).
+`epoch_length` is defined in `genesis_config` and has a value of `43200` height delta on mainnet (12 hours at 1 block per second).
 
 ### EpochHeight
 Epochs on one chain can be identified by height, which is defined the following way:
