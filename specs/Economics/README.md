@@ -183,7 +183,8 @@ treasury_reward[t] = floor(reward[t] * protocol_reward_rate)
 validator_reward[t] = total_reward[t] - treasury_reward[t]
 ```
 
-Uptime of a specific validator is computed:
+Validators that didn't meet the threshold for either blocks or chunks get kicked out and don't get any reward, otherwise uptime
+of a validator is computed:
 
 ```python
 pct_online[t][j] = (num_produced_blocks[t][j] / expected_produced_blocks[t][j] + num_produced_chunks[t][j] / expected_produced_chunks[t][j]) / 2
