@@ -61,11 +61,11 @@ The output of the `FunctionCall`:
 
 ### Value Result
 
-If applied `ActionReceipt` contains [`output_data_receivers`](Receitps.md#output_data_receivers), runtime will create `DataReceipt` for each of `data_id` and `receiver_id` and `data` equals returned value. Eventually, these `DataReceipt` will be delivered to the corresponding receivers.
+If applied `ActionReceipt` contains [`output_data_receivers`](Receipts.md#output_data_receivers), runtime will create `DataReceipt` for each of `data_id` and `receiver_id` and `data` equals returned value. Eventually, these `DataReceipt` will be delivered to the corresponding receivers.
 
 ### ReceiptIndex Result
 
-Successful result could not return any Value, but generates a bunch of new ActionReceipts instead. One example could be a callback. In this case, we assume the the new Receipt will send its Value Result to the [`output_data_receivers`](Receitps.md#output_data_receivers) of the current `ActionReceipt`.
+Successful result could not return any Value, but generates a bunch of new ActionReceipts instead. One example could be a callback. In this case, we assume the the new Receipt will send its Value Result to the [`output_data_receivers`](Receipts.md#output_data_receivers) of the current `ActionReceipt`.
 
 ### Errors
 
@@ -116,11 +116,11 @@ pub enum FunctionCallError {
     MethodResolveError(MethodResolveError),
     /// A trap happened during execution of a binary
     WasmTrap(WasmTrap),
-    WasmUnknownError,   
+    WasmUnknownError,
     HostError(HostError),
 }
 ```
-- `CompilationError` includes errors that can occur during the compilation of wasm binary. 
+- `CompilationError` includes errors that can occur during the compilation of wasm binary.
 - `LinkError` is returned when wasmer runtime is unable to link the wasm module with provided imports.
 - `MethodResolveError` occurs when the method in the action cannot be found in the contract code.
 - `WasmTrap` error happens when a trap occurs during the execution of the binary. Traps here include

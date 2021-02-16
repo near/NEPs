@@ -95,7 +95,7 @@ def on_account_change(block_height, account):
 
 Where `sizeOf(account)` includes size of `account_id`, `account` structure and size of all the data stored under the account.
 
-Account can end up with not enough balance in case it gets slashed. Account will become unusable as all orginating transactions will fail (including deletion).
+Account can end up with not enough balance in case it gets slashed. Account will become unusable as all originating transactions will fail (including deletion).
 The only way to recover it in this case is by sending extra funds from a different accounts.
 
 ## Validators

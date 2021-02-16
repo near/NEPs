@@ -7,9 +7,9 @@ The state of the light client is defined by:
 
 The `epoch_id` refers to the epoch to which the block that is the current known head belongs, and `next_epoch_id` is the epoch that will follow.
 
-Light clients operate by periodically fetching instances of `LightClientBlockView` via particular RPC end-point desdribed [below](#rpc-end-point).
+Light clients operate by periodically fetching instances of `LightClientBlockView` via particular RPC end-point described [below](#rpc-end-point).
 
-Light client does't need to receive `LightClientBlockView` for all the blocks. Having the `LightClientBlockView` for block `B` is sufficient to be able to verify any statement about state or outcomes in any block in the ancestry of `B` (including `B` itself). In particular, having the `LightClientBlockView` for the head is sufficient to locally verify any statement about state or outcomes in any block on the canonical chain.
+Light client doesn't need to receive `LightClientBlockView` for all the blocks. Having the `LightClientBlockView` for block `B` is sufficient to be able to verify any statement about state or outcomes in any block in the ancestry of `B` (including `B` itself). In particular, having the `LightClientBlockView` for the head is sufficient to locally verify any statement about state or outcomes in any block on the canonical chain.
 
 However, to verify the validity of a particular `LightClientBlockView`, the light client must have verified a `LightClientBlockView` for at least one block in the preceding epoch, thus to sync to the head the light client will have to fetch and verify a `LightClientBlockView` per epoch passed.
 
@@ -147,7 +147,7 @@ def validate_and_update_head(block_view):
     if block_view.next_bps is not None:
         if sha256(borsh(block_view.next_bps)) != block_view.inner_lite.next_bp_hash:
             return False
-        
+
         epoch_block_producers_map[block_view.inner_lite.next_epoch_id] = block_view.next_bps
 
     head = block_view
@@ -161,7 +161,7 @@ By construction by the time the `LightClientBlockView` is being validated, the b
 
 The sum of all the stakes of `next_bps` in the previous epoch is `total_stake` referred to in (5) above.
 
-The signatures in the `LightClientBlockView::approvals_after_next` are signatures on `approval_message`. The  `i`-th signature in `approvals_after_next`, if present, must validate against the `i`-th public key in `next_bps` from the previous epoch. `approvals_after_next` can contain fewer elements than `next_bps` in the previous epoch. 
+The signatures in the `LightClientBlockView::approvals_after_next` are signatures on `approval_message`. The  `i`-th signature in `approvals_after_next`, if present, must validate against the `i`-th public key in `next_bps` from the previous epoch. `approvals_after_next` can contain fewer elements than `next_bps` in the previous epoch.
 
 `approvals_after_next` can also contain more signatures than the length of `next_bps` in the previous epoch. This is due to the fact that, as per [consensus specification](./Consensus.md), the last blocks in each epoch contain signatures from both the block producers of the current epoch, and the next epoch. The trailing signatures can be safely ignored by the light client implementation.
 
@@ -208,7 +208,7 @@ pub struct ExecutionOutcomeWithIdView {
 
 The proof verification can be broken down into two steps, execution outcome root verification and block merkle root
 verification.
- 
+
 #### Execution Outcome Root Verification
 If the outcome root of the transaction or receipt is included in block `H`, then `outcome_proof` includes the block hash
 of `H`, as well as the merkle proof of the execution outcome in its given shard. The outcome root in `H` can be

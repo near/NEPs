@@ -100,7 +100,7 @@ For this example, let's say that transactions are valid if the nonce is even and
 
 ##### Initialization
 
-When `.pool_iterator()` is called, a new `PoolIteratorWrapper` is created and it holds the mutuable reference to the pool,
+When `.pool_iterator()` is called, a new `PoolIteratorWrapper` is created and it holds the mutable reference to the pool,
 so the pool can't be modified outside of this iterator. The wrapper looks like this:
 
 ```
