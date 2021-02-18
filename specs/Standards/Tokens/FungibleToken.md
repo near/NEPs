@@ -1,39 +1,39 @@
-# Fungible Token ([NEP-21](https://github.com/nearprotocol/NEPs/pull/21))
+# Fungible Token ([NEP-141](https://github.com/nearprotocol/NEPs/issues/141))
 
-Version `0.2.0`
+See also the discussions:
+- [Fungible token base](https://github.com/near/NEPs/discussions/146#discussioncomment-298943)
+- [Fungible token metadata](https://github.com/near/NEPs/discussions/148)
+- [Storage standard](https://github.com/near/NEPs/discussions/145)
+
+Version `1.0.0`
 
 ## Summary
 [summary]: #summary
 
-A standard interface for fungible tokens allowing for ownership, escrow and transfer, specifically targeting third-party marketplace integration.
-
-## Changelog
-
-### `0.2.0`
-
-- Introduce storage deposits. Make every change method payable (able receive attached deposits with the function calls). It requires the caller to attach enough deposit to cover potential storage increase. See [core-contracts/#47](https://github.com/near/core-contracts/issues/47)
-- Replace `set_allowance` with `inc_allowance` and `dec_allowance` to address the issue of allowance front-running. See [core-contracts/#49](https://github.com/near/core-contracts/issues/49)
-- Validate `owner_id` account ID. See [core-contracts/#54](https://github.com/near/core-contracts/issues/54)
-- Enforce that the `new_owner_id` is different from the current `owner_id` for transfer. See [core-contracts/#55](https://github.com/near/core-contracts/issues/55)
+A standard interface for fungible tokens that allows for a normal transfer as well as a transfer and call in a single transaction. The storage standard addresses the needs (and security) of storage staking. The fungible token metadata standard provides the fields needed for ergonomics across dApps and marketplaces.
 
 ## Motivation
 [motivation]: #motivation
 
-NEAR Protocol uses an asynchronous sharded Runtime. This means the following:
+NEAR Protocol uses an asynchronous, sharded runtime. This means the following:
  - Storage for different contracts and accounts can be located on the different shards.
  - Two contracts can be executed at the same time in different shards.
 
 While this increases the transaction throughput linearly with the number of shards, it also creates some challenges for cross-contract development.
 For example, if one contract wants to query some information from the state of another contract (e.g. current balance), by the time the first contract receive the balance the real balance can change.
-It means in the async system, a contract can't rely on the state of other contract and assume it's not going to change.
+It means in the async system, a contract can't rely on the state of another contract and assume it's not going to change.
 
-Instead the contract can rely on temporary partial lock of the state with a callback to act or unlock, but it requires careful engineering to avoid dead locks.
-In this standard we're trying to avoid enforcing locks, since most actions can still be completed without locks by transferring ownership to an escrow account.
+Instead the contract can rely on temporary partial lock of the state with a callback to act or unlock, but it requires careful engineering to avoid deadlocks.
+In this standard we're trying to avoid enforcing locks. A typical approach to this problem is to include an escrow system with allowances. This approach was initially developed for [NEP-21](https://github.com/nearprotocol/NEPs/pull/21) which is similar to the Ethereum ERC-20 standard. There are a few issues with using an escrow as the only avenue to pay for a service with a fungible token. This frequently requires more than one transaction for common scenarios where fungible tokens are given as payment with the expectation that a method will subsequently be called.
+For example, an oracle contract might be paid in fungible tokens. A client contract that wishes to use the oracle must either increase the escrow allowance before each request to the oracle contract, or allocate a large allowance that covers multiple calls. Both have drawbacks and ultimately it would be ideal to be able to send fungible tokens and call a method in a single transaction. This concern is addressed in the `nft_transfer_call` method. The power of this comes from the receiver contract working in concert with the fungible token contract in a secure way. That is, if the receiver contract abides by the standard, a single transaction may transfer and call a method.
+Note: there is no reason why an escrow system cannot be included in a fungible token's implementation, but it is simply not necessary in the base standard. Escrow logic should be moved to a separate contract to handle that functionality. One reason for this is because the [Rainbow Bridge](https://near.org/blog/eth-near-rainbow-bridge/) will be transferring fungible tokens from Ethereum to NEAR, where the token locker (a factory) will be using the fungible token base standard.
 
 Prior art:
 - [ERC-20 standard](https://eips.ethereum.org/EIPS/eip-20)
 - NEP#4 NEAR NFT standard: [nearprotocol/neps#4](https://github.com/nearprotocol/neps/pull/4)
-- For latest lock proposals see [Safes (#26)](https://github.com/nearprotocol/neps/pull/26)
+
+Learn about NEP-141:
+- [Figment Learning Pathway](https://learn.figment.io/network-documentation/near/tutorials/1-project_overview/2-fungible-token)
 
 ## Guide-level explanation
 [guide-level-explanation]: #guide-level-explanation
@@ -42,26 +42,21 @@ We should be able to do the following:
 - Initialize contract once. The given total supply will be owned by the given account ID.
 - Get the total supply.
 - Transfer tokens to a new user.
-- Set a given allowance for an escrow account ID.
-  - Escrow will be able to transfer up this allowance from your account.
-  - Get current balance for a given account ID.
 - Transfer tokens from one user to another.
-- Get the current allowance for an escrow account on behalf of the balance owner. This should only be used in the UI, since a contract shouldn't rely on this temporary information.
+- Transfer tokens to a contract, have the receiver contract call a method and "return" any fungible tokens not used.
+- Remove state for the key/value pair corresponding with a user's account, withdrawing a nominal balance of Ⓝ that was used for storage.
 
 There are a few concepts in the scenarios above:
-- **Total supply**. It's the total number of tokens in circulation.
-- **Balance owner**. An account ID that owns some amount of tokens.
-- **Balance**. Some amount of tokens.
-- **Transfer**. Action that moves some amount from one account to another account.
-- **Escrow**. A different account from the balance owner who has permission to use some amount of tokens.
-- **Allowance**. The amount of tokens an escrow account can use on behalf of the account owner.
+- **Total supply**: the total number of tokens in circulation.
+- **Balance owner**: an account ID that owns some amount of tokens.
+- **Balance**: an amount of tokens.
+- **Transfer**: an action that moves some amount from one account to another account, either an externally owned account or a contract account.
+- **Transfer and call**: an action that moves some amount from one account to a contract account where the receiver calls a method.
+- **Storage amount**: the amount of storage used for an account to be "registered" in the fungible token. This amount is denominated in Ⓝ, not bytes, and represents the [storage staked](https://docs.near.org/docs/concepts/storage-staking).
 
-Note, that the precision is not part of the default standard, since it's not required to perform actions. The minimum
-value is always 1 token.
+Note, that the precision is not part of the default standard, since it's not required to perform actions. The minimum value is always 1 token.
 
-The standard acknowledges NEAR storage staking model and accounts for the difference in storage that can be introduced
-by actions on this contract. Since multiple users use the contract, the contract has to account for potential
-storage increase. Thus every change method of the contract that can change the amount of storage must be payable.
+The standard acknowledges NEAR storage staking model and accounts for the difference in storage that can be introduced by actions on this contract. Since multiple users use the contract, the contract has to account for potential storage increase. Thus every change method of the contract that can change the amount of storage must be payable.
 See reference implementation for storage deposits and refunds.
 
 ### Simple transfer
@@ -73,7 +68,7 @@ Alice wants to send 5 wBTC tokens to Bob.
 - The wBTC token contract is `wbtc`.
 - Alice's account is `alice`.
 - Bob's account is `bob`.
-- The precision on wBTC contract is `10^8`.
+- The precision ("decimals" in the metadata standard) on wBTC contract is `10^8`.
 - The 5 tokens is `5 * 10^8` or as a number is `500000000`.
 
 **High-level explanation**
@@ -82,7 +77,7 @@ Alice needs to issue one transaction to wBTC contract to transfer 5 tokens (mult
 
 **Technical calls**
 
-1. `alice` calls `wbtc::transfer({"new_owner_id": "bob", "amount": "500000000"})`.
+1. `alice` calls `wbtc::ft_transfer({"receiver_id": "bob", "amount": "500000000"})`.
 
 ### Token deposit to a contract
 
@@ -93,23 +88,26 @@ Alice wants to deposit 1000 DAI tokens to a compound interest contract to earn e
 - The DAI token contract is `dai`.
 - Alice's account is `alice`.
 - The compound interest contract is `compound`.
-- The precision on DAI contract is `10^18`.
+- The precision ("decimals" in the metadata standard) on DAI contract is `10^18`.
 - The 1000 tokens is `1000 * 10^18` or as a number is `1000000000000000000000`.
 - The compound contract can work with multiple token types.
 
 **High-level explanation**
 
-Alice needs to issue 2 transactions. The first one to `dai` to set an allowance for `compound` to be able to withdraw tokens from `alice`.
+Alice needs to issue 1 transaction, as opposed to 2 with a typical escrow workflow.
+
+Alice needs to issue 1 transaction. The first one to `dai` to set an allowance for `compound` to be able to withdraw tokens from `alice`.
 The second transaction is to the `compound` to start the deposit process. Compound will check that the DAI tokens are supported and will try to withdraw the desired amount of DAI from `alice`.
 - If transfer succeeded, `compound` can increase local ownership for `alice` to 1000 DAI
 - If transfer fails, `compound` doesn't need to do anything in current example, but maybe can notify `alice` of unsuccessful transfer.
 
 **Technical calls**
 
-1. `alice` calls `dai::set_allowance({"escrow_account_id": "compound", "allowance": "1000000000000000000000"})`.
-1. `alice` calls `compound::deposit({"token_contract": "dai", "amount": "1000000000000000000000"})`. During the `deposit` call, `compound` does the following:
-   1. makes async call `dai::transfer_from({"owner_id": "alice", "new_owner_id": "compound", "amount": "1000000000000000000000"})`.
-   1. attaches a callback `compound::on_transfer({"owner_id": "alice", "token_contract": "dai", "amount": "1000000000000000000000"})`.
+1. `alice` calls `dai::ft_transfer_call({"receiver_id": "dai", "amount": "1000000000000000000000", "msg": "invest"})`. During the `ft_transfer_call` call, `dai` does the following:
+   1. makes async call `compound::ft_on_transfer({"sender_id": "alice", "amount": "1000000000000000000000", "msg": "invest"})`.
+   2. attaches a callback `dai::ft_resolve_transfer({"sender_id": "alice", "amount": "1000000000000000000000"})`.
+   3. compound finishes investing, using all attached fungible tokens `compound::invest({…})` then returns the value of the tokens that weren't used or needed. In this case, Alice asked for the tokens to be invested, so it will return 0. (In some cases a method may not need to use all the fungible tokens, and would return the remainder.)
+   4. the `dai::ft_resolve_transfer` function receives success/failure of the promise. If success, it will contain the unused tokens. Then the `dai` contract uses simple arithmetic (not needed in this case) and updates the balance for Alice.
 
 ### Multi-token swap on DEX
 
@@ -122,16 +120,15 @@ Charlie wants to exchange his wLTC to wBTC on decentralized exchange contract. A
 - The DEX contract is `dex`.
 - Charlie's account is `charlie`.
 - Alex's account is `alex`.
-- The precision on both tokens contract is `10^8`.
+- The precision ("decimals" in the metadata standard) on both tokens contract is `10^8`.
 - The amount of 9001 wLTC tokens is Alex wants is `9001 * 10^8` or as a number is `900100000000`.
 - The 80 wBTC tokens is `80 * 10^8` or as a number is `8000000000`.
 - Charlie has 1000000 wLTC tokens which is `1000000 * 10^8` or as a number is `100000000000000`
-- Dex contract already has an open order to sell 80 wBTC tokens by `alex` towards 9001 wLTC.
-- Without Safes implementation, DEX has to act as an escrow and hold funds of both users before it can do an exchange.
+- DEX contract already has an open order to sell 80 wBTC tokens by `alex` towards 9001 wLTC.
 
 **High-level explanation**
 
-Let's first setup open order by Alex on DEX. It's similar to `Token deposit to a contract` example above.
+Let's first set up an open order by Alex on the DEX. It's similar to `Token deposit to a contract` example above.
 - Alex sets an allowance on wBTC to DEX
 - Alex calls deposit on Dex for wBTC.
 - Alex calls DEX to make an new sell order.
@@ -148,116 +145,107 @@ When called, DEX makes 2 async transfers calls to exchange corresponding tokens.
 
 **Technical calls**
 
-1. `alex` calls `wbtc::set_allowance({"escrow_account_id": "dex", "allowance": "8000000000"})`.
-1. `alex` calls `dex::deposit({"token": "wbtc", "amount": "8000000000"})`.
-   1. `dex` calls `wbtc::transfer_from({"owner_id": "alex", "new_owner_id": "dex", "amount": "8000000000"})`
-1. `alex` calls `dex::trade({"have": "wbtc", "have_amount": "8000000000", "want": "wltc", "want_amount": "900100000000"})`.
-1. `charlie` calls `wltc::set_allowance({"escrow_account_id": "dex", "allowance": "100000000000000"})`.
-1. `charlie` calls `dex::deposit({"token": "wltc", "amount": "100000000000000"})`.
-   1. `dex` calls `wltc::transfer_from({"owner_id": "charlie", "new_owner_id": "dex", "amount": "100000000000000"})`
-1. `charlie` calls `dex::trade({"have": "wltc", "have_amount": "900100000000", "want": "wbtc", "want_amount": "8000000000"})`.
+1. `alex` calls `wbtc::ft_transfer_call({"receiver_id": "dex", "amount": "8000000000", "msg": "deposit"})`.
+   1. makes async call `dex::ft_on_transfer({"sender_id": "alex", "amount": "8000000000", "msg": "deposit"})`.
+   2. attaches a callback `wbtc::ft_resolve_transfer({"sender_id": "alex", "amount": "8000000000"})`.
+   3. the deposit completes on `dex`, all fungible tokens are used, so it returns `0` as the number of unused tokens back to `wbtc`.
+   4. the `wbtc::ft_resolve_transfer` function receives success as the execution outcome and `0` as the value. This means 8000000000 will be subtracted from `alex`'s balance.
+2. `alex` calls `dex::trade({"have": "wbtc", "have_amount": "8000000000", "want": "wltc", "want_amount": "900100000000"})`.
+3. `charlie` calls `wltc::ft_transfer_call({"receiver_id": "dex", "amount": "100000000000000", "msg": "deposit"})`.
+   1. makes async call `dex::ft_on_transfer({"sender_id": "charlie", "amount": "100000000000000", "msg": "deposit"})`.
+   2. attaches a callback `wltc::ft_resolve_transfer({"sender_id": "charlie", "amount": "100000000000000"})`.
+   3. the deposit completes on `dex`, all fungible tokens are used, so it returns `0` as the number of unused tokens back to `wltc`.
+   4. the `wltc::ft_resolve_transfer` function receives success as the execution outcome and `0` as the value. This means 100000000000000 will be subtracted from `alex`'s balance.   
+4. `charlie` calls `dex::trade({"have": "wltc", "have_amount": "900100000000", "want": "wbtc", "want_amount": "8000000000"})`.
    - `dex` calls `wbtc::transfer({"new_owner_id": "charlie", "amount": "8000000000"})`
    - `dex` calls `wltc::transfer({"new_owner_id": "alex", "amount": "900100000000"})`
-
 
 ## Reference-level explanation
 [reference-level-explanation]: #reference-level-explanation
 
-The full implementation in Rust can be found here: [fungible-token](https://github.com/nearprotocol/near-sdk-rs/blob/master/examples/fungible-token/src/lib.rs)
-
 **NOTES:**
 - All amounts, balances and allowance are limited by `U128` (max value `2**128 - 1`).
 - Token standard uses JSON for serialization of arguments and results.
-- Amounts in arguments and results have are serialized as Base-10 strings, e.g. `"100"`. This is done to avoid
-JSON limitation of max integer value of `2**53`.
-- The contract tracks the change in storage before and after the call. If the storage increases,
-the contract requires the caller of the contract to attach enough deposit to the function call
-to cover the storage cost.
-This is done to prevent a denial of service attack on the contract by taking all available storage.
-It's because the gas cost of adding new escrow account is cheap, many escrow allowances can be added until the contract
-runs out of storage.
-If the storage decreases, the contract will issue a refund for the cost of the released storage.
-The unused tokens from the attached deposit are also refunded, so it's safe to attach more deposit than required.
-- To prevent the deployed contract from being modified or deleted, it should not have any access
-keys on its account.
-
+- Amounts in arguments and results have are serialized as Base-10 strings, e.g. `"100"`. This is done to avoid JSON limitation of max integer value of `2**53`.
+- The contract tracks the change in storage when adding to collections. If the storage increases, the contract requires the caller of the contract to attach enough deposit to the function call to cover the storage cost. This is done to prevent a denial of service attack on the contract by taking all available storage.
+- To prevent the deployed contract from being modified or deleted, it should not have any access keys on its account.
 
 Interface:
 
-```rust
-/******************/
-/* CHANGE METHODS */
-/******************/
+```javascript
+/************************************/
+/* CHANGE METHODS on fungible token */
+/************************************/
+// Simple transfer to a receiver. Does not call a method.
+// Requirements:
+// * Caller of the method must attach a deposit of 1 yoctoⓃ for security purposes
+// * Caller must have greater than or equal to the `amount` being requested
+// `receiver_id` is the valid NEAR account receiving the fungible tokens.
+// `amount` is the number of tokens to transfer, wrapped in quotes and treated like a string, although the number will be stored as an unsigned integer with 128 bits.
+// The `memo` argument is optional. It's added for use cases that may benefit from indexing or providing information for a transfer.
+function ft_transfer(
+    receiver_id: string,
+    amount: string,
+    memo: string|null
+): void
 
-/// Increments the `allowance` for `escrow_account_id` by `amount` on the account of the caller of this contract
-/// (`predecessor_id`) who is the balance owner.
-/// Requirements:
-/// * Caller of the method has to attach deposit enough to cover storage difference at the
-///   fixed storage price defined in the contract.
-#[payable]
-pub fn inc_allowance(&mut self, escrow_account_id: AccountId, amount: U128);
+// Transfer tokens and call a method on a receiver contract. A successful workflow will end in a success execution outcome to the callback on the same contract at the method `ft_resolve_transfer`.
+// Requirements:
+// * Caller of the method must attach a deposit of 1 yoctoⓃ for security purposes
+// * Caller must have greater than or equal to the `amount` being requested
+// * The receiving contract must implement `ft_on_transfer` according to the standard.
+// * This contract must implement `ft_resolve_transfer` according to the standard.
+// `msg` is an argument that may specify any information expected by the receiving contract in order to properly handle the function. It may provide details on which method to call on the receiving contract, extra parameters, etc.
+function ft_transfer_call(
+   receiver_id: string,
+   amount: string,
+   msg: string,
+   memo: string|null,
+): Promise
 
-/// Decrements the `allowance` for `escrow_account_id` by `amount` on the account of the caller of this contract
-/// (`predecessor_id`) who is the balance owner.
-/// Requirements:
-/// * Caller of the method has to attach deposit enough to cover storage difference at the
-///   fixed storage price defined in the contract.
-#[payable]
-pub fn dec_allowance(&mut self, escrow_account_id: AccountId, amount: U128);
+// This function isn't called directly and shall implement logic ensuring it's called by "itself" as a callback to the promise sent to the receiver contract.
+// Here the `sender_id` will be the sender from the `ft_transfer_call` method call. The `receiver_id` and `amount` will be the same as the values provided to `ft_transfer_call`.
+// This returns a string representing a string version of an unsigned 128-bit integer of how many tokens were returned. (This value may be different than `amount`.)
+function ft_resolve_transfer(
+   sender_id: string,
+   receiver_id: string,
+   amount: string,
+): string
 
-/// Transfers the `amount` of tokens from `owner_id` to the `new_owner_id`.
-/// Requirements:
-/// * `amount` should be a positive integer.
-/// * `owner_id` should have balance on the account greater or equal than the transfer `amount`.
-/// * If this function is called by an escrow account (`owner_id != predecessor_account_id`),
-///   then the allowance of the caller of the function (`predecessor_account_id`) on
-///   the account of `owner_id` should be greater or equal than the transfer `amount`.
-/// * Caller of the method has to attach deposit enough to cover storage difference at the
-///   fixed storage price defined in the contract.
-#[payable]
-pub fn transfer_from(&mut self, owner_id: AccountId, new_owner_id: AccountId, amount: U128);
+/****************************************/
+/* CHANGE METHODS on receiving contract */
+/****************************************/
 
-
-/// Transfer `amount` of tokens from the caller of the contract (`predecessor_id`) to
-/// `new_owner_id`.
-/// Act the same was as `transfer_from` with `owner_id` equal to the caller of the contract
-/// (`predecessor_id`).
-/// Requirements:
-/// * Caller of the method has to attach deposit enough to cover storage difference at the
-///   fixed storage price defined in the contract.
-#[payable]
-pub fn transfer(&mut self, new_owner_id: AccountId, amount: U128);
+// This function is implemented on the receving contract.
+// As mentioned, the `msg` argument contains information necessary for the receiving contract to know how to process the request. This may include method names and/or arguments. 
+// Returns a promise with a value. The value is the number of unused tokens. For instance, if `amount` is 10 but only 9 are needed, it will return 1.
+function ft_on_transfer(
+    sender_id: string,
+    amount: string,
+    msg: string
+): Promise
 
 /****************/
 /* VIEW METHODS */
 /****************/
 
-/// Returns total supply of tokens.
-pub fn get_total_supply(&self) -> U128;
+// Returns the total supply of fungible tokens as a string representing the value as an unsigned 128-bit integer.
+function ft_total_supply(): string
 
-/// Returns balance of the `owner_id` account.
-pub fn get_balance(&self, owner_id: AccountId) -> U128;
-
-/// Returns current allowance of `escrow_account_id` for the account of `owner_id`.
-///
-/// NOTE: Other contracts should not rely on this information, because by the moment a contract
-/// receives this information, the allowance may already be changed by the owner.
-/// So this method should only be used on the front-end to see the current allowance.
-pub fn get_allowance(&self, owner_id: AccountId, escrow_account_id: AccountId) -> U128;
+// Returns the balance of an account in string form representing a value as an unsigned 128-bit integer. If the account doesn't exist must returns `"0"`.
+function ft_balance_of(
+    account_id: string
+): string
 ```
 
 ## Drawbacks
 [drawbacks]: #drawbacks
 
-- Current interface doesn't have minting, precision (decimals), naming. But it should be done as extensions, e.g. a Precision extension.
-- It's not possible to exchange tokens without transferring them to escrow first.
-- It's not possible to transfer tokens to a contract with a single transaction without setting the allowance first.
-It should be possible if we introduce `transfer_with` function that transfers tokens and calls escrow contract. It needs to handle result of the execution and contracts have to be aware of this API.
-
+- The `msg` argument to `ft_transfer` and `ft_transfer_call` is freeform, which may necessitate conventions.
+- The paradigm of an escrow system may be familiar to developers and end users, and education on properly handling this in another contract may be needed.
 
 ## Future possibilities
 [future-possibilities]: #future-possibilities
 
 - Support for multiple token types
 - Minting and burning
-- Precision, naming and short token name.
