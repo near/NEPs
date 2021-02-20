@@ -47,4 +47,7 @@
     - [StateRecord](GenesisConfig/StateRecord.md)
 - [Economics](Economics/README.md)
 - [Standards](Standards/README.md)
-  - [Fungible Token](Standards/Tokens/FungibleToken.md)
+  - [Fungible Token](Standards/Tokens/README.md)  
+    - [Base Standard](Standards/Tokens/FungibleTokenBase.md)
+    - [Metadata](Standards/Tokens/FungibleTokenMetadata.md)
+  - [Storage](Standards/Storage.md)

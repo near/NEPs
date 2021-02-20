@@ -1,3 +1,6 @@
 ## Standards
 
-- [Fungible Token Standard](Tokens/FungibleToken.md)
+- [Storage Standard](Storage.md)
+- Fungible Token
+    - [Fungible Token Standard](Tokens/FungibleTokenBase.md)
+    - [Fungible Token Metadata Standard](Tokens/FungibleTokenMetadata.md)
