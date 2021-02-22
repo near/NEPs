@@ -9,7 +9,7 @@ This standard handles state storage when accounts add and remove data stored in 
 1. Check an account's storage "balance."
 2. Determine the minimum storage needed to add account information such that the account can interact as expected in a contract.
 3. Add storage for an account; either their own or another account.
-4. Withdraw storage by removing associated account data from the contract.
+4. Withdraw storage deposit by removing associated account data from the contract.
 
 ## Motivation
 
@@ -21,6 +21,7 @@ Prior art:
 ## Guide-level explanation
 
 We should be able to do the following:
+
 - Have an account sign a transaction, attaching a deposit of Ⓝ that will cover *their own* storage for a smart contract.
 - Have an account sign a transaction, attaching a deposit of Ⓝ that will cover the storage for another account to use a smart contract.
 - Allow an account to remove all their associated data stored on a contract and receive a refund for that storage in the form of Ⓝ.
@@ -42,47 +43,45 @@ Alice registers her account on a fungible token contract.
 
 **High-level explanation**
 
-Alice checks to make sure she does not have storage on the `mochi` contract.
-Alice determines how much storage is needed to register an account with the `mochi` contract.
-Alice issues a transaction to deposit Ⓝ for her account.
+1. Alice checks to make sure she does not have storage on the `mochi` contract.
+2. Alice determines how much storage is needed to register an account with the `mochi` contract.
+3. Alice issues a transaction to deposit Ⓝ for her account.
 
 **Technical calls**
 
 1. Alice calls a view-only method to determine if she already has storage on this contract with `mochi::storage_balance_of({"account_id": "alice"})`. Using [NEAR CLI](https://docs.near.org/docs/tools/near-cli) to make this view call, the command would be:
 
-   near view mochi storage_balance_of '{"account_id": "alice"}'
+       near view mochi storage_balance_of '{"account_id": "alice"}'
 
-The response:
-```bash
-View call: mochi.storage_balance_of({"account_id": "alice"})
-{ total: '0', available: '0' }
-```
+   The response:
+
+       View call: mochi.storage_balance_of({"account_id": "alice"})
+       { total: '0', available: '0' }
 
 2. Alice uses [NEAR CLI](https://docs.near.org/docs/tools/near-cli) to make a view call.
 
-    near view mochi storage_minimum_balance
+       near view mochi storage_minimum_balance
 
-The response:
-```bash
-'2350000000000000000000'
-```
+   The response:
 
-[2350000000000000000000 / 10^24](https://www.wolframalpha.com/input/?i=2350000000000000000000+%2F+10%5E24) (yocto) = 0.00235 Ⓝ
+       '2350000000000000000000'
 
-2. Alice deposits the proper amount in a transaction by calling `mochi::storage_deposit` with the attached deposit of '0.00235'.
+   [2350000000000000000000 / 10^24](https://www.wolframalpha.com/input/?i=2350000000000000000000+%2F+10%5E24) (yocto) = 0.00235 Ⓝ
 
-Using NEAR CLI this command would be:
+3. Alice deposits the proper amount in a transaction by calling `mochi::storage_deposit` with the attached deposit of '0.00235'.
 
-    near call mochi storage_deposit '' --accountId alice --amount 0.00235
+   Using NEAR CLI this command would be:
 
-The result:
+       near call mochi storage_deposit '' --accountId alice --amount 0.00235
 
-```bash
-{
-  total: '2350000000000000000000',
-  available: '2350000000000000000000'
-}
-```
+   The result:
+
+
+       {
+         total: '2350000000000000000000',
+         available: '2350000000000000000000'
+       }
+
 
 #### Account pays for another account's storage
 
