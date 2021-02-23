@@ -25,7 +25,7 @@ We should be able to do the following:
 
 - Have an account sign a transaction, attaching a deposit of Ⓝ that will cover *their own* storage for a smart contract.
 - Have an account sign a transaction, attaching a deposit of Ⓝ that will cover the storage for another account to use a smart contract.
-- Allow an account to remove all their associated data stored on a contract and receive a refund for that storage in the form of Ⓝ.
+- Allow an account to request refunds in Ⓝ for excess storage deposits on a given contract.
 - Use a view function call to determine how much Ⓝ should be attached as a deposit in order for an account to "pay their share" in storage. In some uses cases, this may be thought of as the cost for account registration.
 
 The necessary concepts and terminology is covered in the [documentation for storage staking](https://docs.near.org/docs/concepts/storage-staking).
