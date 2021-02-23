@@ -13,7 +13,7 @@ This standard handles state storage when accounts add and remove data stored in 
 
 ## Motivation
 
-NEAR uses storage staking (different than state rent) as the mechanism to pay for storage on the blockchain. When storage is removed, the staked Ⓝ is released. Developers must take this into consideration when crafting smart contracts that store data on-chain. If no restrictions are enforced in a permissionless system, any account may add key/value pairs that bloat the storage. Since the account containing the smart contract must keep enough Ⓝ to pay for the storage, developers must ensure the state storage is "paid for" and "refunded" as the storage changes. This standard provides a generic approach to handle these concerns.
+NEAR uses [storage staking](https://docs.near.org/docs/concepts/storage-staking) as the mechanism to pay for storage on the blockchain. When storage is removed, the staked Ⓝ is released. Developers must take this into consideration when crafting smart contracts that store data on-chain. If no restrictions are enforced in a permissionless system, any account may add key/value pairs that bloat another account's storage. Since an account containing a smart contract must keep enough Ⓝ to pay for the storage, developers must ensure the state storage is "paid for" as the storage increases, and can refund such storage deposits later if data is removed. This standard provides a generic approach to handle these concerns.
 
 Prior art:
 - A previous fungible token standard ([NEP-21](https://github.com/near/NEPs/pull/21)) highlighting how [storage was paid](https://github.com/near/near-sdk-rs/blob/1d3535bd131b68f97a216e643ad1cba19e16dddf/examples/fungible-token/src/lib.rs#L92-L113) for when increasing the allowance of an escrow system.
