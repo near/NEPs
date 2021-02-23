@@ -180,7 +180,7 @@ Alice and Bob decide to withdraw some unused storage deposit from the `mochi` co
 // * `storage_withdraw`
 // * `storage_balance_of`
 // The `total` and `available` values are string representations of unsigned 128-bit integers.
-class AccountStorageBalance {
+type AccountStorageBalance = {
    total: string;
    available: string;
 }
@@ -196,17 +196,17 @@ class AccountStorageBalance {
 // Returns the AccountStorageBalance structure
 function storage_deposit(
     account_id: string|null
-): string {}
+): AccountStorageBalance {}
 
 // Withdraws a specified amount of Ⓝ for a given account that was previously reserved for storage.
 // Requirements:
-// * `amount` must be less than or equal to the storage balance for the sending account.
+// * `amount` must be less than or equal to the available storage balance for the sending account.
 // * The account must already be registered with the contract
 // `amount`, as always, is sent as a string but represents an unsigned 128-bit integer.
 // Returns the AccountStorageBalance structure
 function storage_withdraw(
     amount: string
-): string {}
+): AccountStorageBalance {}
 
 /****************/
 /* VIEW METHODS */
@@ -217,7 +217,7 @@ function storage_minimum_balance(): string
 // Returns the AccountStorageBalance structure of the valid `account_id` provided.
 function storage_balance_of(
     account_id: string
-): string {}
+): AccountStorageBalance {}
 ```
 
 ## Drawbacks
