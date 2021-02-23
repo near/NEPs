@@ -71,7 +71,8 @@ Alice registers her account on a fungible token contract.
 
 3. Alice deposits the proper amount in a transaction by calling `mochi::storage_deposit` with the attached deposit of '0.00235'. Using NEAR CLI:
 
-       near call mochi storage_deposit '' --accountId alice --amount 0.00235
+       near call mochi storage_deposit '' \
+         --accountId alice --amount 0.00235
 
    The result:
 
@@ -99,7 +100,8 @@ Alice wishes to eventually send `MOCHI` tokens to Bob who is not registered. She
 
 1. Alice calls `mochi::storage_deposit({"account_id": "bob"})` with the attached deposit of '0.00235'. Using NEAR CLI the command would be:
 
-       near call mochi storage_deposit '{"account_id": "bob"}' --accountId alice --amount 0.00235
+       near call mochi storage_deposit '{"account_id": "bob"}' \
+         --accountId alice --amount 0.00235
 
     The result:
 
@@ -155,13 +157,17 @@ Alice and Bob decide to withdraw some unused storage deposit from the `mochi` co
 
 2. Alice calls `mochi::storage_withdraw({"amount": "2350000000000000000000"})` for her own account. NEAR CLI command:
 
-       near call mochi storage_withdraw '{"amount": "2350000000000000000000"}' --accountId alice
+       near call mochi storage_withdraw \
+         '{"amount": "2350000000000000000000"}' \
+         --accountId alice
 
 3. Alice realizes that `storage_withdraw` does not allow specifying the account to withdraw from. She has withdrawn all she can from her own account. When she re-checks `mochi::storage_balance_of({"account_id": "alice"})`, it indicates she has zero available balance. This is because storage withdrawal is only for the predecessor account that has signed the transaction. Alice cannot withdraw for Bob.
 
 4. Bob issues the same transaction as Alice did in step 2.
 
-       near call mochi storage_withdraw '{"amount": "2350000000000000000000"}' --accountId bob
+       near call mochi storage_withdraw \
+         '{"amount": "2350000000000000000000"}' \
+         --accountId bob
 
 ## Reference-level explanation
 
@@ -179,7 +185,8 @@ Alice and Bob decide to withdraw some unused storage deposit from the `mochi` co
 // * `storage_deposit`
 // * `storage_withdraw`
 // * `storage_balance_of`
-// The `total` and `available` values are string representations of unsigned 128-bit integers.
+// The `total` and `available` values are string representations of unsigned
+// 128-bit integers.
 type AccountStorageBalance = {
    total: string;
    available: string;
@@ -191,18 +198,22 @@ type AccountStorageBalance = {
 // Payable method that receives an attached deposit of Ⓝ for a given account.
 // Requirements:
 // * `account_id`, if provided, must be a valid account name.
-// * The account sending the transaction must have enough Ⓝ to cover the deposit.
-// If `account_id` is omitted, the sender's account will receive the attached deposit for storage.
+// * The account sending the transaction must have enough Ⓝ to cover the
+//   deposit.
+// If `account_id` is omitted, the sender's account will receive the attached
+// deposit for storage.
 // Returns the AccountStorageBalance structure
 function storage_deposit(
     account_id: string|null
 ): AccountStorageBalance {}
 
-// Withdraws a specified amount of Ⓝ for a given account that was previously reserved for storage.
+// Withdraws a specified amount of Ⓝ for a given account that was previously
+// reserved for storage.
 // Requirements:
-// * `amount` must be less than or equal to the available storage balance for the sending account.
-// * The account must already be registered with the contract
-// `amount`, as always, is sent as a string but represents an unsigned 128-bit integer.
+// * `amount` must be less than or equal to the available storage balance for
+//   the sending account. Is sent as a string but represents an unsigned
+//   128-bit integer.
+// * The calling account must already be registered with the contract
 // Returns the AccountStorageBalance structure
 function storage_withdraw(
     amount: string
@@ -211,10 +222,13 @@ function storage_withdraw(
 /****************/
 /* VIEW METHODS */
 /****************/
-// Returns the minimum storage needed for an account to interact as expected with the smart contract. It's a string representation of an unsigned 128-bit integer.
+// Returns the minimum storage needed for an account to interact as expected
+// with the smart contract. It's a string representation of an unsigned 128-bit
+// integer.
 function storage_minimum_balance(): string
 
-// Returns the AccountStorageBalance structure of the valid `account_id` provided.
+// Returns the AccountStorageBalance structure of the valid `account_id`
+// provided.
 function storage_balance_of(
     account_id: string
 ): AccountStorageBalance {}
