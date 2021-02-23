@@ -48,8 +48,7 @@ There are a few concepts in the scenarios above:
 
 Note, that the precision is not part of the default standard, since it's not required to perform actions. The minimum value is always 1 token.
 
-The standard acknowledges NEAR storage staking model and accounts for the difference in storage that can be introduced by actions on this contract. Since multiple users use the contract, the contract has to account for potential storage increase. Thus every change method of the contract that can change the amount of storage must be payable.
-See reference implementation for storage deposits and refunds.
+The standard acknowledges NEAR storage staking model and accounts for the difference in storage that can be introduced by actions on this contract. Since multiple users use the contract, the contract has to account for potential storage increase. See reference implementation for storage deposits and refunds.
 
 ### Example scenarios
 
