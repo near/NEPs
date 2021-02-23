@@ -164,7 +164,7 @@ class AccountStorageBalance {
 // Requirements:
 // * `account_id`, if provided, must be a valid account name.
 // * The account sending the transaction must have enough Ⓝ to cover the deposit.
-// If `account_id` is omitted, the sender's account will receive the attached deposit for storage. 
+// If `account_id` is omitted, the sender's account will receive the attached deposit for storage.
 // Returns the AccountStorageBalance structure
 function storage_deposit(
     account_id: string|null
@@ -172,7 +172,7 @@ function storage_deposit(
 
 // Withdraws a specified amount of Ⓝ for a given account that was previously reserved for storage.
 // Requirements:
-// * `amount` must be less than or equal to the storage balance for the sending account. 
+// * `amount` must be less than or equal to the storage balance for the sending account.
 // * The account must already be registered with the contract
 // `amount`, as always, is sent as a string but represents an unsigned 128-bit integer.
 // Returns the AccountStorageBalance structure
@@ -194,8 +194,8 @@ function storage_balance_of(
 
 ## Drawbacks
 
-- The idea may confuse contract developers at first until they understand how system with storage staking work.
-- Some folks in the community would rather see the storage deposit only done for the sender. That is, that no one else should be able to add storage for another user. This stance wasn't adopted in this standard, but others may have concerns in the future.
+- The idea may confuse contract developers at first until they understand how a system with storage staking works.
+- Some folks in the community would rather see the storage deposit only done for the sender. That is, that no one else should be able to add storage for another user. This stance wasn't adopted in this standard, but others may have similar concerns in the future.
 
 ## Future possibilities
 
