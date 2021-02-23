@@ -241,5 +241,6 @@ function storage_balance_of(
 
 ## Future possibilities
 
+- This standard avoids specifying how to close/unregister an account. A future version of this standard may enforce stronger requirements on such interactions.
 - Instead of having developers use constants for the storage price per byte, perhaps this can be derived and instructions can be modified in this standard regarding how to calculate the value returned for `storage_minimum_balance`.
 - Ideally, contracts will update available balance for all accounts every time the NEAR blockchain's configured storage-cost-per-byte is reduced. That they *must* do so is not enforced by this current standard.
