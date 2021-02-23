@@ -108,31 +108,58 @@ Alice wishes to eventually send `MOCHI` tokens to Bob who is not registered. She
          available: '0'
        }
 
-#### Account withdraws storage deposit
+#### Accounts withdraw excess storage deposit
 
-Alice and Bob decide to withdraw their storage deposit from the `mochi` contract.
+Alice and Bob decide to withdraw some unused storage deposit from the `mochi` contract.
 
 **Assumptions**
 
 - Alice's account is `alice`.
 - Bob's account is `bob`.
-- Alice and Bob's account balances are `0`.
+- Both Alice's and Bob's accounts have more deposited than they are using.
 
 **High-level explanation**
 
-1. Alice issues a transaction to withdraw her deposit.
-2. Alice wishes to withdraw the deposit from when she paid for Bob's account, but cannot.
-3. Bob issues a transaction to withdraw.
+1. Knowing that she registered Bob's account and believing that this entitles her to receive a refund for that deposit, Alice views her & Bob's storage balances and sees each have extra.
+2. Alice issues a transaction to withdraw her own excess deposit.
+3. Alice attempts to withdraw Bob's excess deposit, but cannot.
+4. Bob issues a transaction to withdraw his own excess deposit.
 
 **Technical calls**
 
-1. Alice calls `mochi::storage_withdraw({"amount": "2350000000000000000000"})`. NEAR CLI command:
+1. Alice queries `mochi::storage_balance_of({ "account_id": "alice" })` and `mochi::storage_balance_of({ "account_id": "alice" })`.
+
+   Checking her own account with NEAR CLI:
+
+       near view mochi storage_balance_of '{"account_id": "alice"}'
+
+   Response:
+
+       View call: mochi.storage_balance_of({"account_id": "alice"})
+       {
+         total: '7050000000000000000000',
+         available: '2350000000000000000000'
+       }
+
+   Checking Bob's account:
+
+       near view mochi storage_balance_of '{"account_id": "bob"}'
+
+   Response:
+
+       View call: mochi.storage_balance_of({"account_id": "bob"})
+       {
+         total: '4700000000000000000000',
+         available: '2350000000000000000000'
+       }
+
+2. Alice calls `mochi::storage_withdraw({"amount": "2350000000000000000000"})` for her own account. NEAR CLI command:
 
        near call mochi storage_withdraw '{"amount": "2350000000000000000000"}' --accountId alice
 
-2. She suddenly remembers she paid for Bob's account registration, and checks to see if she can withdraw that balance as well, calling `mochi::storage_balance_of({"account_id": "alice"})` which indicates she has zero balance. This is because storage withdrawal is only for the predecessor account that has signed the transaction. Alice cannot withdraw for Bob.
+3. Alice realizes that `storage_withdraw` does not allow specifying the account to withdraw from. She has withdrawn all she can from her own account. When she re-checks `mochi::storage_balance_of({"account_id": "alice"})`, it indicates she has zero available balance. This is because storage withdrawal is only for the predecessor account that has signed the transaction. Alice cannot withdraw for Bob.
 
-3. Bob issues the same transaction as Alice did in step 1.
+4. Bob issues the same transaction as Alice did in step 2.
 
        near call mochi storage_withdraw '{"amount": "2350000000000000000000"}' --accountId bob
 
