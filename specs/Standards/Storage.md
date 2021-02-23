@@ -77,7 +77,7 @@ Alice registers her account on a fungible token contract.
 
        {
          total: '2350000000000000000000',
-         available: '2350000000000000000000'
+         available: '0'
        }
 
 
@@ -105,7 +105,7 @@ Alice wishes to eventually send `MOCHI` tokens to Bob who is not registered. She
 
        {
          total: '2350000000000000000000',
-         available: '2350000000000000000000'
+         available: '0'
        }
 
 #### Account withdraws storage deposit
