@@ -91,7 +91,7 @@ Alice wants to deposit 1000 DAI tokens to a compound interest contract to earn e
 - The 1000 tokens is `1000 * 10^18` or as a number is `1000000000000000000000`.
 - The compound contract can work with multiple token types.
 
-<details style="background-color: #000; padding: 3px">
+<details style="background-color: #000; padding: 3px; color: #fff">
 <summary>For this example, you may expand this section to see how a previous fungible token standard using escrows would deal with the scenario.</summary>
 <hr/>
 
@@ -145,7 +145,7 @@ Charlie wants to exchange his wLTC to wBTC on decentralized exchange contract. A
 - Charlie has 1000000 wLTC tokens which is `1000000 * 10^8` or as a number is `100000000000000`
 - DEX contract already has an open order to sell 80 wBTC tokens by `alex` towards 9001 wLTC.
 
-<details style="background-color: #000; padding: 3px">
+<details style="background-color: #000; padding: 3px; color: #fff">
 <summary>For this example, you may expand this section to see how a previous fungible token standard using escrows would deal with the scenario.</summary>
 <hr/>
 
