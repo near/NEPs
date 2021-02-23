@@ -9,7 +9,7 @@ This standard handles state storage when accounts add and remove data stored in 
 1. Check an account's storage "balance."
 2. Determine the minimum storage needed to add account information such that the account can interact as expected in a contract.
 3. Add storage for an account; either their own or another account.
-4. Withdraw storage deposit by removing associated account data from the contract.
+4. Withdraw some or all of a storage deposit by removing associated account data from the contract and then making a call to remove unused deposit.
 
 ## Motivation
 
