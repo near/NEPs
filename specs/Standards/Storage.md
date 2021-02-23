@@ -49,7 +49,7 @@ Alice registers her account on a fungible token contract.
 
 **Technical calls**
 
-1. Alice calls a view-only method to determine if she already has storage on this contract with `mochi::storage_balance_of({"account_id": "alice"})`. Using [NEAR CLI](https://docs.near.org/docs/tools/near-cli) to make this view call, the command would be:
+1. Alice queries a view-only method to determine if she already has storage on this contract with `mochi::storage_balance_of({"account_id": "alice"})`. Using [NEAR CLI](https://docs.near.org/docs/tools/near-cli) to make this view call, the command would be:
 
        near view mochi storage_balance_of '{"account_id": "alice"}'
 
@@ -68,14 +68,11 @@ Alice registers her account on a fungible token contract.
 
    [2350000000000000000000 / 10^24](https://www.wolframalpha.com/input/?i=2350000000000000000000+%2F+10%5E24) (yocto) = 0.00235 Ⓝ
 
-3. Alice deposits the proper amount in a transaction by calling `mochi::storage_deposit` with the attached deposit of '0.00235'.
-
-   Using NEAR CLI this command would be:
+3. Alice deposits the proper amount in a transaction by calling `mochi::storage_deposit` with the attached deposit of '0.00235'. Using NEAR CLI:
 
        near call mochi storage_deposit '' --accountId alice --amount 0.00235
 
    The result:
-
 
        {
          total: '2350000000000000000000',
@@ -85,7 +82,7 @@ Alice registers her account on a fungible token contract.
 
 #### Account pays for another account's storage
 
-Alice wishes to eventually send `MOCHI` tokens to Bob who is not registered. She decides to pay for their storage.
+Alice wishes to eventually send `MOCHI` tokens to Bob who is not registered. She decides to pay for Bob's storage.
 
 **Assumptions**
 
@@ -95,21 +92,20 @@ Alice wishes to eventually send `MOCHI` tokens to Bob who is not registered. She
 
 **High-level explanation**
 
-Alice issues a transaction to deposit Ⓝ for Bob's account.
+1. Alice issues a transaction to deposit Ⓝ for Bob's account.
 
 **Technical calls**
 
 1. Alice calls `mochi::storage_deposit({"account_id": "bob"})` with the attached deposit of '0.00235'. Using NEAR CLI the command would be:
 
-   near call mochi storage_deposit '{"account_id": "bob"}' --accountId alice --amount 0.00235
+       near call mochi storage_deposit '{"account_id": "bob"}' --accountId alice --amount 0.00235
 
-The result:
-```bash
-{
-  total: '2350000000000000000000',
-  available: '2350000000000000000000'
-}
-```
+    The result:
+
+       {
+         total: '2350000000000000000000',
+         available: '2350000000000000000000'
+       }
 
 #### Account withdraws storage deposit
 
@@ -123,33 +119,34 @@ Alice and Bob decide to withdraw their storage deposit from the `mochi` contract
 
 **High-level explanation**
 
-Alice issues a transaction to withdraw her deposit.
-Alice wishes to withdraw the deposit from when she paid for Bob's account, but cannot.
-Bob issues a transaction to withdraw.
+1. Alice issues a transaction to withdraw her deposit.
+2. Alice wishes to withdraw the deposit from when she paid for Bob's account, but cannot.
+3. Bob issues a transaction to withdraw.
 
 **Technical calls**
 
 1. Alice calls `mochi::storage_withdraw({"amount": "2350000000000000000000"})`. NEAR CLI command:
-   
-   near call mochi storage_withdraw '{"amount": "2350000000000000000000"}' --accountId alice
+
+       near call mochi storage_withdraw '{"amount": "2350000000000000000000"}' --accountId alice
 
 2. She suddenly remembers she paid for Bob's account registration, and checks to see if she can withdraw that balance as well, calling `mochi::storage_balance_of({"account_id": "alice"})` which indicates she has zero balance. This is because storage withdrawal is only for the predecessor account that has signed the transaction. Alice cannot withdraw for Bob.
 
 3. Bob issues the same transaction as Alice did in step 1.
 
-    near call mochi storage_withdraw '{"amount": "2350000000000000000000"}' --accountId bob
+       near call mochi storage_withdraw '{"amount": "2350000000000000000000"}' --accountId bob
 
 ## Reference-level explanation
 
 **NOTES**:
-- All amounts, balances and allowance are limited by `U128` (max value `2**128 - 1`).
+
+- All amounts, balances and allowance are limited by `U128` (max value 2<sup>128</sup> - 1).
 - This storage standard uses JSON for serialization of arguments and results.
-- Amounts in arguments and results have are serialized as Base-10 strings, e.g. `"100"`. This is done to avoid JSON limitation of max integer value of `2**53`.
+- Amounts in arguments and results are serialized as Base-10 strings, e.g. `"100"`. This is done to avoid JSON limitation of max integer value of 2<sup>53</sup>.
 - To prevent the deployed contract from being modified or deleted, it should not have any access keys on its account.
 
 **Interface**:
 
-```javascript
+```ts
 // The below defines the structure that will be returned for the methods:
 // * `storage_deposit`
 // * `storage_withdraw`
