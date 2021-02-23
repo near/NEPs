@@ -118,7 +118,7 @@ The second transaction is to the `compound` to start the deposit process. Compou
 
 1. `alice` calls `dai::ft_transfer_call({"receiver_id": "dai", "amount": "1000000000000000000000", "msg": "invest"})`. During the `ft_transfer_call` call, `dai` does the following:
    1. makes async call `compound::ft_on_transfer({"sender_id": "alice", "amount": "1000000000000000000000", "msg": "invest"})`.
-   2. attaches a callback `dai::ft_resolve_transfer({"sender_id": "alice", "amount": "1000000000000000000000"})`.
+   2. attaches a callback `dai::ft_resolve_transfer({"sender_id": "alice", "receiver_id": "dai", "amount": "1000000000000000000000"})`.
    3. compound finishes investing, using all attached fungible tokens `compound::invest({…})` then returns the value of the tokens that weren't used or needed. In this case, Alice asked for the tokens to be invested, so it will return 0. (In some cases a method may not need to use all the fungible tokens, and would return the remainder.)
    4. the `dai::ft_resolve_transfer` function receives success/failure of the promise. If success, it will contain the unused tokens. Then the `dai` contract uses simple arithmetic (not needed in this case) and updates the balance for Alice.
 
@@ -197,13 +197,13 @@ When called, DEX makes 2 async transfers calls to exchange corresponding tokens.
 
 1. `alex` calls `wbtc::ft_transfer_call({"receiver_id": "dex", "amount": "8000000000", "msg": "deposit"})`.
    1. makes async call `dex::ft_on_transfer({"sender_id": "alex", "amount": "8000000000", "msg": "deposit"})`.
-   2. attaches a callback `wbtc::ft_resolve_transfer({"sender_id": "alex", "amount": "8000000000"})`.
+   2. attaches a callback `wbtc::ft_resolve_transfer({"sender_id": "alex", "receiver_id": "dex", "amount": "8000000000"})`.
    3. the deposit completes on `dex`, all fungible tokens are used, so it returns `0` as the number of unused tokens back to `wbtc`.
    4. the `wbtc::ft_resolve_transfer` function receives success as the execution outcome and `0` as the value. This means 8000000000 will be subtracted from `alex`'s balance.
 2. `alex` calls `dex::trade({"have": "wbtc", "have_amount": "8000000000", "want": "wltc", "want_amount": "900100000000"})`.
 3. `charlie` calls `wltc::ft_transfer_call({"receiver_id": "dex", "amount": "100000000000000", "msg": "deposit"})`.
    1. makes async call `dex::ft_on_transfer({"sender_id": "charlie", "amount": "100000000000000", "msg": "deposit"})`.
-   2. attaches a callback `wltc::ft_resolve_transfer({"sender_id": "charlie", "amount": "100000000000000"})`.
+   2. attaches a callback `wltc::ft_resolve_transfer({"sender_id": "charlie", "receiver_id": "dex", "amount": "100000000000000"})`.
    3. the deposit completes on `dex`, all fungible tokens are used, so it returns `0` as the number of unused tokens back to `wltc`.
    4. the `wltc::ft_resolve_transfer` function receives success as the execution outcome and `0` as the value. This means 100000000000000 will be subtracted from `alex`'s balance.   
 4. `charlie` calls `dex::trade({"have": "wltc", "have_amount": "900100000000", "want": "wbtc", "want_amount": "8000000000"})`.
