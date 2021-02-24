@@ -12,20 +12,21 @@ NEAR Protocol uses an asynchronous, sharded runtime. This means the following:
  - Storage for different contracts and accounts can be located on the different shards.
  - Two contracts can be executed at the same time in different shards.
 
-While this increases the transaction throughput linearly with the number of shards, it also creates some challenges for cross-contract development.
-For example, if one contract wants to query some information from the state of another contract (e.g. current balance), by the time the first contract receive the balance the real balance can change.
-It means in the async system, a contract can't rely on the state of another contract and assume it's not going to change.
+While this increases the transaction throughput linearly with the number of shards, it also creates some challenges for cross-contract development. For example, if one contract wants to query some information from the state of another contract (e.g. current balance), by the time the first contract receives the balance the real balance can change. In such an async system, a contract can't rely on the state of another contract and assume it's not going to change.
 
-Instead the contract can rely on temporary partial lock of the state with a callback to act or unlock, but it requires careful engineering to avoid deadlocks.
-In this standard we're trying to avoid enforcing locks. A typical approach to this problem is to include an escrow system with allowances. This approach was initially developed for [NEP-21](https://github.com/near/NEPs/pull/21) which is similar to the Ethereum ERC-20 standard. There are a few issues with using an escrow as the only avenue to pay for a service with a fungible token. This frequently requires more than one transaction for common scenarios where fungible tokens are given as payment with the expectation that a method will subsequently be called.
+Instead the contract can rely on temporary partial lock of the state with a callback to act or unlock, but it requires careful engineering to avoid deadlocks. In this standard we're trying to avoid enforcing locks. A typical approach to this problem is to include an escrow system with allowances. This approach was initially developed for [NEP-21](https://github.com/near/NEPs/pull/21) which is similar to the Ethereum ERC-20 standard. There are a few issues with using an escrow as the only avenue to pay for a service with a fungible token. This frequently requires more than one transaction for common scenarios where fungible tokens are given as payment with the expectation that a method will subsequently be called.
+
 For example, an oracle contract might be paid in fungible tokens. A client contract that wishes to use the oracle must either increase the escrow allowance before each request to the oracle contract, or allocate a large allowance that covers multiple calls. Both have drawbacks and ultimately it would be ideal to be able to send fungible tokens and call a method in a single transaction. This concern is addressed in the `ft_transfer_call` method. The power of this comes from the receiver contract working in concert with the fungible token contract in a secure way. That is, if the receiver contract abides by the standard, a single transaction may transfer and call a method.
+
 Note: there is no reason why an escrow system cannot be included in a fungible token's implementation, but it is simply not necessary in the core standard. Escrow logic should be moved to a separate contract to handle that functionality. One reason for this is because the [Rainbow Bridge](https://near.org/blog/eth-near-rainbow-bridge/) will be transferring fungible tokens from Ethereum to NEAR, where the token locker (a factory) will be using the fungible token core standard.
 
 Prior art:
+
 - [ERC-20 standard](https://eips.ethereum.org/EIPS/eip-20)
 - NEP#4 NEAR NFT standard: [near/neps#4](https://github.com/near/neps/pull/4)
 
 Learn about NEP-141:
+
 - [Figment Learning Pathway](https://learn.figment.io/network-documentation/near/tutorials/1-project_overview/2-fungible-token)
 
 ## Guide-level explanation
@@ -46,9 +47,9 @@ There are a few concepts in the scenarios above:
 - **Transfer and call**: an action that moves some amount from one account to a contract account where the receiver calls a method.
 - **Storage amount**: the amount of storage used for an account to be "registered" in the fungible token. This amount is denominated in Ⓝ, not bytes, and represents the [storage staked](https://docs.near.org/docs/concepts/storage-staking).
 
-Note, that the precision is not part of the default standard, since it's not required to perform actions. The minimum value is always 1 token.
+Note that precision (the number of decimal places supported by a given token) is not part of this core standard, since it's not required to perform actions. The minimum value is always 1 token. See the [Fungible Token Metadata Standard](FungibleTokenMetadata.md) to learn how to support precision/decimals in a standardized way.
 
-The standard acknowledges NEAR storage staking model and accounts for the difference in storage that can be introduced by actions on this contract. Since multiple users use the contract, the contract has to account for potential storage increase. See reference implementation for storage deposits and refunds.
+Given that multiple users will use a Fungible Token contract and the their activity will result in an increased [storage staking](https://docs.near.org/docs/concepts/storage-staking) burden for the contract's account, this standard is designed to interoperate nicely with [the Account Storage standard](../Storage.md) for storage deposits and refunds.
 
 ### Example scenarios
 
@@ -109,16 +110,11 @@ The second transaction is to the `compound` to start the deposit process. Compou
 
 Alice needs to issue 1 transaction, as opposed to 2 with a typical escrow workflow.
 
-Alice needs to issue 1 transaction. The first one to `dai` to set an allowance for `compound` to be able to withdraw tokens from `alice`.
-The second transaction is to the `compound` to start the deposit process. Compound will check that the DAI tokens are supported and will try to withdraw the desired amount of DAI from `alice`.
-- If transfer succeeded, `compound` can increase local ownership for `alice` to 1000 DAI
-- If transfer fails, `compound` doesn't need to do anything in current example, but maybe can notify `alice` of unsuccessful transfer.
-
 **Technical calls**
 
-1. `alice` calls `dai::ft_transfer_call({"receiver_id": "dai", "amount": "1000000000000000000000", "msg": "invest"})`. During the `ft_transfer_call` call, `dai` does the following:
+1. `alice` calls `dai::ft_transfer_call({"receiver_id": "compound", "amount": "1000000000000000000000", "msg": "invest"})`. During the `ft_transfer_call` call, `dai` does the following:
    1. makes async call `compound::ft_on_transfer({"sender_id": "alice", "amount": "1000000000000000000000", "msg": "invest"})`.
-   2. attaches a callback `dai::ft_resolve_transfer({"sender_id": "alice", "receiver_id": "dai", "amount": "1000000000000000000000"})`.
+   2. attaches a callback `dai::ft_resolve_transfer({"sender_id": "alice", "receiver_id": "compound", "amount": "1000000000000000000000"})`.
    3. compound finishes investing, using all attached fungible tokens `compound::invest({…})` then returns the value of the tokens that weren't used or needed. In this case, Alice asked for the tokens to be invested, so it will return 0. (In some cases a method may not need to use all the fungible tokens, and would return the remainder.)
    4. the `dai::ft_resolve_transfer` function receives success/failure of the promise. If success, it will contain the unused tokens. Then the `dai` contract uses simple arithmetic (not needed in this case) and updates the balance for Alice.
 
@@ -134,7 +130,7 @@ Charlie wants to exchange his wLTC to wBTC on decentralized exchange contract. A
 - Charlie's account is `charlie`.
 - Alex's account is `alex`.
 - The precision ("decimals" in the metadata standard) on both tokens contract is `10^8`.
-- The amount of 9001 wLTC tokens is Alex wants is `9001 * 10^8` or as a number is `900100000000`.
+- The amount of wLTC tokens Alex wants is 9001. `9001 * 10^8` as a number is `900100000000`.
 - The 80 wBTC tokens is `80 * 10^8` or as a number is `8000000000`.
 - Charlie has 1000000 wLTC tokens which is `1000000 * 10^8` or as a number is `100000000000000`
 - DEX contract already has an open order to sell 80 wBTC tokens by `alex` towards 9001 wLTC.

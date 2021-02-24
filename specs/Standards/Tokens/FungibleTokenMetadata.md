@@ -52,7 +52,7 @@ A fungible token contract implementing the metadata standard shall contain a fie
 **Interface**:
 
 ```ts
-type FungibleTokenMetadata {
+type FungibleTokenMetadata = {
     version: string;
     name: string;
     symbol: string;
