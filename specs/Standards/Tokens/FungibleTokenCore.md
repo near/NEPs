@@ -263,12 +263,14 @@ function ft_resolve_transfer(
 
 // This function is implemented on the receving contract.
 // As mentioned, the `msg` argument contains information necessary for the receiving contract to know how to process the request. This may include method names and/or arguments. 
-// Returns a promise with a value. The value is the number of unused tokens. For instance, if `amount` is 10 but only 9 are needed, it will return 1.
+// Returns a value, or a promise which resolves with a value. The value is the
+// number of unused tokens. For instance, if `amount` is 10 but only 9 are
+// needed, it will return 1.
 function ft_on_transfer(
     sender_id: string,
     amount: string,
     msg: string
-): Promise {}
+): PromiseOrValue<U128> {}
 
 /****************/
 /* VIEW METHODS */
