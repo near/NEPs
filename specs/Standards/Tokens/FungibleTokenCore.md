@@ -171,20 +171,20 @@ Altogether then, Alice may take two steps, though the first may be a background 
 
 #### Multi-token swap on DEX
 
-Charlie wants to exchange his wLTC to wBTC on decentralized exchange contract. Alex wants to buy wLTC and has 80 wBTC.
+Alice wants to exchange her wLTC to wBTC on decentralized exchange contract. Bob wants to buy wLTC and has 80 wBTC.
 
 **Assumptions**
 
 - The wLTC token contract is `wltc`.
 - The wBTC token contract is `wbtc`.
 - The DEX contract is `dex`.
-- Charlie's account is `charlie`.
-- Alex's account is `alex`.
+- Alice's account is `alice`.
+- Bob's account is `bob`.
 - The precision ("decimals" in the metadata standard) on both tokens contract is `10^8`.
-- The amount of wLTC tokens Alex wants is 9001. `9001 * 10^8` as a number is `900100000000`.
+- The amount of wLTC tokens Bob wants is 9001. `9001 * 10^8` as a number is `900100000000`.
 - The 80 wBTC tokens is `80 * 10^8` or as a number is `8000000000`.
-- Charlie has 1000000 wLTC tokens which is `1000000 * 10^8` or as a number is `100000000000000`
-- DEX contract already has an open order to sell 80 wBTC tokens by `alex` towards 9001 wLTC.
+- Alice has 1000000 wLTC tokens which is `1000000 * 10^8` or as a number is `100000000000000`
+- DEX contract already has an open order to sell 80 wBTC tokens by `bob` towards 9001 wLTC.
 
 <details style="background-color: #000; padding: 3px; color: #fff">
 <summary>For this example, you may expand this section to see how a previous fungible token standard using escrows would deal with the scenario.</summary>
@@ -192,70 +192,70 @@ Charlie wants to exchange his wLTC to wBTC on decentralized exchange contract. A
 
 **High-level explanation** (NEP-21 standard)
 
-Let's first setup open order by Alex on DEX. It's similar to `Token deposit to a contract` example above.
-- Alex sets an allowance on wBTC to DEX
-- Alex calls deposit on Dex for wBTC.
-- Alex calls DEX to make an new sell order.
+Let's first setup open order by Bob on DEX. It's similar to `Token deposit to a contract` example above.
+- Bob sets an allowance on wBTC to DEX
+- Bob calls deposit on Dex for wBTC.
+- Bob calls DEX to make an new sell order.
 
-Then Charlie comes and decides to fulfill the order by selling his wLTC to Alex on DEX.
-Charlie calls the DEX
-- Charlie sets the allowance on wLTC to DEX
-- Alex calls deposit on Dex for wLTC.
-- Then calls DEX to take the order from Alex.
+Then Alice comes and decides to fulfill the order by selling his wLTC to Bob on DEX.
+Alice calls the DEX
+- Alice sets the allowance on wLTC to DEX
+- Bob calls deposit on Dex for wLTC.
+- Then calls DEX to take the order from Bob.
 
 When called, DEX makes 2 async transfers calls to exchange corresponding tokens.
-- DEX calls wLTC to transfer tokens DEX to Alex.
-- DEX calls wBTC to transfer tokens DEX to Charlie.
+- DEX calls wLTC to transfer tokens DEX to Bob.
+- DEX calls wBTC to transfer tokens DEX to Alice.
 
 **Technical calls** (NEP-21 standard)
 
-1. `alex` calls `wbtc::set_allowance({"escrow_account_id": "dex", "allowance": "8000000000"})`.
-2. `alex` calls `dex::deposit({"token": "wbtc", "amount": "8000000000"})`.
-   1. `dex` calls `wbtc::transfer_from({"owner_id": "alex", "new_owner_id": "dex", "amount": "8000000000"})`
-3. `alex` calls `dex::trade({"have": "wbtc", "have_amount": "8000000000", "want": "wltc", "want_amount": "900100000000"})`.
-4. `charlie` calls `wltc::set_allowance({"escrow_account_id": "dex", "allowance": "100000000000000"})`.
-5. `charlie` calls `dex::deposit({"token": "wltc", "amount": "100000000000000"})`.
-   1. `dex` calls `wltc::transfer_from({"owner_id": "charlie", "new_owner_id": "dex", "amount": "100000000000000"})`
-6. `charlie` calls `dex::trade({"have": "wltc", "have_amount": "900100000000", "want": "wbtc", "want_amount": "8000000000"})`.
-   - `dex` calls `wbtc::transfer({"new_owner_id": "charlie", "amount": "8000000000"})`
-   - `dex` calls `wltc::transfer({"new_owner_id": "alex", "amount": "900100000000"})`
+1. `bob` calls `wbtc::set_allowance({"escrow_account_id": "dex", "allowance": "8000000000"})`.
+2. `bob` calls `dex::deposit({"token": "wbtc", "amount": "8000000000"})`.
+   1. `dex` calls `wbtc::transfer_from({"owner_id": "bob", "new_owner_id": "dex", "amount": "8000000000"})`
+3. `bob` calls `dex::trade({"have": "wbtc", "have_amount": "8000000000", "want": "wltc", "want_amount": "900100000000"})`.
+4. `alice` calls `wltc::set_allowance({"escrow_account_id": "dex", "allowance": "100000000000000"})`.
+5. `alice` calls `dex::deposit({"token": "wltc", "amount": "100000000000000"})`.
+   1. `dex` calls `wltc::transfer_from({"owner_id": "alice", "new_owner_id": "dex", "amount": "100000000000000"})`
+6. `alice` calls `dex::trade({"have": "wltc", "have_amount": "900100000000", "want": "wbtc", "want_amount": "8000000000"})`.
+   - `dex` calls `wbtc::transfer({"new_owner_id": "alice", "amount": "8000000000"})`
+   - `dex` calls `wltc::transfer({"new_owner_id": "bob", "amount": "900100000000"})`
 
 <hr/>
 </details>
 
 **High-level explanation**
 
-Let's first set up an open order by Alex on the DEX. It's similar to `Token deposit to a contract` example above.
-- Alex sets an allowance on wBTC to DEX
-- Alex calls deposit on Dex for wBTC.
-- Alex calls DEX to make an new sell order.
+Let's first set up an open order by Bob on the DEX. It's similar to `Token deposit to a contract` example above.
+- Bob sets an allowance on wBTC to DEX
+- Bob calls deposit on Dex for wBTC.
+- Bob calls DEX to make an new sell order.
 
-Then Charlie comes and decides to fulfill the order by selling his wLTC to Alex on DEX.
-Charlie calls the DEX
-- Charlie sets the allowance on wLTC to DEX
-- Alex calls deposit on Dex for wLTC.
-- Then calls DEX to take the order from Alex.
+Then Alice comes and decides to fulfill the order by selling his wLTC to Bob on DEX.
+Alice calls the DEX
+- Alice sets the allowance on wLTC to DEX
+- Bob calls deposit on Dex for wLTC.
+- Then calls DEX to take the order from Bob.
 
 When called, DEX makes 2 async transfers calls to exchange corresponding tokens.
-- DEX calls wLTC to transfer tokens DEX to Alex.
-- DEX calls wBTC to transfer tokens DEX to Charlie.
+- DEX calls wLTC to transfer tokens DEX to Bob.
+- DEX calls wBTC to transfer tokens DEX to Alice.
 
 **Technical calls**
 
-1. `alex` calls `wbtc::ft_transfer_call({"receiver_id": "dex", "amount": "8000000000", "msg": "deposit"})`.
-   1. makes async call `dex::ft_on_transfer({"sender_id": "alex", "amount": "8000000000", "msg": "deposit"})`.
-   2. attaches a callback `wbtc::ft_resolve_transfer({"sender_id": "alex", "receiver_id": "dex", "amount": "8000000000"})`.
+1. `bob` calls `wbtc::ft_transfer_call({"receiver_id": "dex", "amount": "8000000000", "msg": "deposit"})`.
+   1. makes async call `dex::ft_on_transfer({"sender_id": "bob", "amount": "8000000000", "msg": "deposit"})`.
+   2. attaches a callback `wbtc::ft_resolve_transfer({"sender_id": "bob", "receiver_id": "dex", "amount": "8000000000"})`.
    3. the deposit completes on `dex`, all fungible tokens are used, so it returns `0` as the number of unused tokens back to `wbtc`.
-   4. the `wbtc::ft_resolve_transfer` function receives success as the execution outcome and `0` as the value. This means 8000000000 will be subtracted from `alex`'s balance.
-2. `alex` calls `dex::trade({"have": "wbtc", "have_amount": "8000000000", "want": "wltc", "want_amount": "900100000000"})`.
-3. `charlie` calls `wltc::ft_transfer_call({"receiver_id": "dex", "amount": "100000000000000", "msg": "deposit"})`.
-   1. makes async call `dex::ft_on_transfer({"sender_id": "charlie", "amount": "100000000000000", "msg": "deposit"})`.
-   2. attaches a callback `wltc::ft_resolve_transfer({"sender_id": "charlie", "receiver_id": "dex", "amount": "100000000000000"})`.
+   4. the `wbtc::ft_resolve_transfer` function receives success as the execution outcome and `0` as the value. This means 8000000000 will be subtracted from `bob`'s balance.
+2. `bob` calls `dex::trade({"have": "wbtc", "have_amount": "8000000000", "want": "wltc", "want_amount": "900100000000"})`.
+3. `alice` calls `wltc::ft_transfer_call({"receiver_id": "dex", "amount": "100000000000000", "msg": "deposit"})`.
+   1. makes async call `dex::ft_on_transfer({"sender_id": "alice", "amount": "100000000000000", "msg": "deposit"})`.
+   2. attaches a callback `wltc::ft_resolve_transfer({"sender_id": "alice", "receiver_id": "dex", "amount": "100000000000000"})`.
    3. the deposit completes on `dex`, all fungible tokens are used, so it returns `0` as the number of unused tokens back to `wltc`.
-   4. the `wltc::ft_resolve_transfer` function receives success as the execution outcome and `0` as the value. This means 100000000000000 will be subtracted from `alex`'s balance.   
-4. `charlie` calls `dex::trade({"have": "wltc", "have_amount": "900100000000", "want": "wbtc", "want_amount": "8000000000"})`.
-   - `dex` calls `wbtc::transfer({"new_owner_id": "charlie", "amount": "8000000000"})`
-   - `dex` calls `wltc::transfer({"new_owner_id": "alex", "amount": "900100000000"})`
+   4. the `wltc::ft_resolve_transfer` function receives success as the execution outcome and `0` as the value. This means 100000000000000 will be subtracted from `bob`'s balance.   
+4. `alice` calls `dex::trade({"have": "wltc", "have_amount": "900100000000", "want": "wbtc", "want_amount": "8000000000"})`.
+   - `dex` calls `wbtc::transfer({"new_owner_id": "alice", "amount": "8000000000"})`
+   - `dex` calls `wltc::transfer({"new_owner_id": "bob", "amount": "900100000000"})`
 
 ## Reference-level explanation
 
