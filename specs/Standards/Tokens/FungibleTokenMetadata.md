@@ -11,7 +11,7 @@ An interface for a fungible token's metadata. The goal is to keep the metadata f
 
 Custom fungible tokens play a major role in decentralized applications today. FTs can contain custom properties to differentiate themselves from other tokens or contracts in the ecosystem. Some properties, such as a token's description, are best stored off-chain or in a decentralized storage platform, in order to save on storage costs. Other properties, however, are more fundamental to a token's identity and arguably belong on-chain, like the token's name and symbol.
 
-As blockchain technology advances, it becomes increasingly important to provide backwards compatibility and a concept of a version. This standard encompasses all the concerns mentioned. Extra properties not included here likely belong in the `reference` object.
+As blockchain technology advances, it becomes increasingly important to provide backwards compatibility and a concept of a spec. This standard encompasses all the concerns mentioned. Extra properties not included here likely belong in the `reference` object.
 
 Prior art:
 - [EIP-1046](https://eips.ethereum.org/EIPS/eip-1046)
@@ -39,11 +39,11 @@ Alice issues a transaction to deploy and initialize the fungible token contract,
 
 **Technical calls**
 
-1. `alice` deploys a contract and calls `wbtc::new({"owner_id": "wbtc", "total_supply": "100000000000000", "version": "w-0.1.0", "name": "Wrapped Bitcoin", "symbol": "WBTC", "reference": "https://example.com/wbtc.json", "reference_hash": "7c879fa7b49901d0ecc6ff5d64d7f673da5e4a5eb52a8d50a214175760d8919a", "decimals": 8})`.
+1. `alice` deploys a contract and calls `wbtc::new({"owner_id": "wbtc", "total_supply": "100000000000000", "spec": "ft-1.0.0", "name": "Wrapped Bitcoin", "symbol": "WBTC", "reference": "https://example.com/wbtc.json", "reference_hash": "7c879fa7b49901d0ecc6ff5d64d7f673da5e4a5eb52a8d50a214175760d8919a", "decimals": 8})`.
 
 If this deploy and initialization were done using [NEAR CLI](https://docs.near.org/docs/tools/near-cli) the command would be:
 
-    near deploy wbtc --wasmFile res/ft.wasm --initFunction new --initArgs '{"owner_id": "wbtc", "total_supply": "100000000000000", "version": "w-0.1.0", "name": "Wrapped Bitcoin", "symbol": "WBTC", "reference": "https://example.com/wbtc.json", "reference_hash": "7c879fa7b49901d0ecc6ff5d64d7f673da5e4a5eb52a8d50a214175760d8919a", "decimals": 8}'
+    near deploy wbtc --wasmFile res/ft.wasm --initFunction new --initArgs '{"owner_id": "wbtc", "total_supply": "100000000000000", "spec": "ft-1.0.0", "name": "Wrapped Bitcoin", "symbol": "WBTC", "reference": "https://example.com/wbtc.json", "reference_hash": "7c879fa7b49901d0ecc6ff5d64d7f673da5e4a5eb52a8d50a214175760d8919a", "decimals": 8}'
 
 ## Reference-level explanation
 
@@ -53,7 +53,7 @@ A fungible token contract implementing the metadata standard shall contain a fie
 
 ```ts
 type FungibleTokenMetadata = {
-    version: string;
+    spec: string;
     name: string;
     symbol: string;
     reference: string;
@@ -64,7 +64,7 @@ type FungibleTokenMetadata = {
 
 **Fields**:
 
-- `version` is a string and is open for interpretation. That is to say, conventions will likely arise but are not enforced. It's not necessarily using semantic versioning. There may, for instance, be a benefit in having a version prefix/suffix specificially for wrapped or bridged tokens.
+- `spec` is a string and should be `ft-1.0.0` to indicate that a Fungible Token contract adheres to the current versions of this Metadata and Core spec. This will allow consumers of the Fungible Token to know if they support the features of a given contract.
 - `name` is the human-readable name of the token.
 - `symbol` is the abbreviation, like wETH or AMPL.
 - `reference` is a link to a valid JSON file containing various keys offering supplementary details on the token. (For example: "/ipfs/QmdmQXB2mzChmMeKY47C43LxUdg1NDJ5MWcKMKxDu7RgQm", "https://example.com/token.json", etc.)

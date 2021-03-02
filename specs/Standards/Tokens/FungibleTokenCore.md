@@ -137,7 +137,7 @@ Alice needs to issue one transaction to wNEAR contract to transfer 5 tokens (mul
 
 Alice will probably make this call via a UI that knows how to construct `msg` in a way the `amm` contract will understand. However, it's possible that the `amm` contract itself may provide view functions which take desired action, destination token, & slippage as input and return data ready to pass to `msg` for `ft_transfer_call`. For the sake of this example, let's say `amm` implements a view function called `ft_data_to_msg`.
 
-Alice needs to attach one yoctoNEAR. This will result in her seeing a confirmation page in her preferred NEAR wallet. NEAR wallet implementations will attempt to provide useful information in this confirmation page, so receiver contracts should follow a strong convention in how they format `msg`. As a starting point, we recommend base64-encoded JSON, though contract developers may settle on a different convention in the future. We will update this documentation with a new recommendation, if community consenses changes.
+Alice needs to attach one yoctoNEAR. This will result in her seeing a confirmation page in her preferred NEAR wallet. NEAR wallet implementations will (eventually) attempt to provide useful information in this confirmation page, so receiver contracts should follow a strong convention in how they format `msg`. As a starting point, we recommend base64-encoded JSON, though contract developers may settle on a different convention in the future. We will update this documentation with a new recommendation, if community consenses changes.
 
 Altogether then, Alice may take two steps, though the first may be a background detail of the app she uses.
 
