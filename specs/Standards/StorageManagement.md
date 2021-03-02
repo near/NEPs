@@ -1,4 +1,4 @@
-# Account Storage ([NEP-145](https://github.com/near/NEPs/discussions/145))
+# Storage Management ([NEP-145](https://github.com/near/NEPs/discussions/145))
 
 Version `1.0.0`
 
