@@ -286,12 +286,14 @@ function ft_transfer(
 ): void {}
 
 // Transfer tokens and call a method on a receiver contract. A successful workflow will end in a success execution outcome to the callback on the same contract at the method `ft_resolve_transfer`.
+//
+// You can think of this as being similar to attaching native NEAR tokens to a function call on some contract. It allows you to attach any Fungible Token in a call to a receiver contract, given by `receiver_id`, where `msg` gets passed to the receiver contract to indicate both a function to call and the parameters to that function.
 // Requirements:
 // * Caller of the method must attach a deposit of 1 yoctoⓃ for security purposes
 // * Caller must have greater than or equal to the `amount` being requested
 // * The receiving contract must implement `ft_on_transfer` according to the standard.
 // * This contract must implement `ft_resolve_transfer` according to the standard.
-// `msg` is an argument that may specify any information expected by the receiving contract in order to properly handle the function. It may provide details on which method to call on the receiving contract, extra parameters, etc.
+// `msg` is an argument that may specify any information expected by the receiving contract in order to properly handle the function. If the receiving contract needs something larger than a single string, `msg` could be a complex JSON structure, base64-encoded.
 function ft_transfer_call(
    receiver_id: string,
    amount: string,
