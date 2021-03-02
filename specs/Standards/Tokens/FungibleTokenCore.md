@@ -118,6 +118,57 @@ Alice needs to issue 1 transaction, as opposed to 2 with a typical escrow workfl
    3. compound finishes investing, using all attached fungible tokens `compound::invest({…})` then returns the value of the tokens that weren't used or needed. In this case, Alice asked for the tokens to be invested, so it will return 0. (In some cases a method may not need to use all the fungible tokens, and would return the remainder.)
    4. the `dai::ft_resolve_transfer` function receives success/failure of the promise. If success, it will contain the unused tokens. Then the `dai` contract uses simple arithmetic (not needed in this case) and updates the balance for Alice.
 
+#### Swapping one token for another via an Automated Market Maker (AMM) like Uniswap
+
+Alice wants to swap 5 wrapped NEAR (wNEAR) for BNNA tokens at current market rate, with less than 2% slippage.
+
+**Assumptions**
+
+- The wNEAR token contract is `wnear`.
+- Alice's account is `alice`.
+- The AMM's contract is `amm`.
+- BNNA's contract is `bnna`.
+- The precision ("decimals" in the metadata standard) on wBTC contract is `10^24`.
+- The 5 tokens is `5 * 10^24` or as a number is `5000000000000000000000000`.
+
+**High-level explanation**
+
+Alice needs to issue one transaction to wNEAR contract to transfer 5 tokens (multiplied by precision) to `amm`, specifying her desired destination token (BNNA) & minimum slippage (<2%) in `msg`.
+
+Alice will probably make this call via a UI that knows how to construct `msg` in a way the `amm` contract will understand. However, it's possible that the `amm` contract itself may provide view functions which take desired action, destination token, & slippage as input and return data ready to pass to `msg` for `ft_transfer_call`. For the sake of this example, let's say `amm` implements a view function called `ft_data_to_msg`.
+
+Alice needs to attach one yoctoNEAR. This will result in her seeing a confirmation page in her preferred NEAR wallet. NEAR wallet implementations will attempt to provide useful information in this confirmation page, so receiver contracts should follow a strong convention in how they format `msg`. As a starting point, we recommend base64-encoded JSON, though contract developers may settle on a different convention in the future. We will update this documentation with a new recommendation, if community consenses changes.
+
+Altogether then, Alice may take two steps, though the first may be a background detail of the app she uses.
+
+**Technical calls**
+
+1. View `amm::ft_data_to_msg({ action: "swap", destination_token: "bnna", min_slip: 2 })`. Using [NEAR CLI](https://docs.near.org/docs/tools/near-cli):
+
+      near view amm ft_data_to_msg '{
+        "action": "swap",
+        "destination_token": "bnna",
+        "min_slip": 2
+      }'
+
+   Then Alice (or the app she uses) will hold onto the result and use it in the next step. Let's say this result is `"c3dhcDpibm5hLDI="`, the base64-encoded version of the string "swap:bnna,2".
+
+2. Call `wnear::ft_on_transfer`. Using NEAR CLI:
+       near call wnear ft_transfer_call '{
+         "receiver_id": "amm",
+         "amount": "5000000000000000000000000",
+         "msg": "c3dhcDpibm5hLDI="
+       }' --accountId alice --amount .000000000000000000000001
+
+   During the `ft_transfer_call` call, `wnear` does the following:
+
+   1. Decrease the balance of `alice` and increase the balance of `amm` by 5000000000000000000000000.
+   2. Makes async call `amm::ft_on_transfer({"sender_id": "alice", "amount": "5000000000000000000000000", "msg": "c3dhcDpibm5hLDI="})`.
+   3. Attaches a callback `wnear::ft_resolve_transfer({"sender_id": "alice", "receiver_id": "compound", "amount": "5000000000000000000000000"})`.
+   4. `amm` finishes the swap, either successfully swapping all 5 wNEAR within the desired slippage, or failing.
+   5. The `wnear::ft_resolve_transfer` function receives success/failure of the promise. Assuming `amm` implements all-or-nothing transfers (as in, it will not transfer less-than-the-specified amount in order to fulfill the slippage requirements), `wnear` will do nothing at this point if the swap succeeded, or it will decrease the balance of `amm` and increase the balance of `alice` by 5000000000000000000000000.
+
+
 #### Multi-token swap on DEX
 
 Charlie wants to exchange his wLTC to wBTC on decentralized exchange contract. Alex wants to buy wLTC and has 80 wBTC.
