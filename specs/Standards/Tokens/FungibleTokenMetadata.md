@@ -59,6 +59,8 @@ If this deploy and initialization were done using [NEAR CLI](https://docs.near.o
 
 A fungible token contract implementing the metadata standard shall contain a field named `ft_metadata`. The field will link to a structure with the properties from the interface below.
 
+A contract may update any metadata fields with the exception of `decimals`. A contract MUST NOT update `decimals`, as this can effectively change the balance of all holders.
+
 **Interface**:
 
 ```ts
