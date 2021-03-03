@@ -14,6 +14,7 @@ Custom fungible tokens play a major role in decentralized applications today. FT
 As blockchain technology advances, it becomes increasingly important to provide backwards compatibility and a concept of a spec. This standard encompasses all the concerns mentioned. Extra properties not included here likely belong in the `reference` object.
 
 Prior art:
+
 - [EIP-1046](https://eips.ethereum.org/EIPS/eip-1046)
 - [OpenZeppelin's ERC-721 Metadata standard](https://docs.openzeppelin.com/contracts/2.x/api/token/erc721#ERC721Metadata) also helped, although it's for non-fungible tokens.
 
@@ -43,7 +44,16 @@ Alice issues a transaction to deploy and initialize the fungible token contract,
 
 If this deploy and initialization were done using [NEAR CLI](https://docs.near.org/docs/tools/near-cli) the command would be:
 
-    near deploy wbtc --wasmFile res/ft.wasm --initFunction new --initArgs '{"owner_id": "wbtc", "total_supply": "100000000000000", "spec": "ft-1.0.0", "name": "Wrapped Bitcoin", "symbol": "WBTC", "reference": "https://example.com/wbtc.json", "reference_hash": "7c879fa7b49901d0ecc6ff5d64d7f673da5e4a5eb52a8d50a214175760d8919a", "decimals": 8}'
+    near deploy wbtc --wasmFile res/ft.wasm --initFunction new --initArgs '{
+      "owner_id": "wbtc",
+      "total_supply": "100000000000000",
+      "spec": "ft-1.0.0",
+      "name": "Wrapped Bitcoin",
+      "symbol": "WBTC",
+      "reference": "https://example.com/wbtc.json",
+      "reference_hash": "7c879fa7b49901d0ecc6ff5d64d7f673da5e4a5eb52a8d50a214175760d8919a",
+      "decimals": 8
+    }' --accountId alice
 
 ## Reference-level explanation
 
@@ -53,23 +63,34 @@ A fungible token contract implementing the metadata standard shall contain a fie
 
 ```ts
 type FungibleTokenMetadata = {
-    spec: string;
-    name: string;
-    symbol: string;
     reference: string;
     reference_hash: string;
-    decimals: number;
+    decimals?: number;
+    icon?: string;
+    name?: string;
+    spec?: string;
+    symbol?: string;
 }
 ```
 
-**Fields**:
+This uses TypeScript notation to indicate fields which are required and which are merely permissible under this standard. This is stated more explicitly below:
 
-- `spec` is a string and should be `ft-1.0.0` to indicate that a Fungible Token contract adheres to the current versions of this Metadata and Core spec. This will allow consumers of the Fungible Token to know if they support the features of a given contract.
-- `name` is the human-readable name of the token.
-- `symbol` is the abbreviation, like wETH or AMPL.
-- `reference` is a link to a valid JSON file containing various keys offering supplementary details on the token. (For example: "/ipfs/QmdmQXB2mzChmMeKY47C43LxUdg1NDJ5MWcKMKxDu7RgQm", "https://example.com/token.json", etc.)
-- `reference_hash` is the sha256 hash of the JSON file contained in the `reference` field. This is to guard against off-chain tampering.
+**An implementing contract MUST include the following fields**
+
+- `reference`: a link to a valid JSON file containing various keys offering supplementary details on the token. (For example: "/ipfs/QmdmQXB2mzChmMeKY47C43LxUdg1NDJ5MWcKMKxDu7RgQm", "https://example.com/token.json", etc.)
+- `reference_hash`: the base64-encoded sha256 hash of the JSON file contained in the `reference` field. This is to guard against off-chain tampering.
+
+**An implementing contract MAY include the following fields**
+
+While all of these could be included in the JSON document returned by `reference`, it may be convenient for apps that reference FT contracts to have access to some of this information directly on-chain, so they have something to show to users while off-chain data is fetched. The on-chain fields permitted by this standard are:
+
 - `decimals` is used aid in the frontend showing the proper significant digits of a token. This concept is explained well in this [OpenZeppelin post](https://docs.openzeppelin.com/contracts/3.x/erc20#a-note-on-decimals).
+- `icon`: a small image associated with this token. Should be usable as the `src` attribute in an `img` tag on a web page, by using a [data URL](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/Data_URIs). Recommendation: use [optimized SVG](https://codepen.io/tigt/post/optimizing-svgs-in-data-uris), which can result in high-resolution images with only 100s of bytes of [storage cost](https://docs.near.org/docs/concepts/storage-staking). Note that these storage costs are incurred to the token owner/deployer, but that querying these icons is a very cheap & cachable read operation for all consumers of the contract and the RPC nodes that serve the data. We recommend creating icons that will work well with both light-mode and dark-mode websites by either using middle-tone color schemes, or by [embedding `media` queries in the SVG](https://timkadlec.com/2013/04/media-queries-within-svg/).
+- `name`: the human-readable name of the token.
+- `reference_hash` is the sha256 hash of the JSON file contained in the `reference` field. This is to guard against off-chain tampering.
+- `reference` is a link to a valid JSON file containing various keys offering supplementary details on the token. (For example: "/ipfs/QmdmQXB2mzChmMeKY47C43LxUdg1NDJ5MWcKMKxDu7RgQm", "https://example.com/token.json", etc.)
+- `spec`: a string. Should be `ft-1.0.0` to indicate that a Fungible Token contract adheres to the current versions of this Metadata and the [Fungible Token Core](./FungibleTokenCore.md) specs. This will allow consumers of the Fungible Token to know if they support the features of a given contract.
+- `symbol`: the abbreviation, like wETH or AMPL.
 
 ## Drawbacks
 
