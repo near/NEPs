@@ -50,4 +50,5 @@
   - [Fungible Token](Standards/Tokens/README.md)  
     - [Core Standard](Standards/Tokens/FungibleTokenCore.md)
     - [Metadata](Standards/Tokens/FungibleTokenMetadata.md)
-  - [Storage](Standards/Storage.md)
+  - [Account Registration](Standards/AccountRegistration.md)
+  - [Storage Management](Standards/StorageManagement.md)
