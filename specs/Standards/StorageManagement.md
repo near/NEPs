@@ -4,16 +4,23 @@ Version `1.0.0`
 
 ## Summary
 
-This standard handles state storage when accounts add and remove data stored in the state of a contract. It allows accounts to:
+NEAR uses [storage staking] which means that a contract account must have sufficient balance to cover all storage added over time. For contracts which allow users to add and remove storage over time, this standard provides a uniform way to pass storage costs onto users. It allows accounts and contracts to:
 
 1. Check an account's storage "balance."
-2. Determine the minimum storage needed to add account information such that the account can interact as expected in a contract.
-3. Add storage for an account; either their own or another account.
-4. Withdraw some or all of a storage deposit by removing associated account data from the contract and then making a call to remove unused deposit.
+2. Determine the minimum storage needed to add account information such that the account can interact as expected with a contract.
+3. Add storage for an account; either one's own or another.
+4. Withdraw some of a storage deposit by removing associated account data from the contract and then making a call to remove unused deposit.
+
+For contracts that only incur storage costs on a user's first interaction and do not add more per-user storage over time, see the [Account Registration] standard.
+
+  [storage staking]: https://docs.near.org/docs/concepts/storage-staking
+  [Account Registration]: AccountRegistration.md
+
+Note that this standard does not cover the case of a user completely unregistering and reclaiming storage tokens, whether destructively or non-destructively. If Storage Manager contracts wish to provide such functionality, they can implement `ar_unregister` as specified in [Account Registration]. Other than this detail, Storage Management can be considered a superset of Account Registration.
 
 ## Motivation
 
-NEAR uses [storage staking](https://docs.near.org/docs/concepts/storage-staking) as the mechanism to pay for storage on the blockchain. When storage is removed, the staked Ⓝ is released. Developers must take this into consideration when crafting smart contracts that store data on-chain. If no restrictions are enforced in a permissionless system, any account may add key/value pairs that bloat another account's storage. Since an account containing a smart contract must keep enough Ⓝ to pay for the storage, developers must ensure the state storage is "paid for" as the storage increases, and can refund such storage deposits later if data is removed. This standard provides a generic approach to handle these concerns.
+If no restrictions are enforced in a permissionless [storage staking] system, any account may add key/value pairs that bloat a given contract account's storage. Since a contract account must keep enough Ⓝ to pay for the storage, developers must ensure the storage is paid for as it increases, and can refund such storage deposits later if data is removed. This standard provides a generic approach to handle these concerns.
 
 Prior art:
 
@@ -26,99 +33,116 @@ We should be able to do the following:
 - Have an account sign a transaction, attaching a deposit of Ⓝ that will cover *their own* storage for a smart contract.
 - Have an account sign a transaction, attaching a deposit of Ⓝ that will cover the storage for another account to use a smart contract.
 - Allow an account to request refunds in Ⓝ for excess storage deposits on a given contract.
-- Use a view function call to determine how much Ⓝ should be attached as a deposit in order for an account to "pay their share" in storage. In some uses cases, this may be thought of as the cost for account registration.
-
-The necessary concepts and terminology is covered in the [documentation for storage staking](https://docs.near.org/docs/concepts/storage-staking).
+- Use a view function call to determine how much Ⓝ should be attached as a deposit in order for an account to "pay their share" in storage.
 
 ### Example scenarios
 
-#### Account pays for own storage
+Imagine a social media smart contract which passes storage costs onto users for posts and follower data. Let's say this this contract is deployed at account `social`, and that the minimum storage required to interact with this contract is 0.1Ⓝ, of which 0.00235Ⓝ will be used to register the account and the rest will be kept to allow further storage-adding interactions with the contract.
 
-Alice registers her account on a fungible token contract.
+Let's follow a user, Alice with account `alice`, as she interacts with `social` through the following scenarios:
 
-**Assumptions**
+1. Registration
+2. Registering a friend, Bob with account `bob`
+3. Attempting to take action which exceeds paid-for storage; increasing storage deposit
+4. Removing storage and reclaiming excess deposit
 
-- Alice's account is `alice`.
-- The fungible token contract is `mochi`.
-- The fungible token contract stores account information that requires 2350000000000000000000 yoctoⓃ of storage.
+#### 1. Account registers with `social`
 
 **High-level explanation**
 
-1. Alice checks to make sure she does not have storage on the `mochi` contract.
-2. Alice determines how much storage is needed to register an account with the `mochi` contract.
+1. Alice checks if she is already registered with `social`.
+2. Alice determines how much NEAR is needed to register an account with the `social` contract.
 3. Alice issues a transaction to deposit Ⓝ for her account.
 
 **Technical calls**
 
-1. Alice queries a view-only method to determine if she already has storage on this contract with `mochi::storage_balance_of({"account_id": "alice"})`. Using [NEAR CLI](https://docs.near.org/docs/tools/near-cli) to make this view call, the command would be:
+1. Alice queries a view-only method to determine if she already has storage on this contract with `social::storage_balance_of({"account_id": "alice"})`. Using [NEAR CLI](https://docs.near.org/docs/tools/near-cli) to make this view call, the command would be:
 
-       near view mochi storage_balance_of '{"account_id": "alice"}'
+       near view social storage_balance_of '{"account_id": "alice"}'
 
    The response:
 
-       View call: mochi.storage_balance_of({"account_id": "alice"})
+       View call: social.storage_balance_of({"account_id": "alice"})
        { total: '0', available: '0' }
 
 2. Alice uses [NEAR CLI](https://docs.near.org/docs/tools/near-cli) to make a view call.
 
-       near view mochi storage_minimum_balance
+       near view social storage_minimum_balance
 
    The response:
 
-       '2350000000000000000000'
+       '100000000000000000000000'
 
-   [2350000000000000000000 / 10^24](https://www.wolframalpha.com/input/?i=2350000000000000000000+%2F+10%5E24) (yocto) = 0.00235 Ⓝ
+   This is 0.1Ⓝ specified in yoctoⓃ ([yocto](https://www.metricconversion.us/prefixes.htm) = 10<sup>-24</sup>).
 
-3. Alice deposits the proper amount in a transaction by calling `mochi::storage_deposit` with the attached deposit of '0.00235'. Using NEAR CLI:
+3. Alice deposits the proper amount in a transaction by calling `social::storage_deposit` with the attached deposit of '0.1'. Using NEAR CLI:
 
-       near call mochi storage_deposit '' \
-         --accountId alice --amount 0.00235
+       near call social storage_deposit '' \
+         --accountId alice --amount 0.1
 
    The result:
 
        {
-         total: '2350000000000000000000',
-         available: '2350000000000000000000'
+         total: '100000000000000000000000',
+         available: '9765000000000000000000'
        }
 
+   Here we see that she has deposited 0.1Ⓝ and that 0.00235 of it has been used to register her account, and is therefore locked by the contract. The rest is available to facilitate interaction with the contract, but could also be withdrawn by Alice by using `storage_withdraw`.
 
-#### Account pays for another account's storage
-
-Alice wishes to eventually send `MOCHI` tokens to Bob who is not registered. She decides to pay for Bob's storage.
-
-**Assumptions**
-
-- Alice's account is `alice`.
-- Bob's account is `bob`.
-- As in the prior example, the storage cost per user is 2350000000000000000000 yoctoⓃ or 0.00235 Ⓝ, and this is known to Alice.
+#### 2. One account registers another
 
 **High-level explanation**
 
-1. Alice issues a transaction to deposit Ⓝ for Bob's account.
+Alice issues a transaction to deposit Ⓝ for Bob's account.
 
 **Technical calls**
 
-1. Alice calls `mochi::storage_deposit({"account_id": "bob"})` with the attached deposit of '0.00235'. Using NEAR CLI the command would be:
+Alice calls `social::storage_deposit({"account_id": "bob"})` with the attached deposit of '0.5'. Using NEAR CLI the command would be:
 
-       near call mochi storage_deposit '{"account_id": "bob"}' \
-         --accountId alice --amount 0.00235
+       near call social storage_deposit '{"account_id": "bob"}' \
+         --accountId alice --amount 0.1
 
     The result:
 
        {
-         total: '2350000000000000000000',
-         available: '2350000000000000000000'
+         total: '100000000000000000000000',
+         available: '9765000000000000000000'
        }
 
-#### Accounts withdraw excess storage deposit
+#### 3. Account increases storage deposit
 
-Alice and Bob decide to withdraw some unused storage deposit from the `mochi` contract.
+Assumption: `social` has a `post` function which allows creating a new post with free-form text. Alice has used almost all of her available storage balance. She attempts to call `post` with a large amount of text, and the transaction aborts because she needs to pay for more storage first.
 
-**Assumptions**
+Note that applications will probably want to avoid this situation in the first place by prompting users to top up storage deposits sufficiently before available balance runs out.
 
-- Alice's account is `alice`.
-- Bob's account is `bob`.
-- Both Alice's and Bob's accounts have more deposited than they are using.
+**High-level explanation**
+
+1. Alice issues a transaction, let's say `social.post`, and it fails with an intelligible error message to tell her that she has an insufficient storage balance to cover the cost of the operation
+2. Alice issues a transaction to increase her storage balance
+3. Alice retries the initial transaction and it succeeds
+
+**Technical calls**
+
+1. This is outside the scope of this spec, but let's say Alice calls `near call social post '{ "text": "very long message" }'`, and that this fails with a message saying something like "Unsufficient storage deposit for transaction. Please call `storage_deposit` and attach at least 0.1 NEAR, then try again."
+
+2. Alice deposits the proper amount in a transaction by calling `social::storage_deposit` with the attached deposit of '0.1'. Using NEAR CLI:
+
+       near call social storage_deposit '' \
+         --accountId alice --amount 0.1
+
+   The result:
+
+       {
+         total: '200000000000000000000000',
+         available: '100100000000000000000000'
+       }
+
+
+3. Alice tries the initial `near call social post` call again. It works.
+
+#### 4. Accounts removes storage and reclaim now-unused deposit
+
+Assumption: both Alice's and Bob's accounts have more deposited than they are using.
 
 **High-level explanation**
 
@@ -129,43 +153,43 @@ Alice and Bob decide to withdraw some unused storage deposit from the `mochi` co
 
 **Technical calls**
 
-1. Alice queries `mochi::storage_balance_of({ "account_id": "alice" })` and `mochi::storage_balance_of({ "account_id": "alice" })`.
+1. Alice queries `social::storage_balance_of({ "account_id": "alice" })` and `social::storage_balance_of({ "account_id": "alice" })`.
 
    Checking her own account with NEAR CLI:
 
-       near view mochi storage_balance_of '{"account_id": "alice"}'
+       near view social storage_balance_of '{"account_id": "alice"}'
 
    Response:
 
-       View call: mochi.storage_balance_of({"account_id": "alice"})
+       View call: social.storage_balance_of({"account_id": "alice"})
        {
-         total: '7050000000000000000000',
-         available: '2350000000000000000000'
+         total:     '200000000000000000000000',
+         available: '197650000000000000000000'
        }
 
    Checking Bob's account:
 
-       near view mochi storage_balance_of '{"account_id": "bob"}'
+       near view social storage_balance_of '{"account_id": "bob"}'
 
    Response:
 
-       View call: mochi.storage_balance_of({"account_id": "bob"})
+       View call: social.storage_balance_of({"account_id": "bob"})
        {
          total: '4700000000000000000000',
          available: '2350000000000000000000'
        }
 
-2. Alice calls `mochi::storage_withdraw({"amount": "2350000000000000000000"})` for her own account. NEAR CLI command:
+2. Alice calls `social::storage_withdraw({"amount": "2350000000000000000000"})` for her own account. NEAR CLI command:
 
-       near call mochi storage_withdraw \
+       near call social storage_withdraw \
          '{"amount": "2350000000000000000000"}' \
          --accountId alice
 
-3. Alice realizes that `storage_withdraw` does not allow specifying the account to withdraw from. She has withdrawn all she can from her own account. When she re-checks `mochi::storage_balance_of({"account_id": "alice"})`, it indicates she has zero available balance. This is because storage withdrawal is only for the predecessor account that has signed the transaction. Alice cannot withdraw for Bob.
+3. Alice realizes that `storage_withdraw` does not allow specifying the account to withdraw from. She has withdrawn all she can from her own account. When she re-checks `social::storage_balance_of({"account_id": "alice"})`, it indicates she has zero available balance. This is because storage withdrawal is only for the predecessor account that has signed the transaction. Alice cannot withdraw for Bob.
 
 4. Bob issues the same transaction as Alice did in step 2.
 
-       near call mochi storage_withdraw \
+       near call social storage_withdraw \
          '{"amount": "2350000000000000000000"}' \
          --accountId bob
 
@@ -241,6 +265,4 @@ function storage_balance_of(
 
 ## Future possibilities
 
-- This standard avoids specifying how to close/unregister an account. A future version of this standard may enforce stronger requirements on such interactions.
-- Instead of having developers use constants for the storage price per byte, perhaps this can be derived and instructions can be modified in this standard regarding how to calculate the value returned for `storage_minimum_balance`.
 - Ideally, contracts will update available balance for all accounts every time the NEAR blockchain's configured storage-cost-per-byte is reduced. That they *must* do so is not enforced by this current standard.
