@@ -9,6 +9,7 @@
 - [Architecture](Architecture.md)
 - [Chain specification](ChainSpec/README.md)
   - [Consensus](ChainSpec/Consensus.md)
+  - [Selecting Chunk and Block Producers](ChainSpec/SelectingBlockProducers.md)
   - [Upgradability](ChainSpec/Upgradability.md)
   - [Transactions](ChainSpec/Transactions.md)
   - [Light Client](ChainSpec/LightClient.md)
