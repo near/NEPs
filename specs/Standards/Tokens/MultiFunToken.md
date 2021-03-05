@@ -20,11 +20,10 @@ This standard does not include functions to mint and burn tokens. It only declar
 
 1. The combination of scaling by sharding and the cross-contract calls mechanics in NEAR (async, no 2PC) create certain condiions where in some cases is recommendable to manage multiple tokens in the same contract instead of the standard Ethereum-way of a contract per token.
 
-2. The [diversifying-pool contract](https://narwallets.github.io/diversifying-staking-pool/) is an example of this kind of situation. The contract manages three "tokens": NEAR, SKASH and G-SKASH.
+2. The [meta-pool contract](https://narwallets.github.io/meta-pool/) is an example of this kind of situation. The contract manages three "tokens": NEAR, stNEAR and $META.
 
 Prior art:
-- [#136 NEP Interactive Fungible Token](https://github.com/robert-zaremba/nep-136-fungible-token),
-[#122 Allowance-free vault-based token](https://github.com/near/NEPs/issues/122), [#21 Fungible Token](https://github.com/near/NEPs/blob/master/specs/Standards/Tokens/FungibleToken.md)
+- [#141 Fungible token standard](https://github.com/near/NEPs/issues/141),  [#136 NEP Interactive Fungible Token](https://github.com/robert-zaremba/nep-136-fungible-token), [#122 Allowance-free vault-based token](https://github.com/near/NEPs/issues/122), [#21 Fungible Token](https://github.com/near/NEPs/blob/master/specs/Standards/Tokens/FungibleToken.md)
 
 ## Guide-level explanation
 [guide-level-explanation]: #guide-level-explanation
