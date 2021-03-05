@@ -315,12 +315,12 @@ Assumption: Alice has more deposited than she is using.
 **Interface**:
 
 ```ts
-// The below defines the structure that will be returned for the methods:
+// The structure that will be returned for the methods:
 // * `storage_deposit`
 // * `storage_withdraw`
 // * `storage_balance_of`
 // The `total` and `available` values are string representations of unsigned
-// 128-bit integers.
+// 128-bit integers showing the balance of a specific account in yoctoⓃ.
 type StorageBalance = {
    total: string;
    available: string;
