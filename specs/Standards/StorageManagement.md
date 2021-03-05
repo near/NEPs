@@ -181,7 +181,7 @@ So for this contract, `storage_balance_bounds` will return:
 
 ```json
 {
-  "min": 2350000000000000000000,
+  "min": "2350000000000000000000",
   "max": null
 }
 ```
