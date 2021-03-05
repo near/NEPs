@@ -297,8 +297,8 @@ function ft_transfer(
 function ft_transfer_call(
    receiver_id: string,
    amount: string,
+   memo: string|null,
    msg: string,
-   memo: string|null
 ): Promise {}
 
 // This function isn't called directly and shall implement logic ensuring it's called by "itself" as a callback to the promise sent to the receiver contract.
