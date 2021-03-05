@@ -87,7 +87,6 @@ type FungibleTokenMetadata = {
 ## Drawbacks
 
 - It could be argued that `symbol` and even `name` could belong as key/values in the `reference` JSON object.
-- It might make sense to add `icon_url` and `icon_hash` to the on-chain properties listed in `FungibleTokenMetadata`.
 
 ## Future possibilities
 
