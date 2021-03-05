@@ -265,9 +265,7 @@ function ft_balance_of(
 ): string {}
 ```
 
-**Suggested additional interface**
-
-This behavior is required, but contract authors may name this function something else.
+The following behavior is required, but contract authors may name this function something other than the conventional `ft_resolve_transfer` used here.
 
 ```ts
 // Finalize an `ft_transfer_call` chain of cross-contract calls.
@@ -301,7 +299,7 @@ function ft_resolve_transfer(
    sender_id: string,
    receiver_id: string,
    amount: string
-): string
+): string {}
 ```
 
 ## Drawbacks
