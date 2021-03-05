@@ -45,12 +45,15 @@ Alice issues a transaction to deploy and initialize the fungible token contract,
     near deploy wbtc --wasmFile res/ft.wasm --initFunction new --initArgs '{
       "owner_id": "wbtc",
       "total_supply": "100000000000000",
-      "spec": "ft-1.0.0",
-      "name": "Wrapped Bitcoin",
-      "symbol": "WBTC",
-      "reference": "https://example.com/wbtc.json",
-      "reference_hash": "AK3YRHqKhCJNmKfV6SrutnlWW/icN5J8NUPtKsNXR1M=",
-      "decimals": 8
+      "metadata": {
+         "spec": "ft-1.0.0",
+         "name": "Wrapped Bitcoin",
+         "symbol": "WBTC",
+         "icon": "https://example.com/wbtc.png",
+         "reference": "https://example.com/wbtc.json",
+         "reference_hash": "AK3YRHqKhCJNmKfV6SrutnlWW/icN5J8NUPtKsNXR1M=",
+         "decimals": 8
+      }
     }' --accountId alice
 
 ## Reference-level explanation
