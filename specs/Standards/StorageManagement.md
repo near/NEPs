@@ -71,8 +71,7 @@ Let's follow two users, Alice with account `alice` and Bob with account `bob`, a
 
    The response:
 
-       View call: ft.storage_balance_of({"account_id": "alice"})
-       { total: '0', available: '0' }
+       null
 
 2. Alice uses [NEAR CLI](https://docs.near.org/docs/tools/near-cli) to make a view call.
 
@@ -284,7 +283,6 @@ Assumption: Alice has more deposited than they are using.
 
    Response:
 
-       View call: social.storage_balance_of({"account_id": "alice"})
        {
          total: '200000000000000000000000',
          available: '100100000000000000000000'
@@ -338,9 +336,9 @@ type StorageBalance = {
 // registration, and does not adjust per-user storage over time. A contract
 // which implements `max` must refund deposits that would increase a user's
 // storage balance beyond this amount.
-type StorageBalanceBounds {
-    min: string,
-    max: string|null,
+type StorageBalanceBounds = {
+    min: string;
+    max: string|null;
 }
 
 /************************************/
@@ -363,7 +361,7 @@ type StorageBalanceBounds {
 function storage_deposit(
     account_id: string|null,
     registration_only: boolean|null
-): StorageBalance {}
+): StorageBalance
 
 // Withdraw specified amount of available Ⓝ for predecessor account.
 //
@@ -376,9 +374,7 @@ function storage_deposit(
 // If predecessor account not registered, contract MUST panic.
 //
 // Returns the StorageBalance structure showing updated balances.
-function storage_withdraw(
-    amount: string|null
-): StorageBalance {}
+function storage_withdraw(amount: string|null): StorageBalance
 
 // Unregisters the predecessor account and returns the storage NEAR deposit.
 //
@@ -396,7 +392,7 @@ function storage_withdraw(
 //
 // Returns `true` iff the account was unregistered.
 // Returns `false` iff account was not registered before.
-function storage_unregister(force: boolean|null) -> bool;
+function storage_unregister(force: boolean|null) -> bool
 
 /****************/
 /* VIEW METHODS */
@@ -407,9 +403,9 @@ function storage_balance_bounds(): StorageBalanceBounds
 
 // Returns the StorageBalance structure of the valid `account_id`
 // provided. Must panic if `account_id` is invalid.
-function storage_balance_of(
-    account_id: string
-): StorageBalance {}
+//
+// If `account_id` is not registered, must return `null`.
+function storage_balance_of(account_id: string): StorageBalance|null
 ```
 
 ## Drawbacks
