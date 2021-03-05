@@ -40,9 +40,7 @@ Alice issues a transaction to deploy and initialize the fungible token contract,
 
 **Technical calls**
 
-1. `alice` deploys a contract and calls `wbtc::new({"owner_id": "wbtc", "total_supply": "100000000000000", "spec": "ft-1.0.0", "name": "Wrapped Bitcoin", "symbol": "WBTC", "reference": "https://example.com/wbtc.json", "reference_hash": "7c879fa7b49901d0ecc6ff5d64d7f673da5e4a5eb52a8d50a214175760d8919a", "decimals": 8})`.
-
-If this deploy and initialization were done using [NEAR CLI](https://docs.near.org/docs/tools/near-cli) the command would be:
+1. `alice` deploys a contract and calls `wbtc::new` with all metadata. If this deploy and initialization were done using [NEAR CLI](https://docs.near.org/docs/tools/near-cli) the command would be:
 
     near deploy wbtc --wasmFile res/ft.wasm --initFunction new --initArgs '{
       "owner_id": "wbtc",
