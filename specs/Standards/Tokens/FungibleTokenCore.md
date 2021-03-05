@@ -218,8 +218,7 @@ function ft_transfer(
 // * The receiving contract must implement `ft_on_transfer` according to the
 //   standard. If it does not, FT contract's `ft_resolve_transfer` MUST deal
 //   with the resulting failed cross-contract call and roll back the transfer.
-// * This contract must implement `ft_resolve_transfer` according to the
-//   standard.
+// * Contract MUST implement the behavior described in `ft_resolve_transfer`
 //
 // Arguments:
 // * `receiver_id`: the valid NEAR account receiving the fungible tokens.
@@ -237,15 +236,6 @@ function ft_transfer_call(
    memo: string|null,
    msg: string
 ): Promise {}
-
-// This function isn't called directly and shall implement logic ensuring it's called by "itself" as a callback to the promise sent to the receiver contract.
-// Here the `sender_id` will be the sender from the `ft_transfer_call` method call. The `receiver_id` and `amount` will be the same as the values provided to `ft_transfer_call`.
-// This returns a string representing a string version of an unsigned 128-bit integer of how many tokens were returned. (This value may be different than `amount`.)
-function ft_resolve_transfer(
-   sender_id: string,
-   receiver_id: string,
-   amount: string
-): string {}
 
 /****************************************/
 /* CHANGE METHODS on receiving contract */
@@ -273,6 +263,45 @@ function ft_total_supply(): string {}
 function ft_balance_of(
     account_id: string
 ): string {}
+```
+
+**Suggested additional interface**
+
+This behavior is required, but contract authors may name this function something else.
+
+```ts
+// Finalize an `ft_transfer_call` chain of cross-contract calls.
+//
+// The `ft_transfer_call` process:
+//
+// 1. Sender calls `ft_transfer_call` on FT contract
+// 2. FT contract transfers `amount` tokens from sender to receiver
+// 3. FT contract calls `ft_on_transfer` on receiver contract
+// 4+. [receiver contract may make other cross-contract calls]
+// N. FT contract resolves promise chain with `ft_resolve_transfer`, and may
+//    refund sender some or all of original `amount`
+//
+// Requirements:
+// * Contract MUST forbid calls to this function by any account except self
+// * If promise chain failed, contract MUST revert token transfer
+// * If promise chain resolves with a non-zero amount given as a string,
+//   contract MUST return this amount of tokens to `sender_id`
+//
+// Arguments:
+// * `sender_id`: the sender of `ft_transfer_call`
+// * `receiver_id`: the `receiver_id` argument given to `ft_transfer_call`
+// * `amount`: the `amount` argument given to `ft_transfer_call`
+//
+// Returns a string representing a string version of an unsigned 128-bit
+// integer of how many total tokens were spent by sender_id. Example: if sender
+// calls `ft_transfer_call({ "amount": "100" })`, but `receiver_id` only uses
+// 80, `ft_on_transfer` will resolve with `"20"`, and `ft_resolve_transfer`
+// will return `"80"`.
+function ft_resolve_transfer(
+   sender_id: string,
+   receiver_id: string,
+   amount: string
+): string
 ```
 
 ## Drawbacks
