@@ -21,16 +21,16 @@ Prior art:
 To show the flexibility and power of this standard, let's walk through two example contracts.
 
 1. A simple Fungible Token contract which uses Storage Management in "registration only" mode, where the contract only adds storage on a user's first interaction.
-  1. Account registers self
-  2. Account registers another
-  3. Unnecessary attempt to re-register
-  4. Force-closure of account
-  5. Graceful closure of account
+   1. Account registers self
+   2. Account registers another
+   3. Unnecessary attempt to re-register
+   4. Force-closure of account
+   5. Graceful closure of account
 2. A social media contract, where users can add more data to the contract over time.
-  1. Account registers self with more than minimum required
-  2. Unnecessary attempt to re-register using `registration_only` param
-  3. Attempting to take action which exceeds paid-for storage; increasing storage deposit
-  4. Removing storage and reclaiming excess deposit
+   1. Account registers self with more than minimum required
+   2. Unnecessary attempt to re-register using `registration_only` param
+   3. Attempting to take action which exceeds paid-for storage; increasing storage deposit
+   4. Removing storage and reclaiming excess deposit
 
 ### Example 1: Fungible Token Contract
 
