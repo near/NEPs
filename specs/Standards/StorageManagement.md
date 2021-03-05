@@ -395,7 +395,7 @@ function storage_withdraw(amount: string|null): StorageBalance
 // MUST require exactly 1 yoctoNEAR attached balance to prevent restricted
 // function-call access-key call (UX wallet security)
 //
-// Returns `true` iff the account was unregistered.
+// Returns `true` iff the account was successfully unregistered.
 // Returns `false` iff account was not registered before.
 function storage_unregister(force: boolean|null): boolean
 
