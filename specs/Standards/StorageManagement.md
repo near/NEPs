@@ -236,6 +236,8 @@ The result:
 
 Additionally, Alice will be refunded the extra 0.1Ⓝ that she just attached. This makes it easy for other contracts to always attempt to register users while performing batch transactions without worrying about errors or lost deposits.
 
+Note that if Alice had not included `registration_only`, she would have ended up with a `total` of  0.2Ⓝ.
+
 #### 3. Account increases storage deposit
 
 Assumption: `social` has a `post` function which allows creating a new post with free-form text. Alice has used almost all of her available storage balance. She attempts to call `post` with a large amount of text, and the transaction aborts because she needs to pay for more storage first.
