@@ -252,7 +252,7 @@ Note that applications will probably want to avoid this situation in the first p
 
 **Technical calls**
 
-1. This is outside the scope of this spec, but let's say Alice calls `near call social post '{ "text": "very long message" }'`, and that this fails with a message saying something like "Unsufficient storage deposit for transaction. Please call `storage_deposit` and attach at least 0.1 NEAR, then try again."
+1. This is outside the scope of this spec, but let's say Alice calls `near call social post '{ "text": "very long message" }'`, and that this fails with a message saying something like "Insufficient storage deposit for transaction. Please call `storage_deposit` and attach at least 0.1 NEAR, then try again."
 
 2. Alice deposits the proper amount in a transaction by calling `social::storage_deposit` with the attached deposit of '0.1'. Using NEAR CLI:
 
@@ -363,7 +363,7 @@ type StorageBalanceBounds = {
 function storage_deposit(
     account_id: string|null,
     registration_only: boolean|null
-): StorageBalance
+): StorageBalance {}
 
 // Withdraw specified amount of available Ⓝ for predecessor account.
 //
@@ -379,7 +379,7 @@ function storage_deposit(
 // function-call access-key call (UX wallet security)
 //
 // Returns the StorageBalance structure showing updated balances.
-function storage_withdraw(amount: string|null): StorageBalance
+function storage_withdraw(amount: string|null): StorageBalance {}
 
 // Unregisters the predecessor account and returns the storage NEAR deposit.
 //
@@ -401,20 +401,20 @@ function storage_withdraw(amount: string|null): StorageBalance
 //
 // Returns `true` iff the account was successfully unregistered.
 // Returns `false` iff account was not registered before.
-function storage_unregister(force: boolean|null): boolean
+function storage_unregister(force: boolean|null): boolean {}
 
 /****************/
 /* VIEW METHODS */
 /****************/
 // Returns minimum and maximum allowed balance amounts to interact with this
 // contract. See StorageBalanceBounds.
-function storage_balance_bounds(): StorageBalanceBounds
+function storage_balance_bounds(): StorageBalanceBounds {}
 
 // Returns the StorageBalance structure of the valid `account_id`
 // provided. Must panic if `account_id` is invalid.
 //
 // If `account_id` is not registered, must return `null`.
-function storage_balance_of(account_id: string): StorageBalance|null
+function storage_balance_of(account_id: string): StorageBalance|null {}
 ```
 
 ## Drawbacks

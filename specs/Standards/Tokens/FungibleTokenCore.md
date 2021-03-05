@@ -137,7 +137,7 @@ Alice needs to issue one transaction to wNEAR contract to transfer 5 tokens (mul
 
 Alice will probably make this call via a UI that knows how to construct `msg` in a way the `amm` contract will understand. However, it's possible that the `amm` contract itself may provide view functions which take desired action, destination token, & slippage as input and return data ready to pass to `msg` for `ft_transfer_call`. For the sake of this example, let's say `amm` implements a view function called `ft_data_to_msg`.
 
-Alice needs to attach one yoctoNEAR. This will result in her seeing a confirmation page in her preferred NEAR wallet. NEAR wallet implementations will (eventually) attempt to provide useful information in this confirmation page, so receiver contracts should follow a strong convention in how they format `msg`. We will update this documentation with a recommendation, as community consenses emerges.
+Alice needs to attach one yoctoNEAR. This will result in her seeing a confirmation page in her preferred NEAR wallet. NEAR wallet implementations will (eventually) attempt to provide useful information in this confirmation page, so receiver contracts should follow a strong convention in how they format `msg`. We will update this documentation with a recommendation, as community consensus emerges.
 
 Altogether then, Alice may take two steps, though the first may be a background detail of the app she uses.
 
@@ -201,7 +201,7 @@ function ft_transfer(
     receiver_id: string,
     amount: string,
     memo: string|null
-): void
+): void {}
 
 // Transfer tokens and call a method on a receiver contract. A successful
 // workflow will end in a success execution outcome to the callback on the same
@@ -235,7 +235,7 @@ function ft_transfer_call(
    receiver_id: string,
    amount: string,
    memo: string|null,
-   msg: string,
+   msg: string
 ): Promise {}
 
 // This function isn't called directly and shall implement logic ensuring it's called by "itself" as a callback to the promise sent to the receiver contract.
