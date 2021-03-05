@@ -323,7 +323,7 @@ function ft_on_transfer(
     sender_id: string,
     amount: string,
     msg: string
-): PromiseOrValue<U128> {}
+): string {}
 
 /****************/
 /* VIEW METHODS */
