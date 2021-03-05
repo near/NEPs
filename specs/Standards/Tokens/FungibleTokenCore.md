@@ -184,28 +184,53 @@ Altogether then, Alice may take two steps, though the first may be a background 
 /************************************/
 /* CHANGE METHODS on fungible token */
 /************************************/
-// Simple transfer to a receiver. Does not call a method.
+// Simple transfer to a receiver.
+//
 // Requirements:
 // * Caller of the method must attach a deposit of 1 yoctoⓃ for security purposes
 // * Caller must have greater than or equal to the `amount` being requested
-// `receiver_id` is the valid NEAR account receiving the fungible tokens.
-// `amount` is the number of tokens to transfer, wrapped in quotes and treated like a string, although the number will be stored as an unsigned integer with 128 bits.
-// The `memo` argument is optional. It's added for use cases that may benefit from indexing or providing information for a transfer.
+//
+// Arguments:
+// * `receiver_id`: the valid NEAR account receiving the fungible tokens.
+// * `amount`: the number of tokens to transfer, wrapped in quotes and treated
+//   like a string, although the number will be stored as an unsigned integer
+//   with 128 bits.
+// * `memo` (optional): for use cases that may benefit from indexing or
+//    providing information for a transfer.
 function ft_transfer(
     receiver_id: string,
     amount: string,
     memo: string|null
-): void {}
+): void
 
-// Transfer tokens and call a method on a receiver contract. A successful workflow will end in a success execution outcome to the callback on the same contract at the method `ft_resolve_transfer`.
+// Transfer tokens and call a method on a receiver contract. A successful
+// workflow will end in a success execution outcome to the callback on the same
+// contract at the method `ft_resolve_transfer`.
 //
-// You can think of this as being similar to attaching native NEAR tokens to a function call on some contract. It allows you to attach any Fungible Token in a call to a receiver contract, given by `receiver_id`, where `msg` gets passed to the receiver contract to indicate both a function to call and the parameters to that function.
+// You can think of this as being similar to attaching native NEAR tokens to a
+// function call. It allows you to attach any Fungible Token in a call to a
+// receiver contract.
+//
 // Requirements:
-// * Caller of the method must attach a deposit of 1 yoctoⓃ for security purposes
+// * Caller of the method must attach a deposit of 1 yoctoⓃ for security
+//   purposes
 // * Caller must have greater than or equal to the `amount` being requested
-// * The receiving contract must implement `ft_on_transfer` according to the standard.
-// * This contract must implement `ft_resolve_transfer` according to the standard.
-// `msg` is an argument that may specify any information expected by the receiving contract in order to properly handle the function. If the receiving contract needs something larger than a single string, `msg` could be a complex JSON structure, base64-encoded.
+// * The receiving contract must implement `ft_on_transfer` according to the
+//   standard. If it does not, FT contract's `ft_resolve_transfer` MUST deal
+//   with the resulting failed cross-contract call and roll back the transfer.
+// * This contract must implement `ft_resolve_transfer` according to the
+//   standard.
+//
+// Arguments:
+// * `receiver_id`: the valid NEAR account receiving the fungible tokens.
+// * `amount`: the number of tokens to transfer, wrapped in quotes and treated
+//   like a string, although the number will be stored as an unsigned integer
+//   with 128 bits.
+// * `memo` (optional): for use cases that may benefit from indexing or
+//    providing information for a transfer.
+// * `msg`: specifies information needed by the receiving contract in
+//    order to properly handle the transfer. Can indicate both a function to
+//    call and the parameters to pass to that function.
 function ft_transfer_call(
    receiver_id: string,
    amount: string,
