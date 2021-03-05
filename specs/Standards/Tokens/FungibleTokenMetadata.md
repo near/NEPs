@@ -9,9 +9,9 @@ An interface for a fungible token's metadata. The goal is to keep the metadata f
 
 ## Motivation
 
-Custom fungible tokens play a major role in decentralized applications today. FTs can contain custom properties to differentiate themselves from other tokens or contracts in the ecosystem. Some properties, such as a token's description, are best stored off-chain or in a decentralized storage platform, in order to save on storage costs. Other properties, however, are more fundamental to a token's identity and arguably belong on-chain, like the token's name and symbol.
+Custom fungible tokens play a major role in decentralized applications today. FTs can contain custom properties to differentiate themselves from other tokens or contracts in the ecosystem. In NEAR, many common properties can be stored right on-chain. Other properties are best stored off-chain or in a decentralized storage platform, in order to save on storage costs and allow rapid community experimentation.
 
-As blockchain technology advances, it becomes increasingly important to provide backwards compatibility and a concept of a spec. This standard encompasses all the concerns mentioned. Extra properties not included here likely belong in the `reference` object.
+As blockchain technology advances, it becomes increasingly important to provide backwards compatibility and a concept of a spec. This standard encompasses all of these concerns.
 
 Prior art:
 
