@@ -388,9 +388,13 @@ function storage_withdraw(amount: string|null): StorageBalance
 //
 // If `force=true` the function SHOULD ignore existing account data, such as
 // non-zero balances on an FT contract (that is, it should burn such balances),
-// and close the account. Otherwise, MUST panic if caller has existing account
-// data, such as a positive registered balance (eg token holdings) or if the
-// contract doesn't support forced unregistration.
+// and close the account. Contract MAY panic if it doesn't support forced
+// unregistration, or if it can't force unregister for the particular situation
+// (example: too much data to delete at once).
+//
+// If `force=false` or `force` is omitted, the contract MUST panic if caller
+// has existing account data, such as a positive registered balance (eg token
+// holdings).
 //
 // MUST require exactly 1 yoctoNEAR attached balance to prevent restricted
 // function-call access-key call (UX wallet security)
