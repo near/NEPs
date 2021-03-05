@@ -392,7 +392,7 @@ function storage_withdraw(amount: string|null): StorageBalance
 //
 // Returns `true` iff the account was unregistered.
 // Returns `false` iff account was not registered before.
-function storage_unregister(force: boolean|null) -> boolean
+function storage_unregister(force: boolean|null): boolean
 
 /****************/
 /* VIEW METHODS */
