@@ -4,7 +4,7 @@ Version `1.0.0`
 
 ## Summary
 
-A standard interface for fungible tokens that allows for a normal transfer as well as a transfer and method call in a single transaction. The storage standard addresses the needs (and security) of storage staking. The [fungible token metadata standard](FungibleTokenMetadata.md) provides the fields needed for ergonomics across dApps and marketplaces.
+A standard interface for fungible tokens that allows for a normal transfer as well as a transfer and method call in a single transaction. The [storage standard](../StorageManagement.md) addresses the needs (and security) of storage staking. The [fungible token metadata standard](FungibleTokenMetadata.md) provides the fields needed for ergonomics across dApps and marketplaces.
 
 ## Motivation
 
