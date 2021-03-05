@@ -356,8 +356,8 @@ type StorageBalanceBounds = {
 // if the account wasn't registered and refund full deposit if already
 // registered.
 //
-// Any attached deposit in excess of `storage_balance_bounds.max` must be
-// refunded to predecessor account.
+// The `storage_balance_of.total` + `attached_deposit` in excess of
+// `storage_balance_bounds.max` must be refunded to predecessor account.
 //
 // Returns the StorageBalance structure showing updated balances.
 function storage_deposit(
