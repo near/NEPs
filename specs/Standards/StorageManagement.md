@@ -290,11 +290,11 @@ Assumption: Alice has more deposited than she is using.
          available: '100100000000000000000000'
        }
 
-2. Alice calls `social::storage_withdraw({"amount": "100100000000000000000000"})` for her own account. NEAR CLI command:
+2. Alice calls `storage_withdraw` with a 1 yoctoⓃ deposit. NEAR CLI command:
 
        near call social storage_withdraw \
          '{"amount": "100100000000000000000000"}' \
-         --accountId alice
+         --accountId alice --amount .000000000000000000000001
 
    Result:
 
@@ -374,6 +374,9 @@ function storage_deposit(
 // predecessor account's available balance, contract MUST panic.
 //
 // If predecessor account not registered, contract MUST panic.
+//
+// MUST require exactly 1 yoctoNEAR attached balance to prevent restricted
+// function-call access-key call (UX wallet security)
 //
 // Returns the StorageBalance structure showing updated balances.
 function storage_withdraw(amount: string|null): StorageBalance
