@@ -125,8 +125,8 @@ Alice accidentally makes the same call again, and even misses a leading zero in 
 The result:
 
     {
-      total: 2350000000000000000000,
-      available: 0
+      total: "2350000000000000000000",
+      available: "0"
     }
 
 Additionally, Alice will be refunded the 0.0235Ⓝ she attached, because the `storage_deposit_bounds.max` specifies that Bob's account cannot have a total balance larger than 0.00235Ⓝ.
