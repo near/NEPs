@@ -268,9 +268,9 @@ Note that applications will probably want to avoid this situation in the first p
 
 3. Alice tries the initial `near call social post` call again. It works.
 
-#### 4. Account removes storage and reclaims now-unused deposit
+#### 4. Removing storage and reclaiming excess deposit
 
-Assumption: Alice has more deposited than they are using.
+Assumption: Alice has more deposited than she is using.
 
 **High-level explanation**
 
