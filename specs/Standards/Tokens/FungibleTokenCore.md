@@ -133,11 +133,11 @@ Alice wants to swap 5 wrapped NEAR (wNEAR) for BNNA tokens at current market rat
 
 **High-level explanation**
 
-Alice needs to issue one transaction to wNEAR contract to transfer 5 tokens (multiplied by precision) to `amm`, specifying her desired destination token (BNNA) & minimum slippage (<2%) in `msg`.
+Alice needs to issue one transaction to wNEAR contract to transfer 5 tokens (multiplied by precision) to `amm`, specifying her desired action (swap), her destination token (BNNA) & minimum slippage (<2%) in `msg`.
 
 Alice will probably make this call via a UI that knows how to construct `msg` in a way the `amm` contract will understand. However, it's possible that the `amm` contract itself may provide view functions which take desired action, destination token, & slippage as input and return data ready to pass to `msg` for `ft_transfer_call`. For the sake of this example, let's say `amm` implements a view function called `ft_data_to_msg`.
 
-Alice needs to attach one yoctoNEAR. This will result in her seeing a confirmation page in her preferred NEAR wallet. NEAR wallet implementations will (eventually) attempt to provide useful information in this confirmation page, so receiver contracts should follow a strong convention in how they format `msg`. As a starting point, we recommend base64-encoded JSON, though contract developers may settle on a different convention in the future. We will update this documentation with a new recommendation, if community consenses changes.
+Alice needs to attach one yoctoNEAR. This will result in her seeing a confirmation page in her preferred NEAR wallet. NEAR wallet implementations will (eventually) attempt to provide useful information in this confirmation page, so receiver contracts should follow a strong convention in how they format `msg`. We will update this documentation with a recommendation, as community consenses emerges.
 
 Altogether then, Alice may take two steps, though the first may be a background detail of the app she uses.
 
@@ -151,19 +151,19 @@ Altogether then, Alice may take two steps, though the first may be a background 
         "min_slip": 2
       }'
 
-   Then Alice (or the app she uses) will hold onto the result and use it in the next step. Let's say this result is `"c3dhcDpibm5hLDI="`, the base64-encoded version of the string "swap:bnna,2".
+   Then Alice (or the app she uses) will hold onto the result and use it in the next step. Let's say this result is `"swap:bnna,2"`.
 
 2. Call `wnear::ft_on_transfer`. Using NEAR CLI:
        near call wnear ft_transfer_call '{
          "receiver_id": "amm",
          "amount": "5000000000000000000000000",
-         "msg": "c3dhcDpibm5hLDI="
+         "msg": "swap:bnna,2"
        }' --accountId alice --amount .000000000000000000000001
 
    During the `ft_transfer_call` call, `wnear` does the following:
 
    1. Decrease the balance of `alice` and increase the balance of `amm` by 5000000000000000000000000.
-   2. Makes async call `amm::ft_on_transfer({"sender_id": "alice", "amount": "5000000000000000000000000", "msg": "c3dhcDpibm5hLDI="})`.
+   2. Makes async call `amm::ft_on_transfer({"sender_id": "alice", "amount": "5000000000000000000000000", "msg": "swap:bnna,2"})`.
    3. Attaches a callback `wnear::ft_resolve_transfer({"sender_id": "alice", "receiver_id": "compound", "amount": "5000000000000000000000000"})`.
    4. `amm` finishes the swap, either successfully swapping all 5 wNEAR within the desired slippage, or failing.
    5. The `wnear::ft_resolve_transfer` function receives success/failure of the promise. Assuming `amm` implements all-or-nothing transfers (as in, it will not transfer less-than-the-specified amount in order to fulfill the slippage requirements), `wnear` will do nothing at this point if the swap succeeded, or it will decrease the balance of `amm` and increase the balance of `alice` by 5000000000000000000000000.
