@@ -88,8 +88,8 @@ Let's follow two users, Alice with account `alice` and Bob with account `bob`, a
    The result:
 
        {
-         total: 2350000000000000000000,
-         available: 0
+         total: "2350000000000000000000",
+         available: "0"
        }
 
 
