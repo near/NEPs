@@ -111,8 +111,8 @@ Alice calls `ft::storage_deposit({"account_id": "bob"})` with the attached depos
 The result:
 
     {
-      total: 2350000000000000000000,
-      available: 0
+      total: "2350000000000000000000",
+      available: "0"
     }
 
 #### 3. Unnecessary attempt to register already-registered account
