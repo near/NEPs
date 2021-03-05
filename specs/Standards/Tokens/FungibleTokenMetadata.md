@@ -51,7 +51,7 @@ If this deploy and initialization were done using [NEAR CLI](https://docs.near.o
       "name": "Wrapped Bitcoin",
       "symbol": "WBTC",
       "reference": "https://example.com/wbtc.json",
-      "reference_hash": "7c879fa7b49901d0ecc6ff5d64d7f673da5e4a5eb52a8d50a214175760d8919a",
+      "reference_hash": "AK3YRHqKhCJNmKfV6SrutnlWW/icN5J8NUPtKsNXR1M=",
       "decimals": 8
     }' --accountId alice
 
