@@ -49,7 +49,7 @@ Alice issues a transaction to deploy and initialize the fungible token contract,
          "spec": "ft-1.0.0",
          "name": "Wrapped Bitcoin",
          "symbol": "WBTC",
-         "icon": "https://example.com/wbtc.png",
+         "icon": "data:image/svg+xml,%3C…",
          "reference": "https://example.com/wbtc.json",
          "reference_hash": "AK3YRHqKhCJNmKfV6SrutnlWW/icN5J8NUPtKsNXR1M=",
          "decimals": 8
