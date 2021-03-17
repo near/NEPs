@@ -29,62 +29,118 @@ pub type TokenId = String;
 
 pub struct Token {
     pub owner_id: AccountId,
+    pub approved_account_ids: HashSet<AccountId>,
 }
 
-pub struct Core {
-  pub tokens: LookupMap<TokenId, Token>,
-  owner_id: AccountId,
-  token_storage_usage: StorageUsage, // u64, how much it costs to add an entry to the "tokens" map if the owner's account is max length of 64 characters.
+pub struct Contract {
+    pub tokens_per_owner: LookupMap<AccountId, UnorderedSet<TokenId>>,
+
+    pub tokens_by_id: UnorderedMap<TokenId, Token>,
+
+    pub owner_id: AccountId,
+
+    pub total_supply: u64,
+
+    /// The storage size in bytes for one account.
+    pub extra_storage_in_bytes_per_token: StorageUsage,
 }
 ```
 
 ### Methods
 
-The following have the same workflow as the explained in the [Fungible Token Core spec](https://nomicon.io/Standards/Tokens/FungibleTokenCore.html), except with `nft_transfer_call` there is no value returned from the receiver contract. Instead, the contract shall panic if it's unable to transfer an NFT to an individual. An execution that doesn't panic indicates a successful transfer.
+`nft_transfer` and `nft_transfer_call` have similar workflows as the explained in the [Fungible Token Core spec](https://nomicon.io/Standards/Tokens/FungibleTokenCore.html), except with `nft_transfer_call` there is no value returned from the receiver contract. Instead, the contract shall panic if it's unable to transfer an NFT to an individual. An execution that doesn't panic indicates a successful transfer.
+
+A baseline NFT standard also requires use of escrows (approved accounts), where the Fungible Token Core does not.
 
 ```rust
-pub fn nft_transfer(
-  &mut self,
-  receiver_id: AccountId,
-  token_id: TokenId,
-  enforce_owner_id: Option<ValidAccountId>,
-  memo: String
-) {}
+pub trait NonFungibleTokenCore {
+    fn nft_transfer(
+        &mut self,
+        receiver_id: ValidAccountId,
+        token_id: TokenId,
+        enforce_owner_id: Option<ValidAccountId>,
+        memo: Option<String>,
+    );
 
-fn nft_transfer_call(
-  &mut self,
-  receiver_id: ValidAccountId,
-  token_id: TokenId,
-  enforce_owner_id: Option<ValidAccountId>,
-  memo: Option<String>,
-  msg: String,
-) -> Promise {}
+    /// Returns `true` if the token was transferred from the sender's account.
+    fn nft_transfer_call(
+        &mut self,
+        receiver_id: ValidAccountId,
+        token_id: TokenId,
+        enforce_owner_id: Option<ValidAccountId>,
+        memo: Option<String>,
+        msg: String,
+    ) -> Promise;
 
-pub fn on_nft_transfer: (
-  &mut self,
-  receiver_id: ValidAccountId,
-  token_id: TokenId,
-  enforce_owner_id: Option<ValidAccountId>,
-  memo: Option<String>
-) {}
+    fn nft_approve_account_id(&mut self, token_id: TokenId, account_id: ValidAccountId) -> bool;
+
+    fn nft_revoke_account_id(&mut self, token_id: TokenId, account_id: ValidAccountId) -> bool;
+
+    fn nft_revoke_all(&mut self, token_id: TokenId);
+
+    fn nft_total_supply(&self) -> U64;
+
+    fn nft_token(&self, token_id: TokenId) -> Option<Token>;
+}
+
+trait NonFungibleTokenReceiver {
+    /// Returns `true` if the token should be returned back to the sender.
+    /// TODO: Maybe make it inverse. E.g. true to keep it.
+    fn nft_on_transfer(
+        &mut self,
+        sender_id: AccountId,
+        previous_owner_id: AccountId,
+        token_id: TokenId,
+        msg: String,
+    ) -> Promise;
+}
+
+trait NonFungibleTokenResolver {
+    fn nft_resolve_transfer(
+        &mut self,
+        owner_id: AccountId,
+        receiver_id: AccountId,
+        approved_account_ids: HashSet<AccountId>,
+        token_id: TokenId,
+    ) -> bool;
+}
 ```
 
 ## Metadata
 
+Metadata applies at both the contract level (`NFTMetadata`) and the token level (`TokenMetadata`). The relevant metadata for each:
+
 ```rust
 pub struct NFTMetadata {
-  spec: String, // required, essentially a version like "nft-1.0.0"
-  name: String, // required, ex. "Mochi Rising — Digital Edition" or "ML Course Completion, Spring 2021"
-  media: Option<String>, // preferably decentralized URL (can be centralized, though) to associated media
-  icon: Option<String>, // Data URL, this could be, for instance, a thumbnail of a piece of art
-  reference: Option<String>, // URL to a JSON file with more info
-  reference_hash: Option<String> // Base64-encoded sha256 hash of JSON from reference field
+    spec: String, // required, essentially a version like "nft-1.0.0"
+    name: String, // required, ex. "Mochi Rising — Digital Edition" or "Metaverse 3"
+    icon: Option<String>, // Data URL
+    reference: Option<String>, // URL to a JSON file with more info
+    reference_hash: Option<String> // Base64-encoded sha256 hash of JSON from reference field
 }
 
-pub struct Token {
-  pub owner_id: AccountId,
-  pub meta: NFTMetadata, // NEW FIELD
+pub struct TokenMetadata {
+    name: String, // required, ex. "Arch Nemesis Mailmain" or "Parcel #5055"
+    media: Option<String>, // preferably decentralized URL (can be centralized, though) to associated media
 }
+```
+
+Then a new field is needed on NFT contract:
+
+```rust
+trait NonFungibleTokenMetadata {
+    fn nft_metadata(&mut self) -> NFTMetadata;
+}
+```
+
+And a new attribute can be added to each `Token` struct:
+
+```diff
+ pub struct Token {
+     pub owner_id: AccountId,
+     pub approved_account_ids: HashSet<AccountId>,
++    pub metadata: TokenMetadata,
+ }
 ```
 
 Note that when this NFT contract is created and initialized, the associated `token_storage_usage` will be higher than the previous Core example because of the added metadata fields. The fields `name` and `icon` in particular are indeed variable. The frontend can account for this by adding extra deposit when minting. This could be done by padding with a reasonable amount, or by the frontend using the [RPC call detailed here](https://docs.near.org/docs/develop/front-end/rpc#genesis-config) that gets genesis configuration and actually determine precisely how much deposit is needed.
