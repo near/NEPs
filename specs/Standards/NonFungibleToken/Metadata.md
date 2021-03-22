@@ -34,13 +34,13 @@ type NFTMetadata = {
 }
 
 type TokenMetadata = {
-  name: string, // required, ex. "Arch Nemesis: Mail Carrier" or "Parcel #5055"
-  media: string|null, // a URL to associated media, preferably to decentralized, content-addressed storage
-  media_hash: string|null // - (Base64 sha256 hash from Media content) - to ensure media has not changed, even if using a centralized media URL
-  issued_at: string, // ISO 8601 datetime when token was issued or minted
-  expires_at: string, // ISO 8601 datetime when token expires
-  starts_at: string, // ISO 8601 datetime when token starts being valid
-  updated_at: string, // ISO 8601 datetime when token was last updated
+  name: string|null, // required, ex. "Arch Nemesis: Mail Carrier" or "Parcel #5055"
+  media: string|null, // URL to associated media, preferably to decentralized, content-addressed storage
+  media_hash: string|null, // Base64-encoded sha256 hash of content referenced by the `media` field. Required if `media` is included.
+  issued_at: string|null, // ISO 8601 datetime when token was issued or minted
+  expires_at: string|null, // ISO 8601 datetime when token expires
+  starts_at: string|null, // ISO 8601 datetime when token starts being valid
+  updated_at: string|null, // ISO 8601 datetime when token was last updated
 }
 ```
 
@@ -70,6 +70,12 @@ And a new attribute must be added to each `Token` struct:
 - `icon`: a small image associated with this token. Encouraged to be a [data URL](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/Data_URIs), to help consumers display it quickly while protecting user data. Recommendation: use [optimized SVG](https://codepen.io/tigt/post/optimizing-svgs-in-data-uris), which can result in high-resolution images with only 100s of bytes of [storage cost](https://docs.near.org/docs/concepts/storage-staking). (Note that these storage costs are incurred to the token owner/deployer, but that querying these icons is a very cheap & cacheable read operation for all consumers of the contract and the RPC nodes that serve the data.) Recommendation: create icons that will work well with both light-mode and dark-mode websites by either using middle-tone color schemes, or by [embedding `media` queries in the SVG](https://timkadlec.com/2013/04/media-queries-within-svg/).
 - `reference`: a link to a valid JSON file containing various keys offering supplementary details on the token. Example: "/ipfs/QmdmQXB2mzChmMeKY47C43LxUdg1NDJ5MWcKMKxDu7RgQm", "https://example.com/token.json", etc. If the information given in this document conflicts with the on-chain attributes, the values in `reference` shall be considered the source of truth.
 - `reference_hash`: the base64-encoded sha256 hash of the JSON file contained in the `reference` field. This is to guard against off-chain tampering.
+- `media`: URL to associated media. Preferably to decentralized, content-addressed storage.
+- `media_hash`: the base64-encoded sha256 hash of content referenced by the `media` field. This is to guard against off-chain tampering.
+- `issued_at`: [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) datetime when token was issued or minted
+- `expires_at`: [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) datetime when token expires
+- `starts_at`: [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) datetime when token starts being valid
+- `updated_at`: [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) datetime when token was last updated
 
 **No incurred cost for core NFT behavior**
 
