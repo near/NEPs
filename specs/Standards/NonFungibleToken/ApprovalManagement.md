@@ -23,7 +23,7 @@ Prior art:
 
 ## Interface
 
-The `Token` structure returned by various methods must include an `approved_account_ids` field:
+The `Token` structure returned by `nft_token` must include an `approved_account_ids` field:
 
 ```diff
  type Token = {
@@ -35,16 +35,66 @@ The `Token` structure returned by various methods must include an `approved_acco
 The contract must implement the following methods:
 
 ```ts
-// contract MUST call `nft_on_approve` on `account_id` contract
+// Add an approved account for a specific token.
+//
+// Requirements
+// * Caller of the method must attach a deposit of at least 1 yoctoⓃ for
+//   security purposes
+// * Contract MAY require caller to attach larger deposit, to cover cost of
+//   storing approver data
+// * Contract MUST panic if called by someone other than token owner
+// * Contract MUST call `nft_on_approve` on contract at `account_id`
+//
+// Arguments:
+// * `token_id`: the token for which to add an approval
+// * `account_id`: the account to add to `approved_account_ids`
+//
+// Returns `true` if successfully approved, otherwise `false`
 function nft_approve_account_id(
   token_id: TokenId,
   account_id: string, // account approved to transfer this token
-): Promise<boolean> {}
-
-function nft_revoke_account_id(
-  token_id: TokenId,
-  account_id: ValidAccountId
 ): boolean {}
 
-function nft_revoke_all(token_id: TokenId): boolean {}
+// Revoke an approved account for a specific token.
+//
+// Requirements
+// * Caller of the method must attach a deposit of 1 yoctoⓃ for security
+//   purposes
+// * If contract requires >1yN deposit on `nft_approve_account_id`, contract
+//   MUST refund associated storage deposit when owner revokes approval
+// * Contract MUST panic if called by someone other than token owner
+//
+// Arguments:
+// * `token_id`: the token for which to revoke an approval
+// * `account_id`: the account to remove from `approved_account_ids`
+//
+// Returns `true` if successfully revoked, otherwise `false`
+function nft_revoke_account_id(
+  token_id: string,
+  account_id: string
+): boolean {}
+
+// Revoke all approved accounts for a specific token.
+//
+// Requirements
+// * Caller of the method must attach a deposit of 1 yoctoⓃ for security
+//   purposes
+// * If contract requires >1yN deposit on `nft_approve_account_id`, contract
+//   MUST refund all associated storage deposit when owner revokes approvals
+// * Contract MUST panic if called by someone other than token owner
+//
+// Arguments:
+// * `token_id`: the token with approvals to revoke
+//
+// Returns `true` if successfully revoked, otherwise `false`
+function nft_revoke_all(token_id: string): boolean {}
 ```
+
+### Notes
+
+* `nft_on_approve` is a fire-and-forget operation. `nft_approve_account_id` returns a boolean immediately, ignoring the result of this call.
+* There is no parallel `nft_on_revoke` when revoking either a single approval or when revoking all. This is partially because scheduling many `nft_on_revoke` calls when revoking all approvals could incur prohibitive [gas fees](https://docs.near.org/docs/concepts/gas). Apps caching approved account statuses can therefore not rely on having up-to-date information, and should periodically refresh their caches. Since this will be the necessary reality for `nft_revoke_all`, there is no reason to complicate `nft_revoke_account_id` with an `nft_on_revoke` call.
+
+### No incurred cost for core NFT behavior
+
+Contracts should be implemented in a way to avoid extra gas fees for serialization & deserialization of approved accounts for calls to `nft_*` methods other than `nft_token`. See `near-contract-standards` [implementation using `LazyOption`](https://github.com/near/near-sdk-rs/blob/c2771af7fdfe01a4e8414046752ee16fb0d29d39/examples/fungible-token/ft/src/lib.rs#L71) as a reference example.
