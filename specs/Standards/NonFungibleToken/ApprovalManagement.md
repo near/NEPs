@@ -43,7 +43,9 @@ The contract must implement the following methods:
 // * Contract MAY require caller to attach larger deposit, to cover cost of
 //   storing approver data
 // * Contract MUST panic if called by someone other than token owner
-// * Contract MUST call `nft_on_approve` on contract at `account_id`
+// * Contract MUST panic if addition would cause `nft_revoke_all` to exceed
+//   single-block gas limit
+// * If successful, contract MUST call `nft_on_approve` on `account_id`
 //
 // Arguments:
 // * `token_id`: the token for which to add an approval
