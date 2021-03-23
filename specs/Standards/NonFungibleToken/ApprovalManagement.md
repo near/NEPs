@@ -50,9 +50,10 @@ The contract must implement the following methods:
 // Arguments:
 // * `token_id`: the token for which to add an approval
 // * `account_id`: the account to add to `approved_account_ids`
+// * `msg`: 
 //
 // Returns `true` if successfully approved, otherwise `false`
-function nft_approve_account_id(
+function nft_approve(
   token_id: TokenId,
   account_id: string, // account approved to transfer this token
 ): boolean {}
@@ -62,7 +63,7 @@ function nft_approve_account_id(
 // Requirements
 // * Caller of the method must attach a deposit of 1 yoctoⓃ for security
 //   purposes
-// * If contract requires >1yN deposit on `nft_approve_account_id`, contract
+// * If contract requires >1yN deposit on `nft_approve`, contract
 //   MUST refund associated storage deposit when owner revokes approval
 // * Contract MUST panic if called by someone other than token owner
 //
@@ -71,7 +72,7 @@ function nft_approve_account_id(
 // * `account_id`: the account to remove from `approved_account_ids`
 //
 // Returns `true` if successfully revoked, otherwise `false`
-function nft_revoke_account_id(
+function nft_revoke(
   token_id: string,
   account_id: string
 ): boolean {}
@@ -81,7 +82,7 @@ function nft_revoke_account_id(
 // Requirements
 // * Caller of the method must attach a deposit of 1 yoctoⓃ for security
 //   purposes
-// * If contract requires >1yN deposit on `nft_approve_account_id`, contract
+// * If contract requires >1yN deposit on `nft_approve`, contract
 //   MUST refund all associated storage deposit when owner revokes approvals
 // * Contract MUST panic if called by someone other than token owner
 //
@@ -94,8 +95,8 @@ function nft_revoke_all(token_id: string): boolean {}
 
 ### Notes
 
-* `nft_on_approve` is a fire-and-forget operation. `nft_approve_account_id` returns a boolean immediately, ignoring the result of this call.
-* There is no parallel `nft_on_revoke` when revoking either a single approval or when revoking all. This is partially because scheduling many `nft_on_revoke` calls when revoking all approvals could incur prohibitive [gas fees](https://docs.near.org/docs/concepts/gas). Apps caching approved account statuses can therefore not rely on having up-to-date information, and should periodically refresh their caches. Since this will be the necessary reality for `nft_revoke_all`, there is no reason to complicate `nft_revoke_account_id` with an `nft_on_revoke` call.
+* `nft_on_approve` is a fire-and-forget operation. `nft_approve` returns a boolean immediately, ignoring the result of this call.
+* There is no parallel `nft_on_revoke` when revoking either a single approval or when revoking all. This is partially because scheduling many `nft_on_revoke` calls when revoking all approvals could incur prohibitive [gas fees](https://docs.near.org/docs/concepts/gas). Apps caching approved account statuses can therefore not rely on having up-to-date information, and should periodically refresh their caches. Since this will be the necessary reality for `nft_revoke_all`, there is no reason to complicate `nft_revoke` with an `nft_on_revoke` call.
 
 ### No incurred cost for core NFT behavior
 
