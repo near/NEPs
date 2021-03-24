@@ -50,28 +50,23 @@ type Token = {
 // * Caller of the method must attach a deposit of 1 yoctoⓃ for security purposes
 // * Contract MUST panic if called by someone other than token owner or,
 //   if using Approval Management, one of the approved accounts
-// * If given `enforce_owner_id`, MUST panic if current owner does not match
-//   the provided `enforce_owner_id` value. This prevents an accidental
-//   transfer race condition, in which:
-//   1. a token is listed in two marketplaces, which are both saved to the
-//      token as approved accounts
-//   2. one marketplace sells the token, which clears the approved accounts
-//   3. the new owner lists the token in the second marketplace
-//   4. the second marketplace, operating from cached information, attempts to
-//      transfer the token, thinking it still belongs to the original owner
+// * `enforce_approval_id` is for use with Approval Management extension, see
+//   that document for full explanation.
 // * If using Approval Management, contract MUST nullify approved accounts on
 //   successful transfer.
 //
 // Arguments:
 // * `receiver_id`: the valid NEAR account receiving the token
 // * `token_id`: the token to transfer
-// * `enforce_owner_id`: a valid NEAR account
+// * `enforce_approval_id`: expected approval ID. A number smaller than
+//    2^53, and therefore representable as JSON. See Approval Management
+//    standard for full explanation.
 // * `memo` (optional): for use cases that may benefit from indexing or
 //    providing information for a transfer
 function nft_transfer(
   receiver_id: string,
   token_id: string,
-  enforce_owner_id: string|null,
+  enforce_approval_id: number|null,
   memo: string|null,
 ) {}
 
@@ -94,16 +89,17 @@ function nft_transfer(
 //   standard. If it does not, FT contract's `ft_resolve_transfer` MUST deal
 //   with the resulting failed cross-contract call and roll back the transfer.
 // * Contract MUST implement the behavior described in `ft_resolve_transfer`
-// * If given `enforce_owner_id`, MUST panic if current owner does not match
-//   the provided `enforce_owner_id` value. See motivation in `nft_transfer`
-//   description.
+// * `enforce_approval_id` is for use with Approval Management extension, see
+//   that document for full explanation.
 // * If using Approval Management, contract MUST nullify approved accounts on
 //   successful transfer.
 //
 // Arguments:
 // * `receiver_id`: the valid NEAR account receiving the token.
 // * `token_id`: the token to send.
-// * `enforce_owner_id`: a valid NEAR account
+// * `enforce_approval_id`: expected approval ID. A number smaller than
+//    2^53, and therefore representable as JSON. See Approval Management
+//    standard for full explanation.
 // * `memo` (optional): for use cases that may benefit from indexing or
 //    providing information for a transfer.
 // * `msg`: specifies information needed by the receiving contract in
@@ -112,7 +108,7 @@ function nft_transfer(
 function nft_transfer_call(
   receiver_id: string,
   token_id: string,
-  enforce_owner_id: string|null,
+  enforce_approval_id: string|null,
   memo: string|null,
   msg: string,
 ): Promise<boolean> {}
