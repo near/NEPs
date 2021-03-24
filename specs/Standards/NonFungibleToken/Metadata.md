@@ -25,16 +25,16 @@ Metadata applies at both the contract level (`NFTMetadata`) and the token level 
 
 ```ts
 type NFTMetadata = {
-  spec: string; // required, essentially a version like "nft-1.0.0"
-  name: string; // required, ex. "Mochi Rising — Digital Edition" or "Metaverse 3"
-  symbol: string; // required, ex. "MOCHI"
+  spec: string, // required, essentially a version like "nft-1.0.0"
+  name: string, // required, ex. "Mochi Rising — Digital Edition" or "Metaverse 3"
+  symbol: string, // required, ex. "MOCHI"
   icon: string|null, // Data URL
   reference: string|null, // URL to a JSON file with more info
-  reference_hash: string|null // Base64-encoded sha256 hash of JSON from reference field. Required if `reference` is included.
+  reference_hash: string|null, // Base64-encoded sha256 hash of JSON from reference field. Required if `reference` is included.
 }
 
 type TokenMetadata = {
-  name: string|null, // required, ex. "Arch Nemesis: Mail Carrier" or "Parcel #5055"
+  name: string|null, // ex. "Arch Nemesis: Mail Carrier" or "Parcel #5055"
   media: string|null, // URL to associated media, preferably to decentralized, content-addressed storage
   media_hash: string|null, // Base64-encoded sha256 hash of content referenced by the `media` field. Required if `media` is included.
   issued_at: string|null, // ISO 8601 datetime when token was issued or minted
