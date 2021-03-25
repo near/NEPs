@@ -4,21 +4,30 @@ Version `1.0.0`
 
 ## Summary
 
-TODO
+A standard interface for non-fungible tokens (NFTs). That is, tokens which each have a unique ID.
 
 ## Motivation
 
-TODO
+In the three years since [ERC-721] was ratified by the Ethereum community, Non-Fungible Tokens have proven themselves as an incredible new opportunity across a wide array of disciplines: collectibles, art, gaming, finance, virtual reality, real estate, and more.
+
+This standard builds off the lessons learned in this early experimentation, and pushes the possibilities further by harnessing unique attributes of the NEAR blockchain:
+
+- an asynchronous, sharded runtime, meaning that two contracts can be executed at the same time in different shards
+- a [storage staking] model that separates [gas] fees from the storage demands of the network, enabling greater on-chain storage (see [Metadata] extension) and ultra-low transaction fees
+
+Given these attributes, this NFT standard can accomplish with one user interaction things for which other blockchains need two or three. Most noteworthy is `nft_transfer_call`, by which a user can essentially attach a token to a call to a separate contract. An example scenario:
+
+* An [Exquisite Corpse](https://en.wikipedia.org/wiki/Exquisite_corpse) contract allows three drawings to be submitted, one for each section of a final composition, to be minted as its own NFT and sold on a marketplace, splitting [Royalties] amongst the original artists.
+* Alice draws the top third and submits it, Bob the middle third, and Carol follows up with the bottom third. Since they each use `nft_transfer_call` to both transfer their NFT to the Exquisite Corpse contract as well as call a `submit` method on it, the call from Carol can automatically kick off minting a composite NFT from the three submissions, as well as listing this composite NFT in a marketplace.
+* When Dan attempts to also call `nft_transfer_call` to submit an unneeded top third of the drawing, the Exquisite Corpse contract can throw an error, and the transfer will be rolled back so that Bob maintains ownership of his NFT.
+
+While this is already flexible and powerful enough to handle all sorts of existing and new use-cases, apps such as marketplaces may still benefit from the [Approval Management] extension.
 
 Prior art:
 
-- [Mintbase's ERC-721 Reference](https://github.com/Mintbase/near-nft-standards/blob/main/ERC721_reference.md#rust-equivalent) including a Rust interface
-- [OpenZeppelin implementation of ERC-721](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC721/ERC721.sol)
-- [EIP/ERC-721](https://eips.ethereum.org/EIPS/eip-721) from Ethereum.org
-- [EIP-1155 for multi-tokens](https://eips.ethereum.org/EIPS/eip-1155#non-fungible-tokens) which is a considering particularly for universal identifiers.
-- A [simple NFT implementation](https://github.com/near/core-contracts/blob/7eb1b0d06f79893cb13b82178a37af2a49c46b9f/nft-simple/src/lib.rs) (not created after recent discussions)
-- [Fungible Token library implementation of the Storage Management standard](https://github.com/near/near-sdk-rs/blob/master/near-contract-standards/src/fungible_token/core_impl.rs#L58-L72)
-- [NEP-4](https://github.com/near/NEPs/pull/4), the old NFT standard that does not include approvals per token ID
+- [ERC-721]
+- [EIP-1155 for multi-tokens](https://eips.ethereum.org/EIPS/eip-1155#non-fungible-tokens)
+- [NEAR's Fungible Token Standard](../FungibleToken/Core.md), which first pioneered the "transfer and call" technique
 
 ## Reference-level explanation
 
@@ -162,3 +171,11 @@ function nft_resolve_transfer(
   approved_account_ids: null|string[],
 ): boolean {}
 ```
+
+  [ERC-721]: https://eips.ethereum.org/EIPS/eip-721
+  [storage staking]: https://docs.near.org/docs/concepts/storage-staking
+  [gas]: https://docs.near.org/docs/concepts/gas
+  [Royalties]: Royalties.md
+  [Metadata]: Metadata.md
+  [Approval Management]: ApprovalManagement.md
+
