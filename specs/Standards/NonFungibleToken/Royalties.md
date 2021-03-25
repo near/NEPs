@@ -36,7 +36,7 @@ A new attribute must be added to each `Token` struct:
 
 Taking some ideas from Mintbase and the [Staking Pool contract](https://github.com/near/core-contracts/blob/master/staking-pool) regarding the safe representation of a fraction:
 
-```
+```rust
 #[derive(BorshSerialize, BorshDeserialize, Serialize, Deserialize, Debug, Clone, PartialEq)]
 #[serde(crate = "near_sdk::serde")]
 pub struct Royalty {
@@ -90,7 +90,7 @@ impl Royalty {
 
 Where `SafeFraction` is a single 4-digit number, which may be safely multiplied with another `SafeFraction` without resorting to storing a denominator field:
 
-```
+```rust
 #[derive(
   BorshDeserialize, BorshSerialize, Serialize, Deserialize, Debug, PartialEq, Copy, Clone,
 )]
