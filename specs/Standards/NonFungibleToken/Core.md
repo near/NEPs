@@ -38,7 +38,7 @@ Prior art:
 - The contract must track the change in storage when adding to and removing from collections. This is not included in this core fungible token standard but instead in the [Storage Standard](../Storage.md).
 - To prevent the deployed contract from being modified or deleted, it should not have any access keys on its account.
 
-**Interface**:
+### NFT Interface
 
 ```ts
 // The base structure that will be returned for a token. If contract is using
@@ -170,6 +170,35 @@ function nft_resolve_transfer(
   token_id: string,
   approved_account_ids: null|string[],
 ): boolean {}
+```
+
+### Receiver Interface
+
+Contracts which want to make use of `nft_transfer_call` must implement the following:
+
+```ts
+// Take some action after receiving a non-fungible token
+//
+// Requirements:
+// * Contract MUST restrict calls to this function to a set of whitelisted NFT
+//   contracts
+//
+// Arguments:
+// * `sender_id`: the sender of `nft_transfer_call`
+// * `previous_owner_id`: the account that owned the NFT prior to it being
+//   transfered to this contract, which can differ from `sender_id` if using
+//   Approval Management extension
+// * `token_id`: the `token_id` argument given to `nft_transfer_call`
+// * `msg`: information necessary for this contract to know how to process the
+//   request. This may include method names and/or arguments.
+//
+// Returns true if token should be returned to `sender_id`
+function nft_on_transfer(
+  sender_id: string,
+  previous_owner_id: string,
+  token_id: string,
+  msg: string,
+): Promise<boolean>;
 ```
 
   [ERC-721]: https://eips.ethereum.org/EIPS/eip-721
