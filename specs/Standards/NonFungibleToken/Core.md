@@ -45,7 +45,8 @@ Prior art:
 // extensions such as Approval Management, Metadata, or Royalties, other
 // attributes may be included in this structure.
 type Token = {
-  owner_id: string;
+  id: string,
+  owner_id: string,
 }
 
 /******************/
@@ -59,7 +60,7 @@ type Token = {
 // * Caller of the method must attach a deposit of 1 yoctoⓃ for security purposes
 // * Contract MUST panic if called by someone other than token owner or,
 //   if using Approval Management, one of the approved accounts
-// * `enforce_approval_id` is for use with Approval Management extension, see
+// * `approval_id` is for use with Approval Management extension, see
 //   that document for full explanation.
 // * If using Approval Management, contract MUST nullify approved accounts on
 //   successful transfer.
@@ -67,7 +68,7 @@ type Token = {
 // Arguments:
 // * `receiver_id`: the valid NEAR account receiving the token
 // * `token_id`: the token to transfer
-// * `enforce_approval_id`: expected approval ID. A number smaller than
+// * `approval_id`: expected approval ID. A number smaller than
 //    2^53, and therefore representable as JSON. See Approval Management
 //    standard for full explanation.
 // * `memo` (optional): for use cases that may benefit from indexing or
@@ -75,7 +76,7 @@ type Token = {
 function nft_transfer(
   receiver_id: string,
   token_id: string,
-  enforce_approval_id: number|null,
+  approval_id: number|null,
   memo: string|null,
 ) {}
 
@@ -98,7 +99,7 @@ function nft_transfer(
 //   standard. If it does not, FT contract's `ft_resolve_transfer` MUST deal
 //   with the resulting failed cross-contract call and roll back the transfer.
 // * Contract MUST implement the behavior described in `ft_resolve_transfer`
-// * `enforce_approval_id` is for use with Approval Management extension, see
+// * `approval_id` is for use with Approval Management extension, see
 //   that document for full explanation.
 // * If using Approval Management, contract MUST nullify approved accounts on
 //   successful transfer.
@@ -106,7 +107,7 @@ function nft_transfer(
 // Arguments:
 // * `receiver_id`: the valid NEAR account receiving the token.
 // * `token_id`: the token to send.
-// * `enforce_approval_id`: expected approval ID. A number smaller than
+// * `approval_id`: expected approval ID. A number smaller than
 //    2^53, and therefore representable as JSON. See Approval Management
 //    standard for full explanation.
 // * `memo` (optional): for use cases that may benefit from indexing or
@@ -117,7 +118,7 @@ function nft_transfer(
 function nft_transfer_call(
   receiver_id: string,
   token_id: string,
-  enforce_approval_id: string|null,
+  approval_id: string|null,
   memo: string|null,
   msg: string,
 ): Promise<boolean> {}

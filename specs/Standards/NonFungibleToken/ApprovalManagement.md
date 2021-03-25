@@ -27,7 +27,8 @@ The `Token` structure returned by `nft_token` must include an `approvals` field,
 
 ```diff
  type Token = {
-   owner_id: string;
+   id: string,
+   owner_id: string,
 +  approvals: Record<string, number>,
  };
 ```
@@ -36,6 +37,7 @@ Example token data:
 
 ```json
 {
+  "id": "1",
   "owner_id": "alice.near",
   "approvals": {
     "bob.near": 1,
@@ -56,12 +58,13 @@ This is a unique number given to each approval that allows well-intentioned mark
 
 Note that while this describes an honest mistake, the possibility of such a bug can also be taken advantage of by malicious parties via [front-running](https://defi.cx/front-running-ethereum/).
 
-To avoid this possibility, the NFT contract generates a unique approval ID each time it approves an account. Then when calling `nft_transfer` or `nft_transfer_call`, the approved account passes `enforce_approval_id` with this value to make sure the underlying state of the token hasn't changed from what the approved account expects.
+To avoid this possibility, the NFT contract generates a unique approval ID each time it approves an account. Then when calling `nft_transfer` or `nft_transfer_call`, the approved account passes `approval_id` with this value to make sure the underlying state of the token hasn't changed from what the approved account expects.
 
 Keeping with the example above, say the initial approval of the second marketplace generated the following `approvals` data:
 
 ```json
 {
+  "id": "1",
   "owner_id": "alice.near",
   "approvals": {
     "marketplace_1.near": 1,
@@ -74,6 +77,7 @@ But after the transfers and re-approval described above, the token might have `a
 
 ```json
 {
+  "id": "1",
   "owner_id": "alice.near",
   "approvals": {
     "marketplace_2.near": 3,
@@ -85,7 +89,7 @@ The marketplace then tries to call `nft_transfer`, passing outdated information:
 
 ```bash
 # oops!
-near call nft-contract.near nft_transfer '{ "enforce_approval_id": 2 }'
+near call nft-contract.near nft_transfer '{ "approval_id": 2 }'
 ```
 
 
@@ -104,19 +108,23 @@ The NFT contract must implement the following methods:
 // * Contract MUST panic if called by someone other than token owner
 // * Contract MUST panic if addition would cause `nft_revoke_all` to exceed
 //   single-block gas limit
-// * If successfully approved or if had already been approved, contract MUST
-//   call `nft_on_approve` on `account_id`. See `nft_on_approve` description
-//   below for details.
+// * Contract MUST increment approval ID even if re-approving an account
+// * If successfully approved or if had already been approved, and if `msg` is
+//   present, contract MUST call `nft_on_approve` on `account_id`. See
+//   `nft_on_approve` description below for details.
 //
 // Arguments:
 // * `token_id`: the token for which to add an approval
 // * `account_id`: the account to add to `approvals`
 // * `msg`: optional string to be passed to `nft_on_approve`
+//
+// Returns void, if no `msg` given. Otherwise, returns promise call to
+// `nft_on_approve`, which can resolve with whatever it wants.
 function nft_approve(
   token_id: TokenId,
   account_id: string,
   msg: string|null,
-) {}
+): void|Promise<any> {}
 
 // Revoke an approved account for a specific token.
 //
@@ -147,6 +155,27 @@ function nft_revoke(
 // Arguments:
 // * `token_id`: the token with approvals to revoke
 function nft_revoke_all(token_id: string) {}
+```
+
+Suggestion: NFT contracts may want to implement this view method as a courtesy to marketplaces:
+
+```ts
+// Check if a token is approved for transfer by a given account, optionally
+// checking an approval_id
+//
+// Arguments:
+// * `token_id`: the token for which to revoke an approval
+// * `approved_account_id`: the account to check the existence of in `approvals`
+// * `approval_id`: an optional approval ID to check against current approval ID for given account
+//
+// Returns:
+// if `approval_id` given, `true` if `approved_account_id` is approved with given `approval_id`
+// otherwise, `true` if `approved_account_id` is in list of approved accounts
+function nft_is_approved(
+  token_id: string,
+  approved_account_id: string,
+  approval_id: number|null
+): boolean {}
 ```
 
 ### Approved Account Contract Interface

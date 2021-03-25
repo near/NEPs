@@ -60,6 +60,7 @@ And a new attribute must be added to each `Token` struct:
 
 ```diff
  type Token = {
+   id: string,
    owner_id: string,
 +  metadata: TokenMetadata,
  }
