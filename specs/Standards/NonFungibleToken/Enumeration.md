@@ -4,43 +4,68 @@ Version `1.0.0`
 
 ## Summary
 
-For a given NFT contract, this provides standard interfaces for:
-
-* Determining total number of tokens in existence
-* Listing all tokens owned by an account
+Standard interfaces for counting & fetching tokens, for an entire NFT contract or for a given owner.
 
 ## Motivation
 
-If an NFT contract is deeply integrated with an app, that app can list all tokens owned by a specific account and determine how many tokens are in existence by using off-chain [indexing](https://github.com/near/nearcore/tree/master/chain/indexer). This incurs the complexity of building and maintaining off-chain services but saves [storage] costs for the contract.
+Apps such as marketplaces and wallets need a way to show all tokens owned by a given account and to show statistics about all tokens for a given contract. This extension provides a standard way to do so.
 
-This is not the correct trade-off for all projects. For NFT projects which can tolerate the extra on-chain costs and which want to simplify the integration process for apps, the Enumeration extension provides a standard way to fetch this information without an off-chain layer.
+While some NFT contracts may forego this extension to save [storage] costs, this requires apps to have custom off-chain indexing layers. This makes it harder for apps to integrate with such NFTs. Apps which integrate only with NFTs that use the Enumeration extension do not even need a server-side component at all, since they can retrieve all information they need directly from the blockchain.
 
 Prior art:
 
 - [ERC-721]'s enumeration extension
-- [NEAR's Storage Management Standard][Storage Management]
 
 ## Interface
 
 The contract must implement the following view methods:
 
 ```ts
-// Get list of all tokens owned by a given account
+// Returns the total supply of non-fungible tokens as a string representing an
+// unsigned 128-bit integer to avoid JSON number limit of 2^53.
+function nft_total_supply(): string {}
+
+// Get a list of all tokens
+//
+// Arguments:
+// * `from_index`: a string representing an unsigned 128-bit integer,
+//    representing the starting index of tokens to return
+// * `limit`: the maximum number of tokens to return
+//
+// Returns an array of Token objects, as described in Core standard
+function nft_tokens(
+  from_index: string|null, // default: "0"
+  limit: number|null, // default: unlimited (could fail due to gas limit)
+): Token[] {}
+
+// Get number of tokens owned by a given account
 //
 // Arguments:
 // * `account_id`: a valid NEAR account
 //
-// Returns a list of all token IDs owned by this account
-// TODO: pagination?
-function nft_tokens_for_owner(account_id: string): string[] {}
+// Returns the number of non-fungible tokens owned by given `account_id` as
+// a string representing the value as an unsigned 128-bit integer to avoid JSON
+// number limit of 2^53.
+function nft_supply_for_owner(
+  account_id: string,
+): string {}
 
-// Returns the total supply of non-fungible tokens as a string representing the
-// value as an unsigned 128-bit integer to avoid JSON number limit of 2^53.
-function nft_total_supply(): string {}
+// Get list of all tokens owned by a given account
+//
+// Arguments:
+// * `account_id`: a valid NEAR account
+// * `from_index`: a string representing an unsigned 128-bit integer,
+//    representing the starting index of tokens to return
+// * `limit`: the maximum number of tokens to return
+//
+// Returns a paginated list of all tokens owned by this account
+function nft_tokens_for_owner(
+  account_id: string,
+  from_index: string|null, // default: 0
+  limit: number|null, // default: unlimited (could fail due to gas limit)
+): Token[] {}
 ```
 
-In order to store and serve this information, the contract will need to store extra data for each token. The contract should use something like the [Storage Management] standard to pass these costs onto users to keep the contract functional as state grows. TODO: more to say about this?
 
   [ERC-721]: https://eips.ethereum.org/EIPS/eip-721
   [storage]: https://docs.near.org/docs/concepts/storage-staking
-  [Storage Management]: ../StorageManagement.md
