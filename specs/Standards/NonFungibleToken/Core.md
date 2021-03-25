@@ -127,10 +127,6 @@ function nft_transfer_call(
 /* VIEW METHODS */
 /****************/
 
-// Returns the total supply of non-fungible tokens as a string representing the
-// value as an unsigned 128-bit integer to avoid JSON number limit of 2^53.
-function nft_total_supply(): string {}
-
 // Returns the token with the given `token_id` or `null` if no such token.
 function nft_token(token_id: string): Token|null {}
 ```
