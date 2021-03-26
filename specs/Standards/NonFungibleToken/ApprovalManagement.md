@@ -98,6 +98,10 @@ near call nft-contract.near nft_transfer '{ "approval_id": 2 }'
 The NFT contract must implement the following methods:
 
 ```ts
+/******************/
+/* CHANGE METHODS */
+/******************/
+
 // Add an approved account for a specific token.
 //
 // Requirements
@@ -155,11 +159,11 @@ function nft_revoke(
 // Arguments:
 // * `token_id`: the token with approvals to revoke
 function nft_revoke_all(token_id: string) {}
-```
 
-Suggestion: NFT contracts may want to implement this view method as a courtesy to marketplaces:
+/****************/
+/* VIEW METHODS */
+/****************/
 
-```ts
 // Check if a token is approved for transfer by a given account, optionally
 // checking an approval_id
 //
