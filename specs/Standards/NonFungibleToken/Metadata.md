@@ -50,13 +50,13 @@ type TokenMetadata = {
 }
 ```
 
-Then a new field is needed on NFT contract:
+Then a new function is needed on the NFT contract:
 
 ```ts
 function nft_metadata(): NFTMetadata {}
 ```
 
-And a new attribute must be added to each `Token` struct:
+And a new attribute must be added to each `Token` struct returned:
 
 ```diff
  type Token = {
