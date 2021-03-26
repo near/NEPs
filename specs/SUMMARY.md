@@ -54,6 +54,5 @@
       - [Core Standard](Standards/NonFungibleToken/Core.md)
       - [Metadata](Standards/NonFungibleToken/Metadata.md)
       - [Approval Management](Standards/NonFungibleToken/ApprovalManagement.md)
-      - [Royalties](Standards/NonFungibleToken/Royalties.md)
       - [Enumeration](Standards/NonFungibleToken/Enumeration.md)
   - [Storage Management](Standards/StorageManagement.md)
