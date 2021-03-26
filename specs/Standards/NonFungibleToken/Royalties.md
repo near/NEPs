@@ -1,4 +1,4 @@
-# Non-Fungible Token Royalties ([NEP-???](???))
+# Non-Fungible Token Royalties ([NEP-182](https://github.com/near/NEPs/discussions/182))
 
 Version: `1.0.0`
 
