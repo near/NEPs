@@ -85,17 +85,19 @@ struct AnnounceAccount {
 ```rust
 struct Handshake {
     /// Protocol version.
-    version: u32,
+    pub version: u32,
+    /// Oldest supported protocol version.
+    pub oldest_supported_version: u32,
     /// Sender's peer id.
-    peer_id: PeerId,
+    pub peer_id: PeerId,
     /// Receiver's peer id.
-    target_peer_id: PeerId,
+    pub target_peer_id: PeerId,
     /// Sender's listening addr.
-    listen_port: Option<u16>,
+    pub listen_port: Option<u16>,
     /// Peer's chain information.
-    chain_info: PeerChainInfo,
+    pub chain_info: PeerChainInfoV2,
     /// Info for new edge.
-    edge_info: EdgeInfo,
+    pub edge_info: EdgeInfo,
 }
 ```
 

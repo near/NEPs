@@ -196,12 +196,6 @@ In the case of routing messages each intermediate hop should verify that message
 
 When a node A sends more than `MAX_PEER_MSG_PER_MIN` messages per minute to node B, it will be banned and unable to keep sending messages to it. This a protection mechanism against abusive node to avoid being spammed by some peers.
 
-## Possible attacks
-
-### Overloading routing table
-
-Create several ghost accounts with ghost connections among them and flood the network with them. Nodes will be calculating shortest path frequently and having many reachable nodes in the routing table increase the cost of such operation.
-
 ## Implementation Details
 
 There are some issues that should be handled by the network layer but details about how to implement them are not enforced by the protocol, however we propose here how to address them.
