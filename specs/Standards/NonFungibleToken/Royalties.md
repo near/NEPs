@@ -4,6 +4,14 @@ Version: `1.0.0`
 
 A standard for Non-Fungible Tokens to implement Royalties. Marketplace apps and other sellers of NFTs must split the proceeds of each sale of an NFT amongst the accounts specified by this standard.
 
+## Motivation
+
+As the NEAR ecosystem grows to encompass many non-fungible token (NFT) marketplaces, a standard system to handle royalty payments for non-fungible tokens allows for an NFT created, purchased, or sold on one marketplace to provide the royalties that the creator is entitled to, regardless of the next marketplace/ecosystem it is sold in.
+
+Having this standard on NEAR as a part of the NFT standard  allows for the ecosystem to avoid the pitfalls of marketplace divergence leading to a lack of interoperability.
+
+Without an agreed standard for implementing royalties, the NFT ecosystem will lack an effective means to collect royalties across all marketplaces. This will hamper the growth and adoption of NFTs and demotivate artists and other NFT creators from minting new and innovative tokens.
+
 
 ## Interface
 
