@@ -35,13 +35,13 @@ Alice and Bob are already [registered](../StorageManagement.md) with NFT, Market
 
 Let's examine the technical calls through the following scenarios:
 
-1. **Simple approval**: Alice approves Bob to transfer her token.
-2. **Approval with cross-contract call (XCC)**: Alice approves Market to transfer one of her tokens and passes `msg` so that NFT will call `nft_on_approve` on Market's contract.
-3. **Approval with XCC, edge case**: Alice approves Bazaar and passes `msg` again, but what's this? Bazaar doesn't implement `nft_on_approve`, so Alice sees an error in the transaction result. Not to worry, though, she checks `nft_is_approved` and sees that she did successfully approve Bazaar, despite the error.
-4. **Approval IDs**: Bob buys Alice's token via Market.
-5. **Approval IDs, edge case**: Bob transfers same token back to Alice, Alice re-approves Market & Bazaar. Bazaar has an outdated cache. Bob tries to buy from Bazaar at the old price.
-6. **Revoke one**: Alice revokes Market's approval for this token.
-7. **Revoke all**: Alice revokes all approval for this token.
+1. [Simple approval](#1-simple-approval): Alice approves Bob to transfer her token.
+2. [Approval with cross-contract call (XCC)](#2-approval-with-cross-contract-call): Alice approves Market to transfer one of her tokens and passes `msg` so that NFT will call `nft_on_approve` on Market's contract.
+3. [Approval with XCC, edge case](#3-approval-with-cross-contract-call-edge-case): Alice approves Bazaar and passes `msg` again, but what's this? Bazaar doesn't implement `nft_on_approve`, so Alice sees an error in the transaction result. Not to worry, though, she checks `nft_is_approved` and sees that she did successfully approve Bazaar, despite the error.
+4. [Approval IDs](#4-approval-ids): Bob buys Alice's token via Market.
+5. [Approval IDs, edge case](#5-approval-ids-edge-case): Bob transfers same token back to Alice, Alice re-approves Market & Bazaar. Bazaar has an outdated cache. Bob tries to buy from Bazaar at the old price.
+6. [Revoke one](#6-revoke-one): Alice revokes Market's approval for this token.
+7. [Revoke all](#7-revoke-all): Alice revokes all approval for this token.
 
 ### 1. Simple Approval
 
