@@ -121,7 +121,7 @@ function nft_transfer_call(
   approval_id: string|null,
   memo: string|null,
   msg: string,
-): Promise<boolean> {}
+): Promise {}
 
 
 /****************/
