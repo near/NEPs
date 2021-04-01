@@ -21,10 +21,10 @@ Prior art:
 
 ## Interface
 
-Metadata applies at both the contract level (`ContractMetadata`) and the token level (`TokenMetadata`). The relevant metadata for each:
+Metadata applies at both the contract level (`NFTContractMetadata`) and the token level (`TokenMetadata`). The relevant metadata for each:
 
 ```ts
-type ContractMetadata = {
+type NFTContractMetadata = {
   spec: string, // required, essentially a version like "nft-1.0.0"
   name: string, // required, ex. "Mochi Rising — Digital Edition" or "Metaverse 3"
   symbol: string, // required, ex. "MOCHI"
@@ -53,7 +53,7 @@ type TokenMetadata = {
 Then a new function is needed on the NFT contract:
 
 ```ts
-function nft_metadata(): ContractMetadata {}
+function nft_metadata(): NFTContractMetadata {}
 ```
 
 And a new attribute must be added to each `Token` struct returned:
@@ -75,7 +75,7 @@ And a new attribute must be added to each `Token` struct returned:
 
 ### An implementing contract MAY include the following fields on-chain
 
-For `ContractMetadata`:
+For `NFTContractMetadata`:
 
 - `icon`: a small image associated with this token. Encouraged to be a [data URL](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/Data_URIs), to help consumers display it quickly while protecting user data. Recommendation: use [optimized SVG](https://codepen.io/tigt/post/optimizing-svgs-in-data-uris), which can result in high-resolution images with only 100s of bytes of [storage cost](https://docs.near.org/docs/concepts/storage-staking). (Note that these storage costs are incurred to the token owner/deployer, but that querying these icons is a very cheap & cacheable read operation for all consumers of the contract and the RPC nodes that serve the data.) Recommendation: create icons that will work well with both light-mode and dark-mode websites by either using middle-tone color schemes, or by [embedding `media` queries in the SVG](https://timkadlec.com/2013/04/media-queries-within-svg/).
 - `reference`: a link to a valid JSON file containing various keys offering supplementary details on the token. Example: "/ipfs/QmdmQXB2mzChmMeKY47C43LxUdg1NDJ5MWcKMKxDu7RgQm", "https://example.com/token.json", etc. If the information given in this document conflicts with the on-chain attributes, the values in `reference` shall be considered the source of truth.
