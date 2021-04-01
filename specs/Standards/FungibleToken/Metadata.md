@@ -58,7 +58,11 @@ Alice issues a transaction to deploy and initialize the fungible token contract,
 
 ## Reference-level explanation
 
-A fungible token contract implementing the metadata standard shall contain a field named `ft_metadata`. The field will link to a structure with the properties from the interface below.
+A fungible token contract implementing the metadata standard shall contain a function named `ft_metadata`.
+
+```ts
+function ft_metadata(): FungibleTokenMetadata {}
+```
 
 **Interface**:
 
