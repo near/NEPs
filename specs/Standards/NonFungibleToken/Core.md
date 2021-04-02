@@ -154,7 +154,6 @@ The following behavior is required, but contract authors may name this function 
 //
 // Arguments:
 // * `sender_id`: the sender of `ft_transfer_call`
-// * `receiver_id`: the `receiver_id` argument given to `ft_transfer_call`
 // * `token_id`: the `token_id` argument given to `ft_transfer_call`
 // * `approved_token_ids`: if using Approval Management, contract MUST provide
 //   set of original approved accounts in this argument, and restore these
@@ -163,7 +162,6 @@ The following behavior is required, but contract authors may name this function 
 // Returns true if token was successfully transferred to `receiver_id`.
 function nft_resolve_transfer(
   owner_id: string,
-  receiver_id: string,
   token_id: string,
   approved_account_ids: null|string[],
 ): boolean {}
