@@ -57,7 +57,7 @@ type Token = {
 // `receiver_id`.
 //
 // Requirements
-// * Caller of the method must attach a deposit of 1 yoctoⓃ for security purposes
+// * Caller of the method MUST attach a deposit of 1 yoctoⓃ for security purposes
 // * Contract MUST panic if called by someone other than token owner or,
 //   if using Approval Management, one of the approved accounts
 // * `approval_id` is for use with Approval Management extension, see
@@ -81,7 +81,7 @@ function nft_transfer(
 ) {}
 
 // Returns `true` if the token was transferred from the sender's account.
-
+//
 // Transfer token and call a method on a receiver contract. A successful
 // workflow will end in a success execution outcome to the callback on the NFT
 // contract at the method `nft_resolve_transfer`.
@@ -91,14 +91,14 @@ function nft_transfer(
 // receiver contract.
 //
 // Requirements:
-// * Caller of the method must attach a deposit of 1 yoctoⓃ for security
+// * Caller of the method MUST attach a deposit of 1 yoctoⓃ for security
 //   purposes
 // * Contract MUST panic if called by someone other than token owner or,
 //   if using Approval Management, one of the approved accounts
-// * The receiving contract must implement `ft_on_transfer` according to the
-//   standard. If it does not, FT contract's `ft_resolve_transfer` MUST deal
+// * The receiving contract must implement `nft_on_transfer` according to the
+//   standard. If it does not, this NFT contract's `nft_resolve_transfer` MUST deal
 //   with the resulting failed cross-contract call and roll back the transfer.
-// * Contract MUST implement the behavior described in `ft_resolve_transfer`
+// * Contract MUST implement the behavior described in `nft_resolve_transfer`
 // * `approval_id` is for use with Approval Management extension, see
 //   that document for full explanation.
 // * If using Approval Management, contract MUST nullify approved accounts on
@@ -139,7 +139,7 @@ The following behavior is required, but contract authors may name this function 
 //
 // The `nft_transfer_call` process:
 //
-// 1. Sender calls `nft_transfer_call` on FT contract
+// 1. Sender calls `nft_transfer_call` on NFT contract
 // 2. NFT contract transfers token from sender to receiver
 // 3. NFT contract calls `nft_on_transfer` on receiver contract
 // 4+. [receiver contract may make other cross-contract calls]
@@ -153,9 +153,9 @@ The following behavior is required, but contract authors may name this function 
 //   `sender_id`
 //
 // Arguments:
-// * `sender_id`: the sender of `ft_transfer_call`
-// * `receiver_id`: the `receiver_id` argument given to `ft_transfer_call`
-// * `token_id`: the `token_id` argument given to `ft_transfer_call`
+// * `sender_id`: the sender of `nft_transfer_call`
+// * `receiver_id`: the `receiver_id` argument given to `nft_transfer_call`
+// * `token_id`: the `token_id` argument given to `nft_transfer_call`
 // * `approved_token_ids`: if using Approval Management, contract MUST provide
 //   set of original approved accounts in this argument, and restore these
 //   approved accounts in case of revert.
@@ -165,7 +165,7 @@ function nft_resolve_transfer(
   owner_id: string,
   receiver_id: string,
   token_id: string,
-  approved_account_ids: null|string[],
+  approvals: null|Record<string, number>,
 ): boolean {}
 ```
 
