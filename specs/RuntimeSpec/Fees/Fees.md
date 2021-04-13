@@ -73,6 +73,20 @@ Here is the list of actions and their corresponding fees:
     - the base fee [`delete_key_cost`](/GenesisConfig/RuntimeFeeConfig/ActionCreationConfig.md#delete_key_cost)
 - [DeleteAccount](/RuntimeSpec/Actions.md#deleteaccountaction) uses
     - the base fee [`delete_account_cost`](/GenesisConfig/RuntimeFeeConfig/ActionCreationConfig.md#delete_account_cost)
+    - action receipt creation fee for creating Transfer to send remaining funds to `beneficiary_id`
+    - full transfer fee described in the corresponding item
+    
+# Implementation details
+
+Inside `Runtime`, the fees are tracked in the `ActionResult` struct. 
+For example:
+- execution fee for the action receipt creation is burned and charged in the `Runtime.apply_action_receipt`;
+- execution fee for any action is burned and charged in the `Runtime.apply_action`;
+- more specifically, in the `action_delete_account` we burn and charge fees for sending `Transfer` action receipt and additionally charge fees for executing it;  
+- etc.
+
+Inside `VMLogic`, the fees are tracked in the `GasCounter` struct. The VM itself is called in the `action_function_call` inside `Runtime`. When all actions are processed, the result is send as a `VMOutcome`, which is later merged with `ActionResult`.
+
 
 # Example
 
@@ -136,3 +150,4 @@ total_transaction_fee = burnt_gas + \
 This `total_transaction_fee` is the amount of gas required to create a new receipt from the transaction.
 
 NOTE: There are extra amounts required to prepay for deposit in `TransferAction` and gas in `FunctionCallAction`, but this is not part of the total transaction fee.
+
