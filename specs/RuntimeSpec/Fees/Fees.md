@@ -76,7 +76,7 @@ Here is the list of actions and their corresponding fees:
     - action receipt creation fee for creating Transfer to send remaining funds to `beneficiary_id`
     - full transfer fee described in the corresponding item
     
-# Burning and charging
+## Burning and charging
 
 Inside `Runtime`, the fees are tracked in the `ActionResult` struct. 
 For example:
