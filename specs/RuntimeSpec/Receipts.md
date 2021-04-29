@@ -20,7 +20,7 @@ Each `DataReceiver` consists of `data_id` and `receiver_id` for routing.
 
 Before any action receipt is executed, all input data dependencies need to be satisfied.
 Which means all corresponding data receipts have to be received.
-If any of the data dependencies are missing, the action receipt is postponed until all missing data dependency arrive.
+If any of the data dependencies are missing, the action receipt is postponed until all missing data dependencies arrive.
 
 Because Chain and Runtime guarantees that no receipts are missing, we can rely that every action receipt will be executed eventually ([Receipt Matching explanation](#receipt-matching)).
 
