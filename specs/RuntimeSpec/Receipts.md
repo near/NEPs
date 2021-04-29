@@ -10,7 +10,7 @@ Receipts are one of 2 types: action receipts or data receipts.
 Data Receipts are receipts that contains some data for some `ActionReceipt` with the same `receiver_id`.
 Data Receipts have 2 fields: the unique data identifier `data_id` and `data` the received result.
 `data` is an `Option` field and it indicates whether the result was a success or a failure. If it's `Some`, it means
-the remote execution was successful and it contains a result as a vector of bytes.
+the remote execution was successful and it represents the result as a vector of bytes.
 
 Each `ActionReceipt` also contains fields related to data:
 
@@ -22,7 +22,7 @@ Before any action receipt is executed, all input data dependencies need to be sa
 Which means all corresponding data receipts have to be received.
 If any of the data dependencies are missing, the action receipt is postponed until all missing data dependencies arrive.
 
-Because Chain and Runtime guarantees that no receipts are missing, we can rely that every action receipt will be executed eventually ([Receipt Matching explanation](#receipt-matching)).
+Because chain and runtime guarantees that no receipts are missing, we can rely that every action receipt will be executed eventually ([Receipt Matching explanation](#receipt-matching)).
 
 Each `Receipt` has the following fields:
 
@@ -113,15 +113,15 @@ Receipts can be generated during the execution of a [SignedTransaction](./Transa
 
 # Receipt Matching
 
-The Runtime doesn't require that Receipts come in a particular order. Each Receipt is processed individually. The goal of the `Receipt Matching` process is to match all [`ActionReceipt`s](#actionreceipt) to the corresponding [`DataReceipt`s](#datareceipt).
+Runtime doesn't require that Receipts come in a particular order. Each Receipt is processed individually. The goal of the `Receipt Matching` process is to match all [`ActionReceipt`s](#actionreceipt) to the corresponding [`DataReceipt`s](#datareceipt).
 
 ## Processing ActionReceipt
 
-For each incoming [`ActionReceipt`](#actionreceipt) Runtime checks whether we have all the [`DataReceipt`s](#datareceipt) (defined as [`ActionsReceipt.input_data_ids`](#input_data_ids)) required for execution. If all the required [`DataReceipt`s](#datareceipt) are already in the [storage](#received-datareceipt), Runtime can apply this `ActionReceipt` immediately. Otherwise we save this receipt as a [Postponed ActionReceipt](#postponed-actionreceipt). Also we save [Pending DataReceipts Count](#pending-datareceipt-count) and [a link from pending `DataReceipt` to the `Postponed ActionReceipt`](#pending-datareceipt-for-postponed-actionreceipt). Now Runtime will wait for all the missing `DataReceipt`s to apply the `Postponed ActionReceipt`.
+For each incoming [`ActionReceipt`](#actionreceipt) runtime checks whether we have all the [`DataReceipt`s](#datareceipt) (defined as [`ActionsReceipt.input_data_ids`](#input_data_ids)) required for execution. If all the required [`DataReceipt`s](#datareceipt) are already in the [storage](#received-datareceipt), runtime can apply this `ActionReceipt` immediately. Otherwise we save this receipt as a [Postponed ActionReceipt](#postponed-actionreceipt). Also we save [Pending DataReceipts Count](#pending-datareceipt-count) and [a link from pending `DataReceipt` to the `Postponed ActionReceipt`](#pending-datareceipt-for-postponed-actionreceipt). Now runtime will wait for all the missing `DataReceipt`s to apply the `Postponed ActionReceipt`.
 
 #### Postponed ActionReceipt
 
-A Receipt which Runtime stores until all the designated [`DataReceipt`s](#datareceipt) arrive.
+A Receipt which runtime stores until all the designated [`DataReceipt`s](#datareceipt) arrive.
 
 - **`key`** = `account_id`,`receipt_id`
 - **`value`** = `[u8]`
@@ -148,19 +148,19 @@ We index each pending `DataReceipt` so when a new [`DataReceipt`](#datareceipt) 
 
 #### Received DataReceipt
 
-First of all, Runtime saves the incoming `DataReceipt` to the storage as:
+First of all, runtime saves the incoming `DataReceipt` to the storage as:
 
 - **`key`** = `account_id`,`data_id`
 - **`value`** = `[u8]`
 
 _Where `account_id` is [`Receipt.receiver_id`](#receiver_id), `data_id` is [`DataReceipt.data_id`](#data_id) and value is a [`DataReceipt.data`](#data) (which is typically a serialized result of the call to a particular contract)._
 
-Next, Runtime checks if there are any [`Postponed ActionReceipt`](#postponed-actionreceipt) waiting for this `DataReceipt` by querying [`Pending DataReceipt` to the Postponed Receipt](#pending-datareceipt-for-postponed-actionReceipt). If there is no postponed `receipt_id` yet, we do nothing else. If there is a postponed `receipt_id`, we do the following:
+Next, runtime checks if there are any [`Postponed ActionReceipt`](#postponed-actionreceipt) waiting for this `DataReceipt` by querying [`Pending DataReceipt` to the Postponed Receipt](#pending-datareceipt-for-postponed-actionReceipt). If there is no postponed `receipt_id` yet, we do nothing else. If there is a postponed `receipt_id`, we do the following:
 
 - decrement [`Pending Data Count`](#pending-datareceipt-count) for the postponed `receipt_id`
 - remove found [`Pending DataReceipt` to the `Postponed ActionReceipt`](#pending-datareceipt-for-postponed-actionreceipt)
 
-If [`Pending DataReceipt Count`](#pending-datareceipt-count) is now 0 that means all the [`Receipt.input_data_ids`](#input_data_ids) are in storage and Runtime can safely apply the [Postponed Receipt](#postponed-receipt) and remove it from the store.
+If [`Pending DataReceipt Count`](#pending-datareceipt-count) is now 0 that means all the [`Receipt.input_data_ids`](#input_data_ids) are in storage and runtime can safely apply the [Postponed Receipt](#postponed-receipt) and remove it from the store.
 
 ## Case 1: Call to multiple contracts and await responses
 
