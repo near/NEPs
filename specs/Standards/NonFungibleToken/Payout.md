@@ -35,7 +35,10 @@ The proposed implementation requires two methods on NFT contracts:
 Financial contracts MUST validate several invariants on the returned
 `Payout`:
 1. The returned `Payout` MUST be no longer than maximum length. Payouts of
-   excessive length can become prohibitively gas-expensive.
+   excessive length can become prohibitively gas-expensive. Financial
+   contracts can specify the maximum length of payout the contract is
+   willing to respect with the `max_len_payout` field on
+   `nft_transfer_payout`.
 2. The balances MUST add up to less than or equal to the `balance` argument
    in `nft_transfer_payout`. If the balance adds up to less then the
    `balance` argument, the financial contract MAY claim the remainder for
@@ -45,26 +48,16 @@ Financial contracts MAY specify their own maximum length payout to respect.
 At minimum, financial contracts MUST NOT set their maximum length lower
 than 10.
 
-Note that if either of the above two invariants are violated (as a result
-of the error by the NFT holder), the financial contract has either too
-little gas or Near to complete the transaction. In this pathological
-situation, because of user error, the token has been transferred, but the
-financial contract cannot payout the token's payee's. Front-ends should
-attempt to minimize the possibility for this type of user error.
+Note that if either of the above two invariants are violated by the NFT
+contract, the financial contract has either too little gas or too little
+Near to complete the transaction AND that the NFT contract has acted in bad
+faith. The financial contract is NOT responsible for these failures, and in
+this case, MAY choose to not pay out any address in the returned `Payout`.
+It is further recommended that the financial contract "ban" the violating
+NFT contract from further interaction with the financial contract.
 
-The financial contract is NOT responsible for user error, and MAY choose to
-not pay out any address in the returned `Payout`. The financial contract
-MAY keep the wasted payout funds. It is recommended that the financial
-contract ban the violating NFT contract from further interaction with the
-financial contract.
-
-If the NFT contract returns addresses that do not yet exist, the
-financial contract MAY keep the wasted payout funds.
-
-Users of NFT contracts should therefore use discretion when listing to
-financial contracts: first, the `Payout` interface is an optional interface
-for financial contracts to respect. Second, financial contracts may differ
-in the maximum length of addresses they are willing to pay out on sale.
+If the Payout contains any addresses that do not exist, the financial
+contract MAY keep those wasted payout funds.
 
 Finally, financial contracts MAY take a cut of the NFT sale price as
 commission, subtracting their cut from the total token sale price, and
@@ -117,8 +110,12 @@ pub trait Payouts{
     token_id: String,
     approval_id: U64,
     balance: U128,
+    max_len_payout: u32,
   ) -> Payout{
     let payout = self.nft_payout(token_id.clone(), balance);
+    if max_len_payout > payout.payout.len() as u32 {
+      near_sdk::env::panic(b"payout too long");
+    }
     self.nft_transfer(receiver_id, token_id, approval_id);
     payout
   }
