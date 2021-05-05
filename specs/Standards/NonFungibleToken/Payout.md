@@ -43,18 +43,23 @@ Financial contracts MUST validate several invariants on the returned
    in `nft_transfer_payout`. If the balance adds up to less then the
    `balance` argument, the financial contract MAY claim the remainder for
    itself.
+3. The sum of the balances MUST NOT overflow. This is technically identical
+   to 2, but financial contracts should be expected to handle this
+   possibility.
 
 Financial contracts MAY specify their own maximum length payout to respect.
 At minimum, financial contracts MUST NOT set their maximum length lower
 than 10.
 
-Note that if either of the above two invariants are violated by the NFT
-contract, the financial contract has either too little gas or too little
-Near to complete the transaction AND that the NFT contract has acted in bad
-faith. The financial contract is NOT responsible for these failures, and in
-this case, MAY choose to not pay out any address in the returned `Payout`.
-It is further recommended that the financial contract "ban" the violating
-NFT contract from further interaction with the financial contract.
+Note that if any of the invariants are violated by the NFT contract, the
+financial contract has either too little gas or too little Near to complete
+the transaction AND that the NFT contract has acted in bad faith. The
+financial contract is NOT responsible for these failures, and in this case,
+MAY choose to not pay out any address in the returned `Payout`.
+
+It is further recommended that the financial contract "ban" any
+invariant-violating NFT contract from further interaction with the
+financial contract.
 
 If the Payout contains any addresses that do not exist, the financial
 contract MAY keep those wasted payout funds.
