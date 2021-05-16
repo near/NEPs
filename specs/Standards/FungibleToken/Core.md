@@ -128,7 +128,7 @@ Alice wants to swap 5 wrapped NEAR (wNEAR) for BNNA tokens at current market rat
 - Alice's account is `alice`.
 - The AMM's contract is `amm`.
 - BNNA's contract is `bnna`.
-- The precision ("decimals" in the metadata standard) on wBTC contract is `10^24`.
+- The precision ("decimals" in the metadata standard) on wNEAR contract is `10^24`.
 - The 5 tokens is `5 * 10^24` or as a number is `5000000000000000000000000`.
 
 **High-level explanation**
