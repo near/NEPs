@@ -104,11 +104,13 @@ pub struct Payout {
 }
 
 pub trait Payouts{
-  /// Given a `token_id` and NEAR-denominated balance, return the `Payout`
-  /// struct for the given token.
-  fn nft_payout(&self, token_id: U64, balance: U128) -> Payout;
+  /// Given a `token_id` and NEAR-denominated balance, return the `Payout`.
+  /// struct for the given token. Panic if the length of the payout exceeds
+  /// `max_len_payout.`
+  fn nft_payout(&self, token_id: U64, balance: U128, max_len_payout: u32) -> Payout;
   /// Given a `token_id` and NEAR-denominated balance, transfer the token
-  /// and return the `Payout` struct for the given token.
+  /// and return the `Payout` struct for the given token. Panic if the
+  /// length of the payout exceeds `max_len_payout.`
   // #[payable]
   fn nft_transfer_payout(
     &mut self,
@@ -120,9 +122,6 @@ pub trait Payouts{
   ) -> Payout{
     assert_one_yocto();
     let payout = self.nft_payout(token_id, balance);
-    if max_len_payout > payout.payout.len() as u32 {
-      near_sdk::env::panic(b"payout too long");
-    }
     self.nft_transfer(receiver_id, token_id, approval_id);
     payout
   }
