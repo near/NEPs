@@ -50,8 +50,7 @@ During execution, VM does the following:
 The output of the `FunctionCall`:
 
 - storage updates - changes to the account trie storage which will be applied on a successful call
-- `burnt_gas` - irreversible amount of gas witch was spent on computations
-- `used_gas` - includes `burnt_gas` and gas attached to the new `ActionReceipt`s created during the method execution. In case of failure, created `ActionReceipt`s not going to be sent thus account will pay only for `burnt_gas`
+- `burnt_gas`, `used_gas` - see [Runtime Fees](Fees/Fees.md)
 - `balance` - unspent account balance (account balance could be spent on deposits of newly created `FunctionCall`s or [`TransferAction`s](Actions.md#transferaction) to other contracts)
 - `storage_usage` - storage_usage after ActionReceipt application
 - `logs` - during contract execution, utf8/16 string log records could be created. Logs are not persistent currently.
