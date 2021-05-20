@@ -53,6 +53,7 @@ Here is the list of actions and their corresponding fees:
     - the base fee [`function_call_cost`](/GenesisConfig/RuntimeFeeConfig/ActionCreationConfig.md#function_call_cost)
     - the fee per byte of method name string and per byte of arguments with the fee [`function_call_cost_per_byte`](/GenesisConfig/RuntimeFeeConfig/ActionCreationConfig.md#function_call_cost_per_byte).
     To compute the number of bytes for a function call action `function_call_action` use `function_call_action.method_name.as_bytes().len() + function_call_action.args.len()`
+    - **Note**: owner of corresponding contract gets 30% of the fee as a reward for a possibility to invoke their function.
 - [Transfer](/RuntimeSpec/Actions.md#transferaction) uses one of the following fees:
     - if the `receiver_id` is an [Implicit Account ID](/DataStructures/Account.md#implicit-account-ids), then a sum of base fees is used:
         - the create account base fee [`create_account_cost`](/GenesisConfig/RuntimeFeeConfig/ActionCreationConfig.md#create_account_cost)
