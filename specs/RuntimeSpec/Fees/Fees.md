@@ -83,7 +83,7 @@ Here is the list of actions and their corresponding fees:
 In `Runtime`, fees are tracked in the `ActionResult` struct containing data about burnt and used gas. 
 
 For each `ActionReceipt`, the process of charging fees is as follows:
-- in the beginning of `Runtime.apply_action_receipt`, `ActionResult` is created with the cost for `ActionReceipt` creation;
+- in the beginning of `Runtime.apply_action_receipt`, `ActionResult` is created with fees for `ActionReceipt` creation;
 - all actions inside `ActionReceipt` are passed to `Runtime.apply_action`;
 - `ActionResult` with base execution fees is created there. To compute them, `config.rs:exec_fee` function is used;
 - if action execution leads to new `ActionReceipt`s creation, corresponding `action_[action_name]` function adds new fees to the `ActionResult`. E.g. `action_delete_account` also charges the following fees:
