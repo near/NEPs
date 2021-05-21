@@ -16,7 +16,7 @@ Every [Fee](/GenesisConfig/RuntimeFeeConfig/Fee.md) consists of 3 values measure
 - `execution` - the gas burned when the action is being executed on the receiver's account.
 
 We track gas which have to be deducted in two values:
-- Burnt gas - irreversible amount of gas witch was spent on computations.
+- Burnt gas - irreversible amount of gas spent on computations.
 - Used gas - includes burnt gas and gas attached to the new `ActionReceipt`s created during the method execution. 
   
 Initially runtime charges all used gas from the account. But in case of failure, created `ActionReceipt`s will not be sent and difference between used gas and burnt gas will be refunded.
