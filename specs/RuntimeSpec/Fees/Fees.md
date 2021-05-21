@@ -19,7 +19,7 @@ We track gas which have to be deducted in two values:
 - Burnt gas - irreversible amount of gas witch was spent on computations.
 - Used gas - includes burnt gas and gas attached to the new `ActionReceipt`s created during the method execution. 
   
-Initially system charges all used gas from the account. But in case of failure, created `ActionReceipt`s will not be sent and difference between used gas and burnt gas will be refunded.
+Initially runtime charges all used gas from the account. But in case of failure, created `ActionReceipt`s will not be sent and difference between used gas and burnt gas will be refunded.
 
 ## Receipt creation cost
 
