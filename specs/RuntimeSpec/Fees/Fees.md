@@ -93,7 +93,7 @@ For each `ActionReceipt`, the process of charging fees is as follows:
 - unused gas is refunded in `generate_refund_receipts`.
 
 Inside `VMLogic`, the fees are tracked in the `GasCounter` struct. 
-The VM itself is called in the `action_function_call` inside `Runtime`. When all actions are processed, the result is send as a `VMOutcome`, which is later merged with `ActionResult`.
+The VM itself is called in the `action_function_call` inside `Runtime`. When all actions are processed, the result is returned as a `VMOutcome`, which is later merged with `ActionResult`.
  
 # Example
 
@@ -157,4 +157,3 @@ total_transaction_fee = burnt_gas + \
 This `total_transaction_fee` is the amount of gas required to create a new receipt from the transaction.
 
 NOTE: There are extra amounts required to prepay for deposit in `TransferAction` and gas in `FunctionCallAction`, but this is not part of the total transaction fee.
-
