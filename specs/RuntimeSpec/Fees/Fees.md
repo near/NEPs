@@ -15,12 +15,6 @@ Every [Fee](/GenesisConfig/RuntimeFeeConfig/Fee.md) consists of 3 values measure
     - `send_not_sir` is used when `current_account_id != receiver_id`
 - `execution` - the gas burned when the action is being executed on the receiver's account.
 
-We track gas which have to be deducted in two values:
-- Burnt gas - irreversible amount of gas spent on computations.
-- Used gas - includes burnt gas and gas attached to the new `ActionReceipt`s created during the method execution. 
-  
-Initially runtime charges all used gas from the account. But in case of failure, created `ActionReceipt`s will not be sent and difference between used gas and burnt gas will be refunded.
-
 ## Receipt creation cost
 
 There are 2 types of receipts:
@@ -54,7 +48,6 @@ Here is the list of actions and their corresponding fees:
     - the base fee [`function_call_cost`](/GenesisConfig/RuntimeFeeConfig/ActionCreationConfig.md#function_call_cost)
     - the fee per byte of method name string and per byte of arguments with the fee [`function_call_cost_per_byte`](/GenesisConfig/RuntimeFeeConfig/ActionCreationConfig.md#function_call_cost_per_byte).
     To compute the number of bytes for a function call action `function_call_action` use `function_call_action.method_name.as_bytes().len() + function_call_action.args.len()`
-    - **Note**: owner of corresponding contract gets 30% of the fee as a reward for a possibility to invoke their function
 - [Transfer](/RuntimeSpec/Actions.md#transferaction) uses one of the following fees:
     - if the `receiver_id` is an [Implicit Account ID](/DataStructures/Account.md#implicit-account-ids), then a sum of base fees is used:
         - the create account base fee [`create_account_cost`](/GenesisConfig/RuntimeFeeConfig/ActionCreationConfig.md#create_account_cost)
@@ -78,17 +71,31 @@ Here is the list of actions and their corresponding fees:
     - action receipt creation fee for creating Transfer to send remaining funds to `beneficiary_id`
     - full transfer fee described in the corresponding item
     
-## Charging fees
+## Gas tracking
 
-In `Runtime`, fees are tracked in the `ActionResult` struct containing data about burnt and used gas. 
+In `Runtime`, gas is tracked in the following fields of `ActionResult` struct:
+- `gas_burnt` - irreversible amount of gas spent on computations.
+- `gas_used` - includes burnt gas and gas attached to the new `ActionReceipt`s created during the method execution.
+- `gas_burnt_for_function_call` - stores gas burnt during function call execution. Later, owner of the corresponding contract gets 30% of it as a reward for a possibility to invoke the function.
 
-For each `ActionReceipt`, the process of charging fees is as follows:
-- in the beginning of `Runtime.apply_action_receipt`, `ActionResult` is created with fees for `ActionReceipt` creation;
+Initially runtime charges all used gas from the account. But during refund computation, if new `ActionReceipt`s are not actually going to be sent, e.g. in case of failure on applying some action, difference between used gas and burnt gas is returned to the account.
+
+At first, we charge fees related to conversion from `SignedTransaction` to `ActionReceipt` and execution of this receipt:
+- all `SignedTransaction`s are passed to `Runtime::apply -> Runtime::process_transaction -> verifier.rs::verify_and_charge_transaction` and then to `verifier.rs::validate_transaction`;
+- transaction cost is computed there using `config.rs::tx_cost` function;
+- `total_cost` is deducted from signer. It is a sum of:
+    - `gas_to_balance(gas_burnt)` where `gas_burnt` is action receipt send fee + `total_send_fees(transaction.actions)`);
+    - `gas_to_balance(gas_remaining)` where `gas_remaining` is action receipt exec fee + `total_prepaid_exec_fees(transaction.actions)` to pay for all remaining fees caused by transaction;
+    - `total_deposit(transaction.actions)`;
+- then transaction is finally converted to receipt and passed to `Runtime::process_receipt`.
+
+Then each `ActionReceipt` is passed to `Runtime::apply_action_receipt` where gas is tracked as follows:
+- `ActionResult` is created with `ActionReceipt` execution fee;
 - all actions inside `ActionReceipt` are passed to `Runtime.apply_action`;
-- `ActionResult` with base execution fees is created there. To compute them, `config.rs:exec_fee` function is used;
+- `ActionResult` with charged base execution fees is created there. To compute them, `config.rs::exec_fee` function is used;
 - if action execution leads to new `ActionReceipt`s creation, corresponding `action_[action_name]` function adds new fees to the `ActionResult`. E.g. `action_delete_account` also charges the following fees:
-    - `gas_burnt`: **send** fee for `ActionReceipt` creation + complex **send** fee for `Transfer` to beneficiary account
-    - `gas_used`: `gas_burnt` + **exec** fee for `ActionReceipt` creation + complex **exec** fee for `Transfer`
+    - `gas_burnt`: **send** fee for **new** `ActionReceipt` creation + complex **send** fee for `Transfer` to beneficiary account
+    - `gas_used`: `gas_burnt` + **exec** fee for created `ActionReceipt` + complex **exec** fee for `Transfer`
 - all computed `ActionResult`s are merged into one, where gas values are safely summed up;
 - unused gas is refunded in `generate_refund_receipts`.
 
