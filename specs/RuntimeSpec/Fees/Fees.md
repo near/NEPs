@@ -78,14 +78,14 @@ In `Runtime`, gas is tracked in the following fields of `ActionResult` struct:
 - `gas_used` - includes burnt gas and gas attached to the new `ActionReceipt`s created during the method execution.
 - `gas_burnt_for_function_call` - stores gas burnt during function call execution. Later, owner of the corresponding contract gets 30% of it as a reward for a possibility to invoke the function.
 
-Initially runtime charges all used gas from the account. But during refund computation, if new `ActionReceipt`s are not actually going to be sent, e.g. in case of failure on applying some action, difference between used gas and burnt gas is returned to the account.
+Initially runtime charges all used gas from the account. But during refund computation, if new `ActionReceipt`s are not actually going to be sent, e.g. in case of failure on applying current receipt, difference between used gas and burnt gas is returned to the account.
 
-At first, we charge fees related to conversion from `SignedTransaction` to `ActionReceipt` and execution of this receipt:
+At first, we charge fees related to conversion from `SignedTransaction` to `ActionReceipt` and future execution of this receipt:
 - all `SignedTransaction`s are passed to `Runtime::apply -> Runtime::process_transaction -> verifier.rs::verify_and_charge_transaction` and then to `verifier.rs::validate_transaction`;
 - transaction cost is computed there using `config.rs::tx_cost` function;
 - `total_cost` is deducted from signer. It is a sum of:
     - `gas_to_balance(gas_burnt)` where `gas_burnt` is action receipt send fee + `total_send_fees(transaction.actions)`);
-    - `gas_to_balance(gas_remaining)` where `gas_remaining` is action receipt exec fee + `total_prepaid_exec_fees(transaction.actions)` to pay for all remaining fees caused by transaction;
+    - `gas_to_balance(gas_remaining)` where `gas_remaining` is action receipt exec fee + `total_prepaid_exec_fees(transaction.actions)` to pay all remaining fees caused by transaction;
     - `total_deposit(transaction.actions)`;
 - then transaction is finally converted to receipt and passed to `Runtime::process_receipt`.
 
