@@ -139,7 +139,7 @@ The following behavior is required, but contract authors may name this function 
 //
 // The `nft_transfer_call` process:
 //
-// 1. Sender calls `nft_transfer_call` on FT contract
+// 1. Sender calls `nft_transfer_call` on NFT contract
 // 2. NFT contract transfers token from sender to receiver
 // 3. NFT contract calls `nft_on_transfer` on receiver contract
 // 4+. [receiver contract may make other cross-contract calls]
