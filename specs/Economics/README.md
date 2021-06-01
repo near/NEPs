@@ -165,7 +165,7 @@ def findSeatPrice(stakes, num_seats):
         right = mid
 ```
 
-### Rewards Calculation
+### Validator Rewards Calculation
 
 Note: all calculations are done in Rational numbers.
 
@@ -247,3 +247,8 @@ def end_of_epoch(..., reward):
     # ...
     accounts[TREASURY_ACCOUNT_ID].amount = treasury_reward[t]
 ```
+
+## Contract Rewards
+
+Contract account is rewarded with 30% of gas burnt during execution of its functions, for the possibility to invoke them.
+Rewarding happens after applying the corresponding receipt with [`FunctionCallAction`](../RuntimeSpec/Actions.md#functioncallaction), gas is converted to tokens using gas price of the current block.
