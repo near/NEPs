@@ -251,4 +251,4 @@ def end_of_epoch(..., reward):
 ## Contract Rewards
 
 Contract account is rewarded with 30% of gas burnt during the execution of its functions.
-The reward is credited to the contract account after applying the corresponding receipt with [`FunctionCallAction`](../RuntimeSpec/Actions.md#functioncallaction), gas is converted to tokens using gas price of the current block.
+The reward is credited to the contract account after applying the corresponding [receipt](../RuntimeSpec/Receipts.md) with [`FunctionCallAction`](../RuntimeSpec/Actions.md#functioncallaction), gas is converted to tokens using gas price of the current block.
