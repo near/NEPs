@@ -123,8 +123,8 @@ Data for an single account is collocated in one shard. The account data consists
 - Code of the contract
 - Key-value storage of the contract. Stored in a ordered trie
 - [Access Keys](AccessKey.md)
-- [Postponed ActionReceipts](../Runtime/Receipts.md#postponed-actionreceipt)
-- [Received DataReceipts](../Runtime/Receipts.md#received-datareceipt)
+- [Postponed ActionReceipts](../RuntimeSpec/Receipts.md#postponed-actionreceipt)
+- [Received DataReceipts](../RuntimeSpec/Receipts.md#received-datareceipt)
 
 #### Balances
 
