@@ -11,8 +11,6 @@ For the overview of the NEAR Protocol, read the following documents in numerical
 6. [Network specification](NetworkSpec/NetworkSpec.md)  
 7. [Economics](Economics/README.md)
 
-6. [Economics](Economics/README.md)
-
 ## Standards
 
 Standards such as Fungible Token Standard can be found in [Standards](Standards/README.md) page.
