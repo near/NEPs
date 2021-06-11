@@ -3,11 +3,13 @@
 This repository hosts the current NEAR Protocol specification and standards.
 This includes the core protocol specification, APIs, contract standards, processes, and workflows.
 
-Changes to the core specification and standards are called Near Enhancement Proposals (NEPs).
+Changes to the core specification and standards are called NEAR Enhancement Proposals (NEPs).
+
+This repository uses [mdBook](https://rust-lang.github.io/mdBook) for the [Nomicon website](https://nomicon.io).
 
 ## Specification
 
-NEAR Specification is under active development. The latest version can be found at [Nomicon](https://nomicon.io).
+NEAR Specification is under active development.
 Specification defines how any NEAR client should be connecting, producing blocks, reaching consensus, processing state transitions, using runtime APIs, and implementing smart contract standards as well.
 
 ### Contributing
@@ -43,3 +45,20 @@ Processes include release process for spec, clients or how standards are updated
 * Fill in the NEP. Put care into the details: NEPs that do not present convincing motivation, demonstrate understanding of the impact of the design, or are disingenuous about the drawbacks or alternatives tend to be poorly received. Again, by the time the NEP makes it to the pull request, it has a clear plan and path forward based on the discussions in the governance forum.
 * Submit a pull request. As a pull request the NEP will receive design feedback from the larger community, and the author should be prepared to revise it in response.
 * Build consensus and integrate feedback. NEPs that have broad support are much more likely to make progress than those that don't receive any comments. Feel free to reach out to the NEP assignee in particular to get help identify stakeholders and obstacles.
+
+### Running mdBook
+
+For Linux and OS X, you may run:
+
+`./build.sh`
+
+For Windows:
+
+```bash
+cargo install mdbook
+mdbook build
+```
+
+To quickly iterate, you may also use the command:
+
+`mdbook serve`
