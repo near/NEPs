@@ -91,7 +91,7 @@ abcdefghijklmnopqrstuvwxyz.abcdefghijklmnopqrstuvwxyz.abcdefghijklmnopqrstuvwxyz
 ```
 
 ## System account
-`system` is a special account that is used only for refund receipts. Users cannot create or access the `system` account. For refund receipts, we set the predecessor_id to be `system` to indicate that it is a refund receipt. 
+`system` is a special account that is only used to identify refund receipts. For refund receipts, we set the predecessor_id to be `system` to indicate that it is a refund receipt. Users cannot create or access the `system` account. In fact, this account does not exist as part of the state. 
 
 ## Implicit account IDs
 
