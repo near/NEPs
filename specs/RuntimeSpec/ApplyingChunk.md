@@ -22,11 +22,11 @@ and produce following outputs:
 * If treasury account was not one of validators and this is first block of an epoch, dispense treasury account reward
 * If this is first block of new version or first block with chunk of new version, apply corresponding migrations
 * If this block do not have chunk for this shard, end process early
-* Process [transactions](RuntimeSpec/Transactions.md) (in order of *transactions*)
-* Process local [receipts](RuntimeSpec/Receipts.md) (in order of *transactions* that generated them)
-* Process delayed [receipts](RuntimeSpec/Receipts.md) (ordered first by block where they were generated, then first local receipts based on order of generating *transactions*,
+* Process [transactions](Transactions.md) (in order of *transactions*)
+* Process local [receipts](Receipts.md) (in order of *transactions* that generated them)
+* Process delayed [receipts](Receipts.md) (ordered first by block where they were generated, then first local receipts based on order of generating *transactions*,
 then incomming receipts, ordered by *incoming_receipts* order)
-* Process incomming [receipts](RuntimeSpec/Receipts.md) (ordered by *incoming_receipts*)
+* Process incomming [receipts](Receipts.md) (ordered by *incoming_receipts*)
 
 When processing receipts we track gas used (including gas used on migrations). If we use up gas limit, we immidiately stop to process delayed receipts, and for local and incomming
 receipts we add them to delayed receipts)
