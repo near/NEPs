@@ -1,11 +1,8 @@
-# Standard for a Multiple-Recipient-Payout mechanic on NFT Contracts (NEP-X)
+# Standard for a Multiple-Recipient-Payout mechanic on NFT Contracts (NEP-199)
 Version `1.0.0`.
 
 This standard assumes the NFT contract has implemented
-[NEP-171](https://github.com/near/NEPs/blob/master/specs/Standards/NonFungibleToken/Core.md)
-(Core) and
-[NEP-178](https://github.com/near/NEPs/blob/master/specs/Standards/NonFungibleToken/ApprovalManagement.md)
-(Approval Management).
+[NEP-171](https://github.com/near/NEPs/blob/master/specs/Standards/NonFungibleToken/Core.md) (Core) and [NEP-178](https://github.com/near/NEPs/blob/master/specs/Standards/NonFungibleToken/ApprovalManagement.md) (Approval Management).
 
 ## Summary
 An interface allowing non-fungible token contracts to request that
@@ -13,10 +10,10 @@ financial contracts pay-out multiple receivers, enabling flexible royalty
 implementations.
 
 ## Motivation
-Currently, NFTs on Near support the field `owner_id`, but lack flexibility
+Currently, NFTs on NEAR support the field `owner_id`, but lack flexibility
 for ownership and payout mechanics with more complexity, including but not
-limited to royalties. Financial contracts, such as Marketplaces,
-Auction-houses, and NFT Loan contracts, would benefit from a standard
+limited to royalties. Financial contracts, such as marketplaces,
+auction houses, and NFT Loan contracts would benefit from a standard
 interface on NFT producer contracts for querying whom to pay out, and how
 much to pay.
 
@@ -40,7 +37,7 @@ Financial contracts MUST validate several invariants on the returned
    willing to respect with the `max_len_payout` field on
    `nft_transfer_payout`.
 2. The balances MUST add up to less than or equal to the `balance` argument
-   in `nft_transfer_payout`. If the balance adds up to less then the
+   in `nft_transfer_payout`. If the balance adds up to less than the
    `balance` argument, the financial contract MAY claim the remainder for
    itself.
 3. The sum of the balances MUST NOT overflow. This is technically identical
@@ -52,7 +49,7 @@ At minimum, financial contracts MUST NOT set their maximum length lower
 than 10.
 
 Note that if any of the invariants are violated by the NFT contract, the
-financial contract has either too little gas or too little Near to complete
+financial contract has either too little gas or NEAR to complete
 the transaction AND that the NFT contract has acted in bad faith. The
 financial contract is NOT responsible for these failures, and in this case,
 MAY choose to not pay out any address in the returned `Payout`.
@@ -92,7 +89,7 @@ calling `nft_transfer_payout` with the remainder.
 
 ## Reference-level explanation
 ```rust
-/// A mapping of Near accounts to the amount each should be paid out, in
+/// A mapping of NEAR accounts to the amount each should be paid out, in
 /// the event of a token-sale. The payout mapping MUST be shorter than the
 /// maximum length specified by the financial contract obtaining this
 /// payout data. Any mapping of length 10 or less MUST be accepted by
@@ -111,7 +108,7 @@ pub trait Payouts{
   /// Given a `token_id` and NEAR-denominated balance, transfer the token
   /// and return the `Payout` struct for the given token. Panic if the
   /// length of the payout exceeds `max_len_payout.`
-  // #[payable]
+  #[payable]
   fn nft_transfer_payout(
     &mut self,
     receiver_id: AccountId,

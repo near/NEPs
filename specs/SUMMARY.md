@@ -57,4 +57,5 @@
       - [Metadata](Standards/NonFungibleToken/Metadata.md)
       - [Approval Management](Standards/NonFungibleToken/ApprovalManagement.md)
       - [Enumeration](Standards/NonFungibleToken/Enumeration.md)
+      - [Royalty Payout](Standards/NonFungibleToken/Payout.md)
   - [Storage Management](Standards/StorageManagement.md)
