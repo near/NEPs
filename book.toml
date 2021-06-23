@@ -1,5 +1,5 @@
 [book]
-authors = ["Near Inc <hello@nearprotocol.com>"]
+authors = ["Near Inc <hello@near.org>"]
 multilingual = false
 src = "specs"
 title = "NEAR Protocol Specification"
