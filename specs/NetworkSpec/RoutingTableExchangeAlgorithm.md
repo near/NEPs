@@ -23,7 +23,7 @@ The process of exchanging `routing tables` involves exchanging edges between a p
 For given nodes `A`, `B`, that involves adding edges which `A` has, but `B` doesn't and vice-versa.
 For each connection we create a data structure [IbfSet](#IbfSet).
 It stores `Inverse Bloom Filters` [Ibf](#Ibf) of powers of `2^k` for `k` in range `10..17`.
-This allows us to recover edges as long as set difference is less than `2^17 / 3`.
+This allows us to recover around `2^17 / 1.3` edges with `99%` probability according to [Efficient Set Reconciliation without Prior Context](https://www.ics.uci.edu/~eppstein/pubs/EppGooUye-SIGCOMM-11.pdf).
 Otherwise, we do full routing table exchange.
 
 We have chosen a minimum size of `Ibf` to be `2^10`, because the overhead of processing `IBF` of smaller size of negligible, and to reduce the number of messages required in exchange.
@@ -91,7 +91,7 @@ pub struct RoutingSyncV2 {
 - `seed` - seed used to generate ibf
 - `edges` - list of edges send to the other peer
 - `requested_edges` - list of hashes of edges peer want to get
-- `done` - true if it's the last message in syncrhonization
+- `done` - true if it's the last message in synchronization
 
 
 # IbfSet
@@ -150,13 +150,12 @@ Peer `B` chooses unique `seed`, and generates `IbfPeerSet` based on seed and all
 [Routing Table](NetworkSpec.md#Routing Table).
 
 ## Step 3 - 10
-On odd steps peer `B` sends message to peer `A`, which Ibf of size `2^(step+7)`.
-On event steps, peer `A` does it.
-- Case 1 - if we were unable to find all edges we continue to the next step
+On odd steps peer `B` sends message to peer `A`, with Ibf of size `2^(step+7)`.
+On even steps, peer `A` does it.
+- Case 1 - if we were unable to find all edges we continue to the next step.
 - Case 2 - otherwise, we know what the set difference is.
 We compute the set of hashes of edges given node knows about, and doesn't know about.
-Current peer sends to the other peer the edges he knows about, and asks about edges, based on hashes,
-he doesn't know about the other peer.
+Current peer sends to the other peer the edges it knows about, and asks about edges, based on hashes, it doesn't know about the other peer.
 The other peer sends the response, and the routing table exchange ends.
 
 ## Step 11
@@ -180,8 +179,8 @@ Therefore, we are resistant to that type of attack.
 
 
 # Memory overhead
-For each connection we need to use approximately `(2^10 + ... 2^17) * sizeof(IbfElem) bytes = 2^18 * 16 bytes = 4mb`.
-Assuming we keep extra 40 of such data structures, we would need extra `160mb`.
+For each connection we need to use approximately `(2^10 + ... 2^17) * sizeof(IbfElem) bytes = 2^18 * 16 bytes = 4 MiB`.
+Assuming we keep extra 40 of such data structures, we would need extra `160 MiB`.
 
 # Performance overhead
 On each update we need up update each `IbfSet` structure `3*8 = 24` times.
@@ -206,11 +205,18 @@ It may be still possible to generate offline such set of edges that can cause re
 
 ### Increase number of `IbfSet` structures per `IbfPeerSet`
 In theory, we could increase the sizes of `IBF` structures used from `2^10..2^17` to `2^10..2^20`.
-This would allow us to recover the set difference if it's up to `2^20/3` instead of `2^17/3` at cost of increasing memory overhead from `160mb to 640mb`.
+This would allow us to recover the set difference if it's up to `2^20/3` instead of `2^17/3` at cost of increasing memory overhead from `160 MiB to 640 Mib`.
 
-### Simply algorithm to only exchange list of hashes of known edges of each peer
+### Simplify algorithm to only exchange list of hashes of known edges of each peer
 Each edge has a size of about 400 bytes.
 Let's assume we need to send 1 million edges.
-By sending list of 4 bytes hashes of all known edges on each synchronization we would only need to send 4 mb of metadata plus the size of edges that differ.
+By sending list of 4 bytes hashes of all known edges on each synchronization we would only need to send `4 MiB` of metadata plus the size of edges that differ.
 This approach would be simpler, but not as efficient in terms of bandwidth. 
-That would still be an improvement of having to send just 4 mb over 400mb with existing implementation.
+That would still be an improvement of having to send just `4 MiB` over `400 MiB` with existing implementation.
+
+### Simplify routing algorithm exchange.
+In the current design, both peers communicate to each other exchanging messages. 
+`A` sends `Ibf` of size `2^k` for even `k`, `B` otherwise.
+It may be easier to maintain the code in the future, if we switch to a server/client model.
+Where `A` does all requests, `B` sends only responses.
+This would increase the number of messages exchanged, but could make it simpler to maintain/debug the code.
