@@ -1,4 +1,4 @@
-# Processing chunk
+# Applying chunk
 
 ## Inputs and outputs
 
