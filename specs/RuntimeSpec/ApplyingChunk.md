@@ -25,10 +25,10 @@ and produce following outputs:
 * Process [transactions](Transactions.md) (in order of *transactions*)
 * Process local [receipts](Receipts.md) (in order of *transactions* that generated them)
 * Process delayed [receipts](Receipts.md) (ordered first by block where they were generated, then first local receipts based on order of generating *transactions*,
-then incomming receipts, ordered by *incoming_receipts* order)
-* Process incomming [receipts](Receipts.md) (ordered by *incoming_receipts*)
+then incoming receipts, ordered by *incoming_receipts* order)
+* Process incoming [receipts](Receipts.md) (ordered by *incoming_receipts*)
 
-When processing receipts we track gas used (including gas used on migrations). If we use up gas limit, we immidiately stop to process delayed receipts, and for local and incomming
+When processing receipts we track gas used (including gas used on migrations). If we use up gas limit, we immediately stop to process delayed receipts, and for local and incoming
 receipts we add them to delayed receipts)
 
 * If any of the delayed receipts were processed or any new receipts were delayed, update indices of first and last unprocessed receipts in state
