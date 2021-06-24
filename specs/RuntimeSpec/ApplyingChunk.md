@@ -19,7 +19,7 @@ and produce following outputs:
 
 * If this is first block of an epoch, dispense epoch rewards to validators (in order of *validator_accounts_update.stake_info*)
 * Slash locked balance for malicious behavior (in order of *validator_accounts_update.slashing_info*)
-* If treasury account was not one of validators and this is first block of an epoch, dispense treasury account reward
+* If [treasury account](../Economics/README.md#protocol-treasury) was not one of validators and this is first block of an epoch, dispense treasury account reward
 * If this is first block of new version or first block with chunk of new version, apply corresponding migrations
 * If this block do not have chunk for this shard, end process early
 * Process [transactions](Transactions.md) (in order of *transactions*)
