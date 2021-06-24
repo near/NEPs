@@ -2,13 +2,13 @@
 
 ## Inputs and outputs
 
-Runtime.apply take following inputs:
+Runtime.apply takes following inputs:
 * trie and current state root
 * *validator_accounts_update*
 * *incoming_receipts*
 * *transactions*
 
-and produce following outputs:
+and produces following outputs:
 * new state root
 * *validator_proposals*
 * *outgoing_receipts*
