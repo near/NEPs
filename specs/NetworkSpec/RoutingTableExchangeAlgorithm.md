@@ -180,11 +180,11 @@ Therefore, we are resistant to that type of attack.
 
 # Memory overhead
 For each connection we need to use approximately `(2^10 + ... 2^17) * sizeof(IbfElem) bytes = 2^18 * 16 bytes = 4 MiB`.
-Assuming we keep extra 40 of such data structures, we would need extra `160 MiB`.
+Assuming we keep extra `40` of such data structures, we would need extra `160 MiB`.
 
 # Performance overhead
 On each update we need up update each `IbfSet` structure `3*8 = 24` times.
-Assuming we keep 40 such data structures, that requires up to `960` updates.
+Assuming we keep `40` such data structures, that requires up to `960` updates.
 
 # Future improvements
 
