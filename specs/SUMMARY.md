@@ -16,6 +16,7 @@
   - [Light Client](ChainSpec/LightClient.md)
 - [Runtime specification](RuntimeSpec/README.md)
   - [Runtime](RuntimeSpec/Runtime.md)
+  - [Applying Chunk](RuntimeSpec/ApplyingChunk.md)
   - [FunctionCall](RuntimeSpec/FunctionCall.md)
   - [Transactions](RuntimeSpec/Transactions.md)
   - [Actions](RuntimeSpec/Actions.md)
