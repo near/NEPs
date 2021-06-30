@@ -16,6 +16,7 @@
   - [Light Client](ChainSpec/LightClient.md)
 - [Runtime specification](RuntimeSpec/README.md)
   - [Runtime](RuntimeSpec/Runtime.md)
+  - [Applying Chunk](RuntimeSpec/ApplyingChunk.md)
   - [FunctionCall](RuntimeSpec/FunctionCall.md)
   - [Transactions](RuntimeSpec/Transactions.md)
   - [Actions](RuntimeSpec/Actions.md)
@@ -57,4 +58,5 @@
       - [Metadata](Standards/NonFungibleToken/Metadata.md)
       - [Approval Management](Standards/NonFungibleToken/ApprovalManagement.md)
       - [Enumeration](Standards/NonFungibleToken/Enumeration.md)
+      - [Royalty Payout](Standards/NonFungibleToken/Payout.md)
   - [Storage Management](Standards/StorageManagement.md)

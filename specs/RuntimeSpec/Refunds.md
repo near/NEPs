@@ -6,7 +6,8 @@ The are 2 types of refunds.
 - Refunds for the failed receipt for attached deposits. Let's call them deposit refunds.
 - Refunds for the unused gas and fees. Let's call them gas refunds.
 
-Refunds are identified by having `predecessor_id == "system"`. They don't cost any fees to generate and don't provide burnt gas.
+Refunds receipts are identified by having `predecessor_id == "system"`. They are also special because they don't cost any gas to generate or execute. As a result, they also do not contribute to the block gas limit.
+
 If the execution of a refund fails, the refund amount is burnt.
 The refund receipt is an `ActionReceipt` that consists of a single action `Transfer` with the `deposit` amount of the refund.
 

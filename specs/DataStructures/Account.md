@@ -85,10 +85,13 @@ a..near          // Two dot separators in a row
 $$$              // Non alphanumeric characters are not allowed
 WAT              // Non lowercase characters are not allowed
 me@google.com    // @ is not allowed (it was allowed in the past)
+system           // cannot use the system account, see the section on System account below
 // TOO LONG:
 abcdefghijklmnopqrstuvwxyz.abcdefghijklmnopqrstuvwxyz.abcdefghijklmnopqrstuvwxyz
 ```
 
+## System account
+`system` is a special account that is only used to identify refund receipts. For refund receipts, we set the predecessor_id to be `system` to indicate that it is a refund receipt. Users cannot create or access the `system` account. In fact, this account does not exist as part of the state. 
 
 ## Implicit account IDs
 
