@@ -60,3 +60,5 @@
       - [Enumeration](Standards/NonFungibleToken/Enumeration.md)
       - [Royalty Payout](Standards/NonFungibleToken/Payout.md)
   - [Storage Management](Standards/StorageManagement.md)
+- [Proposals](Proposals/README.md)
+  - [NEAR CLI](Proposals/31-near-shell.md)
