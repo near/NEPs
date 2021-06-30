@@ -1,36 +1,37 @@
-- Proposal Name: near-shell
-- Start Date: 2020-02-03)
-- NEP PR: [nearprotocol/neps#0000](https://github.com/nearprotocol/neps/pull/0000)
-- Issue(s): link to relevant issues in relevant repos (not required).
+- Proposal Name: NEAR CLI enhancements
+- Start Date: 2020-02-03
+- NEP PR: [near/neps#0031](https://github.com/near/neps/pull/31)
+
+(**Special note**: this NEP is currently being updated and a new proposal is forthcoming. Consider this document useful for concepts and historical value.)
 
 # Summary
 [summary]: #summary
 
-`near-shell` is one of the primary tools NEAR developers must use to develop and interact with NEAR networks and smart contracts.  Today, `near-shell` contains the base commands for account creation and deletion, login, viewing account state and keys, sending tokens, creating staking transactions, and building, deploying, and calling smart contracts. There are more opportunities to integrate core NEAR features to expose them directly to users.  This proposal is to enhance `near-shell` to represent all major functionality of NEAR.  For example, validator node management, network selection, native OS key management and integration, smart contract development (including testing, and interaction) could be added.  
+NEAR CLI is one of the primary tools NEAR developers must use to develop and interact with NEAR networks and smart contracts.  Today, NEAR CLI contains the base commands for account creation and deletion, login, viewing account state and keys, sending tokens, creating staking transactions, and building, deploying, and calling smart contracts. There are more opportunities to integrate core NEAR features to expose them directly to users.  This proposal is to enhance NEAR CLI to represent all major functionality of NEAR.  For example, validator node management, network selection, native OS key management and integration, smart contract development (including testing, and interaction) could be added.  
 
-`near-shell` is an excellent tool to attract and engage new NEAR developers, both core and contract level, and if it contains all the required features to select and configure and deploy NEAR networks, nodes, crypto assets (i.e., keys), accounts, and wallets, it can be the ideal single-entry point for those potential new hackers.  
+NEAR CLI is an excellent tool to attract and engage new NEAR developers, both core and contract level, and if it contains all the required features to select and configure and deploy NEAR networks, nodes, crypto assets (i.e., keys), accounts, and wallets, it can be the ideal single-entry point for those potential new hackers.  
 
 # Motivation
 [motivation]: #motivation
 
-These enhancements are intended to simplify and enhance developer and user productivity by providing a single command-line tool which exercises all major features of NEAR. As each major piece of NEAR functionality is added to `near-shell`, we should see utilization of each of those features increase.  Additionally, community mindshare and understanding of NEAR should increase as `near-shell` will contain detailed help documentation for each major feature with clear examples of use, just like Linux man pages and/or other major CLI tools which have integrated help for each command.
+These enhancements are intended to simplify and enhance developer and user productivity by providing a single command-line tool which exercises all major features of NEAR. As each major piece of NEAR functionality is added to NEAR CLI, we should see utilization of each of those features increase.  Additionally, community mindshare and understanding of NEAR should increase as NEAR CLI will contain detailed help documentation for each major feature with clear examples of use, just like Linux man pages and/or other major CLI tools which have integrated help for each command.
 
 # Guide-level explanation
 [guide-level-explanation]: #guide-level-explanation
 
-This NEP will jump straight into the concepts necessary to understand the components needed in `near-shell`, and generally an extensible CLI tool. Unlike other NEPs, the guide-level and reference-level explanations are combined. There is nothing overly technical in the following sections, but more conceptual in nature. With that, the discussion begins by separating the three types of stored information needed for a successful, long-term `near-shell`.
+This NEP will jump straight into the concepts necessary to understand the components needed in NEAR CLI, and generally an extensible CLI tool. Unlike other NEPs, the guide-level and reference-level explanations are combined. There is nothing overly technical in the following sections, but more conceptual in nature. With that, the discussion begins by separating the three types of stored information needed for a successful, long-term NEAR CLI.
 
 ## Settings, config, and key management
 
-Shell-experience **settings**, connection **configuration**, and **key management** are the three types of stored data necessary for developers to reliably build and deploy projects.
+CLI-experience **settings**, connection **configuration**, and **key management** are the three types of stored data necessary for developers to reliably build and deploy projects.
  
 ```
 ─ awesome-near-project  ⟵ NEAR dApp
- ├── .near-config       ⟵ Stores shell-experience settings and connection configuration
+ ├── .near-config       ⟵ Stores CLI-experience settings and connection configuration
  │  ├── connections     ⟵ Contains files used to connect and deploy a contract (except keys)
  │  │  ├── default.js   ⟵ Default configuration is for development
  │  │  └── localnet.js  ⟵ Custom connection added by user for localnet
- │  └── settings.js     ⟵ Stores near-shell settings, how shell behaves when run in this project
+ │  └── settings.js     ⟵ Stores NEAR CLI settings, how the CLI behaves when run in this project
  └── .near-credentials  ⟵ Previously "neardev" this directory contains private key inforamtion
     └── default         
        └── alice.json   ⟵ NEAR account "alice" has private key information here
@@ -39,23 +40,23 @@ Shell-experience **settings**, connection **configuration**, and **key managemen
 ### Definitions:
 
 #### 1. Settings
-[shell-experience-settings]: #shell-experience-settings
+[CLI-experience-settings]: #CLI-experience-settings
 
 ---
 
-These are key-values reflecting how `near-shell` behaves when called within a NEAR project.
+These are key-values reflecting how NEAR CLI behaves when called within a NEAR project.
     
 Example: a developer using OS X uses `near login` with access to a browser, whereas a validator runs `near login` on a CentOS box with no UI or browser. A user prompt may ask "Is this login from a computer with a browser?" The answer is then stored in key-value format in the project-level directory so it can be referenced later, skipping the prompt in the future.
 
-Besides answers to user prompts, shell-experience settings also store information about the last version of `near-shell` used in this project. For more information, please see [Upgradability](#upgradability).
+Besides answers to user prompts, CLI-experience settings also store information about the last version of NEAR CLI used in this project. For more information, please see [Upgradability](#upgradability).
 
 As shown in the directory structure above, this file is located in the project directory at:
 
 `.near-config/settings.js`
 
-In summary, "settings" are key-value pairs that are set by `near-shell` and relate to the behavior of how it operates in a given project directory. They do not relate to the development or deployment of smart contracts, except for providing default values like `accountId`.
+In summary, "settings" are key-value pairs that are set by NEAR CLI and relate to the behavior of how it operates in a given project directory. They do not relate to the development or deployment of smart contracts, except for providing default values like `accountId`.
 
-**Note**: shell-experience settings can exist in the user's home directory as well. In this case, projects without their own `.near-config/settings.js` will use the home directory settings. `near-shell` will be quite verbose when running a command, letting the user know which settings and configuration files are being used when the user runs commands.
+**Note**: CLI-experience settings can exist in the user's home directory as well. In this case, projects without their own `.near-config/settings.js` will use the home directory settings. NEAR CLI will be quite verbose when running a command, letting the user know which settings and configuration files are being used when the user runs commands.
 
 To make this more clear, there are two nested arrays that differentiate settings that should only be applied from a project-level file from those in the home directory. This is how a `settings.js` file may look:
 
@@ -64,14 +65,14 @@ To make this more clear, there are two nested arrays that differentiate settings
   …
   "alwaysRunMigrations": true,
   "project-only": {
-    "lastShellVersion": "0.19.1"
+    "lastCLIVersion": "0.19.1"
   }
 }
 ```
 
 As defined later, there is a command `near settings set-default` which copies the current project's settings into the home directory. Keys inside the `project-only` object will not be moved.
 
-If a new project is created and has no project-level settings file yet, and the home directory has a settings file, the home directory's file will be used as the template. Otherwise, a project-level settings file will be created and populated based on the user prompts given during regular usage of `near-shell`. 
+If a new project is created and has no project-level settings file yet, and the home directory has a settings file, the home directory's file will be used as the template. Otherwise, a project-level settings file will be created and populated based on the user prompts given during regular usage of NEAR CLI. 
     
 #### 2. Configuration
 
@@ -79,7 +80,7 @@ If a new project is created and has no project-level settings file yet, and the 
 
 Configuration are key-value pairs that relate to development and deployment of smart contracts and refer to *connection* information.
 
-Example: As a user, I want to deploy a contract to my localnet instead of testnet during development. I will provide flags and/or modify configuration so that `near-shell` can determine where to connect, for what contract, and on behalf of which NEAR account.
+Example: As a user, I want to deploy a contract to my localnet instead of testnet during development. I will provide flags and/or modify configuration so that NEAR CLI can determine where to connect, for what contract, and on behalf of which NEAR account.
 
 Contains:
 
@@ -94,7 +95,7 @@ As shown in the directory structure earlier, this file is located in the project
 
 `.near-config/connections/default.js`
 
-If a command is run and there exists no file in the path mentioned above, `near-shell` will prompt the user, suggesting it be created. 
+If a command is run and there exists no file in the path mentioned above, NEAR CLI will prompt the user, suggesting it be created. 
 
 **Note**: at the time of this writing, configuration is read from the project level at:
 
@@ -127,7 +128,7 @@ The key file file contains the keys:
 * `network`     : The NEAR network (example, "betanet", "testnet", etc.)
 * `private_key` : The plain-text private key, used when `type = "unencrypted"` 
 
-`near-shell` will look for keys in a specific order. This list is in the prioritized order and can be understood to mean, "if the key is not found here, then try the next location/store."
+NEAR CLI will look for keys in a specific order. This list is in the prioritized order and can be understood to mean, "if the key is not found here, then try the next location/store."
 
 1. Environment variables:
 * `NEAR_ACCOUNT_ID`
@@ -154,7 +155,7 @@ Formerly, the `neardev` folder contained the key files for a project. It is now 
 
 ## Operating system agnostic
 
-`near-shell` will use dependencies like [shelljs](https://github.com/shelljs/shelljs) in order to streamline input/output and paths such that the experience is identical across operating systems. It will not rely on hardcoded backslashes or forward slashes that may break functionality on a different operating system. It will not use unsupported commands like `mkdir -p` that does not exist on Windows, etc.
+NEAR CLI will use dependencies like [shelljs](https://github.com/shelljs/shelljs) in order to streamline input/output and paths such that the experience is identical across operating systems. It will not rely on hardcoded backslashes or forward slashes that may break functionality on a different operating system. It will not use unsupported commands like `mkdir -p` that does not exist on Windows, etc.
 
 ## Translation
 
@@ -164,7 +165,7 @@ It's important to invite the international community into developing with NEAR. 
 
 Language preference can be set in two ways:
 - Using environment variables (i.e., parsed from `process.env.LANG`, and the default assignment)
-- Set explicitly in shell-experience settings using [ISO 639-1](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes)
+- Set explicitly in CLI-experience settings using [ISO 639-1](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes)
 
 Example content from `<project-path>/.near-config/settings.js`:
 ```json
@@ -178,13 +179,13 @@ Commands and subcommands (ex: `call` or `deploy`) are not translated and will be
 ## Upgradability
 [upgradability]: #upgradability
 
-As `near-shell` matures, updates may/will cause a user's project to become outdated. For instance, this NEP proposes to rename the project directory `neardev` to `.near-credentials`. Developers with existing `neardev` directories will either need to manually rename the folder, or `near-shell` will have to look in two places for the key files.
+As NEAR CLI matures, updates may/will cause a user's project to become outdated. For instance, this NEP proposes to rename the project directory `neardev` to `.near-credentials`. Developers with existing `neardev` directories will either need to manually rename the folder, or NEAR CLI will have to look in two places for the key files.
 
-This proposal declares that `near-shell` will have a mechanism to make such upgrades possible. This endeavor cannot happen, however, without keeping track of which version of `near-shell` was most recently used in a project.
+This proposal declares that NEAR CLI will have a mechanism to make such upgrades possible. This endeavor cannot happen, however, without keeping track of which version of NEAR CLI was most recently used in a project.
 
-**Example scenario**: a user begins developing a dApp on NEAR using `near-shell` version `0.19.0`. The user takes a sabbatical for a few months and returns with a new computer, cloning the old project. The new computer installed `near-shell` version `0.23.1`. The first time this user runs a command in this old project, migrations are run ensuring the project stays current.
+**Example scenario**: a user begins developing a dApp on NEAR using NEAR CLI version `0.19.0`. The user takes a sabbatical for a few months and returns with a new computer, cloning the old project. The new computer installed NEAR CLI version `0.23.1`. The first time this user runs a command in this old project, migrations are run ensuring the project stays current.
 
-Of the three types of storage mentioned before (shell-experience settings, connection configuration, and key management) the saved version information belongs to the project-level settings. It's possible that a user will have multiple dApps that are used less frequently than others and become out of date. Therefore, each project must have their own record of which version of `near-shell` was most recently used. This setting will never be placed in the home directory.
+Of the three types of storage mentioned before (CLI-experience settings, connection configuration, and key management) the saved version information belongs to the project-level settings. It's possible that a user will have multiple dApps that are used less frequently than others and become out of date. Therefore, each project must have their own record of which version of NEAR CLI was most recently used. This setting will never be placed in the home directory.
 
 The location of these settings is:
 
@@ -193,21 +194,21 @@ The location of these settings is:
 For example:
 `/Users/friend/near-projects/guest-book/.near-config/settings.js`
 
-Currently, this is the only setting that belongs to the object `project-only` in the settings file. The setting `lastShellVersion` will never be loaded from the home directory. 
+Currently, this is the only setting that belongs to the object `project-only` in the settings file. The setting `lastCLIVersion` will never be loaded from the home directory. 
 
 In this proposal, the file is shown as JavaScript. This is not a hard requirement, as as key-value pairs could also be in the form of environment variables:
 
 ```bash
 …
-LAST_SHELL_VERSION="0.19.1"
+LAST_CLI_VERSION="0.19.1"
 …
 ```
 
-Using middleware, `near-shell` will check the current version against the key `lastShellVersion` (or `LAST_SHELL_VERSION`) of the settings file, then run any necessary migrations.
+Using middleware, NEAR CLI will check the current version against the key `lastCLIVersion` (or `LAST_CLI_VERSION`) of the settings file, then run any necessary migrations.
 
 ### Migrations
 
-The folder structure within `near-shell` will have migration files per minor version as illustrated here:
+The folder structure within NEAR CLI will have migration files per minor version as illustrated here:
 
 ```bash
 └── middleware
@@ -217,7 +218,7 @@ The folder structure within `near-shell` will have migration files per minor ver
       │  ├── 0.19.x.js          ⟵ logic to run for 0.19.0 to 0.19.N
       │  ├── 0.20.x.js          ⟵ logic to run for 0.20.0 to 0.20.N
       │  └── x.x.x-template.js  ⟵ template for adding new minor version migrations
-      └── shell-upgrade.js      ⟵ contains checks for current version against stored version, etc.
+      └── cli-upgrade.js      ⟵ contains checks for current version against stored version, etc.
 ```
 
 An example of a migration script might be:
@@ -242,13 +243,13 @@ const upgrade = async (lastPatchVersion) => {
 exports.upgrade = upgrade;
 ```
 
-Shown in the directory structure above is the file `shell-upgrade.js`. This file will, after comparing the current version to the last used version in the project's `.near-config/settings.js` file, determine how many migration scripts are needed to run. It will loop through the necessary files calling the `upgrade()` function on them in the proper version order. When complete, it will update the `lastShellVersion` key in the project-level settings file. At this time the project is considered current.
+Shown in the directory structure above is the file `cli-upgrade.js`. This file will, after comparing the current version to the last used version in the project's `.near-config/settings.js` file, determine how many migration scripts are needed to run. It will loop through the necessary files calling the `upgrade()` function on them in the proper version order. When complete, it will update the `lastCLIVersion` key in the project-level settings file. At this time the project is considered current.
 
 **Note**: migrations do not have to fix backwards-incompatible changes. Migrations can also improve experience by, for example, removing orphaned files, make safety checks and show warnings, etc.
 
 ## Prompts
 
-Various user prompts will enhance the experience of `near-shell` by providing options. These prompts can save answers so that they may be skipped in the future. As mentioned, the answers will be saved as **settings** on the project level.
+Various user prompts will enhance the experience of NEAR CLI by providing options. These prompts can save answers so that they may be skipped in the future. As mentioned, the answers will be saved as **settings** on the project level.
 
 Example:
 `/Users/friend/near-projects/.near-config/settings.js` has:
@@ -272,7 +273,7 @@ The number of prompts will grow beyond what can be captured in this spec. A numb
 
 ### `near account <command>`
 
-This category is used to create, select, and configure accounts on NEAR networks for a given `near-shell` user.  
+This category is used to create, select, and configure accounts on NEAR networks for a given NEAR CLI user.  
 
 * `near account list`   : Display list of accounts configured in the current directory and home directory
 * `near account status` : Display status of active or specified account, including token amounts, locked, etc.
@@ -281,7 +282,7 @@ This category is used to create, select, and configure accounts on NEAR networks
 * `near account delete` : Delete an account or sub-account.
 * `near account create-key` : Delete an account or sub-account.
 * `near account revoke-key` : Delete an account or sub-account.
-* `near account select` : Selects a default account from the list of accounts with keys. Stored in shell-experience settings with key `defaultAccount`.
+* `near account select` : Selects a default account from the list of accounts with keys. Stored in CLI-experience settings with key `defaultAccount`.
 * `near account login`  : Log in the current active or specified account. The default location of unencrypted key files is the home directory.
 * `near account stake`  : Stake Ⓝ to a given staking contract
 * `near account secure` : Finds the key file for an account name, converts it to use OS-level key management via a command line wizard/instructions.
@@ -292,7 +293,7 @@ This category is used to create, select, and configure accounts on NEAR networks
 * `near config`         : List the location of active configuration file if it's loaded, or default config settings
 * `near config add`     : Set a key in the active configuration, or if using default, create a config file in the home directory with defaults and the specified key and value
 * `near config remove`  : Removes a configuration file. (Example: `near config remove localnet` removes `.near-config/connections/localnet.js`)
-* `near config select`  : Selects a default connection configuration file from the list of those available. Stored in the shell-experience settings with key `defaultConnection`. Default is `default`.
+* `near config select`  : Selects a default connection configuration file from the list of those available. Stored in the CLI-experience settings with key `defaultConnection`. Default is `default`.
 * `near config wizard`  : Runs through a command-line wizard for an environment, allowing user to modify the values.
 
 ### `near settings <command>`
@@ -328,26 +329,26 @@ Shows information on current validators and fisherman in the environment detaile
 
 ### `near tool <command>`
 
-Utility tools added to `near-shell`
+Utility tools added to NEAR CLI
 
 * `near tool repl`      : Read evaluate print loop tool
 * `near tool metrics`   : Allows user to opt-out or opt-in from metrics
 
 ### Flags
 
-**Note**: some of these flags are only to be used for a subset of commands. For example, `--wasmFile` is only useful for commands such as `near contract deploy`. Generally, we'll rely on `near-shell` to give the user feedback when a flag is missing or needed.
+**Note**: some of these flags are only to be used for a subset of commands. For example, `--wasmFile` is only useful for commands such as `near contract deploy`. Generally, we'll rely on NEAR CLI to give the user feedback when a flag is missing or needed.
 
 * `--configFile`        : Explicitly specifies the location of the config file containing connection information. Default location is `.near-config/connections/default.js`.
 * `--accountId`         : Specify the NEAR account performing the command or action
-* `--keyPath`           : An argument used by `near-shell` specifying the path to the key file. 
+* `--keyPath`           : An argument used by NEAR CLI specifying the path to the key file. 
 * `--wasmFile`          : Specify path to compiled smart contract
-* `--version`           : Displays version of `near-shell`
+* `--version`           : Displays version of NEAR CLI
 * `--fromFile` or `-f`  : Add arguments from file. See [inline arguments](#inline-arguments) section below.
 
 ## Command input can be inline or file-based
 [inline-arguments]: #inline-arguments
 
-Some commands in `near-shell` may become long and difficult to type on the command line. End users with a standard terminal application may have lengthy arguments that are better saved to a file.
+Some commands in NEAR CLI may become long and difficult to type on the command line. End users with a standard terminal application may have lengthy arguments that are better saved to a file.
 
 Flags may be done inline (default):
 
@@ -368,13 +369,13 @@ Reading from a file may be added to other commands in the future.
 
 Usage analytics will be used anonymously and purely to measure key performance indicators. [Mixpanel](https://mixpanel.com/) will be the chosen integration at this time. No private data will ever be sent, only metrics on the command usage and possible crash reporting.
 
-There will be the ability to opt-out as well. While the majority of shell-experience settings are project-level, this is the only setting that will be saved directly to the user's home directory settings instead of the project-level settings file. (That is, stored in: `~/.near-config/settings.js`)
+There will be the ability to opt-out as well. While the majority of CLI-experience settings are project-level, this is the only setting that will be saved directly to the user's home directory settings instead of the project-level settings file. (That is, stored in: `~/.near-config/settings.js`)
 
 ### User Stories
 
-These enhancements to `near-shell` aim to increase user and developer adoption by centralizing and optimizing all interactions with NEAR functionality. `near-shell` today is a thin and lightweight set of features which enable the use of each NEAR product offering.  Specifically, `near-shell` is required to use NEAR products today. For example, to stake, send tokens, create and delete accounts, view public keys, build and deploy smart contracts, call smart contract methods, and log in through NEAR Wallet. Each of these features are critical to all NEAR products.
+These enhancements to NEAR CLI aim to increase user and developer adoption by centralizing and optimizing all interactions with NEAR functionality. NEAR CLI today is a thin and lightweight set of features which enable the use of each NEAR product offering.  Specifically, NEAR CLI is required to use NEAR products today. For example, to stake, send tokens, create and delete accounts, view public keys, build and deploy smart contracts, call smart contract methods, and log in through NEAR Wallet. Each of these features are critical to all NEAR products.
 
-If `near-shell` is required, it makes sense to enhance `near-shell` to include other features critical to user and developer interactions. The commands proposed above enhance `near-shell` to include control for both local and distributed development, i.e., using a local network for offline development vs. testnet as a live network used by others, and to be able to select and configure networks.
+If NEAR CLI is required, it makes sense to enhance NEAR CLI to include other features critical to user and developer interactions. The commands proposed above enhance NEAR CLI to include control for both local and distributed development, i.e., using a local network for offline development vs. testnet as a live network used by others, and to be able to select and configure networks.
 
 Here are a few user stories to demonstrate the utility of these enhancements.
 
@@ -384,15 +385,15 @@ Here are a few user stories to demonstrate the utility of these enhancements.
 * As a user, I want to be able to come back to a project months later, upgrade tooling, and face no issues building and deploying.
 * As a user, I want to be able to set defaults and load a file in order to reduce the length of my CLI command when calling my contract.
 * As a user, I want to be able to estimate the gas cost for a particular contract call before deploying.
-* As a user, I want to use `near-shell` on any operating system and experience the full set of features.
+* As a user, I want to use NEAR CLI on any operating system and experience the full set of features.
 
 # Drawbacks
 [drawbacks]: #drawbacks
 
 Why should we *not* do this?
 
-* The complexity of `near-shell` increases whenever a new command is added.
-* This proposal may increase the dependency chain of `near-shell` when it comes to gas estimation, user prompts, and possibly using environment variables instead of JavaScript/JSON.
+* The complexity of NEAR CLI increases whenever a new command is added.
+* This proposal may increase the dependency chain of NEAR CLI when it comes to gas estimation, user prompts, and possibly using environment variables instead of JavaScript/JSON.
 
 # Rationale and alternatives
 [rationale-and-alternatives]: #rationale-and-alternatives
@@ -403,11 +404,11 @@ It's difficult to communicate and introduce distributed web concepts to users an
 
 Current best design practices for blockchain, wallets, and distributed web applications attempt to mitigate blockchain interaction complexities by performing all required steps for interaction and feature use by *delaying* complex interactions and *encapsulating* multiple steps into as few interactions as possible.  The enhancements proposed here embrace multiple facets of NEAR features by including the most complicated feature interactions (i.e., configuring multiple networks, account creation and configuration, etc.) and allow complex interactions with NEAR's blockchain features to be delayed until absolutely required. The majority of the time, the user is not required to pull a separate repository, hence *delaying* a relatively complex product interaction and practically eliminating most of the confusion introduced by fetching and inspecting another NEAR repository.
 
-These `near-shell` enhancements *encapsulate* multiple features and processes required to deploy and configure multiple networks for smart contract development.
+These NEAR CLI enhancements *encapsulate* multiple features and processes required to deploy and configure multiple networks for smart contract development.
 
 >What other designs have been considered and what is the rationale for not choosing them?
 
-The current `near-shell` design is the default. An approach might be to not use a shell at all. Instead, NEAR might create GUI applications, e.g., electron or web server-based configuration management where the user starts a local application which provides a port towards which the user can point their local browser to configure NEAR accounts, networks, and nodes.
+The current NEAR CLI design is the default. An approach might be to not use the command line at all. Instead, NEAR might create GUI applications, e.g., electron or web server-based configuration management where the user starts a local application which provides a port towards which the user can point their local browser to configure NEAR accounts, networks, and nodes.
 
 >What is the impact of not doing this?
 
@@ -418,17 +419,17 @@ Users will not be able to customize their experience with defaults. Users will b
 
 >What parts of the design do you expect to resolve through the NEP process before this gets merged?
 
-Adding the [upgradability mechanism](#upgradability) is key to `near-shell` being future-proof and the project would benefit from immediate implementation.
+Adding the [upgradability mechanism](#upgradability) is key to NEAR CLI being future-proof and the project would benefit from immediate implementation.
 
 >What related issues do you consider out of scope for this NEP that could be addressed in the future independently of the solution that comes out of this NEP?
 
-Out of scope is smart contract execution and debugging. However, future versions of `near-shell` might include specific commands that enable the debugging and optimization of smart contract deployments. Gas estimation is the first step that will likely bring execution much closer in feasibility.
+Out of scope is smart contract execution and debugging. However, future versions of NEAR CLI might include specific commands that enable the debugging and optimization of smart contract deployments. Gas estimation is the first step that will likely bring execution much closer in feasibility.
 
-In this proposal, `near account select` and `near config select` add to the shell-experience settings. These could arguably exist in the connection configuration.
+In this proposal, `near account select` and `near config select` add to the CLI-experience settings. These could arguably exist in the connection configuration.
 
 #### Additional unresolved thoughts/questions
 
-Where possible, it's best to avoid single point of failures. This is in regards to using a package manager in particular. An official installer for multiple operating systems may be advised here, where trusted OS or GPG keys can verify the shell.
+Where possible, it's best to avoid single point of failures. This is in regards to using a package manager in particular. An official installer for multiple operating systems may be advised here, where trusted OS or GPG keys can verify the CLI.
     
 Key storage for the metrics will be in plain-text, which is suboptimal but low risk.
 
@@ -437,15 +438,15 @@ It's unclear if any dependencies needed for this NEP might open the project up t
 # Future possibilities
 [future-possibilities]: #future-possibilities
 
-At the time of this writing, users wishing to run a NEAR validator node [will use nearup](https://github.com/near/nearup). In the future, it might be beneficial to roll this into `near-shell` or borrow features and usability from `near-shell` to the validator node user experience.
+At the time of this writing, users wishing to run a NEAR validator node [will use nearup](https://github.com/near/nearup). In the future, it might be beneficial to roll this into NEAR CLI or borrow features and usability from NEAR CLI to the validator node user experience.
 
-Currently `near-shell` is written in JavaScript using [yargs](https://yargs.js.org/). There are benefits of different platforms. Another JavaScript option is call [oclif](https://oclif.io/) which would provide the ability to have verified installs per operating system based on GPG keys or OS X certificates. There's also been a discussion about rewriting this in Rust.
+Currently NEAR CLI is written in JavaScript using [yargs](https://yargs.js.org/). There are benefits of different platforms. Another JavaScript option is call [oclif](https://oclif.io/) which would provide the ability to have verified installs per operating system based on GPG keys or OS X certificates. There's also been a discussion about rewriting this in Rust.
 
 # From here to there
 
 This section highlights actionable items needed to get from the current state of the project to this spec. It is not exhaustive, but rather can be used to jog memories and start the conversation on atomic tasks.
 
-* Remove `near build`   : With multiple languages in the future and multi-contract dApps, we cannot reliably run a single command to build. It needs to be communicated that the user will have to run a command or build script (not using `near-shell`) for this.
+* Remove `near build`   : With multiple languages in the future and multi-contract dApps, we cannot reliably run a single command to build. It needs to be communicated that the user will have to run a command or build script (not using NEAR CLI) for this.
 * Keys stored in `neardev` need to have an additional key added: `"type": "unencrypted"`.
 * The `neardev` folder needs to be renamed to `.near-credentials`.
 * Add `--env` flag so that config will load proper file.
