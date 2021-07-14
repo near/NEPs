@@ -12,7 +12,7 @@ NEAR Protocol has an account names system. Account ID is similar to a username. 
 - maximum length is 64
 - **Account ID** consists of **Account ID parts** separated by `.`
 - **Account ID part** consists of lowercase alphanumeric symbols separated by either `_` or `-`.
-- **Account ID** that is 64 characters long consists of lowercase hex characters is a specific **implicit account ID**.
+- **Account ID** that is 64 characters long and consists of lowercase hex characters is a specific **implicit account ID**.
 
 Account names are similar to a domain names.
 Top level account (TLA) like `near`, `com`, `eth` can only be created by `registrar` account (see next section for more details).
