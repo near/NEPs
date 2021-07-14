@@ -22,7 +22,7 @@ The contract must implement the following view methods:
 
 ```ts
 // Returns the total supply of non-fungible tokens as a string representing an
-// unsigned 128-bit integer to avoid JSON number limit of 2^53.
+// unsigned 128-bit integer to avoid JSON number limit of 2^53; and "0" if there are no tokens.
 function nft_total_supply(): string {}
 
 // Get a list of all tokens
@@ -32,7 +32,7 @@ function nft_total_supply(): string {}
 //    representing the starting index of tokens to return
 // * `limit`: the maximum number of tokens to return
 //
-// Returns an array of Token objects, as described in Core standard
+// Returns an array of Token objects, as described in Core standard, and an empty array if there are no tokens
 function nft_tokens(
   from_index: string|null, // default: "0"
   limit: number|null, // default: unlimited (could fail due to gas limit)
@@ -45,7 +45,7 @@ function nft_tokens(
 //
 // Returns the number of non-fungible tokens owned by given `account_id` as
 // a string representing the value as an unsigned 128-bit integer to avoid JSON
-// number limit of 2^53.
+// number limit of 2^53; and "0" if there are no tokens.
 function nft_supply_for_owner(
   account_id: string,
 ): string {}
@@ -58,7 +58,7 @@ function nft_supply_for_owner(
 //    representing the starting index of tokens to return
 // * `limit`: the maximum number of tokens to return
 //
-// Returns a paginated list of all tokens owned by this account
+// Returns a paginated list of all tokens owned by this account, and an empty array if there are no tokens
 function nft_tokens_for_owner(
   account_id: string,
   from_index: string|null, // default: 0
