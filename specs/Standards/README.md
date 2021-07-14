@@ -1,6 +1,5 @@
 ## Standards
 
-- [Storage Management](StorageManagement.md)
 - [Fungible Token](FungibleToken/README.md)
     - [Core Standard](FungibleToken/Core.md)
     - [Metadata](FungibleToken/Metadata.md)
@@ -9,3 +8,4 @@
     - [Metadata](NonFungibleToken/Metadata.md)
     - [Approval Management](NonFungibleToken/ApprovalManagement.md)
     - [Enumeration](NonFungibleToken/Enumeration.md)
+- [Storage Management](StorageManagement.md)
