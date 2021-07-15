@@ -3,7 +3,7 @@
 This repository hosts the current NEAR Protocol specification and standards.
 This includes the core protocol specification, APIs, contract standards, processes, and workflows.
 
-Changes to the core specification and standards are called NEAR Enhancement Proposals (NEPs).
+Changes to the protocol specification and standards are called NEAR Enhancement Proposals (NEPs).
 
 This repository uses [mdBook](https://rust-lang.github.io/mdBook) for the [Nomicon website](https://nomicon.io).
 
