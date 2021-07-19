@@ -68,3 +68,4 @@
   - [Execution Outcome](Proposals/0017-execution-outcome.md)
   - [View/Change Methods](Proposals/0018-view-change-method.md)
   - [Economics](Proposals/0033-economics.md)
+  - [Splitting States](Proposals/0040-split-states.md)
