@@ -294,7 +294,7 @@ Thus, most of the change will likely be a one time use that only works for the S
   - It is the best because its implementation is the simplest.
     Considering we want to launch Simple Nightshade as soon as possible by Q4 2021 and we will not enable challenges any time soon, this is the best option we have.
 - What other designs have been considered and what is the rationale for not choosing them?
-  - We have considered other designs that changes states incrementally and keep state roots on chain to make it compatible with challenges.
+  - We have considered other designs that change states incrementally and keep state roots on chain to make it compatible with challenges.
 However, the implementaion of those approaches are overly complicated and does not fit into our timeline for launching Simple Nightshade.
 - What is the impact of not doing this?
   - The impact will be the delay of launching Simple Nightshade, or no launch at all.
