@@ -124,8 +124,8 @@ For example, if epoch T-1 has two shards with `shard_id` 0 and 1 and each of the
 
 ```rust
 pub struct EpochInfoV3 {
+    // All fields in EpochInfoV2
     ...
-// All fields in EpochInfoV2
     shards: Vec<ShardId>,
     parent_shards: HashMap<ShardId, ShardId>,
 }
@@ -136,8 +136,8 @@ A new struct `ShardVersionManager` will be created to manage sharding assignment
 `EpochManager` will own `ShardVersionManager` that it can call to create shards for the `EpochInfo` of the next next epoch.
 
 #### ShardVersionManager
-`ShardVersionManager` replies on some static variables that store the mapping from `ProtocolVersion` to sharding assignments.
-Its implementation can be changed easily when a new sharding assignment is added as long as its behavior for the existing protocol versions do not change.
+`ShardVersionManager` relies on some static variables that store the mapping from `ProtocolVersion` to sharding assignments.
+Its implementation can be changed easily when a new sharding assignment is added as long as its behavior for the existing protocol versions does not change.
 For Simple Nightshade, the following implementation suffices.
 ```rust
 pub const SIMPLE_NIGHTSHADE_SHARD_VERSION: ProtocolVersion;
@@ -199,7 +199,7 @@ pub fn run_catchup(...) {
     )? {
         StateSyncResult::Unchanged => {}
         StateSyncResult::Changed(fetch_block) => {...}
-            StateSyncResult::Completed => {
+        StateSyncResult::Completed => {
             // build states for new shards if shards will change and we will track some of the new shards
             if self.runtime_adapter.will_shards_change_next_epoch(epoch_id) {
                 let mut parent_shards = HashSet::new();
@@ -239,25 +239,25 @@ fn apply_chunks(...) -> Result<(), Error> {
     {
 	...
         let apply_result = ...;
-	// split states to new shards
-	let changes_to_new_shards = self.split_state_changes(trie_changes);
-	// apply changes_to_new_changes to the new shards
+        // split states to new shards
+        let changes_to_new_shards = self.split_state_changes(trie_changes);
+        // apply changes_to_new_changes to the new shards
         for (new_shard_id, new_state_changes) in changes_to_new_states {
-	    // locate the state for the new shard
+            // locate the state for the new shard
             let trie = self.get_trie_for_shard(new_shard_id);
             let chunk_extra =
                 self.chain_store_update.get_chunk_extra(&prev_block.hash(), new_shard_id)?.clone();
             let mut state_update = TrieUpdate::new(trie.clone(), *chunk_extra.state_root());
             
-	    // update the state
-	    for state_change in new_state_changes {
+            // update the state
+            for state_change in new_state_changes {
                 state_update.set(state_change.trie_key, state_change.value);
             }
             state_update.commit(StateChangeCause::Resharding);
             let (trie_changes, state_changes) = state_update.finalize()?;
 	    
-	    // save the TrieChanges and ChunkExtra
-	    self.chain_store_update.save_trie_changes(WrappedTrieChanges::new(
+            // save the TrieChanges and ChunkExtra
+            self.chain_store_update.save_trie_changes(WrappedTrieChanges::new(
                 self.tries,
                 new_shard_id,
                 trie_changes,
