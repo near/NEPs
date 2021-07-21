@@ -1,4 +1,4 @@
-# Primitives
+# Data Structures
 
 - [Account](Account.md)
   - [Account ID](Account.md#account-id)
@@ -6,3 +6,4 @@
 - [Access Keys](AccessKey.md)
 - [Transaction](Transaction.md)
 - [Merkle Proofs](MerkleProof.md)
+- [Trie](Trie.md)
