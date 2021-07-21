@@ -3,13 +3,11 @@
 We use Merkle-Patricia Trie to store blockchain state.
 Trie is persistent, which means that insertion of new node actually leads to creation of new path to this node, and thus root of Trie will also be presented by new object.
 
-Please note that there is a plan to improve this structure
-
-Here we describe some internal entities closely related to Runtime.
+Here we describe some internal entities and pieces of knowledge closely related to Runtime.
 
 ## Trie
 
-Base structure
+Base structure.
 
 ## TrieStorage
 
