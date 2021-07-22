@@ -7,6 +7,7 @@
   - [Access Key](DataStructures/AccessKey.md)
   - [Transaction](DataStructures/Transaction.md)
   - [Merkle Proofs](DataStructures/MerkleProof.md)
+  - [Trie](DataStructures/Trie.md)
 - [Architecture](Architecture.md)
 - [Chain specification](ChainSpec/README.md)
   - [Network specification](ChainSpec/NetworkSpec.md)
