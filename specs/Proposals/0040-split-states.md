@@ -32,18 +32,15 @@ The change involves three parts.
 
 ## Dynamic Shards
 The first issue to address in splitting shards is the assumption that the current implementation of chain and runtime makes that the number of shards never changes.
-This in turn involves two parts, how the validators know when sharding changes happen and how they store states of shards from different epochs during the transition.
+This in turn involves two parts, how the validators know when and how sharding changes happen and how they store states of shards from different epochs during the transition.
 The former is a protocol change and the latter only affects validators' internal states.
 
 ### Protocol Change
-Sharding change will be triggered as protocol version changes.
-Every time a resharding is scheduled, a new protocol version number is created for the switch to new sharding.
-Epochs with `protocol_version` larger or equal than the threshold number will take the new sharding assignment while epochs with `protocol_version` less will take the old sharding assignment.
-Since the `EpochInfo` of epoch T will be determined at the end of epoch T-2, the validators will have time to prepare for states of the new shards during epoch T-1.
+Sharding config for an epoch will be encapsulated in a struct `ShardLayout`, which not only contains number of shards, but also layout information to decide which account ids should be mapped to which shards. The `ShardLayout` information will be stored as part of `EpochConfig`. Right now, `EpochConfig` is stored in `EpochManager` and remains static across epochs. That will be changed in the new implementation so that `EpochConfig` can be changed according to protocol versions, similar to how `RuntimeConfig` is implemented right now.
 
-For example, for the Simple NightShade migration, assume that the current protocol version is 45.
-If there is no other pending protocol update, we can schedule `SimpleNightShadeShardSplit` to happen at protocol version 46.
-Then when the epoch's protocol version is updated to 46, the new sharding for Simple NightShade will be enabled.
+The switch to Simple Nightshade will be implemented as a protocol upgrade.  `EpochManager` creates a new `EpochConfig` for each epoch from the protocol version of the epoch. When the protocol version is large enough and the `SimpleNightShade` feature is enabled, the `EpochConfig` will be use the `ShardLayout` of Simple Nightshade, otherwise it uses the genesis `ShardLayout`. The `ShardLayout` for Simple Nightshade will be added as part of the near config.
+
+Since the protocol version and the shard information of epoch T will be determined at the end of epoch T-2, the validators will have time to prepare for states of the new shards during epoch T-1.
 
 We will discuss how the sharding transition will be managed in the next section.
 
@@ -101,9 +98,97 @@ After the processing is finished, they can take the generated state changes to a
 ### `ShardOrd`
 `ShardOrd` will replace the old `ShardId` in most places, especially in `ShardChunkHeader`.
 Note that such change does not require change in the struct version because it is simply a rename of the field.
+### `ShardLayout`
+```rust
+pub enum ShardLayout {
+    V0(ShardLayoutV0),
+    V1(ShardLayoutV1),
+}
+```
+ShardLayout is a versioned struct that contains all information needed to decide which accounts belong to which shards. Note that `ShardLayout` only contains information at the protocol level, so it uses `ShardOrd` instead of `ShardId`. 
+
+The API contains the following two functions.
+#### `account_id_to_shard_ord`
+```rust
+pub fn account_id_to_shard_ord(account_id: &AccountId, shard_layout: ShardLayout) -> ShardOrd
+```
+maps account id to shard ord given a shard layout
+#### `parent_shards`
+```rust
+pub fn parent_shards(&self) -> Vec<ShardOrd>
+```
+returns a vector of shards ords consisting of the shard ord of the parent shard of the current shard of position in this array. This information is needed for constructing states for the new shards.
+
+We only allow adding new shards that are split from the existing shards. If shard B and C are split from shard A, we call shard A the parent shard of shard B and C.
+For example, if epoch T-1 has two shards with `shard_ord` 0 and 1 and each of them will be split to two shards in epoch T, then the calling `parent_shards` on the shard layout of epoch T will return `[0, 0, 1, 1]`.
+
+#### `ShardLayoutV0`
+```rust
+pub struct ShardLayoutV0 {
+    /// map accounts evenly across all shards
+    num_shards: NumShards,
+}
+```
+A shard layout that maps accounts evenly across all shards. This is added to capture the current `account_id_to_shard_id` algorithm, to keep backward compatibility.
+
+#### `ShardLayoutV1`
+```rust
+pub struct ShardLayoutV1 {
+    /// num_shards = fixed_shards.len() + boundary_accounts.len() + 1
+    /// Each account and all subaccounts map to the shard of position in this array.
+    fixed_shards: Vec<AccountId>,
+    /// The rest are divided by boundary_accounts to ranges, each range is mapped to a shard
+    boundary_accounts: Vec<AccountId>,
+}
+```
+A shard layout that consists some fixed shards each of which is mapped to a fixed account and other shards which are mapped to ranges of accounts. This will be the ShardLayout used by Simple Nightshade.
+
+### `EpochConfig`
+`EpochConfig` will contain the shard layout info.
+
+```rust
+pub struct EpochConfig {
+    // existing fields
+    ...
+    /// Shard layout of this epoch, may change from epoch to epoch
+    pub shard_layout: ShardLayout,
+```
+### `AllEpochConfig`
+`AllEpochConfig` stores information needed to construct `EpochConfig` for all epochs. For SimpleNightshade migration, it only needs to contain two configs.
+
+```rust
+pub struct AllEpochConfig {
+    genesis_epoch_config: Arc<EpochConfig>,
+    simple_nightshade_epoch_config: Arc<EpochConfig>,
+}
+```
+#### `for_protocol_version`
+```rust
+pub fn for_protocol_version(&self, protocol_version: ProtocolVersion) -> &Arc<EpochConfig>
+```
+returns `EpochConfig` according to the given protocol version. `EpochManager` will call this function for every new epoch.
 
 ### `EpochManager`
-`EpochManager` will be responsible for managing shards info accross epochs.
+`EpochManager` will be responsible for managing shards info accross epochs. It will construct shard ids for new epochs according to the `EpochConfig` of the epoch and keep track of shard ids across epochs. To account for the changing shards layout, instead storing one `EpochConfig`, the new `EpochManager` contains an instance of `AllEpochConfig` which contains information for all epochs and calls `AllEpochConfig::for_protocol_version` to construct `EpochConfig` for each epoch.
+#### `ShardsInfo`
+```rust
+pub struct ShardsInfo {
+    /// unique ids for the current shards
+    shards: Vec<InternalShardId>,
+    /// shard_id -> id of parent shard
+    parent_shards: HashMap<InternalShardId, InternalShardId>,
+}
+```
+`ShardsInfo` contains information on about the `ShardId`s of shards in a epoch.
+For example, if epoch T-1 has two shards with `shard_id` 0 and 1 and each of them will be split to two shards in epoch T, then the `ShardsInfo` for epoch T will be `{shards: [2, 3, 4, 5], parent_shards:{2:0, 3:0, 4:1, 5:1}}`.
+
+
+#### `build_next_shards_info`
+```rust
+fn build_next_shards_info(&mut self, prev_epoch_info: &EpochInfo, prev_epoch_config: &EpochConfig, epoch_config: &EpochConfig) -> ShardsInfo
+```
+constructs the ShardsInfo for the next epoch, assigning new shard ids to the new shards if shards will change in the coming epoch.
+
 #### `from_shard_id_to_ord`
 ```rust
 from_shard_id_to_ord(&self, shard_id: ShardId, current_epoch_id: &EpochId) -> Result<(EpochId, ShardOrd), EpochError>
@@ -118,52 +203,19 @@ from_shard_ord_to_id(&self, shard_ord: ShardOrd, epoch_id: &EpochId) -> Result<S
 converts `shard_ord` and `epoch_id` for a shard to its `shard_id`.
 It returns an EpochError if such shard does not exist.
 ### EpochInfoV3
-Epoch info will include the `shard_id` of the shards in this epoch and a mapping from the current shards to their parent shards.
-We only allow adding new shards that are split from the existing shards, and if shard B and C are split from shard A, we call shard A the parent shard of shard B and C.
-For example, if epoch T-1 has two shards with `shard_id` 0 and 1 and each of them will be split to two shards in epoch T, then the `EpochInfo` for epoch T will have `shards = [2, 3, 4, 5]` and `parent_shards = {2:0, 3:0, 4:1, 5:1}`.
+Epoch info will include `ShardsInfo` for the current epoch.
 
 ```rust
 pub struct EpochInfoV3 {
     // All fields in EpochInfoV2
     ...
-    shards: Vec<ShardId>,
-    parent_shards: HashMap<ShardId, ShardId>,
+    shards_info: ShardsInfo,
 }
 ```
 
-### ShardVersionManager
-A new struct `ShardVersionManager` will be created to manage sharding assignment when `ProtocolVersion` is changed.
-`EpochManager` will own `ShardVersionManager` that it can call to create shards for the `EpochInfo` of the next next epoch.
-
-#### ShardVersionManager
-`ShardVersionManager` relies on some static variables that store the mapping from `ProtocolVersion` to sharding assignments.
-Its implementation can be changed easily when a new sharding assignment is added as long as its behavior for the existing protocol versions does not change.
-For Simple Nightshade, the following implementation suffices.
-```rust
-pub const SIMPLE_NIGHTSHADE_SHARD_VERSION: ProtocolVersion;
-pub struct ShardVersionManager {
-    // current shards
-    shards: Vec<ShardId>,
-    // protocol version of the current shards
-    protocol_version: ProtocolVersion,
-}
-```
-#### new
-```rust
-pub fn new(current_protocol_version: ProtocolVersion) -> Self
-```
-creates a new `ShardVersionManager` struct given the current protocol version.
-#### `try_update_shards`
-```rust
-pub fn try_update_shards(protocol_version: ProtocolVersion) -> (Option<(Vec<ShardId>, HashMap<ShardId, ShardId>))
-```
-checks if the given `protocol_version` will trigger a change in sharding.
-If so, returns the new shards and a mapping from the current shards to parent shards.
-This will be called in `EpochManager::finalize_epoch` when `next_version` is determined.
 
 ### ShardTracker
 Various functions such as `account_id_to_shard_id` in `ShardTracker` will be changed to incorporate the change in `ShardId`.
-New functions such as `account_id_to_shard_ord` can also be added easily if needed.
 The `num_shards` field will be removed from `ShardTracker` since it is no longer a static number.
 The current shard information can be accessed by the following functions.
 These changes will also be propagated to wrapper functions in `RuntimeAdapter` since `ShardTracker` cannot be directly accessed through `RuntimeAdapter`.
@@ -225,7 +277,7 @@ pub fn run_catchup(...) {
 ```rust
 split_state_changes(shard_id: ShardId, state_changes: &Vec<RawStateChangesWithTrieKey>) -> HashMap<ShardId, Vec<RawStateChangesWithTrieKey>>
 ```
-splits state changes to be made to a current shard to changes that should be applid to the new shards
+splits state changes to be made to a current shard to changes that should be applid to the new shards. Note that this function call can take a long time. To avoid blocking the client actor from processing and producing blocks for the current epoch, it should be called from a separate thread. Unfortunately, as of now, catching up states and catching up blocks are both run in client actor. They should be moved to a separate actor. However, that can be a separate project, although this NEP will depend on that project. In fact, the issue has already been discussed in [#3201](https://github.com/near/nearcore/issues/3201).
 
 ### `apply_chunks`
 `apply_chunks` will be modified so that states of the new shards will be updated when processing chunks.
@@ -276,11 +328,10 @@ fn apply_chunks(...) -> Result<(), Error> {
 }
 ```
 
-## Garbage collection
-#TODO
-???
-I think garbage collection should mostly work automatically? Need to verify that new ChunkExtra stored for these new shards will be garbage collected correctly.
-Otherwise I think it should be fine.
+## Garbage Collection
+The old states need to be garbage collected after the resharding finishes. The garbage collection algorithm today won't automatically handle that. (#TODO: why?)
+
+Althought we need to handle garbage collection eventually, it is not a pressing issue. Thus, we leave the discussion from this NEP for now and will add a detailed plan later.
 
 # Drawbacks
 [drawbacks]: #drawbacks
@@ -302,7 +353,8 @@ However, the implementaion of those approaches are overly complicated and does n
 # Unresolved questions
 [unresolved-questions]: #unresolved-questions
 - What parts of the design do you expect to resolve through the NEP process before this gets merged?
-  - None. The NEP is quite thorough already.
+  - Where to add ShardLayout config for Simple Nightshade
+  - Garbage collection
 - What parts of the design do you expect to resolve through the implementation of this feature before stabilization?
   - There might be small changes in the detailed implemenations or specifications of some of the functions described above, but the overall structure will not be changed.
 - What related issues do you consider out of scope for this NEP that could be addressed in the future independently of the solution that comes out of this NEP?
@@ -310,7 +362,12 @@ However, the implementaion of those approaches are overly complicated and does n
     Right now, it is a combination of `shard_id` and the node hash.
     Part of the change proposed in this NEP regarding `ShardId` is because of this.
     Plans on how to only store the node hash as keys are being discussed [here](https://github.com/near/nearcore/issues/4527), but it will happen after the Simple Nightshade migration since completely solving the issue will take some careful design and we want to prioritize launching Simple Nightshade for now.
+  - Another issue that is not part of this NEP but must be solved for this NEP to work is to move expensive computation related to state sync / catch up into a separate actor [#3201](https://github.com/near/nearcore/issues/3201).
 
 # Future possibilities
 [future-possibilities]: #future-possibilities
-None
+## Extension
+In the future, when challenges are enabled, resharding and state upgrade should be implemented on-chain.
+## Related Projects
+- 
+## Pre-mortem
