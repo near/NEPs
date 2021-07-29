@@ -38,7 +38,7 @@ The former is a protocol change and the latter only affects validators' internal
 ### Protocol Change
 Sharding config for an epoch will be encapsulated in a struct `ShardLayout`, which not only contains number of shards, but also layout information to decide which account ids should be mapped to which shards. The `ShardLayout` information will be stored as part of `EpochConfig`. Right now, `EpochConfig` is stored in `EpochManager` and remains static across epochs. That will be changed in the new implementation so that `EpochConfig` can be changed according to protocol versions, similar to how `RuntimeConfig` is implemented right now.
 
-The switch to Simple Nightshade will be implemented as a protocol upgrade.  `EpochManager` creates a new `EpochConfig` for each epoch from the protocol version of the epoch. When the protocol version is large enough and the `SimpleNightShade` feature is enabled, the `EpochConfig` will be use the `ShardLayout` of Simple Nightshade, otherwise it uses the genesis `ShardLayout`. The `ShardLayout` for Simple Nightshade will be added as part of the near config.
+The switch to Simple Nightshade will be implemented as a protocol upgrade.  `EpochManager` creates a new `EpochConfig` for each epoch from the protocol version of the epoch. When the protocol version is large enough and the `SimpleNightShade` feature is enabled, the `EpochConfig` will be use the `ShardLayout` of Simple Nightshade, otherwise it uses the genesis `ShardLayout`. Although not ideal, the `ShardLayout` for Simple Nightshade will be added as part of the genesis config in the code. The genesis config file itself will not be changed, but the field will be set to a default value we specify in the code. This process is as hacky as it sounds, but currently we do not have a better way to account for changing protocol config. To completely solve this issue will be a hard problem by itself, thus we do not try to solve it in this NEP.
 
 Since the protocol version and the shard information of epoch T will be determined at the end of epoch T-2, the validators will have time to prepare for states of the new shards during epoch T-1.
 
@@ -94,10 +94,9 @@ After the processing is finished, they can take the generated state changes to a
 
 # Reference-level explanation
 [reference-level-explanation]: #reference-level-explanation
-## Sharding Representation
+## Protocol-Level Shard Representation
 ### `ShardOrd`
-`ShardOrd` will replace the old `ShardId` in most places, especially in `ShardChunkHeader`.
-Note that such change does not require change in the struct version because it is simply a rename of the field.
+`ShardOrd` represents the ordinal number of shards in one epoch, ranging from `0 .. NUM_SHARDS-1`.  It will replace the old `ShardId` in all protovel-level use cases, such as in `ShardChunkHeader`. Note that such change does not require change in the struct version because it is simply a rename of the field.
 ### `ShardLayout`
 ```rust
 pub enum ShardLayout {
@@ -154,7 +153,7 @@ pub struct EpochConfig {
     pub shard_layout: ShardLayout,
 ```
 ### `AllEpochConfig`
-`AllEpochConfig` stores information needed to construct `EpochConfig` for all epochs. For SimpleNightshade migration, it only needs to contain two configs.
+`AllEpochConfig` stores information needed to construct `EpochConfig` for all epochs. For SimpleNightshade migration, it only needs to contain two configs. `AllEpochConfig` will be stored in `EpochManager` to be used to construct `EpochConfig` for different epochs.
 
 ```rust
 pub struct AllEpochConfig {
@@ -168,20 +167,57 @@ pub fn for_protocol_version(&self, protocol_version: ProtocolVersion) -> &Arc<Ep
 ```
 returns `EpochConfig` according to the given protocol version. `EpochManager` will call this function for every new epoch.
 
+## Internal Shard Representation in Validators' State
+### `ShardId`
+`ShardId` is a unique identifier that a validator uses internally to identify shards from all epochs. It only exists inside a validator's internal state and can be different among validators, thus it should never be exposed to outside APIs.
+
 ### `EpochManager`
-`EpochManager` will be responsible for managing shards info accross epochs. It will construct shard ids for new epochs according to the `EpochConfig` of the epoch and keep track of shard ids across epochs. To account for the changing shards layout, instead storing one `EpochConfig`, the new `EpochManager` contains an instance of `AllEpochConfig` which contains information for all epochs and calls `AllEpochConfig::for_protocol_version` to construct `EpochConfig` for each epoch.
+`EpochManager` will be responsible for managing shard ids accross epochs. Information regarding shard ids in an epoch will be stored in a struct `ShardsInfo`, which will be part of `EpochInfo`. `EpochManager` assigns shard ids for shards in a new epoch when it builds `EpochInfo` for the epoch, in function `finalize_epoch`.
+
+#### `finalize_epoch`
+`EpochInfo` on epoch T+2 will be decided when finaling epoch T. We modify `finalize_epoch` to construct the correct `ShardsInfo` for epoch T+2.
+
+```rust
+fn finalize_epoch(
+    &mut self,
+    store_update: &mut StoreUpdate,
+    block_info: &BlockInfo,
+    last_block_hash: &CryptoHash,
+    rng_seed: RngSeed,
+) -> Result<EpochId, EpochError> {
+    // existing code
+    ...
+    // EpochConfig for epoch T+1
+    let next_epoch_config =
+	self.config.for_protocol_version(next_epoch_info.protocol_version());
+    // EpochConfig for epoch T+2
+    let next_next_epoch_config = self.config.for_protocol_version(next_version);
+    // Decide ShardsInfo for epoch T+2
+    let shards_info = self.build_next_shards_info(
+	    &next_epoch_info,
+	    next_epoch_config,
+	    next_next_epoch_config,
+    );
+    
+    let next_next_epoch_info = match proposals_to_epoch_info(..., shards_info);
+    // existing code
+    ...
+    
+}
+```
+When constructing `EpochInfo` for a new epoch, `EpochManager` creates the `EpochConfig` for the protocol version of the epoch. Then it assigns shard ids for the shards in the new epoch according to `ShardLayout` in the `EpochConfig`.
+
 #### `ShardsInfo`
 ```rust
 pub struct ShardsInfo {
     /// unique ids for the current shards
-    shards: Vec<InternalShardId>,
+    shards: Vec<ShardId>,
     /// shard_id -> id of parent shard
-    parent_shards: HashMap<InternalShardId, InternalShardId>,
+    parent_shards: HashMap<ShardId, ShardId>,
 }
 ```
 `ShardsInfo` contains information on about the `ShardId`s of shards in a epoch.
 For example, if epoch T-1 has two shards with `shard_id` 0 and 1 and each of them will be split to two shards in epoch T, then the `ShardsInfo` for epoch T will be `{shards: [2, 3, 4, 5], parent_shards:{2:0, 3:0, 4:1, 5:1}}`.
-
 
 #### `build_next_shards_info`
 ```rust
@@ -353,7 +389,6 @@ However, the implementaion of those approaches are overly complicated and does n
 # Unresolved questions
 [unresolved-questions]: #unresolved-questions
 - What parts of the design do you expect to resolve through the NEP process before this gets merged?
-  - Where to add ShardLayout config for Simple Nightshade
   - Garbage collection
 - What parts of the design do you expect to resolve through the implementation of this feature before stabilization?
   - There might be small changes in the detailed implemenations or specifications of some of the functions described above, but the overall structure will not be changed.
@@ -363,11 +398,13 @@ However, the implementaion of those approaches are overly complicated and does n
     Part of the change proposed in this NEP regarding `ShardId` is because of this.
     Plans on how to only store the node hash as keys are being discussed [here](https://github.com/near/nearcore/issues/4527), but it will happen after the Simple Nightshade migration since completely solving the issue will take some careful design and we want to prioritize launching Simple Nightshade for now.
   - Another issue that is not part of this NEP but must be solved for this NEP to work is to move expensive computation related to state sync / catch up into a separate actor [#3201](https://github.com/near/nearcore/issues/3201).
+  - Lastly, we should also build a better mechanism to deal with changing protocol config. The current way of putting changing protocol config in the genesis config and changing how the genesis config file is parsed is not a long term solution.
 
 # Future possibilities
 [future-possibilities]: #future-possibilities
 ## Extension
 In the future, when challenges are enabled, resharding and state upgrade should be implemented on-chain.
-## Related Projects
+## Affected Projects
 - 
 ## Pre-mortem
+- Building and catching up new states takes longer than one epoch to finish.
