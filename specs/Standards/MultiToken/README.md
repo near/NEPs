@@ -466,7 +466,7 @@ pub trait StorageManagement {
 ### Metadata Trait
 ```
 pub struct MultiTokenMetadata {
-    pub spec: String,              // required, essentially a version like "nft-1.0.0"
+    pub spec: String,              // required, essentially a version like "mt-1.0.0"
     pub name: String,              // required, ex. "Mosaics"
     pub symbol: String,            // required, ex. "MOSIAC"
     pub icon: Option<String>,      // Data URL
