@@ -68,7 +68,7 @@ Alice needs to issue one transaction to `games` contract to transfer 5 tokens (m
  
 Technical calls:
 
-1. `alice` calls `games::mt_transfer({"receiver_id": "bob", "amount": "500000000", "token_id": "g133"})`.
+1. `alice` calls `games::mt_transfer({"receiver_id": "bob", "amount": "500000000", "token_id": "g133", "memo": "for my dinner"})`.
 
 #### Simple batch transfer
 
