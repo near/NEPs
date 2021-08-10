@@ -455,11 +455,8 @@ pub trait StorageManagement {
     /// Returns `false` iff account was not registered before.
     fn storage_unregister(&mut self, token_ids:Vec<TokenId>, force: Option<bool>) -> Vec<bool>;
 
-    fn storage_balance_bounds(&self, token_id:TokenId, account_id: Option<AccountId>) -> StorageBalanceBounds;
-    fn storage_balance_bounds_batch(&self, token_id:Vec<TokenId>, account_id: Option<AccountId>) -> StorageBalanceBounds;
-
-    fn storage_balance_of(&self, token_id:TokenId, account_id: AccountId) -> Option<StorageBalance>;
-    fn storage_balance_of_batch(&self, token_ids:Vec<TokenId>, account_id: AccountId) -> Option<StorageBalance>;
+    fn storage_balance_bounds(&self, token_id:Vec<TokenId>, account_id: Option<AccountId>) -> StorageBalanceBounds;
+    fn storage_balance_of(&self, token_ids:Vec<TokenId>, account_id: AccountId) -> Option<StorageBalance>;
 }
 ```
 
