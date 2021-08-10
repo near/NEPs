@@ -469,6 +469,7 @@ pub struct MultiTokenMetadata {
     pub icon: Option<String>,      // Data URL
     pub base_uri: Option<String>, // Centralized gateway known to have reliable access to decentralized storage assets referenced by `reference` or `media` URLs
     // supports metadata_uri interface that interpolates {id} in the string
+    pub decimals: Option<u8>, // Option to specify precision if required 
     pub reference: Option<String>, // URL to a JSON file with more info
     pub reference_hash: Option<Base64VecU8>, // Base64-encoded sha256 hash of JSON from reference field. Required if `reference` is included.
 }
