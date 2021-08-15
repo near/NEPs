@@ -36,11 +36,21 @@ This in turn involves two parts, how the validators know when and how sharding c
 The former is a protocol change and the latter only affects validators' internal states.
 
 ### Protocol Change
-Sharding config for an epoch will be encapsulated in a struct `ShardLayout`, which not only contains number of shards, but also layout information to decide which account ids should be mapped to which shards. The `ShardLayout` information will be stored as part of `EpochConfig`. Right now, `EpochConfig` is stored in `EpochManager` and remains static across epochs. That will be changed in the new implementation so that `EpochConfig` can be changed according to protocol versions, similar to how `RuntimeConfig` is implemented right now.
+Sharding config for an epoch will be encapsulated in a struct `ShardLayout`, which not only contains number of shards, but also layout information to decide which account ids should be mapped to which shards. 
+The `ShardLayout` information will be stored as part of `EpochConfig`. 
+Right now, `EpochConfig` is stored in `EpochManager` and remains static across epochs. 
+That will be changed in the new implementation so that `EpochConfig` can be changed according to protocol versions, similar to how `RuntimeConfig` is implemented right now.
 
-The switch to Simple Nightshade will be implemented as a protocol upgrade.  `EpochManager` creates a new `EpochConfig` for each epoch from the protocol version of the epoch. When the protocol version is large enough and the `SimpleNightShade` feature is enabled, the `EpochConfig` will be use the `ShardLayout` of Simple Nightshade, otherwise it uses the genesis `ShardLayout`. Although not ideal, the `ShardLayout` for Simple Nightshade will be added as part of the genesis config in the code. The genesis config file itself will not be changed, but the field will be set to a default value we specify in the code. This process is as hacky as it sounds, but currently we do not have a better way to account for changing protocol config. To completely solve this issue will be a hard problem by itself, thus we do not try to solve it in this NEP.
-
+The switch to Simple Nightshade will be implemented as a protocol upgrade.
+`EpochManager` creates a new `EpochConfig` for each epoch from the protocol version of the epoch.
+When the protocol version is large enough and the `SimpleNightShade` feature is enabled, the `EpochConfig` will be use the `ShardLayout` of Simple Nightshade, otherwise it uses the genesis `ShardLayout`.
 Since the protocol version and the shard information of epoch T will be determined at the end of epoch T-2, the validators will have time to prepare for states of the new shards during epoch T-1.
+
+Although not ideal, the `ShardLayout` for Simple Nightshade will be added as part of the genesis config in the code.
+The genesis config file itself will not be changed, but the field will be set to a default value we specify in the code.
+This process is as hacky as it sounds, but currently we have no better way to account for changing protocol config.
+To completely solve this issue will be a hard problem by itself, thus we do not try to solve it in this NEP.
+
 
 We will discuss how the sharding transition will be managed in the next section.
 
@@ -49,20 +59,20 @@ In epoch T-1, the validators need to maintain two versions of states for all sha
 Currently, shards are identified by their `shard_id`, which is a number ranging from `0` to `NUM_SHARDS-1`.`shard_id` is also used as part of the indexing keys by which trie nodes are stored in the database.
 However, when shards may change accross epochs, `shard_id` can no longer be used to uniquely identify states because new shards and old shards will share the same `shard_id`s under this representation.
 
-To solve this issue, the new proposal differenciates between `ShardId`, which can be used to uniquely identify shards accross epochs, and `ShardOrd`, which is an ordinal number that can be used to locate shards within an epoch.
-In other words, the new `ShardId` will be a real identifier and the new `ShardOrd` replaces the old `ShardId`.
-`ShardOrd` will be used in ChunkHeader and other communication messages between validators, so that there will be no change in the protocol level.
-`ShardId` is used by the validators to store and manage states internally.
-New values of `ShardId` will be created and assigned to new shards when sharding change is scheduled.
-`EpochManager` will be responsible for assigning and managing `ShardId` accross epochs.
-It will provide an interface to convert `shard_id` to `epoch_id` and `shard_ord`, and vice versa.
+To solve this issue, the new proposal creates a new struct `ShardUId` as an unique identifier to reference shards accross epochs. 
+`ShardUId` will only be used for storing and managing states, for example, in `Trie` related structures, 
+In most other places in the code, it is clear which epoch the referenced shard belongs, and `ShardId` is enough to identify the shard. 
+There will be no change in the protocol level since `ShardId` will continue to be used in protocol level specs.
 
-Take the Simple Nightshade migration as an example.
-At epoch T-2, there is one shard with `shard_id = 0` and `shard_ord = 0`.
-At the end of epoch T-2, the epoch info for epoch T will be created and validators will know that epoch T will use a new sharding assignment that has eight shards.
-They then assign `shard_id`s from 1 to 8 to the new shards.
-At epoch T-1, on chain there will only be one shard `shard_id = 0`, but the validators can build states for shard 1 to 8.
-At epoch T, the new shards will be used, with `shard_ord` from 0 to 7 and `shard_id`s from 1 to 8.
+`ShardUId` contains a version number and the corresponding `shard_id`.
+```rust
+pub struct ShardUId {
+    version: u32,
+    shard_id: u32,
+}
+```
+The version number is different between different shard layouts, to ensure `ShardUId`s for shards from different epochs are different.
+`EpochManager` will be responsible for managing shard versions and `ShardUId` across epochs.
 
 ## Build New States
 Currently, when receiving the first block of every epoch, validators start downloading states to prepare for the next epoch.
@@ -95,8 +105,6 @@ After the processing is finished, they can take the generated state changes to a
 # Reference-level explanation
 [reference-level-explanation]: #reference-level-explanation
 ## Protocol-Level Shard Representation
-### `ShardOrd`
-`ShardOrd` represents the ordinal number of shards in one epoch, ranging from `0 .. NUM_SHARDS-1`.  It will replace the old `ShardId` in all protovel-level use cases, such as in `ShardChunkHeader`. Note that such change does not require change in the struct version because it is simply a rename of the field.
 ### `ShardLayout`
 ```rust
 pub enum ShardLayout {
@@ -107,11 +115,6 @@ pub enum ShardLayout {
 ShardLayout is a versioned struct that contains all information needed to decide which accounts belong to which shards. Note that `ShardLayout` only contains information at the protocol level, so it uses `ShardOrd` instead of `ShardId`. 
 
 The API contains the following two functions.
-#### `account_id_to_shard_ord`
-```rust
-pub fn account_id_to_shard_ord(account_id: &AccountId, shard_layout: ShardLayout) -> ShardOrd
-```
-maps account id to shard ord given a shard layout
 #### `parent_shards`
 ```rust
 pub fn parent_shards(&self) -> Vec<ShardOrd>
@@ -120,6 +123,18 @@ returns a vector of shards ords consisting of the shard ord of the parent shard 
 
 We only allow adding new shards that are split from the existing shards. If shard B and C are split from shard A, we call shard A the parent shard of shard B and C.
 For example, if epoch T-1 has two shards with `shard_ord` 0 and 1 and each of them will be split to two shards in epoch T, then the calling `parent_shards` on the shard layout of epoch T will return `[0, 0, 1, 1]`.
+    
+#### `version`
+```rust
+pub fn version(&self) -> ShardVersion
+```
+returns the version number of this shard layout. This version number is also used to create `ShardUId` for shards in this `ShardLayout`.
+
+#### `account_id_to_shard_id`
+```rust
+pub fn account_id_to_shard_id(account_id: &AccountId, shard_layout: ShardLayout) -> ShardId
+```
+maps account id to shard id given a shard layout
 
 #### `ShardLayoutV0`
 ```rust
@@ -128,7 +143,7 @@ pub struct ShardLayoutV0 {
     num_shards: NumShards,
 }
 ```
-A shard layout that maps accounts evenly across all shards. This is added to capture the current `account_id_to_shard_id` algorithm, to keep backward compatibility.
+A shard layout that maps accounts evenly across all shards. This is added to capture the current `account_id_to_shard_id` algorithm, to keep backward compatibility for some existing tests. `parent_shards` for `ShardLayoutV1` is always `None` and `version`is always `0`.
 
 #### `ShardLayoutV1`
 ```rust
@@ -138,6 +153,11 @@ pub struct ShardLayoutV1 {
     fixed_shards: Vec<AccountId>,
     /// The rest are divided by boundary_accounts to ranges, each range is mapped to a shard
     boundary_accounts: Vec<AccountId>,
+    /// Parent shards for the shards, useful for constructing states for the shards.
+    /// None for the genesis shard layout
+    parent_shards: Option<Vec<ShardId>>,
+    /// Version of the shard layout, useful to uniquely identify the shard layout
+    version: ShardVersion,
 }
 ```
 A shard layout that consists some fixed shards each of which is mapped to a fixed account and other shards which are mapped to ranges of accounts. This will be the ShardLayout used by Simple Nightshade.
@@ -168,86 +188,31 @@ pub fn for_protocol_version(&self, protocol_version: ProtocolVersion) -> &Arc<Ep
 returns `EpochConfig` according to the given protocol version. `EpochManager` will call this function for every new epoch.
 
 ## Internal Shard Representation in Validators' State
-### `ShardId`
-`ShardId` is a unique identifier that a validator uses internally to identify shards from all epochs. It only exists inside a validator's internal state and can be different among validators, thus it should never be exposed to outside APIs.
+### `ShardUId`
+`ShardUId` is a unique identifier that a validator uses internally to identify shards from all epochs. It only exists inside a validator's internal state and can be different among validators, thus it should never be exposed to outside APIs.
+
+```rust
+pub struct ShardUId {
+    pub version: ShardVersion,
+    pub shard_id: u32,
+}
+```
+#### `TrieCachingStorage`
+Trie storage will be contruct database key from `ShardUId` and hash of the trie node.
+##### `get_shard_uid_and_hash_from_key`
+```rust
+fn get_shard_uid_and_hash_from_key(key: &[u8]) -> Result<(ShardUId, CryptoHash), std::io::Error>
+```
+##### `get_key_from_shard_uid_and_hash`
+```rust
+fn get_key_from_shard_uid_and_hash(shard_uid: ShardUId, hash: &CryptoHash) -> [u8; 40]
+```
+
 
 ### `EpochManager`
 `EpochManager` will be responsible for managing shard ids accross epochs. Information regarding shard ids in an epoch will be stored in a struct `ShardsInfo`, which will be part of `EpochInfo`. `EpochManager` assigns shard ids for shards in a new epoch when it builds `EpochInfo` for the epoch, in function `finalize_epoch`.
 
-#### `finalize_epoch`
-`EpochInfo` on epoch T+2 will be decided when finaling epoch T. We modify `finalize_epoch` to construct the correct `ShardsInfo` for epoch T+2.
-
-```rust
-fn finalize_epoch(
-    &mut self,
-    store_update: &mut StoreUpdate,
-    block_info: &BlockInfo,
-    last_block_hash: &CryptoHash,
-    rng_seed: RngSeed,
-) -> Result<EpochId, EpochError> {
-    // existing code
-    ...
-    // EpochConfig for epoch T+1
-    let next_epoch_config =
-	self.config.for_protocol_version(next_epoch_info.protocol_version());
-    // EpochConfig for epoch T+2
-    let next_next_epoch_config = self.config.for_protocol_version(next_version);
-    // Decide ShardsInfo for epoch T+2
-    let shards_info = self.build_next_shards_info(
-	    &next_epoch_info,
-	    next_epoch_config,
-	    next_next_epoch_config,
-    );
-    
-    let next_next_epoch_info = match proposals_to_epoch_info(..., shards_info);
-    // existing code
-    ...
-    
-}
-```
 When constructing `EpochInfo` for a new epoch, `EpochManager` creates the `EpochConfig` for the protocol version of the epoch. Then it assigns shard ids for the shards in the new epoch according to `ShardLayout` in the `EpochConfig`.
-
-#### `ShardsInfo`
-```rust
-pub struct ShardsInfo {
-    /// unique ids for the current shards
-    shards: Vec<ShardId>,
-    /// shard_id -> id of parent shard
-    parent_shards: HashMap<ShardId, ShardId>,
-}
-```
-`ShardsInfo` contains information on about the `ShardId`s of shards in a epoch.
-For example, if epoch T-1 has two shards with `shard_id` 0 and 1 and each of them will be split to two shards in epoch T, then the `ShardsInfo` for epoch T will be `{shards: [2, 3, 4, 5], parent_shards:{2:0, 3:0, 4:1, 5:1}}`.
-
-#### `build_next_shards_info`
-```rust
-fn build_next_shards_info(&mut self, prev_epoch_info: &EpochInfo, prev_epoch_config: &EpochConfig, epoch_config: &EpochConfig) -> ShardsInfo
-```
-constructs the ShardsInfo for the next epoch, assigning new shard ids to the new shards if shards will change in the coming epoch.
-
-#### `from_shard_id_to_ord`
-```rust
-from_shard_id_to_ord(&self, shard_id: ShardId, current_epoch_id: &EpochId) -> Result<(EpochId, ShardOrd), EpochError>
-```
-converts `shard_id` to the `shard_ord` and `epoch_id` of a shard.
-`current_epoch_id` will be used as the starting search point, the function will only search for epoch T-1, T, T+1 if the current epoch is T.
-If it cannot find the `shard_id`, it returns an `EpochError`.
-#### `from_shard_ord_to_id`
-```rust
-from_shard_ord_to_id(&self, shard_ord: ShardOrd, epoch_id: &EpochId) -> Result<ShardId, EpochError>
-```
-converts `shard_ord` and `epoch_id` for a shard to its `shard_id`.
-It returns an EpochError if such shard does not exist.
-### EpochInfoV3
-Epoch info will include `ShardsInfo` for the current epoch.
-
-```rust
-pub struct EpochInfoV3 {
-    // All fields in EpochInfoV2
-    ...
-    shards_info: ShardsInfo,
-}
-```
 
 
 ### ShardTracker
@@ -390,6 +355,7 @@ However, the implementaion of those approaches are overly complicated and does n
 [unresolved-questions]: #unresolved-questions
 - What parts of the design do you expect to resolve through the NEP process before this gets merged?
   - Garbage collection
+  - State Sync?
 - What parts of the design do you expect to resolve through the implementation of this feature before stabilization?
   - There might be small changes in the detailed implemenations or specifications of some of the functions described above, but the overall structure will not be changed.
 - What related issues do you consider out of scope for this NEP that could be addressed in the future independently of the solution that comes out of this NEP?
@@ -408,3 +374,8 @@ In the future, when challenges are enabled, resharding and state upgrade should 
 - 
 ## Pre-mortem
 - Building and catching up new states takes longer than one epoch to finish.
+- Protocol version switched back to pre simple nightshade
+- Validators cannot track shards properly after resharding
+- Genesis State
+- Must load the correct `shard_version`
+- ShardTracker?
