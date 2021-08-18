@@ -509,18 +509,25 @@ and weak ecosystem. Where every developer would not be able to reliably trade th
 # Unresolved questions
 [unresolved-questions]: #unresolved-questions
 The unresolved questions, are really what type of metadata , is required for this spec?
+- We decided that having metadata on chain is good, and that at later time we can have a spec for extra data if needed
 
 Can we represent events in this spec, which would improve the ecosystem quite a bit? If we represent events what should those events be?
+- We decided events aren't here yet in the ecosystem, in the way we' like them to be so they are't apart of this standard
 
 Should we have a spec for TokenType?
+- We decided TokkenType shouldn't be exposed for the public interface consumption. We will leave this description in the hands of the implementers
 
 Should we have a spec for offchain metadata?
+- We decided no spec for offchain metadta yet but maybe in the future
 
 Does the current storage management scheme work for people?
+- The current storage management scheme works for folks
 
 How freeform should this token be? Right now there is a notion of supply, which is not 100% guaranteed every token has
 or wants to track supply semantics. Not having supply makes everything more difficult and requires consumers of the contract
 to track minting and burning events.
+- This point was taken to show that due to lack of proper events, and having the additional capability of storing this on chain, would
+result in a reduction of complexity for consumers of the contract data.
 
 Approval Management is probably out of the scope of this solution.
 
