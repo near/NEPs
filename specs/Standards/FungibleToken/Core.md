@@ -181,7 +181,7 @@ Altogether then, Alice may take two steps, though the first may be a background 
 
 **Interface**:
 
-```javascript
+```ts
 /************************************/
 /* CHANGE METHODS on fungible token */
 /************************************/
@@ -243,7 +243,7 @@ function ft_transfer_call(
 /****************************************/
 
 // This function is implemented on the receving contract.
-// As mentioned, the `msg` argument contains information necessary for the receiving contract to know how to process the request. This may include method names and/or arguments. 
+// As mentioned, the `msg` argument contains information necessary for the receiving contract to know how to process the request. This may include method names and/or arguments.
 // Returns a value, or a promise which resolves with a value. The value is the
 // number of unused tokens in string form. For instance, if `amount` is 10 but only 9 are
 // needed, it will return "1".
