@@ -5,7 +5,7 @@ Version `1.0.0`
 ## Summary
 [summary]: #summary
 
-An interface for a fungible token minting, which is usually a part of a token lifecycle,
+An interface for a fungible token minting, which is usually a part of a token life cycle,
 
 ## Motivation
 
