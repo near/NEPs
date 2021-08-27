@@ -95,10 +95,10 @@ function nft_transfer(
 //   purposes
 // * Contract MUST panic if called by someone other than token owner or,
 //   if using Approval Management, one of the approved accounts
-// * The receiving contract must implement `ft_on_transfer` according to the
-//   standard. If it does not, FT contract's `ft_resolve_transfer` MUST deal
+// * The receiving contract must implement `nft_on_transfer` according to the
+//   standard. If it does not, FT contract's `nft_resolve_transfer` MUST deal
 //   with the resulting failed cross-contract call and roll back the transfer.
-// * Contract MUST implement the behavior described in `ft_resolve_transfer`
+// * Contract MUST implement the behavior described in `nft_resolve_transfer`
 // * `approval_id` is for use with Approval Management extension, see
 //   that document for full explanation.
 // * If using Approval Management, contract MUST nullify approved accounts on
@@ -153,9 +153,9 @@ The following behavior is required, but contract authors may name this function 
 //   `sender_id`
 //
 // Arguments:
-// * `sender_id`: the sender of `ft_transfer_call`
-// * `receiver_id`: the `receiver_id` argument given to `ft_transfer_call`
-// * `token_id`: the `token_id` argument given to `ft_transfer_call`
+// * `sender_id`: the sender of `nft_transfer_call`
+// * `receiver_id`: the `receiver_id` argument given to `nft_transfer_call`
+// * `token_id`: the `token_id` argument given to `nft_transfer_call`
 // * `approved_token_ids`: if using Approval Management, contract MUST provide
 //   set of original approved accounts in this argument, and restore these
 //   approved accounts in case of revert.
