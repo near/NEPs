@@ -518,7 +518,7 @@ Should we have a spec for TokenType?
 - We decided TokenType shouldn't be exposed for the public interface consumption. We will leave this description in the hands of the implementers
 
 Should we have a spec for offchain metadata?
-- We decided no spec for offchain metadta yet but maybe in the future
+- We decided no spec for offchain metadata yet but maybe in the future
 
 Does the current storage management scheme work for people?
 - The current storage management scheme works for folks
