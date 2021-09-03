@@ -515,7 +515,7 @@ Can we represent events in this spec, which would improve the ecosystem quite a 
 - We decided events aren't here yet in the ecosystem, in the way we' like them to be so they are't apart of this standard
 
 Should we have a spec for TokenType?
-- We decided TokkenType shouldn't be exposed for the public interface consumption. We will leave this description in the hands of the implementers
+- We decided TokenType shouldn't be exposed for the public interface consumption. We will leave this description in the hands of the implementers
 
 Should we have a spec for offchain metadata?
 - We decided no spec for offchain metadta yet but maybe in the future
