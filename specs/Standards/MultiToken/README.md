@@ -465,7 +465,7 @@ pub trait StorageManagement {
 pub struct MultiTokenMetadata {
     pub spec: String,              // required, essentially a version like "mt-1.0.0"
     pub name: String,              // required, ex. "Mosaics"
-    pub symbol: String,            // required, ex. "MOSIAC"
+    pub symbol: Option<String>,            // ex. "MOSIAC"
     pub icon: Option<String>,      // Data URL
     pub base_uri: Option<String>, // Centralized gateway known to have reliable access to decentralized storage assets referenced by `reference` or `media` URLs
     // supports metadata_uri interface that interpolates {id} in the string
