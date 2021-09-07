@@ -78,7 +78,7 @@ pub trait Payouts{
   fn nft_transfer_payout(
     &mut self,
     receiver_id: AccountId,
-    token_id: String,
+    token_id: U64,
     approval_id: U64,
     balance: U128,
     max_len_payout: u32,

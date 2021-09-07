@@ -334,7 +334,7 @@ The NFT contract must implement the following methods:
 // Returns void, if no `msg` given. Otherwise, returns promise call to
 // `nft_on_approve`, which can resolve with whatever it wants.
 function nft_approve(
-  token_id: TokenId,
+  token_id: string,
   account_id: string,
   msg: string|null,
 ): void|Promise<any> {}
@@ -428,7 +428,7 @@ If a contract that gets approved to transfer NFTs wants to, it can implement `nf
 //    handle the approval. Can indicate both a function to call and the
 //    parameters to pass to that function.
 function nft_on_approve(
-  token_id: TokenId,
+  token_id: string,
   owner_id: string,
   approval_id: number,
   msg: string,
