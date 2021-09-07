@@ -32,6 +32,7 @@ App requests wallet to login
 - `walletUrl` is a base wallet URL that can be specified when creating wallet connection using nearlib.
 - `contractId` optional, account id of the contract app wants to add access key for. Not needed when `publicKey` is not specified. Means app wants unrestricted access (e.g. `near-shell`) otherwise.
 - `callbackUrl` callback URL provided by app that gets opened by wallet after flow completion.
+- `signOnly` optional, `false` by default. `true` if needs to sign transaction, but not submit it to blockchain. This can be useful to fight against phishing, see https://github.com/near/near-wallet/issues/726. This also allows to authenticate user without incurring any gas fee.
 
 When `publicKey` wallet is expected to complete `addKey` transaction to add access key limited to given `contractId`. User can refuse to do it. This is not an error and will mean that callback only sends `accountId` selected by user back to app.
 
@@ -49,6 +50,7 @@ For error:
 For success:
 - `accountId` account ID for account used
 - `publicKey` optional, public key added as an access key. Not provided if user wants to confirm every transaction explicitly.
+- `transaction` optional, base64-encoded [`Transaction` object](https://github.com/near/near-api-js/blob/db51150b98f3e55c2893a410ad8e2379c10d8b73/src/transaction.ts#L83) serialized using [Borsh](https://borsh.io). Present when `signOnly` is `true` and supported by wallet. Contains transaction that should add a necessary access key. Receiving app should validate if it adds a proper key and execute if desired. App can decide to ignore the transaction if it doesn't plan to send transactions, but needs to validate user account
 
 ## Sign transaction with Web wallet
 
@@ -58,6 +60,7 @@ App requests wallet to sign transaction by open following URL in the browser:
 - `walletUrl` is a base wallet URL that can be specified when creating wallet connection using nearlib.
 - `transactions` comma-separatted list of base64-encoded [`Transaction` objects](https://github.com/near/near-api-js/blob/db51150b98f3e55c2893a410ad8e2379c10d8b73/src/transaction.ts#L83) serialized using [Borsh](https://borsh.io). 
 - `callbackUrl` callback URL provided by app that gets opened by wallet after flow completion.
+- `signOnly` optional, `false` by default. `true` if needs to sign transactions, but not submit them to blockchain. This can be used to sign arbitrary data (in `Transaction` wrapper) without incurring any gas fee.
 
 ### Callback URL
 
