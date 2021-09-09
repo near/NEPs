@@ -1,5 +1,5 @@
 # Standard for a Multiple-Recipient-Payout mechanic on NFT Contracts (NEP-199)
-Version `1.0.0`.
+Version `2.0.0`.
 
 This standard assumes the NFT contract has implemented
 [NEP-171](https://github.com/near/NEPs/blob/master/specs/Standards/NonFungibleToken/Core.md) (Core) and [NEP-178](https://github.com/near/NEPs/blob/master/specs/Standards/NonFungibleToken/ApprovalManagement.md) (Approval Management).
@@ -33,15 +33,15 @@ Financial contracts MAY take a cut of the NFT sale price as commission, subtract
 
 ## Example Flow
 ```
- ┌───────────────────────────────────────────────┐
- │Token Owner approves marketplace for token_id 0│
- ├───────────────────────────────────────────────┘
- │  nft_approve(0,market.near,<SaleArgs>)
+ ┌─────────────────────────────────────────────────┐
+ │Token Owner approves marketplace for token_id "0"│
+ ├─────────────────────────────────────────────────┘
+ │  nft_approve("0",market.near,<SaleArgs>)
  ▼
  ┌───────────────────────────────────────────────┐
  │Marketplace sells token to user.near for 10N   │
  ├───────────────────────────────────────────────┘
- │  nft_transfer_payout(user.near,0,0,10_000_000...)
+ │  nft_transfer_payout(user.near,"0",0,"10000000",5)
  ▼
  ┌───────────────────────────────────────────────┐
  │NFT contract returns Payout data               │
@@ -70,7 +70,7 @@ pub trait Payouts{
   /// Given a `token_id` and NEAR-denominated balance, return the `Payout`.
   /// struct for the given token. Panic if the length of the payout exceeds
   /// `max_len_payout.`
-  fn nft_payout(&self, token_id: U64, balance: U128, max_len_payout: u32) -> Payout;
+  fn nft_payout(&self, token_id: String, balance: U128, max_len_payout: u32) -> Payout;
   /// Given a `token_id` and NEAR-denominated balance, transfer the token
   /// and return the `Payout` struct for the given token. Panic if the
   /// length of the payout exceeds `max_len_payout.`
@@ -79,7 +79,7 @@ pub trait Payouts{
     &mut self,
     receiver_id: AccountId,
     token_id: String,
-    approval_id: U64,
+    approval_id: u64,
     balance: U128,
     max_len_payout: u32,
   ) -> Payout{
