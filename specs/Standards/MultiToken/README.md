@@ -1,6 +1,9 @@
 - Proposal Name: Multi-Token-Standard
 - Start Date: 2021/07/24
 - Issue(s): #245.
+
+Version `1.0.0`
+
 # Summary
 [summary]: #summary
 
