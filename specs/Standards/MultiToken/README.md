@@ -21,7 +21,6 @@ Prior art:
 
 - This NEP derives some examples and format from: https://github.com/near/NEPs/pull/21
 
-- Example of an NFT Series: https://github.com/near-apps/gnr8
 
 - Things from the NFT Discussions: https://github.com/near/NEPs/discussions/171
 
