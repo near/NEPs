@@ -141,18 +141,18 @@ Technical calls:
 
 #### Batch Token deposit to a contract 
 
-Alice wants to deposit `silver` and `gold` tokens and the nft `gem` to a compound interest contract to earn some rewards. 
+Alice wants to deposit `silver` (fungible) and `gold` (fungible)  tokens and the unique `gem` (non-fungible) to a compound interest contract to earn some rewards. 
 
 Let's assume the following:
-- The `gold` token is represented  by the `games` contract with token_id `g133` .
-- The `silver` token is represented  by the `games` contract with token_id `s133` .
-- The `gem` unique only one nft token is represented  by the `games` contract with token_id `uu2` .
-- Alice's account is `alice`.
-- The compound interest contract is `compound`.
+- The `gold` token is represented  by the `games.near` contract with `token_id` of `g133` .
+- The `silver` token is represented  by the `games.near` contract with `token_id` of `s133` .
+- The `gem` unique only one nft token is represented  by the `games.near` contract with `token_id` of `uu2` .
+- Alice's account is `alice.near`.
+- The compound interest contract is `compound.near`.
 - The precision on `gold` token is `10^18`. 
 - The precision on `silver` token is `10^18`. 
-- The 1000 tokens is `1000 * 10^18` or as a number is `1000000000000000000000`. 
-- The compound contract can work with many different token contracts and types.
+- The `amount` used to represent 1000 tokens is `1000 * 10^18` or as a number is `1000000000000000000000`. 
+- The `compound.near` contract can work with many different token contracts and types.
 
 High-level explanation:
 
