@@ -156,17 +156,17 @@ Let's assume the following:
 
 High-level explanation:
 
-Alice needs to issue a single transaction to `games` that will internally issue a cross contract call to `compound`. 
+Alice needs to issue a single transaction to `games.near` that will internally issue a cross contract call to `compound.near`. 
 
-The initial transaction to `games` is made with `compound` as the receiver of a set token_ids and amounts from `alice`.
+The initial transaction to `games.near` is made with `compound.near` as the receiver of a set token_ids and amounts from `alice`.
 
-This call then waits on a response from `compound`. If `compound` responds with failure, the tx is aborted. 
+This call then waits on a response from `compound.near`. If `compound.near` responds with failure, the tx is aborted. 
 
-Otherwise `games` contract accepts the results and resolves the promise completing the transaction.
+Otherwise `games.near` contract accepts the results and resolves the promise completing the transaction.
 
-- If transfer succeeded, `compound` can increase local ownership for `alice` to 1000 for `gold` token_id `g133`
+- If transfer succeeded, `compound.near` can increase local ownership for `alice.near` to 1000 for `gold` with token_id `g133`
 
-- If transfer fails, `compound` doesn't need to do anything in current example, but maybe can notify `alice` of unsuccessful transfer.
+- If transfer fails, `compound.near` doesn't need to do anything in current example, but maybe can notify `alice.near` of unsuccessful transfer.
 
 Technical calls:
 1. `alice` calls `games::mt_transfer_batch_call({"receiver_id": "compound", amounts: ["1000000000000000000000","1000000000000000000000", "1"], "token_ids": ["g133","s133","uu2"], msg: "interest-building"})`.
