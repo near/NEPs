@@ -55,7 +55,7 @@ There are a few concepts in the scenarios above:
  
 #### Simple transfer
 
-Alice wants to send 5 gold tokens to Bob.
+Alice wants to send 5 `gold` tokens to Bob.
 
 Let's assume the following:
 - The `gold` token is represented by the `games` with token_id `g133`.
