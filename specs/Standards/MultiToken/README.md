@@ -493,7 +493,7 @@ pub trait MultiTokenMetadataProvider {
 ```
 # Drawbacks
 [drawbacks]: #drawbacks
-Doing this adds another spec and codebase to the standards. It could be seen that we could leave this to developers to implement custom solutions and have them create a token that just uses FT and NFT together. There is some additional complexity
+Doing this adds another spec and codebase to the standards. It could be seen that we could leave this to developers to implement custom solutions and have them create a contract that implements both `NEP-141` and `NEP-171` methods together. There is some additional complexity
 in ux, when considering batch size request and gas limitations, that might trip some developers up. 
 
 # Rationale and alternatives
