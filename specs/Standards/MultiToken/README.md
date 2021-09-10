@@ -217,7 +217,7 @@ pub trait MultiTokenCore {
     /// workflow will end in a success execution outcome to the callback on the MultiToken
     /// contract at the method `mt_resolve_transfer`.
     ///
-    /// You can think of this as being similar to attaching  tokens to a
+    /// You can think of this as being similar to attaching NEAR tokens as a `deposit` to a
     /// function call. It allows you to attach any FungibleToken or NonFungibleToken in a call to a
     /// receiver contract.
     ///
