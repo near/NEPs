@@ -453,8 +453,8 @@ pub trait StorageManagement {
     ///     the contract doesn't support force unregistration.
     /// MUST require exactly 1 yoctoNEAR attached balance to prevent restricted function-call access-key call
     /// (UX wallet security)
-    /// Returns `true` iff the account was unregistered.
-    /// Returns `false` iff account was not registered before.
+    /// Returns `true` if the account was successfully unregistered by this call.
+    /// Returns `false` if account was already unregistered.
     fn storage_unregister(&mut self, token_ids:Vec<TokenId>, force: Option<bool>) -> Vec<bool>;
 
     fn storage_balance_bounds(&self, token_id:Vec<TokenId>, account_id: Option<AccountId>) -> StorageBalanceBounds;
