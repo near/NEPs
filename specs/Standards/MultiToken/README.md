@@ -66,7 +66,7 @@ Let's assume the following:
 
 High-level explanation:
 
-Alice needs to issue one transaction to `games` contract to transfer 5 tokens (multiplied by precision) to Bob.
+Alice needs to issue one transaction to the `games.near` contract to transfer 5 `gold` tokens (multiplied by the precision defined in `gold` token metadata) to Bob.
  
 Technical calls:
 
