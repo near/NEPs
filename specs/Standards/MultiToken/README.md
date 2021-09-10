@@ -77,17 +77,17 @@ Technical calls:
 Alice wants to send 1 unique (non-fungible) `gemstone`, 5 `gold` (fungible) and 10 `silver` (fungible) tokens to Bob.
 
 Let's assume the following:
-- The unique nft `gem` token is represented by `games` with token_id
+- The unique (non-fungible) `gem` token is defined in the `games.near` contract with `token_id`
 `uu2`
-- The `gold` token is represented by the `games` with token_id `g133`.
-- The `silver` token is represented by the `games` with token_id `s133`.
-- Alice's account is `alice`.
-- Bob's account is `bob`.
-- The precision for `gold` on the games contract is `10^8`. 
-- The precision for `silver` on the games contract is also `10^8`. 
-- The 5 gold tokens is `5 * 10^8` or as a number is `500000000`. 
-- The 10 silver tokens is `10 * 10^8` or as a number is `1000000000`. 
-- The  1 gem token is `1` or as a number is `1`
+- The `gold` token is defined in the `games.near` contract with `token_id` `g133`.
+- The `silver` token is defined in the `games.near` contract with `token_id` `s133`.
+- Alice's account is `alice.near`.
+- Bob's account is `bob.near`.
+- The precision for `gold` on the `games.near` contract is `10^8`. 
+- The precision for `silver` on the `games.near` contract is also `10^8`. 
+- The `amount` to represent 5 `gold` tokens is `5 * 10^8` or as a number is `500000000`. 
+- The `amount` to represent 10 `silver` tokens is `10 * 10^8` or as a number is `1000000000`. 
+- The `amount` to represent 1 `gem` token is `1` or as a number is `1`
 
 High-level explanation:
 
