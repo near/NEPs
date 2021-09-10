@@ -11,7 +11,7 @@ A standard interface for a multi token standard that supports fungible, semi-fun
 
 # Motivation
 [motivation]: #motivation
-Having a single contract represent both NFTs and FTs can greatly improve efficiency as demonstrated by Enjin Coin. The ability to make batch requests with multiple asset classes can reduce a many transactions transaciton to a single transaction to trade around both NFTs and FTs that are a part of same token contract.
+Having a single contract represent both NFTs and FTs can greatly improve efficiency as demonstrated by Enjin Coin. The ability to make batch requests with multiple asset classes can allow operations that currently require _many_ transactions to be completed in a single transaction that can transfer both NFTs and FTs that are a part of same token contract.
 
 Having this will also increase NEAR's ability to work interoperably with other chains. This will reduce the complexity required to represent these emerging asset classes.
 
