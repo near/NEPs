@@ -58,7 +58,7 @@ There are a few concepts in the scenarios above:
 Alice wants to send 5 `gold` tokens to Bob.
 
 Let's assume the following:
-- The `gold` token is represented by the `games` with token_id `g133`.
+- The `gold` token is defined in the `games.near` contract with `token_id` of `g133`.
 - Alice's account is `alice`.
 - Bob's account is `bob`.
 - The precision for `gold` on the games contract is `10^8`. 
