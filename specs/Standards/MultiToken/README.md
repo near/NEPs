@@ -189,7 +189,7 @@ WIP implementation: https://github.com/shipsgold/multi-token-standard-impl/tree/
 ```
 pub trait MultiTokenCore {
     /// Basic token transfer. Transfer a token or tokens given a token_id. The token id can correspond to  
-    /// either a NonFungibleToken or Fungible Token this is differeniated by the implementation.
+    /// either a NonFungibleToken or FungibleToken  - this is differentiated by the implementation.
     ///
     /// Requirements:
     /// * Caller of the method must attach a deposit of 1 yoctoⓃ for security purposes
