@@ -136,8 +136,8 @@ Technical calls:
         msg: String,
     ) -> PromiseOrValue<Vec<U128>>;
 }
-    1. calls `compound::mt_on_transfer({"sender_id": "alice", "token_ids":["g133"], "amounts": ["1000000000000000000000"], msg: "interest-building"})`.
-    2. `compound` resolves the request/fails and `games` contract handles response from the promise with `games::mt_resolve_transfer` returning refunded amount if there is any or handling follow up from the result of compound cross contract call
+    1. calls `compound::mt_on_transfer({"sender_id": "alice.near", "token_ids":["g133"], "amounts": ["1000000000000000000000"], msg: "interest-building"})`.
+    2. `compound.near` resolves the request/fails and `games.near` contract handles the result of the promise, with `games.near::mt_resolve_transfer()` returning refunded amount if there is any or handling follow up from the result of compound cross contract call
 
 #### Batch Token deposit to a contract 
 
