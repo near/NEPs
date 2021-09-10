@@ -169,8 +169,8 @@ Otherwise `games.near` contract accepts the results and resolves the promise com
 - If transfer fails, `compound.near` doesn't need to do anything in current example, but maybe can notify `alice.near` of unsuccessful transfer.
 
 Technical calls:
-1. `alice` calls `games::mt_transfer_batch_call({"receiver_id": "compound", amounts: ["1000000000000000000000","1000000000000000000000", "1"], "token_ids": ["g133","s133","uu2"], msg: "interest-building"})`.
-   During the `mt_transfer_call` call, `compound` does the following:
+1. `alice.near` calls `games.near::mt_transfer_batch_call({"receiver_id": "compound.near", amounts: ["1000000000000000000000","1000000000000000000000", "1"], "token_ids": ["g133","s133","uu2"], msg: "interest-building"})`.
+   During the `mt_transfer_call` call, `compound.near` does the following:
      fn mt_on_transfer(
         &mut self,
         sender_id: AccountId,
@@ -179,8 +179,8 @@ Technical calls:
         msg: String,
     ) -> PromiseOrValue<Vec<U128>>;
 }
-    1. calls `compound::mt_on_transfer({"sender_id": "alice", amounts: ["1000000000000000000000","1000000000000000000000", "1"], "token_ids": ["g133","s133","uu2"], msg: "interest-building"})`
-    2. `compound` resolves the request/fails and `games` contract handles response from the promise with `games::mt_resolve_transfer` returning refunded amount if there is any or handling follow up from the result of compound cross contract call
+    1. calls `compound.near::mt_on_transfer({"sender_id": "alice.near", amounts: ["1000000000000000000000","1000000000000000000000", "1"], "token_ids": ["g133","s133","uu2"], msg: "interest-building"})`
+    2. `compound.near` resolves the request/fails and `games.near` contract handles response from the promise with `games.near::mt_resolve_transfer` returning refunded amount if there is any or handling follow up from the result of compound cross contract call
 
 # Reference-level explanation
 [reference-level-explanation]: #reference-level-explanation
