@@ -113,9 +113,9 @@ Let's assume the following:
 
 High-level explanation:
 
-Alice needs to issue a single transaction to `games` that will internally issue a cross contract call to `compound`. 
+Alice needs to issue a single transaction to `games.near` that will internally issue a cross contract call to `compound.near`. 
 
-The initial transaction to `games` is made with `compound` as the receiver of a set token_ids and amounts from `alice`.
+The initial transaction to `games.near` is made with `compound.near` as the receiver of a set token_ids and amounts from `alice.near`.
 
 This call then waits on a response from `compound`. If `compound` responds with failure, the tx is aborted. 
 
