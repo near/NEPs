@@ -127,7 +127,7 @@ Otherwise `games.near` contract accepts the results and resolves the promise com
 
 Technical calls:
 1. `alice` calls `games::mt_transfer_call({"receiver_id": "compound", amount: "1000000000000000000000", "token_id": "g133", msg: "interest-building"})`.
-   During the `mt_transfer_call` call, `compound` does the following:
+   During the `mt_transfer_call` call, `compound.near` does the following:
      fn mt_on_transfer(
         &mut self,
         sender_id: AccountId,
