@@ -218,7 +218,7 @@ pub trait MultiTokenCore {
     /// contract at the method `mt_resolve_transfer`.
     ///
     /// You can think of this as being similar to attaching  tokens to a
-    /// function call. It allows you to attach any Fungible or Non Fungible Token in a call to a
+    /// function call. It allows you to attach any FungibleToken or NonFungibleToken in a call to a
     /// receiver contract.
     ///
     /// Requirements:
