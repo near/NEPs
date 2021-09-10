@@ -7,7 +7,7 @@ Version `1.0.0`
 # Summary
 [summary]: #summary
 
-A standard interface for  a multi token standard that supports fungible, semi-fungible, and tokens of any type, allowing for ownership, transfer, and batch transfer of tokens generally regardless of specific type.
+A standard interface for a multi token standard that supports fungible, semi-fungible, and tokens of any type, allowing for ownership, transfer, and batch transfer of tokens generally regardless of specific type.
 
 # Motivation
 [motivation]: #motivation
