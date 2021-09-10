@@ -17,7 +17,7 @@ In a minting life cycle, token will be firstly minted and then transferred. Foll
 * smart contract will mint tokens for a user
 
 Moreover, there are tools which filter transactions to report user tokens in a dashboard (eg the NEAR Wallet).
-These tools will usually check the first transaction. In case of NEAR Wallet it check for the `ft_transfer`, `ft_transfer_call` function calls. If a user will receive a token through minting, the it won't be reported (see  Minted Tokens via Contract not showing in Wallet [#468](https://github.com/near/near-contract-helper/issues/468) issue). So, we need a standard interface in order to have a tool support.
+These tools will usually check the first transaction. In case of NEAR Wallet it check for the `ft_transfer`, `ft_transfer_call` function calls. If a user will receive a token through minting, then it won't be reported (see Minted Tokens via Contract not showing in Wallet [#468](https://github.com/near/near-contract-helper/issues/468) issue). So, we need a standard interface in order to have a tool support.
 
 ## Standard Interface
 
