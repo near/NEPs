@@ -191,7 +191,7 @@ pub trait MultiTokenCore {
     /// Basic token transfer. Transfer a token or tokens given a token_id. The token id can correspond to  
     /// either a NonFungibleToken or Fungible Token this is differeniated by the implementation.
     ///
-    /// Requirements
+    /// Requirements:
     /// * Caller of the method must attach a deposit of 1 yoctoⓃ for security purposes
     /// * Contract MUST panic if called by someone other than token owner or,
     /// * If using Approval Management, contract MUST nullify approved accounts on
