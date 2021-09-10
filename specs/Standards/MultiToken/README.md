@@ -61,7 +61,7 @@ Let's assume the following:
 - The `gold` token is defined in the `games.near` contract with `token_id` of `g133`.
 - Alice's account is `alice.near`.
 - Bob's account is `bob.near`.
-- The precision for `gold` on the games contract is `10^8`. 
+- The precision for `gold` on the `games.near` contract is `10^8`. 
 - The `amount` to represent 5 `gold` tokens is `5 * 10^8`, or as a number is `500000000`. 
 
 High-level explanation:
