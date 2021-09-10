@@ -117,13 +117,13 @@ Alice needs to issue a single transaction to `games.near` that will internally i
 
 The initial transaction to `games.near` is made with `compound.near` as the receiver of a set token_ids and amounts from `alice.near`.
 
-This call then waits on a response from `compound`. If `compound` responds with failure, the tx is aborted. 
+This call then waits on a response from `compound.near`. If `compound.near` responds with failure, the tx is aborted. 
 
-Otherwise `games` contract accepts the results and resolves the promise completing the transaction.
+Otherwise `games.near` contract accepts the results and resolves the promise completing the transaction.
 
-- If transfer succeeded, `compound` can increase local ownership for `alice` to 1000 for `gold` token_id `g133`
+- If transfer succeeded, `compound.near` can increase local ownership for `alice.near` to 1000 for `gold` , whose `token_id` is `g133`
 
-- If transfer fails, `compound` doesn't need to do anything in current example, but maybe can notify `alice` of unsuccessful transfer.
+- If transfer fails, `compound.near` doesn't need to do anything in current example, but maybe can notify `alice.near` of unsuccessful transfer.
 
 Technical calls:
 1. `alice` calls `games::mt_transfer_call({"receiver_id": "compound", amount: "1000000000000000000000", "token_id": "g133", msg: "interest-building"})`.
