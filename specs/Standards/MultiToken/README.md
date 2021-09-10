@@ -22,9 +22,9 @@ Prior art:
 - This NEP derives some examples and format from: https://github.com/near/NEPs/pull/21
 
 
-- Things from the NFT Discussions: https://github.com/near/NEPs/discussions/171
-
-- Things from the NFT Discussions: https://gov.near.org/t/nft-standard-discussion/853
+- NFT Discussions:
+https://github.com/near/NEPs/discussions/171
+https://gov.near.org/t/nft-standard-discussion/853
 
 Discussions out of band:
  - https://gov.near.org/t/multi-token-standard-discussion/2917
