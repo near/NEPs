@@ -126,7 +126,7 @@ Otherwise `games.near` contract accepts the results and resolves the promise com
 - If transfer fails, `compound.near` doesn't need to do anything in current example, but maybe can notify `alice.near` of unsuccessful transfer.
 
 Technical calls:
-1. `alice` calls `games::mt_transfer_call({"receiver_id": "compound", amount: "1000000000000000000000", "token_id": "g133", msg: "interest-building"})`.
+1. `alice.near` calls `games.near::mt_transfer_call({"receiver_id": "compound.near", amount: "1000000000000000000000", "token_id": "g133", msg: "interest-building"})`.
    During the `mt_transfer_call` call, `compound.near` does the following:
      fn mt_on_transfer(
         &mut self,
