@@ -74,7 +74,7 @@ Technical calls:
 
 #### Simple batch transfer
 
-Alice wants to send and a 1 unique(nft) gemstone, 5 gold and 10 silver tokens to Bob.
+Alice wants to send 1 unique (non-fungible) `gemstone`, 5 `gold` (fungible) and 10 `silver` (fungible) tokens to Bob.
 
 Let's assume the following:
 - The unique nft `gem` token is represented by `games` with token_id
