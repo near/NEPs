@@ -104,12 +104,12 @@ Technical calls:
 Alice wants to deposit `gold` tokens to a compound interest contract to earn some rewards.
 
 Let's assume the following:
-- The `gold` token is represented  by the `games` contract with token_id `g133` .
-- Alice's account is `alice`.
-- The compound interest contract is `compound`.
+- The `gold` token is represented  by the `games.near` contract with `token_id` `g133` .
+- Alice's account is `alice.near`.
+- The compound interest contract is `compound.near`.
 - The precision on `gold` token is `10^18`. 
-- The 1000 tokens is `1000 * 10^18` or as a number is `1000000000000000000000`. 
-- The compound contract can work with many different token contracts and types.
+- The `amount` to represent 1000 tokens is `1000 * 10^18` or as a number is `1000000000000000000000`. 
+- The `compound.near` contract can work with many different token contracts and types.
 
 High-level explanation:
 
