@@ -91,11 +91,11 @@ Let's assume the following:
 
 High-level explanation:
 
-Alice needs to issue one transaction to `games` contract to transfer 5 gold tokens and 10 silver tokens (multiplied by precision) and 1 gem to Bob.
+Alice needs to issue one transaction to `games.near` contract to transfer 5 `gold` tokens and 10 `silver` tokens (multiplied by precision) and 1 `gem` to Bob.
  
 Technical calls:
 
-1. `alice` calls `games::mt_transfer_batch({"receiver_id": "bob", "amounts": ["500000000", "1000000000", "1"], "token_ids": ["g133", "s133", "uu2"], "memo": "well done"})`.
+1. `alice.near` calls `games.near::mt_transfer_batch({"receiver_id": "bob.near", "amounts": ["500000000", "1000000000", "1"], "token_ids": ["g133", "s133", "uu2"], "memo": "well done"})`.
 
 
 
