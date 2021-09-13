@@ -36,7 +36,7 @@ This in turn involves two parts, how the validators know when and how sharding c
 The former is a protocol change and the latter only affects validators' internal states.
 
 ### Protocol Change
-Sharding config for an epoch will be encapsulated in a struct `ShardLayout`, which not only contains number of shards, but also layout information to decide which account ids should be mapped to which shards. 
+Sharding config for an epoch will be encapsulated in a struct `ShardLayout`, which not only contains the number of shards, but also layout information to decide which account ids should be mapped to which shards. 
 The `ShardLayout` information will be stored as part of `EpochConfig`. 
 Right now, `EpochConfig` is stored in `EpochManager` and remains static across epochs. 
 That will be changed in the new implementation so that `EpochConfig` can be changed according to protocol versions, similar to how `RuntimeConfig` is implemented right now.
@@ -144,7 +144,7 @@ pub struct ShardLayoutV0 {
     num_shards: NumShards,
 }
 ```
-A shard layout that maps accounts evenly across all shards. This is added to capture the current `account_id_to_shard_id` algorithm, to keep backward compatibility for some existing tests. `parent_shards` for `ShardLayoutV1` is always `None` and `version`is always `0`.
+A shard layout that maps accounts evenly across all shards -- by calculate the hash of account id and mod number of shards. This is added to capture the current `account_id_to_shard_id` algorithm, to keep backward compatibility for some existing tests. `parent_shards` for `ShardLayoutV1` is always `None` and `version`is always `0`.
 
 #### `ShardLayoutV1`
 ```rust
@@ -188,6 +188,14 @@ pub fn for_protocol_version(&self, protocol_version: ProtocolVersion) -> &Arc<Ep
 ```
 returns `EpochConfig` according to the given protocol version. `EpochManager` will call this function for every new epoch.
 
+### `EpochManager`
+`EpochManager` will be responsible for managing `ShardLayout` accross epochs. As we mentioned, `EpochManager` stores an instance of `AllEpochConfig`, so it can returns the `ShardLayout` for each epoch. 
+
+####  `get_shard_layout`
+```rust
+pub fn get_shard_layout(&mut self, epoch_id: &EpochId) -> Result<&ShardLayout, EpochError> 
+```
+
 ## Internal Shard Representation in Validators' State
 ### `ShardUId`
 `ShardUId` is a unique identifier that a validator uses internally to identify shards from all epochs. It only exists inside a validator's internal state and can be different among validators, thus it should never be exposed to outside APIs.
@@ -208,7 +216,7 @@ The following database columns are stored with `ShardId` as part of the database
 - ColTrieChanges
 
 #### `TrieCachingStorage`
-Trie storage will be contruct database key from `ShardUId` and hash of the trie node.
+Trie storage will contruct database key from `ShardUId` and hash of the trie node.
 ##### `get_shard_uid_and_hash_from_key`
 ```rust
 fn get_shard_uid_and_hash_from_key(key: &[u8]) -> Result<(ShardUId, CryptoHash), std::io::Error>
@@ -218,18 +226,11 @@ fn get_shard_uid_and_hash_from_key(key: &[u8]) -> Result<(ShardUId, CryptoHash),
 fn get_key_from_shard_uid_and_hash(shard_uid: ShardUId, hash: &CryptoHash) -> [u8; 40]
 ```
 
-### `EpochManager`
-`EpochManager` will be responsible for managing `ShardLayout` accross epochs. As we mentioned, `EpochManager` stores an instance of `AllEpochConfig`, so it can returns the `ShardLayout` for each epoch. 
-
-####  `get_shard_layout`
-```rust
-pub fn get_shard_layout(&mut self, epoch_id: &EpochId) -> Result<&ShardLayout, EpochError> 
-```
 
 ## Build New States
 The following method in `Chain` will be added or modified to split a shard's current state into multiple states.
 
-### `split_shards`
+### `build_state_for_split_shards`
 ```rust
 pub fn build_state_for_split_shards(&mut self, sync_hash: &CryptoHash, shard_id: ShardId) -> Result<(), Error>
 ```
@@ -331,7 +332,7 @@ Althought we need to handle garbage collection eventually, it is not a pressing 
 [drawbacks]: #drawbacks
 
 The drawback of this approach is that it will not work when challenges are enabled since challenges to the transition to the new states will be too large to construct or verify.
-Thus, most of the change will likely be a one time use that only works for the Simple Nightshade transition, although part of the change involing `ShardId` may be reused in the future.
+Thus, most of the change will likely be a one time use that only works for the Simple Nightshade transition, although part of the change involving `ShardId` may be reused in the future.
 
 # Rationale and alternatives
 [rationale-and-alternatives]: #rationale-and-alternatives
@@ -350,7 +351,7 @@ However, the implementaion of those approaches are overly complicated and does n
   - Garbage collection
   - State Sync?
 - What parts of the design do you expect to resolve through the implementation of this feature before stabilization?
-  - There might be small changes in the detailed implemenations or specifications of some of the functions described above, but the overall structure will not be changed.
+  - There might be small changes in the detailed implementations or specifications of some of the functions described above, but the overall structure will not be changed.
 - What related issues do you consider out of scope for this NEP that could be addressed in the future independently of the solution that comes out of this NEP?
   - One issue that is related to this NEP but will be resolved indepdently is how trie nodes are stored in the database.
     Right now, it is a combination of `shard_id` and the node hash.
