@@ -115,20 +115,21 @@ pub enum ShardLayout {
 ShardLayout is a versioned struct that contains all information needed to decide which accounts belong to which shards. Note that `ShardLayout` only contains information at the protocol level, so it uses `ShardOrd` instead of `ShardId`. 
 
 The API contains the following two functions.
-#### `parent_shards`
-```rust
-pub fn parent_shards(&self) -> Vec<ShardOrd>
+#### `get_split_shards`
 ```
-returns a vector of shards ords consisting of the shard ord of the parent shard of the current shard of position in this array. This information is needed for constructing states for the new shards.
+pub fn get_split_shards(&self, parent_shard_id: ShardId) -> Option<&Vec<ShardId>>
+```
+returns the children shards of shard `parent_shard_id` (we will explain parent-children shards shortly). Note that `parent_shard_id` is a shard from the last ShardLayout, not from `self`. The returned `ShardId` represents shard in the current shard layout.
+This information is needed for constructing states for the new shards.
 
 We only allow adding new shards that are split from the existing shards. If shard B and C are split from shard A, we call shard A the parent shard of shard B and C.
-For example, if epoch T-1 has two shards with `shard_ord` 0 and 1 and each of them will be split to two shards in epoch T, then the calling `parent_shards` on the shard layout of epoch T will return `[0, 0, 1, 1]`.
+For example, if epoch T-1 has a shard layout `shardlayout0` with two shards with `shard_ord` 0 and 1 and each of them will be split to two shards in `shardlayout1` in epoch T, then `shard_layout1.get_split_shards(0)` returns `[0,1]` and `shard_layout.get_split_shards(1)` returns `[2,3]`.
     
 #### `version`
 ```rust
 pub fn version(&self) -> ShardVersion
 ```
-returns the version number of this shard layout. This version number is also used to create `ShardUId` for shards in this `ShardLayout`.
+returns the version number of this shard layout. This version number is used to create `ShardUId` for shards in this `ShardLayout`. The version numbers must be different for all shard layouts used in the blockchain.
 
 #### `account_id_to_shard_id`
 ```rust
@@ -163,7 +164,7 @@ pub struct ShardLayoutV1 {
 A shard layout that consists some fixed shards each of which is mapped to a fixed account and other shards which are mapped to ranges of accounts. This will be the ShardLayout used by Simple Nightshade.
 
 ### `EpochConfig`
-`EpochConfig` will contain the shard layout info.
+`EpochConfig` will contain the shard layout for the given epoch.
 
 ```rust
 pub struct EpochConfig {
@@ -173,7 +174,7 @@ pub struct EpochConfig {
     pub shard_layout: ShardLayout,
 ```
 ### `AllEpochConfig`
-`AllEpochConfig` stores information needed to construct `EpochConfig` for all epochs. For SimpleNightshade migration, it only needs to contain two configs. `AllEpochConfig` will be stored in `EpochManager` to be used to construct `EpochConfig` for different epochs.
+`AllEpochConfig` stores a mapping from protocol versions to `EpochConfig`s. `EpochConfig` for a particular epoch can be retrieved from `AllEpochConfig`, given the protocol version of the epoch. For SimpleNightshade migration, it only needs to contain two configs. `AllEpochConfig` will be stored inside `EpochManager` to be used to construct `EpochConfig` for different epochs.
 
 ```rust
 pub struct AllEpochConfig {
@@ -197,6 +198,15 @@ pub struct ShardUId {
     pub shard_id: u32,
 }
 ```
+
+`version` in `ShardUId` comes from the version of `ShardLayout` that this shard belongs. This way, different shards from different shard layout will have different `ShardUId`s.
+
+### Database storage
+The following database columns are stored with `ShardId` as part of the database key, it will be replaced by `ShardUId`
+- ColState
+- ColChunkExtra
+- ColTrieChanges
+
 #### `TrieCachingStorage`
 Trie storage will be contruct database key from `ShardUId` and hash of the trie node.
 ##### `get_shard_uid_and_hash_from_key`
@@ -208,37 +218,20 @@ fn get_shard_uid_and_hash_from_key(key: &[u8]) -> Result<(ShardUId, CryptoHash),
 fn get_key_from_shard_uid_and_hash(shard_uid: ShardUId, hash: &CryptoHash) -> [u8; 40]
 ```
 
-
 ### `EpochManager`
-`EpochManager` will be responsible for managing shard ids accross epochs. Information regarding shard ids in an epoch will be stored in a struct `ShardsInfo`, which will be part of `EpochInfo`. `EpochManager` assigns shard ids for shards in a new epoch when it builds `EpochInfo` for the epoch, in function `finalize_epoch`.
+`EpochManager` will be responsible for managing `ShardLayout` accross epochs. As we mentioned, `EpochManager` stores an instance of `AllEpochConfig`, so it can returns the `ShardLayout` for each epoch. 
 
-When constructing `EpochInfo` for a new epoch, `EpochManager` creates the `EpochConfig` for the protocol version of the epoch. Then it assigns shard ids for the shards in the new epoch according to `ShardLayout` in the `EpochConfig`.
-
-
-### ShardTracker
-Various functions such as `account_id_to_shard_id` in `ShardTracker` will be changed to incorporate the change in `ShardId`.
-The `num_shards` field will be removed from `ShardTracker` since it is no longer a static number.
-The current shard information can be accessed by the following functions.
-These changes will also be propagated to wrapper functions in `RuntimeAdapter` since `ShardTracker` cannot be directly accessed through `RuntimeAdapter`.
-
-#### `get_shards`
+####  `get_shard_layout`
 ```rust
-pub fn get_shards() -> Vec<ShardId>
+pub fn get_shard_layout(&mut self, epoch_id: &EpochId) -> Result<&ShardLayout, EpochError> 
 ```
-returns the `shard_id`s of the shards in the current epoch.
-
-#### `get_shards_next_epoch`
-```rust
-pub fn get_shards_next_epoch() -> (Vec<ShardId>, HashMap<ShardId, ShardId>)
-```
-returns the `shard_id`s of the shards in the next epoch and a map from those shards to their parent shards.
 
 ## Build New States
-The following method in `Client` will be added or modified to split a shard's current state into multiple states.
+The following method in `Chain` will be added or modified to split a shard's current state into multiple states.
 
 ### `split_shards`
 ```rust
-pub fn split_shards(me: &Option<AccountId>, sync_hash: CryptoHash, shard_id: ShardId)
+pub fn build_state_for_split_shards(&mut self, sync_hash: &CryptoHash, shard_id: ShardId) -> Result<(), Error>
 ```
 builds states for the new shards that the shard `shard_id` will be split to.
 After this function is finished, the states for the new shards should be ready in `ShardTries` to be accessed.
