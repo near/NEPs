@@ -101,3 +101,7 @@ There is an assumption that NFT contracts will understand the limits of gas and 
 ## Future possibilities
 
 In the future, the NFT contract itself may be able to place an NFT transfer is a state that is "pending transfer" until all payouts have been awarded. This would keep all the information inside the NFT and remove trust.
+
+## Errata
+
+Version `2.0.0` contains the intended `approval_id` of `u64` instead of the stringified `U64` version. This was an oversight, but since the standard was live for a few months before noticing, the team thought it best to bump the major version.
