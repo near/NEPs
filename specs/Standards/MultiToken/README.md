@@ -40,7 +40,7 @@ We should be able to do the following:
 - Get total supply of tokens per token_ids per single transaction
 - Represent non fungibility of tokens
 - Represent fungibility of tokens
-- Transfer tokens by id in batch
+- Transfer tokens by id in batch in a single transaction to a single account
 - Use these tokens on an exchange
 - Refund storage costs for fungible tokens
 
