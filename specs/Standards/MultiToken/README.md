@@ -31,6 +31,15 @@ Discussions out of band:
  - https://github.com/shipsgold/multi-token-standard-impl/tree/main/meetings 
 
 # Guide-level explanation
+
+There are a few concepts in the scenarios below:
+- **Total supply**. It's the total number of tokens in circulation.
+- **Balance owner**. An account ID that owns some amount of tokens.
+- **Transfer**. Moves some amount from one account to another account.
+- **Fungibility**. An indistinguishable amount of tokens to exchange 
+- **Non Fungibility**. Tokens that are differentiable from each other.
+
+
 [guide-level-explanation]: #guide-level-explanation
 
 We should be able to do the following:
@@ -43,13 +52,6 @@ We should be able to do the following:
 - Transfer tokens by id in batch in a single transaction to a single account
 - Use these tokens on an exchange
 - Refund storage costs for fungible tokens
-
-There are a few concepts in the scenarios above:
-- **Total supply**. It's the total number of tokens in circulation.
-- **Balance owner**. An account ID that owns some amount of tokens.
-- **Transfer**. Moves some amount from one account to another account.
-- **Fungibility**. An indistinguishable amount of tokens to exchange 
-- **Non Fungibility**. Tokens that are differentiable from each other.
 
 ### Real scenarios
  
