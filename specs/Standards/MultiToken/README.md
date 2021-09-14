@@ -34,8 +34,8 @@ Discussions out of band:
 [guide-level-explanation]: #guide-level-explanation
 
 We should be able to do the following:
-- Get balance of token per user
-- Get balance in batch of a user
+- Get balance of a single token_id per account per single transaction 
+- Get balance of multiple token_ids per account per single transaction
 - Get supply of tokens per id
 - Get supply of tokens in batch per id
 - Represent non fungibility of tokens
