@@ -36,13 +36,12 @@ Alice and Bob are already [registered](README.md) with MT, Market, and Bazaar, a
 Let's examine the technical calls through the following scenarios:
 
 1. [Simple approval](#1-simple-approval): Alice approves Bob to transfer her token.
-2. [Simple approval all](#2-simple-approval-all): Alice approves Bob to transfer all her tokens and future tokens she may mint.
-3. [Approval with cross-contract call (XCC)](#3-approval-with-cross-contract-call): Alice approves Market to transfer one of her tokens and passes `msg` so that NFT will call `mt_on_approve` on Market's contract.
-4. [Approval with XCC, edge case](#4-approval-with-cross-contract-call-edge-case): Alice approves Bazaar and passes `msg` again, but what's this? Bazaar doesn't implement `mt_on_approve`, so Alice sees an error in the transaction result. Not to worry, though, she checks `mt_is_approved` and sees that she did successfully approve Bazaar, despite the error.
-5. [Approval IDs](#5-approval-ids): Bob buys Alice's token via Market.
-6. [Approval IDs, edge case](#6-approval-ids-edge-case): Bob transfers same token back to Alice, Alice re-approves Market & Bazaar. Bazaar has an outdated cache. Bob tries to buy from Bazaar at the old price.
-7. [Revoke one](#7-revoke-one): Alice revokes Market's approval for this token.
-8. [Revoke all](#8-revoke-all): Alice revokes all approval for this token.
+2. [Approval with cross-contract call (XCC)](#2-approval-with-cross-contract-call): Alice approves Market to transfer one of her tokens and passes `msg` so that NFT will call `mt_on_approve` on Market's contract.
+3. [Approval with XCC, edge case](#3-approval-with-cross-contract-call-edge-case): Alice approves Bazaar and passes `msg` again, but what's this? Bazaar doesn't implement `mt_on_approve`, so Alice sees an error in the transaction result. Not to worry, though, she checks `mt_is_approved` and sees that she did successfully approve Bazaar, despite the error.
+4. [Approval IDs](#4-approval-ids): Bob buys Alice's token via Market.
+5. [Approval IDs, edge case](#5-approval-ids-edge-case): Bob transfers same token back to Alice, Alice re-approves Market & Bazaar. Bazaar has an outdated cache. Bob tries to buy from Bazaar at the old price.
+6. [Revoke one](#6-revoke-one): Alice revokes Market's approval for this token.
+7. [Revoke all](#7-revoke-all): Alice revokes all approval for this token.
 
 ### 1. Simple Approval
 
@@ -56,7 +55,7 @@ Alice approves Bob to transfer her token.
 
 **Technical calls**
 
-1. Alice calls `mt::mt_approve({ "token_ids": ["1","2"], "account_id": "bob" })`. She attaches 1 yoctoⓃ, (.000000000000000000000001Ⓝ). Using [NEAR CLI](https://docs.near.org/docs/tools/near-cli) to make this call, the command would be:
+1. Alice calls `mt::mt_approve({ "token_ids": ["1","2"], amounts:[1,100],"account_id": "bob" })`. She attaches 1 yoctoⓃ, (.000000000000000000000001Ⓝ). Using [NEAR CLI](https://docs.near.org/docs/tools/near-cli) to make this call, the command would be:
 
        near call mt mt_approve \
          '{ "token_id": "1", "account_id": "bob" }' \
@@ -78,68 +77,20 @@ Alice approves Bob to transfer her token.
          "owner_id": "alice.near",
          "approvals": [{
            "bob": 1,
+           "amount": 1,
          },
          {
            "bob": 2,
+           "amount": 100,
          }]
        }
 
 3. Alice calls view method `mt_is_approved`:
 
        near view mt mt_is_approved \
-         '{ "token_ids": ["1", "2"], "approved_account_id": "bob" }'
+         '{ "token_ids": ["1", "2"], amounts:["1","100"], "approved_account_id": "bob" }'
 
    The response:
-
-       true
-
-### 2. Simple Approval All
-
-Alice approves Bob for all token_ids to transfer her tokens.
-
-**High-level explanation**
-
-1. Alice approves Bob
-2. Alice queries the token to verify
-3. Alice verifies a different way
-
-**Technical calls**
-
-1. Alice calls `mt::mt_approve_all({"account_id": "bob" })`. She attaches 1 yoctoⓃ, (.000000000000000000000001Ⓝ). Using [NEAR CLI](https://docs.near.org/docs/tools/near-cli) to make this call, the command would be:
-
-       near call mt mt_approve_all \
-         '{"account_id": "bob"}' \
-         --accountId alice --amount .000000000000000000000001
-
-   The response:
-
-       ''
-
-2. Alice calls view method `mt_approvals`:
-
-       near view mt mt_approvals \
-         '{ "token_id": ["1", "2"] }'
-
-   The response:
-
-       {
-         "ids": ["1", "2"]
-         "owner_id": "alice.near",
-         "approvals": [{
-           "bob": 1,
-         },
-         {
-           "bob": 2,
-         }]
-       }
-
-3. Alice calls view method `mt_is_approved`:
-
-       near view mt mt_is_approved \
-         '{ "token_ids": ["1", "2"], "approved_account_id": "bob" }'
-
-   The response:
-
        true
 
 ### 3. Approval with cross-contract call
@@ -158,8 +109,9 @@ Alice approves Market to transfer one of her tokens and passes `msg` so that MT 
 
        near call mt mt_approve '{
          "token_id": ["1","2"],
+         "amounts": ["1", "100"],
          "account_id": "market",
-         "msg": "{\"action\": \"list\", \"price\": \"100\", \"token\": \"nDAI\" }"
+         "msg": "{\"action\": \"list\", \"price\": [\"100\",\"50\"],\"token\": \"nDAI\" }"
        }' --accountId alice --amount .000000000000000000000001
 
    At this point, near-cli will hang until the cross-contract call chain fully resolves, which would also be true if Alice used a Market frontend using [near-api-js](https://docs.near.org/docs/develop/front-end/near-api-js). Alice's part is done, though. The rest happens behind the scenes.
@@ -168,48 +120,13 @@ Alice approves Market to transfer one of her tokens and passes `msg` so that MT 
 
        near call market mt_on_approve '{
          "token_id": ["1","2"],
+         "amounts": ["1","100"],
          "owner_id": "alice",
          "approval_id": 2,
          "msg": "{\"action\": \"list\", \"price\": [\"100\",\"50\"], \"token\": \"nDAI\" }"
        }' --accountId mt
 
-3. `market` now knows that it can sell Alice's token for 100 [nDAI](https://explorer.mainnet.near.org/accounts/6b175474e89094c44da98b954eedeac495271d0f.factory.bridge.near), and that when it transfers it to a buyer using `mt_batch_transfer`, it can pass along the given `approval_id` to ensure that Alice hasn't changed her mind. It can schedule any further cross-contract calls it wants, and if it returns these promises correctly, Alice's initial near-cli call will resolve with the outcome from the final step in the chain. If Alice actually made this call from a Market frontend, the frontend can use this return value for something useful.
-
-
-
-### 3. Approval all with cross-contract call
-
-Alice approves Market to transfer some of her tokens and passes `msg` so that MT will call `mt_on_approve_all` on Market's contract. She probably does this via Market's frontend app which would know how to construct `msg` in a useful way.
-
-**High-level explanation**
-
-1. Alice calls `mt_approve_all` to approve `market` to transfer her tokens, and passes a `msg`
-2. Since `msg` is included, `mt` will schedule a cross-contract call to `market`
-3. Market can do whatever it wants with this info, such as listing the token for sale at a given price. The result of this operation is returned as the promise outcome to the original `mt_approve_all` call. This will allow the 
-market to transfer the listing whenver necessary. In addition to this any future listings as well that this owner owns.  In the case of a game
-new items in the collection can be listed for sale at no additional
-approval storage cost, within the contract.
-
-**Technical calls**
-
-1. Using near-cli:
-
-       near call mt mt_approve_all '{
-         "account_id": "market",
-         "msg": "{\"action\": \"approve"}"
-       }' --accountId alice --amount .000000000000000000000001
-
-   At this point, near-cli will hang until the cross-contract call chain fully resolves, which would also be true if Alice used a Market frontend using [near-api-js](https://docs.near.org/docs/develop/front-end/near-api-js). Alice's part is done, though. The rest happens behind the scenes.
-
-2. `mt` schedules a call to `mt_on_approve` on `market`. Using near-cli notation for easy cross-reference with the above, this would look like:
-
-       near call market mt_on_approve_all '{
-         "owner_id": "alice",
-         "approval_id": 2,
-         "msg": "{\"action\": \"approve\"}"
-       }' --accountId mt
-
-3. `market` now knows that it can approve selling or using alice's token. It also knows that when alice sets a price and that when it transfers it to a buyer using `mt_batch_transfer`, it can pass along the given `approval_id` to ensure that Alice hasn't changed her mind. It can schedule any further cross-contract calls it wants, and if it returns these promises correctly, Alice's initial near-cli call will resolve with the outcome from the final step in the chain. If Alice actually made this call from a Market frontend, the frontend can use this return value for something useful.
+3. `market` now knows that it can sell Alice's tokens for 100 [nDAI] and 50 [nDAI] (https://explorer.mainnet.near.org/accounts/6b175474e89094c44da98b954eedeac495271d0f.factory.bridge.near), and that when it transfers it to a buyer using `mt_batch_transfer`, it can pass along the given `approval_id` to ensure that Alice hasn't changed her mind. It can schedule any further cross-contract calls it wants, and if it returns these promises correctly, Alice's initial near-cli call will resolve with the outcome from the final step in the chain. If Alice actually made this call from a Market frontend, the frontend can use this return value for something useful.
 
 ### 3. Approval with cross-contract call, edge case
 
@@ -229,7 +146,8 @@ Not to worry, though, she checks `mt_is_approved` and sees that she did successf
 1. Using near-cli:
 
        near call mt mt_approve '{
-         "token_id": "1",
+         "token_ids": ["1"],
+         "amounts: ["1000"],
          "account_id": "bazaar",
          "msg": "{\"action\": \"list\", \"price\": \"100\", \"token\": \"nDAI\" }"
        }' --accountId alice --amount .000000000000000000000001
@@ -237,7 +155,8 @@ Not to worry, though, she checks `mt_is_approved` and sees that she did successf
 2. `mt` schedules a call to `mt_on_approve` on `market`. Using near-cli notation for easy cross-reference with the above, this would look like:
 
        near call bazaar mt_on_approve '{
-         "token_id": ["1","2"],
+         "token_ids": ["1"],
+         "amounts": ["1000"],
          "owner_id": "alice",
          "approval_id": 3,
          "msg": "{\"action\": \"list\", \"price\": \"100\", \"token\": \"nDAI\" }"
@@ -248,53 +167,11 @@ Not to worry, though, she checks `mt_is_approved` and sees that she did successf
 4. Alice checks if the approval itself worked, despite the error on the cross-contract call:
 
        near view mt mt_is_approved \
-         '{ "token_id": "1", "approved_account_id": "bazaar" }'
+         '{ "token_ids": ["1","2"], "amounts":["1","100"], "approved_account_id": "bazaar" }'
 
    The response:
 
        true
-
-### 3. Approval all with cross-contract call, edge case
-
-Alice approves Bazaar and passes `msg` again. Maybe she actually does this via near-cli, rather than using Bazaar's frontend, because what's this? Bazaar doesn't implement `mt_on_approve_all`, so Alice sees an error in the transaction result.
-
-Not to worry, though, she checks `mt_is_approved` and sees that she did successfully approve Bazaar, despite the error. She will have to find a new way to list her token for sale in Bazaar, rather than using the same `msg` shortcut that worked for Market.
-
-**High-level explanation**
-
-1. Alice calls `mt_approve_all` to approve `bazaar` to transfer her token, and passes a `msg`.
-2. Since `msg` is included, `mt` will schedule a cross-contract call to `bazaar`.
-3. Bazaar doesn't implement `mt_on_approve_all`, so this call results in an error. The approval still worked, but Alice sees an error in her near-cli output.
-4. Alice checks if `bazaar` is approved, and sees that it is, despite the error.
-
-**Technical calls**
-
-1. Using near-cli:
-
-       near call mt mt_approve_all '{
-         "account_id": "bazaar",
-         "msg": "{\"action\": \"approve\"}"
-       }' --accountId alice --amount .000000000000000000000001
-
-2. `mt` schedules a call to `mt_on_approve_all` on `market`. Using near-cli notation for easy cross-reference with the above, this would look like:
-
-       near call bazaar mt_on_approve_all '{
-         "owner_id": "alice",
-         "approval_id": 3,
-         "msg": "{\"action\": \"approve\" }"
-       }' --accountId mt
-
-3. 💥 `bazaar` doesn't implement this method, so the call results in an error. Alice sees this error in the output from near-cli.
-
-4. Alice checks if the approval itself worked, despite the error on the cross-contract call:
-
-       near view mt mt_is_approved \
-         '{ "token_id": "1", "approved_account_id": "bazaar" }'
-
-   The response:
-
-       true
-
 
 ### 4. Approval IDs
 
@@ -352,8 +229,7 @@ Note that `market` will not get a cross-contract call in this case. The implemen
 
 ### 7. Revoke all
 
-Alice revokes all approval for this token excluding approval all, approved
-accounts.
+Alice revokes all approval for these tokens
 
 **Technical calls**
 
@@ -365,33 +241,20 @@ Using near-cli:
 
 Again, note that no previous approvers will get cross-contract calls in this case.
 
-### 7. Revoke approval all
-
-Alice revokes approval all approvals for this account. This can take an 
-optional field for account_ids that specific specific accounts to revoke
-or all accounts to revoke if field is None.
-
-**Technical calls**
-
-Using near-cli:
-
-    near call mt mt_revoke_approval_all '{
-      account_ids: None,
-    }' --accountId alice --amount .000000000000000000000001
-
-Again, note that no previous approvers will get cross-contract calls in this case.
-
-
 
 ## Reference-level explanation
 
 The `Token` structure returned by `mt_token` must include an `approvals` field, which is a map of account IDs to approval IDs. Using TypeScript's [Record type](https://www.typescriptlang.org/docs/handbook/utility-types.html#recordkeystype) notation:
 
 ```diff
+ interface Approval = {
+   amount: number
+   approval_id: string
+ }
  type Token = {
    id: string,
    owner_id: string,
-+  approvals: Record<string, number>,
++  approvals: Record<string, Approval>,
  };
 ```
 
@@ -402,8 +265,14 @@ Example token data:
   "id": "1",
   "owner_id": "alice.near",
   "approvals": {
-    "bob.near": 1,
-    "carol.near": 2,
+    "bob.near": {
+      "amount": 100,
+      "approval_id":1,
+    },
+    "carol.near": {
+      "amount":2,
+      "approval_id": 2,
+    }
   }
 }
 ```
@@ -429,8 +298,13 @@ Keeping with the example above, say the initial approval of the second marketpla
   "id": "1",
   "owner_id": "alice.near",
   "approvals": {
-    "marketplace_1.near": 1,
+    "marketplace_1.near": {
+      "approval_id": 1,
+      "amount": "100",
+    },
     "marketplace_2.near": 2,
+    "approval_id": 2,
+     "amount": "50",
   }
 }
 ```
@@ -442,7 +316,10 @@ But after the transfers and re-approval described above, the token might have `a
   "id": "1",
   "owner_id": "alice.near",
   "approvals": {
-    "marketplace_2.near": 3,
+    "marketplace_2.near": {
+      "approval_id": 3,
+      "amount": "50",
+    }
   }
 }
 ```
@@ -480,14 +357,16 @@ The MT contract must implement the following methods:
 //   `nft_on_approve` description below for details.
 //
 // Arguments:
-// * `token_id`: the token for which to add an approval
+// * `token_ids`: the token ids for which to add an approval
 // * `account_id`: the account to add to `approvals`
+// * `amounts`: the corresponding token_id amounts to add to `approvals`
 // * `msg`: optional string to be passed to `nft_on_approve`
 //
 // Returns void, if no `msg` given. Otherwise, returns promise call to
 // `nft_on_approve`, which can resolve with whatever it wants.
 function mt_approve(
   token_ids: Array<TokenId>,
+  amounts:Array<number>,
   account_id: string,
   msg: string|null,
 ): void|Promise<any> {}
@@ -502,25 +381,10 @@ function mt_approve(
 // * Contract MUST panic if called by someone other than token owner
 //
 // Arguments:
-// * `token_id`: the token for which to revoke an approval
+// * `token_ids`: the token for which to revoke an approval
 // * `account_id`: the account to remove from `approvals`
 function mt_revoke(
-  token_id: string,
-  account_id: string
-) {}
-
-// Revoke an approval all account. Revokes access for that account for all tokens.
-//
-// Requirements
-// * Caller of the method must attach a deposit of 1 yoctoⓃ for security
-//   purposes
-// * If contract requires >1yN deposit on `nft_approve`, contract
-//   MUST refund associated storage deposit when owner revokes approval
-// * Contract MUST panic if called by someone other than token owner
-//
-// Arguments:
-// * `account_id`: the account to remove from `approvals`
-function mt_revoke_approval_all(
+  token_ids: Array<string>,
   account_id: string
 ) {}
 
@@ -534,21 +398,8 @@ function mt_revoke_approval_all(
 // * Contract MUST panic if called by someone other than token owner
 //
 // Arguments:
-// * `token_id`: the token with approvals to revoke
-function mt_revoke_all(token_id: string) {}
-
-// Revoke all approved accounts for approval all. 
-//
-// Requirements
-// * Caller of the method must attach a deposit of 1 yoctoⓃ for security
-//   purposes
-// * If contract requires >1yN deposit on `nft_approve`, contract
-//   MUST refund all associated storage deposit when owner revokes approvals
-// * Contract MUST panic if called by someone other than token owner
-//
-// Arguments:
-// * `token_id`: the token with approvals to revoke
-function mt_revoke_all_approval_all() {}
+// * `token_ids`: the token ids with approvals to revoke
+function mt_revoke_all(token_ids: Array<string>) {}
 
 /****************/
 /* VIEW METHODS */
@@ -561,13 +412,16 @@ function mt_revoke_all_approval_all() {}
 // * `token_id`: the token for which to revoke an approval
 // * `approved_account_id`: the account to check the existence of in `approvals`
 // * `approval_id`: an optional approval ID to check against current approval ID for given account
+// * `amounts`: specify the positionally corresponding amount for the token_id that at least must be approved  
 //
 // Returns:
-// if `approval_id` given, `true` if `approved_account_id` is approved with given `approval_id`
-// otherwise, `true` if `approved_account_id` is in list of approved accounts
+// if `approval_id` given, `true` if `approved_account_id` is approved with given `approval_id` and has at least the amount specified approved 
+// otherwise, `true` if `approved_account_id` is in list of approved accounts and has at least the amount specified approved
+// finally it returns false for all other states
 function mt_is_approved(
   token_ids: [string],
   approved_account_id: string,
+  amounts: [number],
   approval_id: number|null
 ): boolean {}
 ```
@@ -592,7 +446,7 @@ Contract authors may choose to set a cap of something small and safe like 10 app
 
 ### Approved Account Contract Interface
 
-If a contract that gets approved to transfer MTs wants to, it can implement `mt_on_approve` or `mt_on_approve_all` to update its own state when granted approval for a token:
+If a contract that gets approved to transfer MTs wants to, it can implement `mt_on_approve` to update its own state when granted approval for a token:
 
 ```ts
 // Respond to notification that contract has been granted approval for a token.
@@ -601,35 +455,17 @@ If a contract that gets approved to transfer MTs wants to, it can implement `mt_
 // * Contract knows the token contract ID from `predecessor_account_id`
 //
 // Arguments:
-// * `token_id`: the token to which this contract has been granted approval
+// * `token_ids`: the token_ids to which this contract has been granted approval
 // * `owner_id`: the owner of the token
+// * `amounts`: the amounts  to which this contract has been granted approval
 // * `approval_id`: the approval ID stored by NFT contract for this approval.
 //   Expected to be a number within the 2^53 limit representable by JSON.
 // * `msg`: specifies information needed by the approved contract in order to
 //    handle the approval. Can indicate both a function to call and the
 //    parameters to pass to that function.
 function mt_on_approve(
-  token_id: [TokenId],
-  owner_id: string,
-  approval_id: number,
-  msg: string,
-) {}
-```
-```ts
-// Respond to notification that contract has been granted approval for a token.
-//
-// Notes
-// * Contract knows the token contract ID from `predecessor_account_id`
-//
-// Arguments:
-// * `token_id`: the token to which this contract has been granted approval
-// * `owner_id`: the owner of the token
-// * `approval_id`: the approval ID stored by NFT contract for this approval.
-//   Expected to be a number within the 2^53 limit representable by JSON.
-// * `msg`: specifies information needed by the approved contract in order to
-//    handle the approval. Can indicate both a function to call and the
-//    parameters to pass to that function.
-function mt_on_approve_all(
+  token_ids: [TokenId],
+  amounts: [number],
   owner_id: string,
   approval_id: number,
   msg: string,
