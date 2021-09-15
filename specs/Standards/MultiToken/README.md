@@ -459,7 +459,14 @@ pub trait StorageManagement {
     /// Returns `false` if account was already unregistered.
     fn storage_unregister(&mut self, token_ids:Vec<TokenId>, force: Option<bool>) -> Vec<bool>;
 
+    /****************/
+    /* VIEW METHODS */
+    /****************/
+    // Returns minimum and maximum allowed balance amounts to interact with this
+    // contract. See StorageBalanceBounds.
     fn storage_balance_bounds(&self, token_id:Vec<TokenId>, account_id: Option<AccountId>) -> StorageBalanceBounds;
+    
+    // If `account_id` is not registered, must return `null`.
     fn storage_balance_of(&self, token_ids:Vec<TokenId>, account_id: AccountId) -> Option<StorageBalance>;
 }
 ```
