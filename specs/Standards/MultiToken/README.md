@@ -135,6 +135,7 @@ Technical calls:
         sender_id: AccountId,
         token_ids: Vec<TokenId>,
         amounts: Vec<U128>,
+        approval_ids: Option<Vec<Option<U64>>,
         msg: String,
     ) -> PromiseOrValue<Vec<U128>>;
 }
@@ -178,6 +179,7 @@ Technical calls:
         sender_id: AccountId,
         token_ids: Vec<TokenId>,
         amounts: Vec<U128>,
+        previous_owner_id: AccountId,
         msg: String,
     ) -> PromiseOrValue<Vec<U128>>;
 }
@@ -205,6 +207,9 @@ pub trait MultiTokenCore {
     /// * `receiver_id`: the valid NEAR account receiving the token
     /// * `token_id`: the token or tokens to transfer
     /// * `amount`: the token amount of tokens to transfer for token_id
+    /// * `approval_id`:  expected approval ID. A number smaller than
+    ///    2^53, and therefore representable as JSON. See Approval Management
+    ///    standard for full explanation.
     /// * `memo` (optional): for use cases that may benefit from indexing or
     ///    providing information for a transfer
     fn mt_transfer(
@@ -212,6 +217,7 @@ pub trait MultiTokenCore {
         receiver_id: AccountId,
         token_id: TokenId,
         amount: U128,
+        approval_id: Option<U64>,
         memo: Option<String>,
     );
 
@@ -237,6 +243,9 @@ pub trait MultiTokenCore {
     /// * `receiver_id`: the valid NEAR account receiving the token.
     /// * `token_id`: the token to send.
     /// * `amount`: amount of tokens to transfer for token_id
+    /// * `approval_id`:  expected approval ID. A number smaller than
+    ///    2^53, and therefore representable as JSON. See Approval Management
+    ///    standard for full explanation.
     /// * `memo` (optional): for use cases that may benefit from indexing or
     ///    providing information for a transfer.
     /// * `msg`: specifies information needed by the receiving contract in
@@ -247,6 +256,7 @@ pub trait MultiTokenCore {
         receiver_id: AccountId,
         token_id: TokenId,
         amount: U128,
+        approval_id: Option<U64>,
         memo: Option<String>,
         msg: String,
     ) -> PromiseOrValue<U128>;
@@ -274,7 +284,7 @@ pub trait MultiTokenCore {
     /// * `amounts`: the amount of tokens to transfer for corresponding token_id
     /// * `approval_ids`: expected approval ID. A number smaller than
     ///    2^53, and therefore representable as JSON. See Approval Management
-    ///    standard for full explanation. Must have same length as token_ids
+    ///    standard for full explanation. Must have same length and order as ///    token_ids
     /// * `memo` (optional): for use cases that may benefit from indexing or
     ///    providing information for a transfer
 
@@ -283,6 +293,7 @@ pub trait MultiTokenCore {
         receiver_id: AccountId,
         token_ids: Vec<TokenId>,
         amounts: Vec<U128>,
+        approval_ids: Option<Vec<Option<U64>>>,
         memo: Option<String>,
     );
     /// Batch transfer token/s and call a method on a receiver contract. A successful
@@ -311,8 +322,9 @@ pub trait MultiTokenCore {
     /// * `receiver_id`: the valid NEAR account receiving the token.
     /// * `token_ids`: the tokens to transfer
     /// * `amounts`: the amount of tokens to transfer for corresponding token_id
-    /// * `approval_ids`: expected approval IDs. A number smaller than
+    /// * `approval_ids`: expected approval ID. A number smaller than
     ///    2^53, and therefore representable as JSON. See Approval Management
+    ///    standard for full explanation. Must have same length and order as ///    token_ids
     ///    standard for full explanation. Must have same length as token_ids
     /// * `memo` (optional): for use cases that may benefit from indexing or
     ///    providing information for a transfer.
@@ -325,6 +337,7 @@ pub trait MultiTokenCore {
         receiver_id: AccountId,
         token_ids: Vec<TokenId>,
         amounts: Vec<U128>,
+        approval_ids: Option<Vec<Option<U64>>>,
         memo: Option<String>,
         msg: String,
     ) -> PromiseOrValue<Vec<U128>>;
@@ -369,6 +382,7 @@ pub trait MultiTokenReceiver {
     fn mt_on_transfer(
         &mut self,
         sender_id: AccountId,
+        previous_owner_id: AccountId,
         token_ids: Vec<TokenId>,
         amounts: Vec<U128>,
         msg: String,
@@ -402,9 +416,10 @@ pub trait MultiTokenResolver {
     /// * `previous_owner_id`: the owner prior to the call to `mt_transfer_call`
     /// * `receiver_id`: the `receiver_id` argument given to `mt_transfer_call`
     /// * `token_ids`: the `token_ids` argument given to `mt_transfer_call`
-    /// * `approvals`: if using Approval Management, contract MUST provide
+    /// * `approved_account_ids`: if using Approval Management, contract MUST provide
     ///   set of original approved accounts in this argument, and restore these
-    ///   approved accounts in case of revert. In this case it may be multiple sets of approvals
+    ///   approved accounts in case of revert. In this case it may be multiple sets of approvals . If specified the length and order must correspond to token_ids
+
     ///
     /// Returns true if tokens were successfully transferred to `receiver_id`.
     fn mt_resolve_transfer(
@@ -413,6 +428,7 @@ pub trait MultiTokenResolver {
         receiver_id: AccountId,
         token_ids: Vec<TokenId>,
         amounts: Vec<U128>,
+        approved_account_ids: Option<Vec<Vec<AccountId>>>,
     ) -> Vec<U128>;
 }
 ```
