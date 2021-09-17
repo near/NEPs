@@ -342,7 +342,7 @@ pub trait MultiTokenCore {
         msg: String,
     ) -> PromiseOrValue<Vec<U128>>;
 
-    /// Get the balance of an an account given token_id. For fungible token returns back amount, for
+    /// Get the balance of an account for the given `token_id`. For fungible token returns back amount, for
     /// non fungible token it returns back constant 1.
     fn mt_balance_of(&self, owner_id: AccountId, token_id: TokenId) -> U128;
 
