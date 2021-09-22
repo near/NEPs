@@ -193,10 +193,6 @@ This would reduce number of updates we need to do, and memory usage.
 However, it would be possible to guess the hash function used, which would expose us to security vulnerability.
 It would be simple to produce two edges, such that there is a hash collision, which would cause routing table exchange to fail.
 
-### Used a fixed number of `IbfPeerSet` structures for each node
-Theoretically, smaller number of sets could be used. For example 10, this would require estimating how likely it is to produce edges such that they produce collisions.
-It may be still possible to generate offline such set of edges that can cause recovery of edges from `IBF` to fail for one node.
-
 ### Increase number of `IbfSet` structures per `IbfPeerSet`
 In theory, we could increase the sizes of `IBF` structures used from `2^10..2^17` to `2^10..2^20`.
 This would allow us to recover the set difference if it's up to `2^20/3` instead of `2^17/3` at cost of increasing memory overhead from `160 MiB to 640 Mib`.
@@ -207,4 +203,10 @@ Let's assume we need to send 1 million edges.
 By sending list of 4 bytes hashes of all known edges on each synchronization we would only need to send `4 MiB` of metadata plus the size of edges that differ.
 This approach would be simpler, but not as efficient in terms of bandwidth.
 That would still be an improvement of having to send just `4 MiB` over `400 MiB` with existing implementation.
+
+# Future improvements
+
+## Reduce memory usagae
+### Used a fixed number of `IbfPeerSet` structures for each node Theoretically, smaller number of sets could be used. For example 10, this would require estimating how likely it is to produce edges such that they produce collisions.
+It may be still possible to generate offline such set of edges that can cause recovery of edges from `IBF` to fail for one node.
 
