@@ -31,7 +31,7 @@ On the other side, we limit `Ibf` to size of `2^17` to reduce memory usage requi
 
 
 # Routing Table
-
+d
 We are extending [Routing Table](NetworkSpec.md#Routing Table) by additional field `peer_ibf_set`
 
 ```rust
@@ -186,12 +186,6 @@ Assuming we keep extra `40` of such data structures, we would need extra `160 Mi
 On each update we need up update each `IbfSet` structure `3*8 = 24` times.
 Assuming we keep `40` such data structures, that requires up to `960` updates.
 
-# Future improvements
-
-### Reduce overhead on adding new edge
-We may have to do `40*8*3=960` updates of `IbfElem` on adding each new edge.
-This overhead can be reduced by moving updating `IbfElem` to another thread.
-
 # Alternative approaches
 
 ### Only use one `IbfPeerSet` structure for everyone
@@ -200,7 +194,7 @@ However, it would be possible to guess the hash function used, which would expos
 It would be simple to produce two edges, such that there is a hash collision, which would cause routing table exchange to fail.
 
 ### Used a fixed number of `IbfPeerSet` structures for each node
-Theoretically, smaller number of sets could be used. For example 10, this would require estimating how likely it is to produce edges such that they produce collisions. 
+Theoretically, smaller number of sets could be used. For example 10, this would require estimating how likely it is to produce edges such that they produce collisions.
 It may be still possible to generate offline such set of edges that can cause recovery of edges from `IBF` to fail for one node.
 
 ### Increase number of `IbfSet` structures per `IbfPeerSet`
@@ -211,12 +205,6 @@ This would allow us to recover the set difference if it's up to `2^20/3` instead
 Each edge has a size of about 400 bytes.
 Let's assume we need to send 1 million edges.
 By sending list of 4 bytes hashes of all known edges on each synchronization we would only need to send `4 MiB` of metadata plus the size of edges that differ.
-This approach would be simpler, but not as efficient in terms of bandwidth. 
+This approach would be simpler, but not as efficient in terms of bandwidth.
 That would still be an improvement of having to send just `4 MiB` over `400 MiB` with existing implementation.
 
-### Simplify routing algorithm exchange.
-In the current design, both peers communicate to each other exchanging messages. 
-`A` sends `Ibf` of size `2^k` for even `k`, `B` otherwise.
-It may be easier to maintain the code in the future, if we switch to a server/client model.
-Where `A` does all requests, `B` sends only responses.
-This would increase the number of messages exchanged, but could make it simpler to maintain/debug the code.
