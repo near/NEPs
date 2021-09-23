@@ -32,7 +32,6 @@ On the other side, we limit `Ibf` to size of `2^17` to reduce memory usage requi
 
 
 # Routing Table
-d
 We are extending [Routing Table](NetworkSpec.md#Routing Table) by additional field `peer_ibf_set`
 
 ```rust
