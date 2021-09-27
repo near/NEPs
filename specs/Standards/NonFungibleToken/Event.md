@@ -56,7 +56,7 @@ interface EventLogData {
 // * `account_id`: "account.near"
 // * `token_id`: "1"
 interface NftMintLog {
-    account_id:string,
+    owner_id:string,
     token_id:string
 }
 
