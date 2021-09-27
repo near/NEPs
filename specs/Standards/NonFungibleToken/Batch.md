@@ -4,20 +4,27 @@ Version `1.0.0`
 
 ## Summary
 
-Standard interfaces for batching NFT contract actions.
+Standard interfaces for NFT contract actions.
 
 ## Motivation
 
-Apps such as marketplaces regularly perform repetitive user triggered actions that increase bandwidth and network load.
+
+Nft driven apps such as marketplaces regularly perform many
+of the same acions such as `minting`, `burning` and `transfering`.
+Each app have their own way of performing these actions and it
+is difficult to consistently capture these events.
 This extension addresses that.
 
-For example, it's common in NFT marketplaces to transfer tokens to many users from a single account. Where many accounts
-are involved, marketplaces are responsible for coordinating successful transfer of each asset handle cases of failure.
-This makes scaling such apps harder and infeasible to serve high traffic demands.
+For example, it's common in NFT marketplaces to have
+different methods of transfer a single token vs many 
+tokens. Other applications like wallets, will have
+a difficult time tracking consistently this information for many
+markets. This makes interactive with many nft driven apps 
+infeasible.
 
-Due to different functions used by marketplaces to perform their
-batching requirements discussed here https://github.com/near/NEPs/issues/254,
-a standard way to capture these events is needed.
+Due to discussions here 
+https://github.com/near/NEPs/issues/254,
+a standard way to capture these events are needed.
 
 ## Interface
 
@@ -74,3 +81,10 @@ interface NftTransferLog {
     token_id:string
 }
 ```
+
+## Drawbacks
+
+There is a known limitation of 16kb strings when capturing logs.
+This can be observed from `token_ids` that may vary in length
+for different apps so the amount of logs that can
+be executed may vary.
