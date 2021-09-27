@@ -68,7 +68,7 @@ type Token = {
 // Arguments:
 // * `receiver_id`: the valid NEAR account receiving the token
 // * `token_id`: the token to transfer
-// * `approval_id`: expected approval ID. A number smaller than
+// * `approval_id` (optional): expected approval ID. A number smaller than
 //    2^53, and therefore representable as JSON. See Approval Management
 //    standard for full explanation.
 // * `memo` (optional): for use cases that may benefit from indexing or
@@ -107,7 +107,7 @@ function nft_transfer(
 // Arguments:
 // * `receiver_id`: the valid NEAR account receiving the token.
 // * `token_id`: the token to send.
-// * `approval_id`: expected approval ID. A number smaller than
+// * `approval_id` (optional): expected approval ID. A number smaller than
 //    2^53, and therefore representable as JSON. See Approval Management
 //    standard for full explanation.
 // * `memo` (optional): for use cases that may benefit from indexing or
@@ -118,9 +118,9 @@ function nft_transfer(
 function nft_transfer_call(
   receiver_id: string,
   token_id: string,
+  msg: string,
   approval_id: number|null,
   memo: string|null,
-  msg: string,
 ): Promise {}
 
 
@@ -156,7 +156,7 @@ The following behavior is required, but contract authors may name this function 
 // * `sender_id`: the sender of `nft_transfer_call`
 // * `receiver_id`: the `receiver_id` argument given to `nft_transfer_call`
 // * `token_id`: the `token_id` argument given to `nft_transfer_call`
-// * `approved_token_ids`: if using Approval Management, contract MUST provide
+// * `approved_token_ids` (optional): if using Approval Management, contract MUST provide
 //   set of original approved accounts in this argument, and restore these
 //   approved accounts in case of revert.
 //
@@ -201,6 +201,7 @@ function nft_on_transfer(
 ## Errata
 
 * **2021-07-16**: updated `nft_transfer_call` argument `approval_id` to be type `number|null` instead of `string|null`. As stated, approval IDs are not expected to exceed the JSON limit of 2^53.
+* **2021-09-27**: Mark `approval_id` parameter as optional in function description as well.
 
   [ERC-721]: https://eips.ethereum.org/EIPS/eip-721
   [storage staking]: https://docs.near.org/docs/concepts/storage-staking
