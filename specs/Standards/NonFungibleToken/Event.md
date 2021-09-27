@@ -1,4 +1,4 @@
-# Non-Fungible Token Batch
+# Non-Fungible Token Event
 
 Version `1.0.0`
 
@@ -7,7 +7,6 @@ Version `1.0.0`
 Standard interfaces for NFT contract actions.
 
 ## Motivation
-
 
 Nft driven apps such as marketplaces regularly perform many
 of the same acions such as `minting`, `burning` and `transfering`.
