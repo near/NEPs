@@ -36,39 +36,41 @@ interface EventLog {
 // Arguments
 // * `standard`: name of standard e.g. nep171
 // * `version`: e.g. 1.0.0
-// * `event`: `nft_batch_mint` | `nft_batch_burn` | `nft_batch_transfer`
+// * `event`: `nft_mint` | `nft_burn` | `nft_transfer`
 // * `data`: associate event data
 interface EventLogData {
     standard:string,
     version:string,
     event:string,
-    data: BatchMintLog[]|BatchTransferLog[]|BatchBurnLog
+    data: NftMintLog[]|NftTransferLog[]|NftBurnLog
 }
 
 // An event log to capture token minting
 // Arguments
 // * `account_id`: "account.near"
 // * `token_id`: "1"
-interface BatchMintLog {
+interface NftMintLog {
     account_id:string,
     token_id:string
 }
 
 // An event log to capture token burning
 // Arguments
+// * `owner_id`: owner of tokens to burn
 // * `token_ids`: ["1","2"]
-interface BatchBurnLog {
+interface NftBurnLog {
+    owner_id:string,
     token_ids:string[]
 }
 
 // An event log to capture token transfer
 // Arguments
 // * `sender_id`: "account.near"
-// * `to`: "receiver.near"
+// * `receiver_id`: "receiver.near"
 // * `token_id`: "12345abc"
-interface BatchTransferLog {
+interface NftTransferLog {
     sender_id:string,
-    to:string,
+    receiver_id:string,
     token_id:string
 }
 ```
