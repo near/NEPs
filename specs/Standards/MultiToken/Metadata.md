@@ -53,9 +53,13 @@ type MTTokenMetadata = {
   expires_at: string|null, // When token expires, Unix epoch in milliseconds
   starts_at: string|null, // When token starts being valid, Unix epoch in milliseconds
   updated_at: string|null, // When token was last updated, Unix epoch in milliseconds
-  extra: string|null, // anything extra the NFT wants to store on-chain. Can be stringified JSON.
+  extra: string|null, // Anything extra the MT wants to store on-chain. Can be stringified JSON.
   reference: string|null, // URL to an off-chain JSON file with more info.
   reference_hash: string|null // Base64-encoded sha256 hash of JSON from reference field. Required if `reference` is included.
+}
+type MTTokenMetadataAll = {
+  base: MTBaseTokenMetadata
+  token: MTTokenMetadata
 }
 ```
 
@@ -63,10 +67,11 @@ A new set of functions MUST be supported on the MT contract:
 
 ```ts
 // Returns the top-level contract level metadtata
-function mt_metadata(): ContractMetadata {}
-function mt_token_metadata_by_token_id(token_ids: TokenId[]): TokenMetadata[]
-function mt_base_token_metadata_by_token_id(token_ids: TokenId[]): BaseTokenMetadata[]
-function mt_base_token_metadata(base_metadata_ids: BaseMetadataId[]):BaseTokenMetadata
+function mt_metadata_contract(): MTContractMetadata {}
+function mt_metadata_token_all(token_ids: TokenId[]): MTAllTokenMetadata[]
+function mt_metadata_token_by_token_id(token_ids: TokenId[]): MTTokenMetadata[]
+function mt_metadata_base_by_token_id(token_ids: TokenId[]): MTBaseMetadata[]
+function mt_metadata_base_by_metadata_id(base_metadata_ids: MTBaseMetadataId[]):MTBaseTokenMetadata
 
 ```
 
@@ -75,8 +80,7 @@ A new attribute MUST be added to each `Token` struct:
 ```diff
  type Token = {
    id: string,
-   owner_id: string,
-+  metadata: TokenMetadata,
++  metadata: MTTokenMetadata,
 +  base_metadata_id: string,
  }
 ```
@@ -110,9 +114,14 @@ For `MTTokenMetadata`:
 - `expires_at`: [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) datetime when token expires
 - `starts_at`: [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) datetime when token starts being valid
 - `updated_at`: [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) datetime when token was last updated
-- `extra`: anything extra the NFT wants to store on-chain. Can be stringified JSON.
+- `extra`: anything extra the MT wants to store on-chain. Can be stringified JSON.
 - `reference`: URL to an off-chain JSON file with more info.
 - `reference_hash`: Base64-encoded sha256 hash of JSON from reference field. Required if `reference` is included.
+
+For `MTAllTokenMetadata`:
+
+- `base`: The base metadata that corresonds to `MTBaseTokenMetadata` for the token.
+- `token`: The token specific metadata that corresponds to `MTTokenMetadata`.
 
 ### No incurred cost for core NFT behavior
 
