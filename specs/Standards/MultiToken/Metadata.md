@@ -80,6 +80,7 @@ A new attribute MUST be added to each `Token` struct:
 ```diff
  type Token = {
    id: string,
+   amount: string,
 +  metadata: MTTokenMetadata,
 +  base_metadata_id: string,
  }
