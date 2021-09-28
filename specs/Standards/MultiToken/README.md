@@ -385,7 +385,10 @@ pub trait MultiTokenReceiver {
     /// * `msg`: information necessary for this contract to know how to process the
     ///   request. This may include method names and/or arguments.
     ///
-    /// Returns true if tokens should be returned to `sender_id`
+    // Returns a value, or a promise which resolves with a vector of values. The values are the
+    /// number of unused tokens in string form. For instance, if `amount` is 10 but only 9 are
+    /// needed, it will return ["1"].
+
     fn mt_on_transfer(
         &mut self,
         sender_id: AccountId,
@@ -427,26 +430,23 @@ pub trait MultiTokenResolver {
     ///   set of original approved accounts in this argument, and restore these
     ///   approved accounts in case of revert. In this case it may be multiple sets of approvals . If specified the length and order must correspond to token_ids
 
-    ///
-    /// Returns true if tokens were successfully transferred to `receiver_id`.
+    /// Returns the amount of how many total tokens were spent by `sender_id`, corresponding to the `token_id`.
     fn mt_resolve_transfer(
         &mut self,
         sender_id: AccountId,
         receiver_id: AccountId,
         token_ids: Vec<TokenId>,
         amounts: Vec<U128>,
-        approved_account_ids: Option<Vec<Vec<AccountId>>>,
+        approved_account_ids: Option<Vec<Option<Vec<AccountId>>>>,
     ) -> Vec<U128>;
 }
 ```
 ### Storage Management Trait
-#### Notes
-This is semi necessary for ft token types to be able to refund users for storage of many different token types like gold/silver... this might be slightly out of scope
 ```
 pub trait StorageManagement {
     // if `registration_only=true` MUST refund above the minimum balance if the account didn't exist and
     //     refund full deposit if the account exists.
-    fn storage_deposit(
+    fn mt_storage_deposit(
         &mut self,
         token_ids: Vec<TokenId>,
         account_id: Option<AccountId>,
