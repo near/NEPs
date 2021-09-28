@@ -27,11 +27,11 @@ Let's consider some examples. Our cast of characters & apps:
 
 * Alice: has account `alice` with no contract deployed to it
 * Bob: has account `bob` with no contract deployed to it
-* MT: a contract with account `mt`, implementing only the [Multi Token Standard](README.md) with this Approval Management extension
+* MT: a contract with account `mt`, implementing only the [Multi Token Standard](Core.md) with this Approval Management extension
 * Market: a contract with account `market` which sells tokens from `mt` as well as other token contracts
 * Bazaar: similar to Market, but implemented differently (spoiler alert: has no `mt_on_approve` function!), has account `bazaar`
 
-Alice and Bob are already [registered](README.md) with MT, Market, and Bazaar, and Alice owns a token on the MT contract with ID=`"1"` and a fungible style token with ID =`"2"` and  AMOUNT =`"100"`.
+Alice and Bob are already [registered](Core.md) with MT, Market, and Bazaar, and Alice owns a token on the MT contract with ID=`"1"` and a fungible style token with ID =`"2"` and  AMOUNT =`"100"`.
 
 Let's examine the technical calls through the following scenarios:
 
