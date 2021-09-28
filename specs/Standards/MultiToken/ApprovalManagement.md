@@ -341,7 +341,7 @@ The MT contract must implement the following methods:
 /* CHANGE METHODS */
 /******************/
 
-// Add an approved account for a specific token.
+// Add an approved account for a specific set of tokens.
 //
 // Requirements
 // * Caller of the method must attach a deposit of at least 1 yoctoⓃ for
@@ -360,10 +360,10 @@ The MT contract must implement the following methods:
 // * `token_ids`: the token ids for which to add an approval
 // * `account_id`: the account to add to `approvals`
 // * `amounts`: the corresponding token_id amounts to add to `approvals`
-// * `msg`: optional string to be passed to `nft_on_approve`
+// * `msg`: optional string to be passed to `mt_on_approve`
 //
 // Returns void, if no `msg` given. Otherwise, returns promise call to
-// `nft_on_approve`, which can resolve with whatever it wants.
+// `mt_on_approve`, which can resolve with whatever it wants.
 function mt_approve(
   token_ids: Array<TokenId>,
   amounts:Array<number>,
@@ -381,7 +381,7 @@ function mt_approve(
 // * Contract MUST panic if called by someone other than token owner
 //
 // Arguments:
-// * `token_ids`: the token for which to revoke an approval
+// * `token_ids`: the token for which to revoke approvals
 // * `account_id`: the account to remove from `approvals`
 function mt_revoke(
   token_ids: Array<string>,
@@ -405,11 +405,11 @@ function mt_revoke_all(token_ids: Array<string>) {}
 /* VIEW METHODS */
 /****************/
 
-// Check if a token is approved for transfer by a given account, optionally
+// Check if tokens are approved for transfer by a given account, optionally
 // checking an approval_id
 //
 // Arguments:
-// * `token_id`: the token for which to revoke an approval
+// * `token_ids`: the tokens for which to check an approval
 // * `approved_account_id`: the account to check the existence of in `approvals`
 // * `approval_id`: an optional approval ID to check against current approval ID for given account
 // * `amounts`: specify the positionally corresponding amount for the token_id that at least must be approved  
