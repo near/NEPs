@@ -22,8 +22,14 @@ Prior art:
 The contract must implement the following view methods:
 
 ```ts
-
-
+// Metadata field is optional if metadata extension is implemented. Includes the base token metadata id and the token_metadata object, that represents the token specific metadata.
+type MTToken {
+  id: string
+  metadata?: {
+  base_metadata_id: string
+  token_metadata: MTTokenMetadata
+  }
+}
 
 // Get a list of all tokens
 //
@@ -32,11 +38,11 @@ The contract must implement the following view methods:
 //    representing the starting index of tokens to return
 // * `limit`: the maximum number of tokens to return
 //
-// Returns an array of Token objects, as described above, and an empty array if there are no tokens
+// Returns an array of MTToken objects, as described above, and an empty array if there are no tokens
 function mt_tokens(
   from_index: string|null, // default: "0"
   limit: number|null, // default: unlimited (could fail due to gas limit)
-): Token[] {}
+): MTToken[] {}
 
 // Get list of all tokens owned by a given account
 //
@@ -51,7 +57,7 @@ function mt_tokens_for_owner(
   account_id: string,
   from_index: string|null, // default: 0
   limit: number|null, // default: unlimited (could fail due to gas limit)
-): Token[] {}
+): MTToken[] {}
 ```
 
 The contract must implement the following view methods if using metadata extension:
@@ -64,8 +70,8 @@ The contract must implement the following view methods if using metadata extensi
 //    representing the starting index of tokens to return
 // * `limit`: the maximum number of tokens to return
 //
-// Returns an array of BaseTokenMetadata objects, as described above, and an empty array if there are no tokens
-function mt_base_token_metadata(
+// Returns an array of MTBaseTokenMetadata objects, as described above, and an empty array if there are no tokens
+function mt_tokens_base_metadata_all(
   from_index: string | null,
   limit: number | null
   ): BaseTokenMetadata[]
