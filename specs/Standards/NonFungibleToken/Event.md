@@ -33,8 +33,11 @@ events of these activities through logs.
 
 ```ts
 // Interface to capture an event
-interface EventLog {
-    EVENT_JSON:EventLogData
+// and return formatted event string.
+interface EventJsonLog {
+    // Takes `EventLogData` and returns
+    // `EVENT_JSON: <EVENT_LOG_DATA>`
+    (e:EventLogData):string
 }
 
 // Interface to capture data 
