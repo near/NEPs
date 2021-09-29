@@ -1,4 +1,5 @@
-# Multi Token Enumeration
+# Multi Token Enumeration([NEP-246](https://github.com/near/NEPs/discussions/246))
+
 
 Version `1.0.0`
 
@@ -15,22 +16,15 @@ While some Multi Token contracts may forego this extension to save [storage] cos
 Prior art:
 
 - [ERC-721]'s enumeration extension
-- [NEP-181]'s enumeration extension
+- [Non Fungible Token Standard's](../NonFungibleToken/Enumeration.md) enumeration extension
 
 ## Interface
 
 The contract must implement the following view methods:
 
-```ts
 // Metadata field is optional if metadata extension is implemented. Includes the base token metadata id and the token_metadata object, that represents the token specific metadata.
-type MTToken {
-  id: string
-  metadata?: {
-  base_metadata_id: string
-  token_metadata: MTTokenMetadata
-  }
-}
 
+```ts
 // Get a list of all tokens
 //
 // Arguments:
@@ -42,7 +36,7 @@ type MTToken {
 function mt_tokens(
   from_index: string|null, // default: "0"
   limit: number|null, // default: unlimited (could fail due to gas limit)
-): MTToken[] {}
+): Token[] {}
 
 // Get list of all tokens owned by a given account
 //
@@ -57,7 +51,7 @@ function mt_tokens_for_owner(
   account_id: string,
   from_index: string|null, // default: 0
   limit: number|null, // default: unlimited (could fail due to gas limit)
-): MTToken[] {}
+): Token[] {}
 ```
 
 The contract must implement the following view methods if using metadata extension:

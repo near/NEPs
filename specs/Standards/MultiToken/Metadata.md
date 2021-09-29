@@ -1,4 +1,5 @@
-# Multi Token Metadata
+# Multi Token Metadata([NEP-246](https://github.com/near/NEPs/discussions/246))
+
 
 Version `1.0.0`
 
@@ -80,8 +81,7 @@ A new attribute MUST be added to each `Token` struct:
 ```diff
  type Token = {
    id: string,
-   amount: string,
-+  metadata: MTTokenMetadata,
++  token_metadata?: MTTokenMetadata,
 +  base_metadata_id: string,
  }
 ```
@@ -126,7 +126,7 @@ For `MTAllTokenMetadata`:
 
 ### No incurred cost for core NFT behavior
 
-Contracts should be implemented in a way to avoid extra gas fees for serialization & deserialization of metadata for calls to `mt_*` methods other than `mt_*metadata*` or `mt_token`. See `near-contract-standards` [implementation using `LazyOption`](https://github.com/near/near-sdk-rs/blob/c2771af7fdfe01a4e8414046752ee16fb0d29d39/examples/fungible-token/ft/src/lib.rs#L71) as a reference example.
+Contracts should be implemented in a way to avoid extra gas fees for serialization & deserialization of metadata for calls to `mt_*` methods other than `mt_metadata*` or `mt_tokens`. See `near-contract-standards` [implementation using `LazyOption`](https://github.com/near/near-sdk-rs/blob/c2771af7fdfe01a4e8414046752ee16fb0d29d39/examples/fungible-token/ft/src/lib.rs#L71) as a reference example.
 
 ## Drawbacks
 
