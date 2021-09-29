@@ -38,10 +38,11 @@ Prior art:
 
 ```ts
 // The base structure that will be returned for a token. If contract is using
-// extensions such as Approval Management, Metadata, or other
+// extensions such as Approval Management, Enumeration, Metadata, or other
 // attributes may be included in this structure.
 type Token = {
   id: string,
+  owner_id: string | null
 }
 
 /******************/
@@ -201,8 +202,8 @@ function mt_transfer_call(
 // * `receiver_id`: the valid NEAR account receiving the token.
 // * `token_ids`: the tokens to transfer
 // * `amounts`: the number of tokens to transfer, wrapped in quotes and treated
-//    like an array of string, although the numbers will be stored as an array of unsigned integer
-//    with 128 bits.
+//    like an array of string, although the numbers will be stored as an array of
+//    unsigned integer with 128 bits.  
 // * `approval_ids`: expected approval IDs per `token_ids`. If a `token_id` does 
 //    not have a corresponding approval id then the entry in the array must be marked null.
 //    The `approval_ids` are numbers smaller than 2^53, and therefore representable as JSON. 
@@ -226,6 +227,10 @@ function mt_batch_transfer_call(
 /****************/
 /* VIEW METHODS */
 /****************/
+
+
+// Returns the tokens with the given `token_ids` or `null` if no such token.
+function mt_tokens(token_ids: string[]) (Token | null)[]
 // Returns the balance of an account for the given `token_id`.  
 // The balance though wrapped in quotes and treated like a string, 
 // the number will be stored as an unsigned integer with 128 bits.
