@@ -4,7 +4,7 @@ Version `1.0.0`
 
 ## Summary
 
-A standard interface for a multi token standard that supports fungible, semi-fungible, and tokens of any type, allowing for ownership, transfer, and batch transfer of tokens regardless of specific type.
+A standard interface for a multi token standard that supports fungible, semi-fungible,non-fungible, and tokens of any type, allowing for ownership, transfer, and batch transfer of tokens regardless of specific type.
 
 ## Motivation
 
@@ -231,6 +231,7 @@ function mt_batch_transfer_call(
 
 // Returns the tokens with the given `token_ids` or `null` if no such token.
 function mt_tokens(token_ids: string[]) (Token | null)[]
+
 // Returns the balance of an account for the given `token_id`.  
 // The balance though wrapped in quotes and treated like a string, 
 // the number will be stored as an unsigned integer with 128 bits.
