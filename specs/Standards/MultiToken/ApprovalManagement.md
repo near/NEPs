@@ -1,4 +1,5 @@
-# Multi Token Standard Approval Management
+# Multi Token Standard Approval Management([NEP-246](https://github.com/near/NEPs/discussions/246))
+
 
 Version `1.0.0`
 
@@ -31,7 +32,7 @@ Let's consider some examples. Our cast of characters & apps:
 * Market: a contract with account `market` which sells tokens from `mt` as well as other token contracts
 * Bazaar: similar to Market, but implemented differently (spoiler alert: has no `mt_on_approve` function!), has account `bazaar`
 
-Alice and Bob are already [registered](Core.md) with MT, Market, and Bazaar, and Alice owns a token on the MT contract with ID=`"1"` and a fungible style token with ID =`"2"` and  AMOUNT =`"100"`.
+Alice and Bob are already [registered](../StorageManagement.md) with MT, Market, and Bazaar, and Alice owns a token on the MT contract with ID=`"1"` and a fungible style token with ID =`"2"` and  AMOUNT =`"100"`.
 
 Let's examine the technical calls through the following scenarios:
 
@@ -45,7 +46,7 @@ Let's examine the technical calls through the following scenarios:
 
 ### 1. Simple Approval
 
-Alice approves Bob to transfer her token.
+Alice approves Bob to transfer her tokens.
 
 **High-level explanation**
 
@@ -55,10 +56,10 @@ Alice approves Bob to transfer her token.
 
 **Technical calls**
 
-1. Alice calls `mt::mt_approve({ "token_ids": ["1","2"], amounts:[1,100],"account_id": "bob" })`. She attaches 1 yoctoⓃ, (.000000000000000000000001Ⓝ). Using [NEAR CLI](https://docs.near.org/docs/tools/near-cli) to make this call, the command would be:
+1. Alice calls `mt::mt_approve({ "token_ids": ["1","2"], amounts:["1","100"], "account_id": "bob" })`. She attaches 1 yoctoⓃ, (.000000000000000000000001Ⓝ). Using [NEAR CLI](https://docs.near.org/docs/tools/near-cli) to make this call, the command would be:
 
        near call mt mt_approve \
-         '{ "token_id": "1", "account_id": "bob" }' \
+         '{ "token_ids": ["1","2"], amounts: ["1","100"], "account_id": "bob" }' \
          --accountId alice --amount .000000000000000000000001
 
    The response:
@@ -76,11 +77,11 @@ Alice approves Bob to transfer her token.
          "ids": ["1", "2"]
          "owner_id": "alice.near",
          "approvals": [{
-           "bob": 1,
+           "bob": 4,
            "amount": 1,
          },
          {
-           "bob": 2,
+           "bob": 5,
            "amount": 100,
          }]
        }
@@ -95,7 +96,7 @@ Alice approves Bob to transfer her token.
 
 ### 3. Approval with cross-contract call
 
-Alice approves Market to transfer one of her tokens and passes `msg` so that MT will call `mt_on_approve` on Market's contract. She probably does this via Market's frontend app which would know how to construct `msg` in a useful way.
+Alice approves Market to transfer some of her tokens and passes `msg` so that MT will call `mt_on_approve` on Market's contract. She probably does this via Market's frontend app which would know how to construct `msg` in a useful way.
 
 **High-level explanation**
 
@@ -122,11 +123,11 @@ Alice approves Market to transfer one of her tokens and passes `msg` so that MT 
          "token_id": ["1","2"],
          "amounts": ["1","100"],
          "owner_id": "alice",
-         "approval_id": 2,
+         "approval_ids": ["4","5"],
          "msg": "{\"action\": \"list\", \"price\": [\"100\",\"50\"], \"token\": \"nDAI\" }"
        }' --accountId mt
 
-3. `market` now knows that it can sell Alice's tokens for 100 [nDAI] and 50 [nDAI] (https://explorer.mainnet.near.org/accounts/6b175474e89094c44da98b954eedeac495271d0f.factory.bridge.near), and that when it transfers it to a buyer using `mt_batch_transfer`, it can pass along the given `approval_id` to ensure that Alice hasn't changed her mind. It can schedule any further cross-contract calls it wants, and if it returns these promises correctly, Alice's initial near-cli call will resolve with the outcome from the final step in the chain. If Alice actually made this call from a Market frontend, the frontend can use this return value for something useful.
+3. `market` now knows that it can sell Alice's tokens for 100 [nDAI](https://explorer.mainnet.near.org/accounts/6b175474e89094c44da98b954eedeac495271d0f.factory.bridge.near) and 50 [nDAI](https://explorer.mainnet.near.org/accounts/6b175474e89094c44da98b954eedeac495271d0f.factory.bridge.near), and that when it transfers it to a buyer using `mt_batch_transfer`, it can pass along the given `approval_ids` to ensure that Alice hasn't changed her mind. It can schedule any further cross-contract calls it wants, and if it returns these promises correctly, Alice's initial near-cli call will resolve with the outcome from the final step in the chain. If Alice actually made this call from a Market frontend, the frontend can use this return value for something useful.
 
 ### 3. Approval with cross-contract call, edge case
 
@@ -158,7 +159,7 @@ Not to worry, though, she checks `mt_is_approved` and sees that she did successf
          "token_ids": ["1"],
          "amounts": ["1000"],
          "owner_id": "alice",
-         "approval_id": 3,
+         "approval_ids": [3],
          "msg": "{\"action\": \"list\", \"price\": \"100\", \"token\": \"nDAI\" }"
        }' --accountId mt
 
@@ -198,10 +199,6 @@ Bob transfers same token back to Alice, Alice re-approves Market & Bazaar, listi
 
 Bob signs some transaction which results in the `bazaar` contract calling `mt_transfer` on the `mt` contract, as described above. To be trustworthy and pass security audits, `bazaar` needs to pass along `approval_id` so that it knows it has up-to-date information. It does not have up-to-date information, so the call fails. If the initial `mt_transfer` call is part of a call chain originating from a call to `ft_transfer_call` on a fungible token, Bob's payment will be refunded and no assets will change hands.
 
-Note that approval all has different semantics, with approval all 
-the approval_id is linked to the owners entire state of the contract
-as such approval all is vunerable to cross listing discrepencies. 
-
 **Technical calls**
 
 Using near-cli notation for consistency:
@@ -222,7 +219,7 @@ Using near-cli:
 
     near call mt mt_revoke '{
       "account_id": "market",
-      "token_ids": ["1", "2"],
+      "token_ids": ["1"],
     }' --accountId alice --amount .000000000000000000000001
 
 Note that `market` will not get a cross-contract call in this case. The implementors of the Market app should implement [cron](https://en.wikipedia.org/wiki/Cron)-type functionality to intermittently check that Market still has the access they expect.
@@ -244,13 +241,14 @@ Again, note that no previous approvers will get cross-contract calls in this cas
 
 ## Reference-level explanation
 
-The `Token` structure returned by `mt_token` must include an `approvals` field, which is a map of account IDs to approval IDs. Using TypeScript's [Record type](https://www.typescriptlang.org/docs/handbook/utility-types.html#recordkeystype) notation:
+The `Token` structure returned by `mt_token` must include an `approvals` field, which is a map of account IDs to `Approval`. The `amount` field though wrapped in quotes and treated like strings, the number will be stored as an unsigned integer with 128 bits.
+ in approval is  Using TypeScript's [Record type](https://www.typescriptlang.org/docs/handbook/utility-types.html#recordkeystype) notation:
 
 ```diff
- interface Approval = {
-   amount: number
-   approval_id: string
- }
++ type Approval = {
++   amount: string 
++   approval_id: string
++ }
  type Token = {
    id: string,
    owner_id: string,
@@ -263,14 +261,13 @@ Example token data:
 ```json
 {
   "id": "1",
-  "owner_id": "alice.near",
   "approvals": {
     "bob.near": {
-      "amount": 100,
+      "amount": "100",
       "approval_id":1,
     },
     "carol.near": {
-      "amount":2,
+      "amount":"2",
       "approval_id": 2,
     }
   }
@@ -289,7 +286,7 @@ This is a unique number given to each approval that allows well-intentioned mark
 
 Note that while this describes an honest mistake, the possibility of such a bug can also be taken advantage of by malicious parties via [front-running](https://defi.cx/front-running-ethereum/).
 
-To avoid this possibility, the MT contract generates a unique approval ID each time it approves an account. Then when calling `mt_transfer` or `mt_transfer_call`, the approved account passes `approval_id` with this value to make sure the underlying state of the token hasn't changed from what the approved account expects.
+To avoid this possibility, the MT contract generates a unique approval ID each time it approves an account. Then when calling `mt_transfer`, `mt_transfer_call`, `mt_batch_transfer`, or `mt_batch_transfer_call` the approved account passes `approval_id` or `approval_ids` with this value to make sure the underlying state of the token(s) hasn't changed from what the approved account expects.
 
 Keeping with the example above, say the initial approval of the second marketplace generated the following `approvals` data:
 
@@ -328,7 +325,7 @@ The marketplace then tries to call `mt_transfer`, passing outdated information:
 
 ```bash
 # oops!
-near call mt-contract.near mt_transfer '{ "approval_id": 2 }'
+near call mt-contract.near mt_transfer '{"account_id": "someacct", "amount":"50", "approval_id": 2 }'
 ```
 
 
@@ -353,20 +350,23 @@ The MT contract must implement the following methods:
 //   single-block gas limit. See below for more info.
 // * Contract MUST increment approval ID even if re-approving an account
 // * If successfully approved or if had already been approved, and if `msg` is
-//   present, contract MUST call `nft_on_approve` on `account_id`. See
-//   `nft_on_approve` description below for details.
+//   present, contract MUST call `mt_on_approve` on `account_id`. See
+//   `mt_on_approve` description below for details.
 //
 // Arguments:
 // * `token_ids`: the token ids for which to add an approval
 // * `account_id`: the account to add to `approvals`
-// * `amounts`: the corresponding token_id amounts to add to `approvals`
+// * `amounts`: the number of tokens to approve for transfer, wrapped in quotes and treated
+//    like an array of string, although the numbers will be stored as an array of
+//    unsigned integer with 128 bits.  
+
 // * `msg`: optional string to be passed to `mt_on_approve`
 //
 // Returns void, if no `msg` given. Otherwise, returns promise call to
 // `mt_on_approve`, which can resolve with whatever it wants.
 function mt_approve(
-  token_ids: Array<TokenId>,
-  amounts:Array<number>,
+  token_ids: [string],
+  amounts: [string],
   account_id: string,
   msg: string|null,
 ): void|Promise<any> {}
@@ -384,7 +384,7 @@ function mt_approve(
 // * `token_ids`: the token for which to revoke approvals
 // * `account_id`: the account to remove from `approvals`
 function mt_revoke(
-  token_ids: Array<string>,
+  token_ids: [string],
   account_id: string
 ) {}
 
@@ -399,7 +399,7 @@ function mt_revoke(
 //
 // Arguments:
 // * `token_ids`: the token ids with approvals to revoke
-function mt_revoke_all(token_ids: Array<string>) {}
+function mt_revoke_all(token_ids: [string]) {}
 
 /****************/
 /* VIEW METHODS */
@@ -408,21 +408,30 @@ function mt_revoke_all(token_ids: Array<string>) {}
 // Check if tokens are approved for transfer by a given account, optionally
 // checking an approval_id
 //
+// Requirements:
+// * Contract MUST panic if `approval_ids` is not null and the length of
+//   `approval_ids` is not equal to `token_ids`
+//
 // Arguments:
 // * `token_ids`: the tokens for which to check an approval
 // * `approved_account_id`: the account to check the existence of in `approvals`
-// * `approval_id`: an optional approval ID to check against current approval ID for given account
-// * `amounts`: specify the positionally corresponding amount for the token_id that at least must be approved  
+// * `approval_ids`: an optional array of approval IDs to check against 
+//    current approval IDs for given account and `token_ids`.
+// * `amounts`: specify the positionally corresponding amount for the `token_id` 
+//    that at least must be approved. The number of tokens to approve for transfer, 
+//    wrapped in quotes and treated like an array of string, although the numbers will be 
+//    stored as an array of unsigned integer with 128 bits.  
 //
 // Returns:
-// if `approval_id` given, `true` if `approved_account_id` is approved with given `approval_id` and has at least the amount specified approved 
-// otherwise, `true` if `approved_account_id` is in list of approved accounts and has at least the amount specified approved
+// if `approval_id` given, `true` if `approved_account_id` is approved with given `approval_id` 
+// and has at least the amount specified approved  otherwise, `true` if `approved_account_id` 
+// is in list of approved accounts and has at least the amount specified approved
 // finally it returns false for all other states
 function mt_is_approved(
   token_ids: [string],
   approved_account_id: string,
-  amounts: [number],
-  approval_id: number|null
+  amounts: [string],
+  approval_ids: number[]|null
 ): boolean {}
 ```
 
@@ -457,22 +466,25 @@ If a contract that gets approved to transfer MTs wants to, it can implement `mt_
 // Arguments:
 // * `token_ids`: the token_ids to which this contract has been granted approval
 // * `owner_id`: the owner of the token
-// * `amounts`: the amounts  to which this contract has been granted approval
+// * `amounts`: the ositionally corresponding amount for the token_id 
+//    that at must be approved. The number of tokens to approve for transfer, 
+//    wrapped in quotes and treated like an array of string, although the numbers will be 
+//    stored as an array of unsigned integer with 128 bits.  
 // * `approval_id`: the approval ID stored by NFT contract for this approval.
-//   Expected to be a number within the 2^53 limit representable by JSON.
+//    Expected to be a number within the 2^53 limit representable by JSON.
 // * `msg`: specifies information needed by the approved contract in order to
 //    handle the approval. Can indicate both a function to call and the
 //    parameters to pass to that function.
 function mt_on_approve(
   token_ids: [TokenId],
-  amounts: [number],
+  amounts: [string],
   owner_id: string,
-  approval_id: number,
+  approval_ids: [number],
   msg: string,
 ) {}
 ```
 
-Note that the MT contract will fire-and-forget this call, ignoring any return values or errors generated. This means that even if the approved account does not have a contract or does not implement `mt_on_approve`, the approval will still work correctly from the point of view of the NFT contract.
+Note that the MT contract will fire-and-forget this call, ignoring any return values or errors generated. This means that even if the approved account does not have a contract or does not implement `mt_on_approve`, the approval will still work correctly from the point of view of the MT contract.
 
 Further note that there is no parallel `mt_on_revoke` when revoking either a single approval or when revoking all. This is partially because scheduling many `mt_on_revoke` calls when revoking all approvals could incur prohibitive [gas fees](https://docs.near.org/docs/concepts/gas). Apps and contracts which cache MT approvals can therefore not rely on having up-to-date information, and should periodically refresh their caches. Since this will be the necessary reality for dealing with `mt_revoke_all`, there is no reason to complicate `mt_revoke` with an `mt_on_revoke` call.
 
