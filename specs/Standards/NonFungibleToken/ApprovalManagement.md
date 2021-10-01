@@ -59,7 +59,7 @@ Alice approves Bob to transfer her token.
 
        near call nft nft_approve \
          '{ "token_id": "1", "account_id": "bob" }' \
-         --accountId alice --amount .000000000000000000000001
+         --accountId alice --depositYocto 1
 
    The response:
 
@@ -107,7 +107,7 @@ Alice approves Market to transfer one of her tokens and passes `msg` so that NFT
          "token_id": "1",
          "account_id": "market",
          "msg": "{\"action\": \"list\", \"price\": \"100\", \"token\": \"nDAI\" }"
-       }' --accountId alice --amount .000000000000000000000001
+       }' --accountId alice --depositYocto 1
 
    At this point, near-cli will hang until the cross-contract call chain fully resolves, which would also be true if Alice used a Market frontend using [near-api-js](https://docs.near.org/docs/develop/front-end/near-api-js). Alice's part is done, though. The rest happens behind the scenes.
 
@@ -143,7 +143,7 @@ Not to worry, though, she checks `nft_is_approved` and sees that she did success
          "token_id": "1",
          "account_id": "bazaar",
          "msg": "{\"action\": \"list\", \"price\": \"100\", \"token\": \"nDAI\" }"
-       }' --accountId alice --amount .000000000000000000000001
+       }' --accountId alice --depositYocto 1
 
 2. `nft` schedules a call to `nft_on_approve` on `market`. Using near-cli notation for easy cross-reference with the above, this would look like:
 
@@ -181,7 +181,7 @@ Using near-cli notation for consistency:
       "receiver_id": "bob",
       "token_id": "1",
       "approval_id": 2,
-    }' --accountId market --amount .000000000000000000000001
+    }' --accountId market --depositYocto 1
 
 ### 5. Approval IDs, edge case
 
@@ -199,7 +199,7 @@ Using near-cli notation for consistency:
       "receiver_id": "bob",
       "token_id": "1",
       "approval_id": 3,
-    }' --accountId bazaar --amount .000000000000000000000001
+    }' --accountId bazaar --depositYocto 1
 
 ### 6. Revoke one
 
@@ -212,7 +212,7 @@ Using near-cli:
     near call nft nft_revoke '{
       "account_id": "market",
       "token_id": "1",
-    }' --accountId alice --amount .000000000000000000000001
+    }' --accountId alice --depositYocto 1
 
 Note that `market` will not get a cross-contract call in this case. The implementors of the Market app should implement [cron](https://en.wikipedia.org/wiki/Cron)-type functionality to intermittently check that Market still has the access they expect.
 
@@ -226,7 +226,7 @@ Using near-cli:
 
     near call nft nft_revoke_all '{
       "token_id": "1",
-    }' --accountId alice --amount .000000000000000000000001
+    }' --accountId alice --depositYocto 1
 
 Again, note that no previous approvers will get cross-contract calls in this case.
 
