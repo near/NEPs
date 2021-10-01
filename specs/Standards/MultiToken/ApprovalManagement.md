@@ -448,11 +448,11 @@ If a contract that gets approved to transfer MTs wants to, it can implement `mt_
 //
 // Arguments:
 // * `token_ids`: the token_ids to which this contract has been granted approval
-// * `owner_id`: the owner of the token
 // * `amounts`: the ositionally corresponding amount for the token_id 
 //    that at must be approved. The number of tokens to approve for transfer, 
 //    wrapped in quotes and treated like an array of string, although the numbers will be 
 //    stored as an array of unsigned integer with 128 bits.  
+// * `owner_id`: the owner of the token
 // * `approval_ids`: the approval ID stored by NFT contract for this approval.
 //    Expected to be a number within the 2^53 limit representable by JSON.
 // * `msg`: specifies information needed by the approved contract in order to
