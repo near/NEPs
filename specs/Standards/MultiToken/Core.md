@@ -230,7 +230,7 @@ function mt_batch_transfer_call(
 
 
 // Returns the tokens with the given `token_ids` or `null` if no such token.
-function mt_tokens(token_ids: string[]) (Token | null)[]
+function mt_token(token_ids: string[]) (Token | null)[]
 
 // Returns the balance of an account for the given `token_id`.  
 // The balance though wrapped in quotes and treated like a string, 
