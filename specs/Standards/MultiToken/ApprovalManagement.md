@@ -396,12 +396,12 @@ function mt_revoke_all(token_ids: [string]) {}
 // Arguments:
 // * `token_ids`: the tokens for which to check an approval
 // * `approved_account_id`: the account to check the existence of in `approvals`
-// * `approval_ids`: an optional array of approval IDs to check against 
+// * `amounts`: specify the positionally corresponding amount for the `token_id`
+//    that at least must be approved. The number of tokens to approve for transfer,
+//    wrapped in quotes and treated like an array of string, although the numbers will be
+//    stored as an array of unsigned integer with 128 bits.
+// * `approval_ids`: an optional array of approval IDs to check against
 //    current approval IDs for given account and `token_ids`.
-// * `amounts`: specify the positionally corresponding amount for the `token_id` 
-//    that at least must be approved. The number of tokens to approve for transfer, 
-//    wrapped in quotes and treated like an array of string, although the numbers will be 
-//    stored as an array of unsigned integer with 128 bits.  
 //
 // Returns:
 // if `approval_ids` is given, `true` if `approved_account_id` is approved with given `approval_id` 
