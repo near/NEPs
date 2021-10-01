@@ -9,7 +9,7 @@ An interface for a multi token's metadata. The goal is to keep the metadata futu
 
 ## Motivation
 
-The primary value of tokens comes from their metadata. While the [core standard](Core.md) provides the minimum interface that can be considered a multi token, most artists, developers, and dApps will want to associate more data with each token, and will want a predictable way to interact with any NFT's metadata.
+The primary value of tokens comes from their metadata. While the [core standard](Core.md) provides the minimum interface that can be considered a multi token, most artists, developers, and dApps will want to associate more data with each token, and will want a predictable way to interact with any MT's metadata.
 
 NEAR's unique [storage staking](https://docs.near.org/docs/concepts/storage-staking) approach makes it feasible to store more data on-chain than other blockchains. This standard leverages this strength for common metadata attributes, and provides a standard way to link to additional offchain data to support rapid community experimentation.
 
@@ -24,7 +24,7 @@ Prior art:
 
 ## Interface
 
-Metadata applies at both the class level (`BaseTokenMetadata`) and the specific instance level (`TokenMetadata`). The relevant metadata for each:
+Metadata applies at both the class level (`MTBaseTokenMetadata`) and the specific instance level (`MTTokenMetadata`). The relevant metadata for each:
 
 ```ts
 
@@ -69,10 +69,10 @@ A new set of functions MUST be supported on the MT contract:
 ```ts
 // Returns the top-level contract level metadtata
 function mt_metadata_contract(): MTContractMetadata {}
-function mt_metadata_token_all(token_ids: TokenId[]): MTAllTokenMetadata[]
-function mt_metadata_token_by_token_id(token_ids: TokenId[]): MTTokenMetadata[]
-function mt_metadata_base_by_token_id(token_ids: TokenId[]): MTBaseMetadata[]
-function mt_metadata_base_by_metadata_id(base_metadata_ids: MTBaseMetadataId[]):MTBaseTokenMetadata
+function mt_metadata_token_all(token_ids: string[]): MTTokenMetadataAll[]
+function mt_metadata_token_by_token_id(token_ids: string[]): MTTokenMetadata[]
+function mt_metadata_base_by_token_id(token_ids: string[]): MTBaseMetadata[]
+function mt_metadata_base_by_metadata_id(base_metadata_ids: string[]): MTBaseTokenMetadata
 
 ```
 
@@ -112,19 +112,19 @@ For `MTTokenMetadata`:
 - `media_hash`: the base64-encoded sha256 hash of content referenced by the `media` field. This is to guard against off-chain tampering.
 - `copies`: The number of tokens with this set of metadata or `media` known to exist at time of minting.
 - `issued_at`: Unix epoch in milliseconds when token was issued or minted (an unsigned 32-bit integer would suffice until the year 2106)
-- `expires_at`: [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) datetime when token expires
-- `starts_at`: [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) datetime when token starts being valid
-- `updated_at`: [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) datetime when token was last updated
+- `expires_at`: Unix epoch in milliseconds when token expires
+- `starts_at`: Unix epoch in milliseconds when token starts being valid
+- `updated_at`: Unix epoch in milliseconds when token was last updated
 - `extra`: anything extra the MT wants to store on-chain. Can be stringified JSON.
 - `reference`: URL to an off-chain JSON file with more info.
 - `reference_hash`: Base64-encoded sha256 hash of JSON from reference field. Required if `reference` is included.
 
-For `MTAllTokenMetadata`:
+For `MTTokenMetadataAll `:
 
-- `base`: The base metadata that corresonds to `MTBaseTokenMetadata` for the token.
+- `base`: The base metadata that corresponds to `MTBaseTokenMetadata` for the token.
 - `token`: The token specific metadata that corresponds to `MTTokenMetadata`.
 
-### No incurred cost for core NFT behavior
+### No incurred cost for core MT behavior
 
 Contracts should be implemented in a way to avoid extra gas fees for serialization & deserialization of metadata for calls to `mt_*` methods other than `mt_metadata*` or `mt_tokens`. See `near-contract-standards` [implementation using `LazyOption`](https://github.com/near/near-sdk-rs/blob/c2771af7fdfe01a4e8414046752ee16fb0d29d39/examples/fungible-token/ft/src/lib.rs#L71) as a reference example.
 
