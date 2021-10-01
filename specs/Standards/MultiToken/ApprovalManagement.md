@@ -13,7 +13,7 @@ A system for allowing a set of users or contracts to transfer specific tokens on
 
 People familiar with [ERC-721] may expect to need an approval management system for basic transfers, where a simple transfer from Alice to Bob requires that Alice first _approve_ Bob to spend one of her tokens, after which Bob can call `transfer_from` to actually transfer the token to himself.
 
-NEAR's [core Multi Token standard](README.md) includes good support for safe atomic transfers without such complexity. It even provides "transfer and call" functionality (`mt_transfer_call`) which allows  specific tokens to be "attached" to a call to a separate contract. For many token workflows, these options may circumvent the need for a full-blown Approval Managament system.
+NEAR's [core Multi Token standard](README.md) includes good support for safe atomic transfers without such complexity. It even provides "transfer and call" functionality (`mt_transfer_call`) which allows  specific tokens to be "attached" to a call to a separate contract. For many token workflows, these options may circumvent the need for a full-blown Approval Management system.
 
 However, some Multi Token developers, marketplaces, dApps, or artists may require greater control. This standard provides a uniform interface allowing token owners to approve other NEAR accounts, whether individuals or contracts, to transfer specific tokens on the owner's behalf.
 
@@ -32,12 +32,12 @@ Let's consider some examples. Our cast of characters & apps:
 * Market: a contract with account `market` which sells tokens from `mt` as well as other token contracts
 * Bazaar: similar to Market, but implemented differently (spoiler alert: has no `mt_on_approve` function!), has account `bazaar`
 
-Alice and Bob are already [registered](../StorageManagement.md) with MT, Market, and Bazaar, and Alice owns a token on the MT contract with ID=`"1"` and a fungible style token with ID =`"2"` and  AMOUNT =`"100"`.
+Alice and Bob are already [registered](../StorageManagement.md) with MT, Market, and Bazaar, and Alice owns a token on the MT contract with ID=`"1"` and a fungible style token with ID =`"2"` and AMOUNT =`"100"`.
 
 Let's examine the technical calls through the following scenarios:
 
 1. [Simple approval](#1-simple-approval): Alice approves Bob to transfer her token.
-2. [Approval with cross-contract call (XCC)](#2-approval-with-cross-contract-call): Alice approves Market to transfer one of her tokens and passes `msg` so that NFT will call `mt_on_approve` on Market's contract.
+2. [Approval with cross-contract call (XCC)](#2-approval-with-cross-contract-call): Alice approves Market to transfer one of her tokens and passes `msg` so that MT will call `mt_on_approve` on Market's contract.
 3. [Approval with XCC, edge case](#3-approval-with-cross-contract-call-edge-case): Alice approves Bazaar and passes `msg` again, but what's this? Bazaar doesn't implement `mt_on_approve`, so Alice sees an error in the transaction result. Not to worry, though, she checks `mt_is_approved` and sees that she did successfully approve Bazaar, despite the error.
 4. [Approval IDs](#4-approval-ids): Bob buys Alice's token via Market.
 5. [Approval IDs, edge case](#5-approval-ids-edge-case): Bob transfers same token back to Alice, Alice re-approves Market & Bazaar. Bazaar has an outdated cache. Bob tries to buy from Bazaar at the old price.
@@ -109,7 +109,7 @@ Alice approves Market to transfer some of her tokens and passes `msg` so that MT
 1. Using near-cli:
 
        near call mt mt_approve '{
-         "token_id": ["1","2"],
+         "token_ids": ["1","2"],
          "amounts": ["1", "100"],
          "account_id": "market",
          "msg": "{\"action\": \"list\", \"price\": [\"100\",\"50\"],\"token\": \"nDAI\" }"
@@ -120,7 +120,7 @@ Alice approves Market to transfer some of her tokens and passes `msg` so that MT
 2. `mt` schedules a call to `mt_on_approve` on `market`. Using near-cli notation for easy cross-reference with the above, this would look like:
 
        near call market mt_on_approve '{
-         "token_id": ["1","2"],
+         "token_ids": ["1","2"],
          "amounts": ["1","100"],
          "owner_id": "alice",
          "approval_ids": ["4","5"],
@@ -176,7 +176,7 @@ Not to worry, though, she checks `mt_is_approved` and sees that she did successf
 
 ### 4. Approval IDs
 
-Bob buys Alice's token via Market. Bob probably does this via Market's frontend, which will probably initiate the transfer via a call to `ft_transfer_call` on the nDAI contract to transfer 100 nDAI to `market`. Like the NFT standard's "transfer and call" function, [Fungible Token](../FungibleToken/Core.md)'s `ft_transfer_call` takes a `msg` which `market` can use to pass along information it will need to pay Alice and actually transfer the MT. The actual transfer of the MT is the only part we care about here.
+Bob buys Alice's token via Market. Bob probably does this via Market's frontend, which will probably initiate the transfer via a call to `ft_transfer_call` on the nDAI contract to transfer 100 nDAI to `market`. Like the MT standard's "transfer and call" function, [Fungible Token](../FungibleToken/Core.md)'s `ft_transfer_call` takes a `msg` which `market` can use to pass along information it will need to pay Alice and actually transfer the MT. The actual transfer of the MT is the only part we care about here.
 
 **High-level explanation**
 
@@ -189,6 +189,7 @@ Using near-cli notation for consistency:
     near call mt mt_transfer '{
       "receiver_id": "bob",
       "token_id": "1",
+      "amount": "1",
       "approval_id": 2,
     }' --accountId market --amount .000000000000000000000001
 
@@ -206,6 +207,7 @@ Using near-cli notation for consistency:
     near call mt mt_transfer '{
       "receiver_id": "bob",
       "token_id": "1",
+      "amount": "1",
       "approval_id": 3,
     }' --accountId bazaar --amount .000000000000000000000001
 
@@ -241,7 +243,7 @@ Again, note that no previous approvers will get cross-contract calls in this cas
 
 ## Reference-level explanation
 
-The `Token` structure returned by `mt_token` must include an `approvals` field, which is a map of account IDs to `Approval`. The `amount` field though wrapped in quotes and treated like strings, the number will be stored as an unsigned integer with 128 bits.
+The `Token` structure returned by `mt_tokens` must include an `approvals` field, which is a map of account IDs to `Approval`. The `amount` field though wrapped in quotes and treated like strings, the number will be stored as an unsigned integer with 128 bits.
  in approval is  Using TypeScript's [Record type](https://www.typescriptlang.org/docs/handbook/utility-types.html#recordkeystype) notation:
 
 ```diff
@@ -346,7 +348,7 @@ The MT contract must implement the following methods:
 // * Contract MAY require caller to attach larger deposit, to cover cost of
 //   storing approver data
 // * Contract MUST panic if called by someone other than token owner
-// * Contract MUST panic if addition would cause `nft_revoke_all` to exceed
+// * Contract MUST panic if addition would cause `mt_revoke_all` to exceed
 //   single-block gas limit. See below for more info.
 // * Contract MUST increment approval ID even if re-approving an account
 // * If successfully approved or if had already been approved, and if `msg` is
@@ -376,7 +378,7 @@ function mt_approve(
 // Requirements
 // * Caller of the method must attach a deposit of 1 yoctoⓃ for security
 //   purposes
-// * If contract requires >1yN deposit on `nft_approve`, contract
+// * If contract requires >1yN deposit on `mt_approve`, contract
 //   MUST refund associated storage deposit when owner revokes approval
 // * Contract MUST panic if called by someone other than token owner
 //
@@ -393,7 +395,7 @@ function mt_revoke(
 // Requirements
 // * Caller of the method must attach a deposit of 1 yoctoⓃ for security
 //   purposes
-// * If contract requires >1yN deposit on `nft_approve`, contract
+// * If contract requires >1yN deposit on `mt_approve`, contract
 //   MUST refund all associated storage deposit when owner revokes approvals
 // * Contract MUST panic if called by someone other than token owner
 //
@@ -423,7 +425,7 @@ function mt_revoke_all(token_ids: [string]) {}
 //    stored as an array of unsigned integer with 128 bits.  
 //
 // Returns:
-// if `approval_id` given, `true` if `approved_account_id` is approved with given `approval_id` 
+// if `approval_ids` is given, `true` if `approved_account_id` is approved with given `approval_id` 
 // and has at least the amount specified approved  otherwise, `true` if `approved_account_id` 
 // is in list of approved accounts and has at least the amount specified approved
 // finally it returns false for all other states
@@ -470,7 +472,7 @@ If a contract that gets approved to transfer MTs wants to, it can implement `mt_
 //    that at must be approved. The number of tokens to approve for transfer, 
 //    wrapped in quotes and treated like an array of string, although the numbers will be 
 //    stored as an array of unsigned integer with 128 bits.  
-// * `approval_id`: the approval ID stored by NFT contract for this approval.
+// * `approval_ids`: the approval ID stored by NFT contract for this approval.
 //    Expected to be a number within the 2^53 limit representable by JSON.
 // * `msg`: specifies information needed by the approved contract in order to
 //    handle the approval. Can indicate both a function to call and the
@@ -490,4 +492,4 @@ Further note that there is no parallel `mt_on_revoke` when revoking either a sin
 
 ### No incurred cost for core MT behavior
 
-MT contracts should be implemented in a way to avoid extra gas fees for serialization & deserialization of `approvals` for calls to `mt_*` methods other than `mt_token`. See `near-contract-standards` [implementation of `ft_metadata` using `LazyOption`](https://github.com/near/near-sdk-rs/blob/c2771af7fdfe01a4e8414046752ee16fb0d29d39/examples/fungible-token/ft/src/lib.rs#L71) as a reference example.
+MT contracts should be implemented in a way to avoid extra gas fees for serialization & deserialization of `approvals` for calls to `mt_*` methods other than `mt_tokens`. See `near-contract-standards` [implementation of `ft_metadata` using `LazyOption`](https://github.com/near/near-sdk-rs/blob/c2771af7fdfe01a4e8414046752ee16fb0d29d39/examples/fungible-token/ft/src/lib.rs#L71) as a reference example.
