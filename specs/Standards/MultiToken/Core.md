@@ -9,14 +9,14 @@ A standard interface for a multi token standard that supports fungible, semi-fun
 ## Motivation
 
 
-In the three years since [ERC-1155] was ratified by the Ethereum Community, Multi Token based contracts have proven themselves valuable assets. Many blockchain projects emulate this standard for representing multiple token assets classes in a single contract. The ability to reduce transaction overhead for marketplaces, video games, daos, and exchanges is appealing to the blockchain ecosystem and simplifies transactions for developers. 
+In the three years since [ERC-1155] was ratified by the Ethereum Community, Multi Token based contracts have proven themselves valuable assets. Many blockchain projects emulate this standard for representing multiple token assets classes in a single contract. The ability to reduce transaction overhead for marketplaces, video games, DAOs, and exchanges is appealing to the blockchain ecosystem and simplifies transactions for developers. 
 
-Having a single contract represent NFTs, FTs,  and tokens that sit inbetween greatly improves efficiency. The standard also introdued the ability to make batch requests with multiple asset classes reducing complexity. This standard allows operations that currently require _many_ transactions to be completed in a single transaction that can transfer not only NFTs and FTs, but any tokens that are a part of same token contract.
+Having a single contract represent NFTs, FTs, and tokens that sit inbetween greatly improves efficiency. The standard also introduced the ability to make batch requests with multiple asset classes reducing complexity. This standard allows operations that currently require _many_ transactions to be completed in a single transaction that can transfer not only NFTs and FTs, but any tokens that are a part of same token contract.
 
-With this standard, we have sought to take advantage of the ability of the NEAR bockchain to scale. It's sharded runtime, and [storage staking] model that decouples [gas] fees from storage demand, enables ultra low transaction fees and greater on chain storage ( see [Metadata]extenson).   
+With this standard, we have sought to take advantage of the ability of the NEAR blockchain to scale. Its sharded runtime, and [storage staking] model that decouples [gas] fees from storage demand, enables ultra low transaction fees and greater on chain storage ( see [Metadata] extension).   
 
-With the aformentioned, it is note worthy to mention that like the [NFT] standard the Multi Token standard, implements `mt_transfer_call`,
-which allows, a user to attach many tokens to a call to a separate contract. Additionally this standard includes an optional [Approval Management] extension. The extension allows marketplaces to trade on behalf of a user, providing additional flexibility for dApps.
+With the aforementioned, it is noteworthy to mention that like the [NFT] standard the Multi Token standard, implements `mt_transfer_call`,
+which allows, a user to attach many tokens to a call to a separate contract. Additionally, this standard includes an optional [Approval Management] extension. The extension allows marketplaces to trade on behalf of a user, providing additional flexibility for dApps.
 
 Prior art:
 
@@ -30,7 +30,7 @@ Prior art:
 **NOTES**:
 - All amounts, balances and allowance are limited by `U128` (max value `2**128 - 1`).
 - Token standard uses JSON for serialization of arguments and results.
-- Amounts in arguments and results have are serialized as Base-10 strings, e.g. `"100"`. This is done to avoid JSON limitation of max integer value of `2**53`.
+- Amounts in arguments and results are serialized as Base-10 strings, e.g. `"100"`. This is done to avoid JSON limitation of max integer value of `2**53`.
 - The contract must track the change in storage when adding to and removing from collections. This is not included in this core multi token standard but instead in the [Storage Standard](../StorageManagement.md). 
 - To prevent the deployed contract from being modified or deleted, it should not have any access keys on its account.
 
@@ -102,12 +102,12 @@ function mt_transfer(
 // * `receiver_id`: the valid NEAR account receiving the token
 // * `token_ids`: the tokens to transfer
 // * `amounts`: the number of tokens to transfer, wrapped in quotes and treated
-//    like an array of  string, although the numbers will be stored as an array of unsigned integer
+//    like an array of strings, although the numbers will be stored as an array of unsigned integer
 //    with 128 bits.
 // * `approval_ids`: expected approval IDs per `token_ids`. If a `token_id` does 
 //    not have a corresponding approval id then the entry in the array must be marked null.
 //    The `approval_ids` are numbers smaller than 2^53, and therefore representable as JSON. 
-//    ApprovalId See Approval Management standard for full explanation.
+//    See Approval Management standard for full explanation.
 // * `memo` (optional): for use cases that may benefit from indexing or
 //    providing information for a transfer
 
@@ -174,7 +174,7 @@ function mt_transfer_call(
 // Returns `true` if the tokens were transferred from the sender's account.
 
 // Transfer tokens and call a method on a receiver contract. A successful
-// workflow will end in a success execution outcome to the callback on the NFT
+// workflow will end in a success execution outcome to the callback on the MT
 // contract at the method `mt_resolve_transfer`.
 //
 // You can think of this as being similar to attaching native NEAR tokens to a
@@ -237,7 +237,7 @@ function mt_tokens(token_ids: string[]) (Token | null)[]
 // the number will be stored as an unsigned integer with 128 bits.
 // Arguments:
 // * `account_id`: the NEAR account that owns the token.
-// * `token_id`: the token to retreive the balance from
+// * `token_id`: the token to retrieve the balance from
 function mt_balance_of(account_id: string, token_id: string): string
 
 // Returns the balances of an account for the given `token_ids`.   
@@ -245,7 +245,7 @@ function mt_balance_of(account_id: string, token_id: string): string
 // the numbers will be stored as an unsigned integer with 128 bits.
 // Arguments:
 // * `account_id`: the NEAR account that owns the tokens.
-// * `token_ids`: the tokens to retreive the balance from
+// * `token_ids`: the tokens to retrieve the balance from
 function mt_batch_balance_of(account_id: string, token_ids: string): string[]
 
 // Returns the token supply with the given `token_id` or `null` if no such token exists.
@@ -267,7 +267,7 @@ The following behavior is required, but contract authors may name this function 
 //
 // The `mt_transfer_call` process:
 //
-// 1. Sender calls `mt_transfer_call` on NFT contract
+// 1. Sender calls `mt_transfer_call` on MT contract
 // 2. MT contract transfers token from sender to receiver
 // 3. MT contract calls `mt_on_transfer` on receiver contract
 // 4+. [receiver contract may make other cross-contract calls]
@@ -289,7 +289,7 @@ The following behavior is required, but contract authors may name this function 
 //   set of original approved accounts in this argument, and restore these
 //   approved accounts in case of revert.
 //
-// Returns total amount spent by the `sender_id`, corresonding to the `token_id`.
+// Returns total amount spent by the `sender_id`, corresponding to the `token_id`.
 // The amounts returned, though wrapped in quotes and treated like strings,
 // the numbers will be stored as an unsigned integer with 128 bits.
 // Example: if sender_id calls `mt_transfer_call({ "amounts": ["100"], token_ids: ["55"], receiver_id: "games" })`,
@@ -323,7 +323,7 @@ Contracts which want to make use of `mt_transfer_call` and `mt_batch_transfer_ca
 // Arguments:
 // * `sender_id`: the sender of `mt_transfer_call`
 // * `previous_owner_ids`: the account that owned the tokens prior to it being
-//   transfered to this contract, which can differ from `sender_id` if using
+//   transferred to this contract, which can differ from `sender_id` if using
 //   Approval Management extension
 // * `token_ids`: the `token_ids` argument given to `mt_transfer_call`
 // * `amounts`: the `token_ids` argument given to `mt_transfer_call`

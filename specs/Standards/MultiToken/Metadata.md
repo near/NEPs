@@ -111,7 +111,7 @@ For `MTTokenMetadata`:
 - `media`: URL to associated media. Preferably to decentralized, content-addressed storage.
 - `media_hash`: the base64-encoded sha256 hash of content referenced by the `media` field. This is to guard against off-chain tampering.
 - `copies`: The number of tokens with this set of metadata or `media` known to exist at time of minting.
-- `issued_at`: [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) datetime when token was issued or minted
+- `issued_at`: Unix epoch in milliseconds when token was issued or minted (an unsigned 32-bit integer would suffice until the year 2106)
 - `expires_at`: [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) datetime when token expires
 - `starts_at`: [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) datetime when token starts being valid
 - `updated_at`: [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) datetime when token was last updated

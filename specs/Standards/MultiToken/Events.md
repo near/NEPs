@@ -62,7 +62,7 @@ interface MtEventLogData {
 // * Contract token_ids and amounts MUST be the same length 
 // * `owner_id`: the account receiving the minted token
 // * `token_ids`: the tokens minted
-// * `amounts`: the number of tokens burned, wrapped in quotes and treated
+// * `amounts`: the number of tokens minted, wrapped in quotes and treated
 //    like a string, although the numbers will be stored as an unsigned integer
 // .  array with 128 bits.
 interface MtMintLog {
@@ -76,7 +76,7 @@ interface MtMintLog {
 // * Contract MUST emit event when minting a token
 // Fields 
 // * Contract token_ids and amounts MUST be the same length 
-// * `owner_id`: the account receiving the minted token
+// * `owner_id`: the account whose token(s) are being burned
 // * `token_ids`: the tokens to burned
 // * `amounts`: the number of tokens burned, wrapped in quotes and treated
 //    like a string, although the numbers will be stored as an unsigned integer
