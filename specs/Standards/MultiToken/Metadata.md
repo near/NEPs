@@ -58,6 +58,7 @@ type MTTokenMetadata = {
   reference: string|null, // URL to an off-chain JSON file with more info.
   reference_hash: string|null // Base64-encoded sha256 hash of JSON from reference field. Required if `reference` is included.
 }
+
 type MTTokenMetadataAll = {
   base: MTBaseTokenMetadata
   token: MTTokenMetadata
