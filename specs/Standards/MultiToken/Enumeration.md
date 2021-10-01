@@ -68,7 +68,7 @@ The contract must implement the following view methods if using metadata extensi
 function mt_tokens_base_metadata_all(
   from_index: string | null,
   limit: number | null
-  ): BaseTokenMetadata[]
+  ): MTBaseTokenMetadata[]
 ```
 
 
