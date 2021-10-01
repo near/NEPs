@@ -104,24 +104,6 @@ interface MtTransferLog {
     amounts: string[]
 }
 
-// Transfer event log. Emitted when a token is transfered.  
-// Requirements
-// * Contract MUST emit event when transferring a token
-// * Contract token_ids and amounts MUST be the same length 
-// Fields 
-// * `sender_id`: the account sending the minted tokens
-// * `receiver_id`: the account receving the minted tokens
-// * `token_ids`: the tokens to transfer 
-// * `amounts`: the number of tokens burned, wrapped in quotes and treated
-//    like a string, although the numbers will be stored as an unsigned integer
-// .  array with 128 bits.
-interface MtTransferLog {
-    sender_id: string,
-    receiver_id: string,
-    token_ids: string[],
-    amounts: string[]
-}
-
 // Approval event log. Emitted when a token's approval has changed.  
 // Requirements
 // * Contract MUST emit event when approval of tokens have changed
