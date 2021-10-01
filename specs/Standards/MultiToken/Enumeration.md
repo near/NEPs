@@ -32,7 +32,8 @@ The contract must implement the following view methods:
 //    representing the starting index of tokens to return
 // * `limit`: the maximum number of tokens to return
 //
-// Returns an array of Token objects, as described above, and an empty array if there are no tokens
+// Returns an array of `Token` objects, as described in the Core standard,
+// and an empty array if there are no tokens
 function mt_tokens(
   from_index: string|null, // default: "0"
   limit: number|null, // default: unlimited (could fail due to gas limit)
@@ -64,7 +65,7 @@ The contract must implement the following view methods if using metadata extensi
 //    representing the starting index of tokens to return
 // * `limit`: the maximum number of tokens to return
 //
-// Returns an array of MTBaseTokenMetadata objects, as described above, and an empty array if there are no tokens
+// Returns an array of `MTBaseTokenMetadata` objects, as described in the Metadata standard, and an empty array if there are no tokens
 function mt_tokens_base_metadata_all(
   from_index: string | null,
   limit: number | null
