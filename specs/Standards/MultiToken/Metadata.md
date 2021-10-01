@@ -36,9 +36,9 @@ type MTContractMetadata = {
 type MTBaseTokenMetadata = {
   name: string, // required, ex. "Silver Swords" or "Metaverse 3"
   id: string, // required a unique identifier for the metadata
-  symbol: string| null, // required, ex. "MOCHI"
+  symbol: string|null, // required, ex. "MOCHI"
   icon: string|null, // Data URL
-  decimals: string | null // number of decimals for the token useful for FT related tokens
+  decimals: string|null // number of decimals for the token useful for FT related tokens
   base_uri: string|null, // Centralized gateway known to have reliable access to decentralized storage assets referenced by `reference` or `media` URLs
   reference: string|null, // URL to a JSON file with more info
   copies: number|null, // number of copies of this set of metadata in existence when token was minted.
