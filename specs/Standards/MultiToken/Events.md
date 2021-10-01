@@ -43,7 +43,7 @@ type MtEvent = "mt_mint" | "mt_burn" | "mt_transfer" | "mt_approval"
 // * `EVENT_JSON`: The standard event prefix required to signal consumers about
 // the type of log data being emitted.
 // * `standard`: name of standard e.g. nep-246 
-// * `version`: e.g. 1.0.0
+// * `version`: e.g. "1.0.0"
 // * `event`: `mt_mint` | `mt_burn` | `mt_transfer` | `mt_approval`
 // * `data`: associate event data
 interface MtEventLogData {
@@ -64,7 +64,7 @@ interface MtEventLogData {
 // * `token_ids`: the tokens minted
 // * `amounts`: the number of tokens minted, wrapped in quotes and treated
 //    like a string, although the numbers will be stored as an unsigned integer
-// .  array with 128 bits.
+//    array with 128 bits.
 interface MtMintLog {
     owner_id: string,
     token_ids: string[],
@@ -77,10 +77,10 @@ interface MtMintLog {
 // Fields 
 // * Contract token_ids and amounts MUST be the same length 
 // * `owner_id`: the account whose token(s) are being burned
-// * `token_ids`: the tokens to burned
+// * `token_ids`: the tokens being burned
 // * `amounts`: the number of tokens burned, wrapped in quotes and treated
 //    like a string, although the numbers will be stored as an unsigned integer
-// .  array with 128 bits.
+//    array with 128 bits.
 interface MtBurnLog {
     owner_id: string,
     token_ids: string[]
@@ -91,12 +91,12 @@ interface MtBurnLog {
 // Requirements
 // * Contract MUST emit event when transferring a token
 // Fields 
-// * `sender_id`: the account sending the minted tokens
-// * `receiver_id`: the account receving the minted tokens
+// * `sender_id`: the account sending the tokens
+// * `receiver_id`: the account receiving the tokens
 // * `token_ids`: the tokens to transfer 
-// * `amounts`: the number of tokens burned, wrapped in quotes and treated
+// * `amounts`: the number of tokens to transfer, wrapped in quotes and treated
 //    like a string, although the numbers will be stored as an unsigned integer
-// .  array with 128 bits.
+//    array with 128 bits.
 interface MtTransferLog {
     sender_id: string,
     receiver_id: string,
@@ -127,15 +127,15 @@ interface MtTransferLog {
 // * Contract MUST emit event when approval of tokens have changed
 // * Contract token_ids and amounts MUST be the same length 
 // Fields 
-// * `account_id`: the account sending the approval 
-// * `approved_id`: the account being approved
+// * `owner_id`: the account who owns the token, sending the approval
+// * `approved_account_id`: the account being approved
 // * `token_ids`: the tokens to transfer 
 // * `amounts`: the number of tokens approved for transfer, wrapped in quotes and treated
 //    like a string, although the numbers will be stored as an unsigned integer
-// .  array with 128 bits.
+//    array with 128 bits.
 interface MtApprovalLog {
     account_id: string,
-    approved_id: string,
+    approved_account_id: string,
     token_ids: string[],
     amounts: string[]
 }
