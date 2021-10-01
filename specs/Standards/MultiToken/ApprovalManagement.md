@@ -52,7 +52,6 @@ Alice approves Bob to transfer her tokens.
 
 1. Alice approves Bob
 2. Alice queries the token to verify
-3. Alice verifies a different way
 
 **Technical calls**
 
@@ -65,33 +64,13 @@ Alice approves Bob to transfer her tokens.
    The response:
 
        ''
-
-2. Alice calls view method `mt_approvals`:
-
-       near view mt mt_approvals \
-         '{ "token_id": ["1", "2"] }'
-
-   The response:
-
-       {
-         "ids": ["1", "2"]
-         "owner_id": "alice.near",
-         "approvals": [{
-           "bob": 4,
-           "amount": 1,
-         },
-         {
-           "bob": 5,
-           "amount": 100,
-         }]
-       }
-
-3. Alice calls view method `mt_is_approved`:
+2. Alice calls view method `mt_is_approved`:
 
        near view mt mt_is_approved \
          '{ "token_ids": ["1", "2"], amounts:["1","100"], "approved_account_id": "bob" }'
 
    The response:
+
        true
 
 ### 3. Approval with cross-contract call
@@ -435,6 +414,8 @@ function mt_is_approved(
   amounts: [string],
   approval_ids: number[]|null
 ): boolean {}
+
+
 ```
 
 ### Why must `mt_approve` panic if `mt_revoke_all` would fail later?
