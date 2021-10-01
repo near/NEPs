@@ -32,7 +32,7 @@ The contract must implement the following view methods:
 //    representing the starting index of tokens to return
 // * `limit`: the maximum number of tokens to return
 //
-// Returns an array of MTToken objects, as described above, and an empty array if there are no tokens
+// Returns an array of Token objects, as described above, and an empty array if there are no tokens
 function mt_tokens(
   from_index: string|null, // default: "0"
   limit: number|null, // default: unlimited (could fail due to gas limit)
