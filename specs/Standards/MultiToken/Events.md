@@ -134,7 +134,7 @@ interface MtTransferLog {
 //    like a string, although the numbers will be stored as an unsigned integer
 //    array with 128 bits.
 interface MtApprovalLog {
-    account_id: string,
+    owner_id: string,
     approved_account_id: string,
     token_ids: string[],
     amounts: string[]
