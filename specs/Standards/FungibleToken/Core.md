@@ -159,7 +159,7 @@ Altogether then, Alice may take two steps, though the first may be a background 
          "receiver_id": "amm",
          "amount": "5000000000000000000000000",
          "msg": "swap:bnna,2"
-       }' --accountId alice --amount .000000000000000000000001
+       }' --accountId alice --depositYocto 1
 
    During the `ft_transfer_call` call, `wnear` does the following:
 

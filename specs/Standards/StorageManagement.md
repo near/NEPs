@@ -143,7 +143,7 @@ Alice issues a transaction to unregister her account and recover the Ⓝ from he
 Alice calls `ft::storage_unregister({"force": true})` with a 1 yoctoⓃ deposit. Using NEAR CLI the command would be:
 
     near call ft storage_unregister '{ "force": true }' \
-      --accountId alice --amount .000000000000000000000001
+      --accountId alice --depositYocto 1
 
 The result:
 
@@ -164,7 +164,7 @@ Bob wants to close his account, but has a non-zero balance of `ft` tokens.
 1. Bob calls `ft::storage_unregister()` with a 1 yoctoⓃ deposit. Using NEAR CLI the command would be:
 
        near call ft storage_unregister '' \
-         --accountId bob --amount .000000000000000000000001
+         --accountId bob --depositYocto 1
 
    It fails with a message like "Cannot gracefully close account with positive remaining balance; bob has balance N"
 
@@ -294,7 +294,7 @@ Assumption: Alice has more deposited than she is using.
 
        near call social storage_withdraw \
          '{"amount": "100100000000000000000000"}' \
-         --accountId alice --amount .000000000000000000000001
+         --accountId alice --depositYocto 1
 
    Result:
 
