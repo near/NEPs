@@ -59,7 +59,7 @@ Alice approves Bob to transfer her token.
 
        near call nft nft_approve \
          '{ "token_id": "1", "account_id": "bob" }' \
-         --accountId alice --amount .000000000000000000000001
+         --accountId alice --depositYocto 1
 
    The response:
 
@@ -107,7 +107,7 @@ Alice approves Market to transfer one of her tokens and passes `msg` so that NFT
          "token_id": "1",
          "account_id": "market",
          "msg": "{\"action\": \"list\", \"price\": \"100\", \"token\": \"nDAI\" }"
-       }' --accountId alice --amount .000000000000000000000001
+       }' --accountId alice --depositYocto 1
 
    At this point, near-cli will hang until the cross-contract call chain fully resolves, which would also be true if Alice used a Market frontend using [near-api-js](https://docs.near.org/docs/develop/front-end/near-api-js). Alice's part is done, though. The rest happens behind the scenes.
 
@@ -143,7 +143,7 @@ Not to worry, though, she checks `nft_is_approved` and sees that she did success
          "token_id": "1",
          "account_id": "bazaar",
          "msg": "{\"action\": \"list\", \"price\": \"100\", \"token\": \"nDAI\" }"
-       }' --accountId alice --amount .000000000000000000000001
+       }' --accountId alice --depositYocto 1
 
 2. `nft` schedules a call to `nft_on_approve` on `market`. Using near-cli notation for easy cross-reference with the above, this would look like:
 
@@ -181,7 +181,7 @@ Using near-cli notation for consistency:
       "receiver_id": "bob",
       "token_id": "1",
       "approval_id": 2,
-    }' --accountId market --amount .000000000000000000000001
+    }' --accountId market --depositYocto 1
 
 ### 5. Approval IDs, edge case
 
@@ -199,7 +199,7 @@ Using near-cli notation for consistency:
       "receiver_id": "bob",
       "token_id": "1",
       "approval_id": 3,
-    }' --accountId bazaar --amount .000000000000000000000001
+    }' --accountId bazaar --depositYocto 1
 
 ### 6. Revoke one
 
@@ -212,7 +212,7 @@ Using near-cli:
     near call nft nft_revoke '{
       "account_id": "market",
       "token_id": "1",
-    }' --accountId alice --amount .000000000000000000000001
+    }' --accountId alice --depositYocto 1
 
 Note that `market` will not get a cross-contract call in this case. The implementors of the Market app should implement [cron](https://en.wikipedia.org/wiki/Cron)-type functionality to intermittently check that Market still has the access they expect.
 
@@ -226,7 +226,7 @@ Using near-cli:
 
     near call nft nft_revoke_all '{
       "token_id": "1",
-    }' --accountId alice --amount .000000000000000000000001
+    }' --accountId alice --depositYocto 1
 
 Again, note that no previous approvers will get cross-contract calls in this case.
 
@@ -328,6 +328,8 @@ The NFT contract must implement the following methods:
 // * Contract MAY require caller to attach larger deposit, to cover cost of
 //   storing approver data
 // * Contract MUST panic if called by someone other than token owner
+// * Contract MUST panic if addition would cause `nft_revoke_all` to exceed
+//   single-block gas limit. See below for more info.
 // * Contract MUST increment approval ID even if re-approving an account
 // * If successfully approved or if had already been approved, and if `msg` is
 //   present, contract MUST call `nft_on_approve` on `account_id`. See
@@ -397,6 +399,24 @@ function nft_is_approved(
   approval_id: number|null
 ): boolean {}
 ```
+
+### Why must `nft_approve` panic if `nft_revoke_all` would fail later?
+
+In the description of `nft_approve` above, it states:
+
+    Contract MUST panic if addition would cause `nft_revoke_all` to exceed
+    single-block gas limit.
+
+What does this mean?
+
+First, it's useful to understand what we mean by "single-block gas limit". This refers to the [hard cap on gas per block at the protocol layer](https://docs.near.org/docs/concepts/gas#thinking-in-gas). This number will increase over time.
+
+Removing data from a contract uses gas, so if an NFT had a large enough number of approvals, `nft_revoke_all` would fail, because calling it would exceed the maximum gas.
+
+Contracts must prevent this by capping the number of approvals for a given token. However, it is up to contract authors to determine a sensible cap for their contract (and the single block gas limit at the time they deploy). Since contract implementations can vary, some implementations will be able to support a larger number of approvals than others, even with the same maximum gas per block.
+
+Contract authors may choose to set a cap of something small and safe like 10 approvals, or they could dynamically calculate whether a new approval would break future calls to `nft_revoke_all`. But every contract MUST ensure that they never break the functionality of `nft_revoke_all`.
+
 
 ### Approved Account Contract Interface
 

@@ -12,7 +12,7 @@ NEAR Protocol has an account names system. Account ID is similar to a username. 
 - maximum length is 64
 - **Account ID** consists of **Account ID parts** separated by `.`
 - **Account ID part** consists of lowercase alphanumeric symbols separated by either `_` or `-`.
-- **Account ID** that is 64 characters long consists of lowercase hex characters is a specific **implicit account ID**.
+- **Account ID** that is 64 characters long and consists of lowercase hex characters is a specific **implicit account ID**.
 
 Account names are similar to a domain names.
 Top level account (TLA) like `near`, `com`, `eth` can only be created by `registrar` account (see next section for more details).
@@ -85,10 +85,13 @@ a..near          // Two dot separators in a row
 $$$              // Non alphanumeric characters are not allowed
 WAT              // Non lowercase characters are not allowed
 me@google.com    // @ is not allowed (it was allowed in the past)
+system           // cannot use the system account, see the section on System account below
 // TOO LONG:
 abcdefghijklmnopqrstuvwxyz.abcdefghijklmnopqrstuvwxyz.abcdefghijklmnopqrstuvwxyz
 ```
 
+## System account
+`system` is a special account that is only used to identify refund receipts. For refund receipts, we set the predecessor_id to be `system` to indicate that it is a refund receipt. Users cannot create or access the `system` account. In fact, this account does not exist as part of the state. 
 
 ## Implicit account IDs
 
@@ -123,8 +126,8 @@ Data for an single account is collocated in one shard. The account data consists
 - Code of the contract
 - Key-value storage of the contract. Stored in a ordered trie
 - [Access Keys](AccessKey.md)
-- [Postponed ActionReceipts](../Runtime/Receipts.md#postponed-actionreceipt)
-- [Received DataReceipts](../Runtime/Receipts.md#received-datareceipt)
+- [Postponed ActionReceipts](../RuntimeSpec/Receipts.md#postponed-actionreceipt)
+- [Received DataReceipts](../RuntimeSpec/Receipts.md#received-datareceipt)
 
 #### Balances
 

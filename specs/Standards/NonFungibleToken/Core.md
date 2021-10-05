@@ -35,7 +35,7 @@ Prior art:
 - All amounts, balances and allowance are limited by `U128` (max value `2**128 - 1`).
 - Token standard uses JSON for serialization of arguments and results.
 - Amounts in arguments and results have are serialized as Base-10 strings, e.g. `"100"`. This is done to avoid JSON limitation of max integer value of `2**53`.
-- The contract must track the change in storage when adding to and removing from collections. This is not included in this core fungible token standard but instead in the [Storage Standard](../Storage.md).
+- The contract must track the change in storage when adding to and removing from collections. This is not included in this core fungible token standard but instead in the [Storage Standard](../StorageManagement.md).
 - To prevent the deployed contract from being modified or deleted, it should not have any access keys on its account.
 
 ### NFT Interface
@@ -95,10 +95,10 @@ function nft_transfer(
 //   purposes
 // * Contract MUST panic if called by someone other than token owner or,
 //   if using Approval Management, one of the approved accounts
-// * The receiving contract must implement `ft_on_transfer` according to the
-//   standard. If it does not, FT contract's `ft_resolve_transfer` MUST deal
+// * The receiving contract must implement `nft_on_transfer` according to the
+//   standard. If it does not, FT contract's `nft_resolve_transfer` MUST deal
 //   with the resulting failed cross-contract call and roll back the transfer.
-// * Contract MUST implement the behavior described in `ft_resolve_transfer`
+// * Contract MUST implement the behavior described in `nft_resolve_transfer`
 // * `approval_id` is for use with Approval Management extension, see
 //   that document for full explanation.
 // * If using Approval Management, contract MUST nullify approved accounts on
@@ -118,7 +118,7 @@ function nft_transfer(
 function nft_transfer_call(
   receiver_id: string,
   token_id: string,
-  approval_id: string|null,
+  approval_id: number|null,
   memo: string|null,
   msg: string,
 ): Promise {}
@@ -139,7 +139,7 @@ The following behavior is required, but contract authors may name this function 
 //
 // The `nft_transfer_call` process:
 //
-// 1. Sender calls `nft_transfer_call` on FT contract
+// 1. Sender calls `nft_transfer_call` on NFT contract
 // 2. NFT contract transfers token from sender to receiver
 // 3. NFT contract calls `nft_on_transfer` on receiver contract
 // 4+. [receiver contract may make other cross-contract calls]
@@ -153,9 +153,9 @@ The following behavior is required, but contract authors may name this function 
 //   `sender_id`
 //
 // Arguments:
-// * `sender_id`: the sender of `ft_transfer_call`
-// * `receiver_id`: the `receiver_id` argument given to `ft_transfer_call`
-// * `token_id`: the `token_id` argument given to `ft_transfer_call`
+// * `sender_id`: the sender of `nft_transfer_call`
+// * `receiver_id`: the `receiver_id` argument given to `nft_transfer_call`
+// * `token_id`: the `token_id` argument given to `nft_transfer_call`
 // * `approved_token_ids`: if using Approval Management, contract MUST provide
 //   set of original approved accounts in this argument, and restore these
 //   approved accounts in case of revert.
@@ -197,6 +197,10 @@ function nft_on_transfer(
   msg: string,
 ): Promise<boolean>;
 ```
+
+## Errata
+
+* **2021-07-16**: updated `nft_transfer_call` argument `approval_id` to be type `number|null` instead of `string|null`. As stated, approval IDs are not expected to exceed the JSON limit of 2^53.
 
   [ERC-721]: https://eips.ethereum.org/EIPS/eip-721
   [storage staking]: https://docs.near.org/docs/concepts/storage-staking

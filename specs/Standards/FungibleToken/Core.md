@@ -4,7 +4,8 @@ Version `1.0.0`
 
 ## Summary
 
-A standard interface for fungible tokens that allows for a normal transfer as well as a transfer and method call in a single transaction. The [storage standard](../StorageManagement.md) addresses the needs (and security) of storage staking. The [fungible token metadata standard](FungibleTokenMetadata.md) provides the fields needed for ergonomics across dApps and marketplaces.
+A standard interface for fungible tokens that allows for a normal transfer as well as a transfer and method call in a single transaction. The [storage standard](../StorageManagement.md) addresses the needs (and security) of storage staking.
+The [fungible token metadata standard](Metadata.md) provides the fields needed for ergonomics across dApps and marketplaces.
 
 ## Motivation
 
@@ -47,9 +48,9 @@ There are a few concepts in the scenarios above:
 - **Transfer and call**: an action that moves some amount from one account to a contract account where the receiver calls a method.
 - **Storage amount**: the amount of storage used for an account to be "registered" in the fungible token. This amount is denominated in Ⓝ, not bytes, and represents the [storage staked](https://docs.near.org/docs/concepts/storage-staking).
 
-Note that precision (the number of decimal places supported by a given token) is not part of this core standard, since it's not required to perform actions. The minimum value is always 1 token. See the [Fungible Token Metadata Standard](FungibleTokenMetadata.md) to learn how to support precision/decimals in a standardized way.
+Note that precision (the number of decimal places supported by a given token) is not part of this core standard, since it's not required to perform actions. The minimum value is always 1 token. See the [Fungible Token Metadata Standard](Metadata.md) to learn how to support precision/decimals in a standardized way.
 
-Given that multiple users will use a Fungible Token contract and the their activity will result in an increased [storage staking](https://docs.near.org/docs/concepts/storage-staking) burden for the contract's account, this standard is designed to interoperate nicely with [the Account Storage standard](../Storage.md) for storage deposits and refunds.
+Given that multiple users will use a Fungible Token contract, and their activity will result in an increased [storage staking](https://docs.near.org/docs/concepts/storage-staking) burden for the contract's account, this standard is designed to interoperate nicely with [the Account Storage standard](../StorageManagement.md) for storage deposits and refunds.
 
 ### Example scenarios
 
@@ -128,7 +129,7 @@ Alice wants to swap 5 wrapped NEAR (wNEAR) for BNNA tokens at current market rat
 - Alice's account is `alice`.
 - The AMM's contract is `amm`.
 - BNNA's contract is `bnna`.
-- The precision ("decimals" in the metadata standard) on wBTC contract is `10^24`.
+- The precision ("decimals" in the metadata standard) on wNEAR contract is `10^24`.
 - The 5 tokens is `5 * 10^24` or as a number is `5000000000000000000000000`.
 
 **High-level explanation**
@@ -158,7 +159,7 @@ Altogether then, Alice may take two steps, though the first may be a background 
          "receiver_id": "amm",
          "amount": "5000000000000000000000000",
          "msg": "swap:bnna,2"
-       }' --accountId alice --amount .000000000000000000000001
+       }' --accountId alice --depositYocto 1
 
    During the `ft_transfer_call` call, `wnear` does the following:
 
@@ -175,7 +176,7 @@ Altogether then, Alice may take two steps, though the first may be a background 
 - All amounts, balances and allowance are limited by `U128` (max value `2**128 - 1`).
 - Token standard uses JSON for serialization of arguments and results.
 - Amounts in arguments and results have are serialized as Base-10 strings, e.g. `"100"`. This is done to avoid JSON limitation of max integer value of `2**53`.
-- The contract must track the change in storage when adding to and removing from collections. This is not included in this core fungible token standard but instead in the [Storage Standard](../Storage.md).
+- The contract must track the change in storage when adding to and removing from collections. This is not included in this core fungible token standard but instead in the [Storage Standard](../StorageManagement.md).
 - To prevent the deployed contract from being modified or deleted, it should not have any access keys on its account.
 
 **Interface**:

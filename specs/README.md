@@ -8,7 +8,8 @@ For the overview of the NEAR Protocol, read the following documents in numerical
 3. [Architecture](Architecture.md)
 4. [Chain specification](ChainSpec/README.md)
 5. [Runtime specification](RuntimeSpec/README.md)
-6. [Economics](Economics/README.md)
+6. [Network specification](NetworkSpec/NetworkSpec.md)  
+7. [Economics](Economics/README.md)
 
 ## Standards
 

@@ -1,6 +1,6 @@
 # Non-Fungible Token Metadata ([NEP-177](https://github.com/near/NEPs/discussions/177))
 
-Version `1.0.0`
+Version `2.0.0`
 
 ## Summary
 
@@ -40,10 +40,10 @@ type TokenMetadata = {
   media: string|null, // URL to associated media, preferably to decentralized, content-addressed storage
   media_hash: string|null, // Base64-encoded sha256 hash of content referenced by the `media` field. Required if `media` is included.
   copies: number|null, // number of copies of this set of metadata in existence when token was minted.
-  issued_at: string|null, // When token was issued or minted, Unix epoch in milliseconds
-  expires_at: string|null, // When token expires, Unix epoch in milliseconds
-  starts_at: string|null, // When token starts being valid, Unix epoch in milliseconds
-  updated_at: string|null, // When token was last updated, Unix epoch in milliseconds
+  issued_at: number|null, // When token was issued or minted, Unix epoch in milliseconds
+  expires_at: number|null, // When token expires, Unix epoch in milliseconds
+  starts_at: number|null, // When token starts being valid, Unix epoch in milliseconds
+  updated_at: number|null, // When token was last updated, Unix epoch in milliseconds
   extra: string|null, // anything extra the NFT wants to store on-chain. Can be stringified JSON.
   reference: string|null, // URL to an off-chain JSON file with more info.
   reference_hash: string|null // Base64-encoded sha256 hash of JSON from reference field. Required if `reference` is included.
@@ -88,10 +88,10 @@ For `TokenMetadata`:
 - `media`: URL to associated media. Preferably to decentralized, content-addressed storage.
 - `media_hash`: the base64-encoded sha256 hash of content referenced by the `media` field. This is to guard against off-chain tampering.
 - `copies`: The number of tokens with this set of metadata or `media` known to exist at time of minting.
-- `issued_at`: [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) datetime when token was issued or minted
-- `expires_at`: [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) datetime when token expires
-- `starts_at`: [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) datetime when token starts being valid
-- `updated_at`: [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) datetime when token was last updated
+- `issued_at`: Unix epoch in milliseconds when token was issued or minted (an unsigned 32-bit integer would suffice until the year 2106)
+- `expires_at`: Unix epoch in milliseconds when token expires
+- `starts_at`: Unix epoch in milliseconds when token starts being valid
+- `updated_at`: Unix epoch in milliseconds when token was last updated
 - `extra`: anything extra the NFT wants to store on-chain. Can be stringified JSON.
 - `reference`: URL to an off-chain JSON file with more info.
 - `reference_hash`: Base64-encoded sha256 hash of JSON from reference field. Required if `reference` is included.
@@ -110,3 +110,13 @@ Contracts should be implemented in a way to avoid extra gas fees for serializati
 
 - Detailed conventions that may be enforced for versions.
 - A fleshed out schema for what the `reference` object should contain.
+
+## Errata
+
+The first version (`1.0.0`) had confusing language regarding the fields:
+- `issued_at`
+- `expires_at`
+- `starts_at`
+- `updated_at`
+
+It gave those fields the type `string|null` but it was unclear whether it should be a Unix epoch in milliseconds or [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html). Upon having to revisit this, it was determined to be the most efficient to use epoch milliseconds as it would reduce the computation on the smart contract and can be derived trivially from the block timestamp.
