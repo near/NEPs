@@ -73,7 +73,7 @@ As for calculations, the remaining gas at the end of the transaction can be floo
 
 For example, if there are three ratios, `a`, `b`, `c`:
 ```
-v = remaining_gas / (a + b + c)
+v = remaining_gas.div_floor(a + b + c)
 a_gas += a * v
 b_gas += b * v
 c_gas += c * v
