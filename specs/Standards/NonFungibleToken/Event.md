@@ -8,7 +8,7 @@ Standard interfaces for NFT contract actions.
 
 ## Motivation
 
-Nft driven apps such as marketplaces regularly perform many
+NFT-driven apps such as marketplaces regularly perform many
 of the same acions such as `minting`, `burning` and `transfering`.
 Each app have their own way of performing these actions and it
 is difficult to consistently capture these events.
