@@ -18,7 +18,7 @@ For example, it's common in NFT marketplaces to have
 different methods of transfer a single token vs many 
 tokens. Other applications like wallets, will have
 a difficult time tracking consistently this information for many
-markets. This makes interactive with many nft driven apps 
+markets. This makes interactive with many NFT-driven apps 
 infeasible.
 
 Due to discussions here 
