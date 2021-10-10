@@ -23,7 +23,7 @@ infeasible.
 
 Due to discussions here 
 https://github.com/near/NEPs/issues/254,
-a standard way to capture these events are needed.
+a standard way to capture these events is needed.
 
 ## Interface
 
