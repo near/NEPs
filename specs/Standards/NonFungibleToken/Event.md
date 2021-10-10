@@ -28,7 +28,7 @@ a standard way to capture these events is needed.
 ## Interface
 
 Many apps may use different mechanisms to perform their batching
-requirements. This interface standardises this process by capturing
+requirements. This interface standardizes this process by capturing
 events of these activities through logs.
 
 ```ts
