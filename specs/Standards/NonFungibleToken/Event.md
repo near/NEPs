@@ -9,7 +9,7 @@ Standard interfaces for NFT contract actions.
 ## Motivation
 
 NFT-driven apps such as marketplaces regularly perform many
-of the same acions such as `minting`, `burning` and `transfering`.
+of the same actions such as `minting`, `burning` and `transferring`.
 Each app have their own way of performing these actions and it
 is difficult to consistently capture these events.
 This extension addresses that.
