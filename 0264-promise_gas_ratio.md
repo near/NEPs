@@ -81,6 +81,28 @@ c_gas += c * v
 
 <!-- TODO add more info on specific changes to nearcore when necessary/scoped -->
 
+### SDK changes
+
+This protocol change will allow cross-contract calls to provide a fixed amount of gas and/or adjust the ratio of unused gas to use. If neither is provided, it will default to using a ratio of 1 for each and no static amount of gas. If no function modifies this ratio, the runtime will split the unused gas evenly among all function calls.
+
+Currently, the API for a cross contract call looks like:
+```rust
+let contract_account_id: AccountId = todo!();
+ext::some_method(/* parameters */, contract_account_id, 0 /* deposit amount */, 5_000_000_000_000 /* static amount of gas to attach */)
+```
+
+When the intended API should not require thinking about how much gas to attach by default, the API will look something like what's shown in [this PR](https://github.com/near/near-sdk-rs/pull/523), which can look like the following:
+
+```rust
+ext::some_method(/* parameters */, contract_account_id)
+      // Optional configuration
+      .with_amount(1 /* default deposit of 0 */)
+      .with_static_gas(5_000_000_000_000 /* default of 0 */)
+      .with_unused_gas_ratio(2 /* default 1 */)
+```
+
+At a basic level, a developer has only to include the parameters for the function call and specify the account id of the contract being called. Currently, only the amount can be optional because there is no way to set a reasonable default for the amount of gas to use for each function call.
+
 # Drawbacks
 [drawbacks]: #drawbacks
 
