@@ -85,7 +85,7 @@ c_gas += c * v
 
 This protocol change will allow cross-contract calls to provide a fixed amount of gas and/or adjust the ratio of unused gas to use. If neither is provided, it will default to using a ratio of 1 for each and no static amount of gas. If no function modifies this ratio, the runtime will split the unused gas evenly among all function calls.
 
-Currently, the API for a cross contract call looks like:
+Currently, the API for a cross-contract call looks like:
 ```rust
 let contract_account_id: AccountId = todo!();
 ext::some_method(/* parameters */, contract_account_id, 0 /* deposit amount */, 5_000_000_000_000 /* static amount of gas to attach */)
