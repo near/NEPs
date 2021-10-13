@@ -56,7 +56,7 @@ interface EventLogData {
 
 // An event log to capture token minting
 // Arguments
-// * `account_id`: "account.near"
+// * `owner_id`: "account.near"
 // * `token_id`: "1"
 interface NftMintLog {
     owner_id:string,
