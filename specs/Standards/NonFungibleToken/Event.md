@@ -88,7 +88,7 @@ interface NftTransferLog {
 
 Note that the example events covered above cover two different kinds of events:
 1. Events that are not specified in the NFT Standard (`nft_mint`, `nft_burn`)
-2. An event that is covered in the [NFT Core Standard](https://nomicon.io/Standards/NonFungibleToken/Core.html#nft-interface).
+2. An event that is covered in the [NFT Core Standard](https://nomicon.io/Standards/NonFungibleToken/Core.html#nft-interface). (`nft_transfer`)
 
  This event standard also applies beyond the three events highlighted here, where future events follow the same convention of as the second type. For instance, if an NFT contract uses the [approval management standard](https://nomicon.io/Standards/NonFungibleToken/ApprovalManagement.html), it may emit an event for `nft_approve` if that's deemed as important by the developer community.
  
