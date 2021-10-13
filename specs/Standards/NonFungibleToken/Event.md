@@ -47,7 +47,7 @@ interface EventLogData {
     standard:string,
     version:string,
     event:string,
-    data: NftMintLog[]|NftTransferLog[]|NftBurnLog
+    data: NftMintLog[]|NftTransferLog[]|NftBurnLog[]
 }
 
 // An event log to capture token minting
