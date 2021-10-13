@@ -58,7 +58,7 @@ interface EventLogData {
 // * `memo`: optional message
 interface NftMintLog {
     owner_id:string,
-    token_id:string,
+    token_ids:string[],
     memo?:string
 }
 
@@ -82,7 +82,7 @@ interface NftBurnLog {
 interface NftTransferLog {
     sender_id:string,
     receiver_id:string,
-    token_id:string,
+    token_ids:string[],
     memo?:string
 }
 ```
