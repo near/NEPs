@@ -48,7 +48,6 @@ interface EventLogData {
     standard:string,
     version:string,
     event:string,
-    memo?:string,
     data: NftMintLog[]|NftTransferLog[]|NftBurnLog[]
 }
 
