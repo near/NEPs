@@ -69,6 +69,7 @@ interface NftMintLog {
 // * `memo`: optional message
 interface NftBurnLog {
     owner_id:string,
+    delegatee_id:string,
     token_ids:string[],
     memo?:string
 }
@@ -80,6 +81,7 @@ interface NftBurnLog {
 // * `token_id`: "12345abc"
 // * `memo`: optional message
 interface NftTransferLog {
+    delegatee_id:string,
     sender_id:string,
     receiver_id:string,
     token_ids:string[],
