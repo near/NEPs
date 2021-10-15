@@ -42,7 +42,6 @@ interface EventJsonLog {
 // * `standard`: name of standard e.g. nep171
 // * `version`: e.g. 1.0.0
 // * `event`: `nft_mint` | `nft_burn` | `nft_transfer`
-// * `memo`: optional message
 // * `data`: associate event data
 interface EventLogData {
     standard:string,
@@ -54,7 +53,7 @@ interface EventLogData {
 // An event log to capture token minting
 // Arguments
 // * `owner_id`: "account.near"
-// * `token_id`: "1"
+// * `token_ids`: ["1", "abc"]
 // * `memo`: optional message
 interface NftMintLog {
     owner_id:string,
@@ -80,7 +79,7 @@ interface NftBurnLog {
 // * `delegatee_id`: approved account to burn
 // * `sender_id`: "account.near"
 // * `receiver_id`: "receiver.near"
-// * `token_id`: "12345abc"
+// * `token_ids`: ["1", "12345abc"]
 // * `memo`: optional message
 interface NftTransferLog {
     delegatee_id:string,
