@@ -64,12 +64,12 @@ interface NftMintLog {
 // An event log to capture token burning
 // Arguments
 // * `owner_id`: owner of tokens to burn
-// * `authorised_id`: approved account to burn
+// * `authorised_id`: approved account to burn, if applicable
 // * `token_ids`: ["1","2"]
 // * `memo`: optional message
 interface NftBurnLog {
     owner_id:string,
-    authorised_id:string,
+    authorised_id?:string,
     token_ids:string[],
     memo?:string
 }
