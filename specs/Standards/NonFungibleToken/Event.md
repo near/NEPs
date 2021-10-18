@@ -64,25 +64,25 @@ interface NftMintLog {
 // An event log to capture token burning
 // Arguments
 // * `owner_id`: owner of tokens to burn
-// * `delegatee_id`: approved account to burn
+// * `authorised_id`: approved account to burn
 // * `token_ids`: ["1","2"]
 // * `memo`: optional message
 interface NftBurnLog {
     owner_id:string,
-    delegatee_id:string,
+    authorised_id:string,
     token_ids:string[],
     memo?:string
 }
 
 // An event log to capture token transfer
 // Arguments
-// * `delegatee_id`: approved account to burn
+// * `authorised_id`: approved account to transfer
 // * `sender_id`: "account.near"
 // * `receiver_id`: "receiver.near"
 // * `token_ids`: ["1", "12345abc"]
 // * `memo`: optional message
 interface NftTransferLog {
-    delegatee_id:string,
+    authorised_id:string,
     sender_id:string,
     receiver_id:string,
     token_ids:string[],
