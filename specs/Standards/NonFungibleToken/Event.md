@@ -77,14 +77,14 @@ interface NftBurnLog {
 // An event log to capture token transfer
 // Arguments
 // * `authorised_id`: approved account to transfer
-// * `sender_id`: "account.near"
-// * `receiver_id`: "receiver.near"
+// * `old_owner_id`: "owner.near"
+// * `new_owner_id`: "receiver.near"
 // * `token_ids`: ["1", "12345abc"]
 // * `memo`: optional message
 interface NftTransferLog {
     authorised_id?:string,
-    sender_id:string,
-    receiver_id:string,
+    old_owner_id:string,
+    new_owner_id:string,
     token_ids:string[],
     memo?:string
 }
