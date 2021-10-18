@@ -82,7 +82,7 @@ interface NftBurnLog {
 // * `token_ids`: ["1", "12345abc"]
 // * `memo`: optional message
 interface NftTransferLog {
-    authorised_id:string,
+    authorised_id?:string,
     sender_id:string,
     receiver_id:string,
     token_ids:string[],
