@@ -30,6 +30,13 @@ It captures these actions through logs.
 ```ts
 // Interface to capture an event
 // and return formatted event string.
+// It should be a single line.
+// Multiline strings are not valid.
+// E.g.
+// `EVENT_JSON ...` is valid
+// `EVENT_JSON {
+//  ...
+// }` is not valid
 interface EventJsonLog {
     // Takes `EventLogData` and returns
     // `EVENT_JSON: <EVENT_LOG_DATA>`
