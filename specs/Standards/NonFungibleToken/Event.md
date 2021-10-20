@@ -21,48 +21,84 @@ If not, tracking state across many NFT-driven apps become infeasible.
 We need a standard way to capture events.
 This was discussed here https://github.com/near/NEPs/issues/254.
 
-## Interface
+## Events
 
 Many apps use different interfaces that represent the same action.
-This interface standardizes that process.
-It captures these actions through logs.
+This interface standardizes that process by introducing event logs.
+There is no Event NEP yet, so this standard paves the road to that.
+
+Events use standard logs capability of NEAR and defined as a convention.
+Events are log entries that start with `EVENT_JSON:` prefix followed by a single valid JSON document of the following interface:
 
 ```ts
-// Interface to capture an event
-// and return formatted event string.
-interface EventJsonLog {
-    // Takes `EventLogData` and returns single line string
-    // e.g. `EVENT_JSON: <EVENT_LOG_DATA>`
-    // Multiline strings are not valid e.g.
-    // `EVENT_JSON: {
-    //  ...
-    // }`
-    (e:EventLogData):string
-}
-
 // Interface to capture data 
 // about an event
 // Arguments
 // * `standard`: name of standard e.g. nep171
 // * `version`: e.g. 1.0.0
-// * `event`: `nft_mint` | `nft_burn` | `nft_transfer`
+// * `event`: string
 // * `data`: associate event data
 interface EventLogData {
-    standard:string,
-    version:string,
-    event:string,
-    data: NftMintLog[]|NftTransferLog[]|NftBurnLog[]
+    standard: string,
+    version: string,
+    event: string,
+    data?: unknown,
 }
+```
 
+#### Valid event logs:
+
+```js
+EVENT_JSON:{"standard": "nepXXX", "version": "1.0.0", "event": "xyz_is_triggered"}
+```
+
+```js
+EVENT_JSON:{
+  "standard": "nepXXX",
+  "version": "1.0.0",
+  "event": "xyz_is_triggered"
+}
+```
+
+```js
+EVENT_JSON:{"standard": "nepXXX", "version": "1.0.0", "event": "xyz_is_triggered", "data": {"triggered_by": "foundation.near"}}
+```
+
+#### Invalid event logs:
+
+* Two events in a single log entry (instead, call `log` for each individual event)
+```
+EVENT_JSON:{"standard": "nepXXX", "version": "1.0.0", "event": "xyz_is_triggered"}
+EVENT_JSON:{"standard": "nepXXX", "version": "1.0.0", "event": "xyz_is_triggered"}
+```
+* Invalid JSON data
+```
+EVENT_JSON:invalid json
+```
+
+## Interface
+
+Non-Fungible Token Events MUST have `standard` set to `"nep171"`, standard version set to `"1.0.0"`, `event` value is one of `nft_mint`, `nft_burn`, `nft_transfer`, and `data` must be of one of the following relavant types: `NftMintLog[] | NftTransferLog[] | NftBurnLog[]`:
+
+```ts
+interface EventLogData {
+    standard: "nep171",
+    version: "1.0.0",
+    event: "nft_mint" | "nft_burn" | "nft_transfer",
+    data: NftMintLog[] | NftTransferLog[] | NftBurnLog[],
+}
+```
+
+```ts
 // An event log to capture token minting
 // Arguments
 // * `owner_id`: "account.near"
 // * `token_ids`: ["1", "abc"]
 // * `memo`: optional message
 interface NftMintLog {
-    owner_id:string,
-    token_ids:string[],
-    memo?:string
+    owner_id: string,
+    token_ids: string[],
+    memo?: string
 }
 
 // An event log to capture token burning
@@ -72,10 +108,10 @@ interface NftMintLog {
 // * `token_ids`: ["1","2"]
 // * `memo`: optional message
 interface NftBurnLog {
-    owner_id:string,
-    authorised_id?:string,
-    token_ids:string[],
-    memo?:string
+    owner_id: string,
+    authorised_id?: string,
+    token_ids: string[],
+    memo?: string
 }
 
 // An event log to capture token transfer
@@ -86,11 +122,64 @@ interface NftBurnLog {
 // * `token_ids`: ["1", "12345abc"]
 // * `memo`: optional message
 interface NftTransferLog {
-    authorised_id?:string,
-    old_owner_id:string,
-    new_owner_id:string,
-    token_ids:string[],
-    memo?:string
+    authorised_id?: string,
+    old_owner_id: string,
+    new_owner_id: string,
+    token_ids: string[],
+    memo?: string
+}
+```
+
+## Examples
+
+Single owner batch minting (pretty-formatted for readability purposes):
+
+```js
+EVENT_JSON:{
+  "standard": "nep171",
+  "version": "1.0.0",
+  "event": "nft_mint",
+  "data": [
+    {"owner_id": "foundation.near", "token_ids": ["aurora", "proximitylabs"]}
+  ]
+}
+```
+
+Different owners batch minting:
+
+```js
+EVENT_JSON:{
+  "standard": "nep171",
+  "version": "1.0.0",
+  "event": "nft_mint",
+  "data": [
+    {"owner_id": "foundation.near", "token_ids": ["aurora", "proximitylabs"]},
+    {"owner_id": "user1.near", "token_ids": ["meme"]}
+  ]
+}
+```
+
+Different events (separate log entries):
+
+```js
+EVENT_JSON:{
+  "standard": "nep171",
+  "version": "1.0.0",
+  "event": "nft_burn",
+  "data": [
+    {"owner_id": "foundation.near", "token_ids": ["aurora", "proximitylabs"]},
+  ]
+}
+```
+
+```js
+EVENT_JSON:{
+  "standard": "nep171",
+  "version": "1.0.0",
+  "event": "nft_transfer",
+  "data": [
+    {"old_owner_id": "user1.near", "new_owner_id": "user2.near", "token_ids": ["meme"], "memo": "have fun!"}
+  ]
 }
 ```
 
