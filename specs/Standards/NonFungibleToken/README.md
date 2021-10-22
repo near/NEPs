@@ -5,3 +5,4 @@
 - [Non-Fungible Token Approval Management](ApprovalManagement.md)
 - [Non-Fungible Token Enumeration](Enumeration.md)
 - [Non-Fungible Token Royalty Payout](Payout.md)
+- [Non-Fungible Token Events](Event.md)
