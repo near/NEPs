@@ -59,6 +59,7 @@
       - [Approval Management](Standards/NonFungibleToken/ApprovalManagement.md)
       - [Enumeration](Standards/NonFungibleToken/Enumeration.md)
       - [Royalty Payout](Standards/NonFungibleToken/Payout.md)
+      - [Events](Standards/NonFungibleToken/Event.md)
   - [Storage Management](Standards/StorageManagement.md)
 - [Proposals](Proposals/README.md)
   - [Access Keys](Proposals/0005-access-keys.md)
