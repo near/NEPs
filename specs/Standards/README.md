@@ -8,5 +8,6 @@
     - [Metadata](NonFungibleToken/Metadata.md)
     - [Approval Management](NonFungibleToken/ApprovalManagement.md)
     - [Enumeration](NonFungibleToken/Enumeration.md)
+    - [Royalty Payout](NonFungibleToken/Payout.md)
     - [Events](NonFungibleToken/Event.md)
 - [Storage Management](StorageManagement.md)
