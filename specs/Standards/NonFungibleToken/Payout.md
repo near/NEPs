@@ -87,7 +87,7 @@ pub trait Payouts {
     receiver_id: AccountId,
     token_id: String,
     approval_id: u64,
-    memo: Option<u64>
+    memo: Option<u64>,
     balance: U128,
     max_len_payout: u32,
   ) -> Payout {
