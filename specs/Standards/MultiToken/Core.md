@@ -289,7 +289,7 @@ The following behavior is required, but contract authors may name this function 
 //   set of original approved accounts in this argument, and restore these
 //   approved accounts in case of revert.
 //
-// Returns total amount spent by the `sender_id`, corresponding to the `token_id`.
+// Returns total amount spent by the `receiver_id`, corresponding to the `token_id`.
 // The amounts returned, though wrapped in quotes and treated like strings,
 // the numbers will be stored as an unsigned integer with 128 bits.
 // Example: if sender_id calls `mt_transfer_call({ "amounts": ["100"], token_ids: ["55"], receiver_id: "games" })`,
