@@ -72,8 +72,8 @@ A new set of functions MUST be supported on the MT contract:
 function mt_metadata_contract(): MTContractMetadata {}
 function mt_metadata_token_all(token_ids: string[]): MTTokenMetadataAll[]
 function mt_metadata_token_by_token_id(token_ids: string[]): MTTokenMetadata[]
-function mt_metadata_base_by_token_id(token_ids: string[]): MTBaseMetadata[]
-function mt_metadata_base_by_metadata_id(base_metadata_ids: string[]): MTBaseTokenMetadata
+function mt_metadata_base_by_token_id(token_ids: string[]): MTBaseTokenMetadata[]
+function mt_metadata_base_by_metadata_id(base_metadata_ids: string[]): MTBaseTokenMetadata[]
 
 ```
 
