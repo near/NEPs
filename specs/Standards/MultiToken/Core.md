@@ -120,7 +120,6 @@ function mt_batch_transfer(
   memo: string|null,
 ) {}
 
-// Returns `true` if the token was transferred from the sender's account.
 
 // Transfer token and call a method on a receiver contract. A successful
 // workflow will end in a success execution outcome to the callback on the MT
@@ -171,7 +170,6 @@ function mt_transfer_call(
 ): Promise {}
 
 
-// Returns `true` if the tokens were transferred from the sender's account.
 
 // Transfer tokens and call a method on a receiver contract. A successful
 // workflow will end in a success execution outcome to the callback on the MT
