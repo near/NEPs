@@ -21,9 +21,9 @@ which allows, a user to attach many tokens to a call to a separate contract. Add
 Prior art:
 
 - [ERC-721]
-- [EIP-1155 for multi-tokens](https://eips.ethereum.org/EIPS/eip-1155)
-- [NEAR's Fungible Token Standard](../FungibleToken/Core.md), which first pioneered the "transfer and call" technique
-- [NEAR's Non-Fungible Token Standard](../NearFungibleToken/Core.md)
+- [ERC-1155]
+- [NEAR Fungible Token Standard][FT], which first pioneered the "transfer and call" technique
+- [NEAR Non-Fungible Token Standard][NFT]
 
 ## Reference-level explanation
 
@@ -352,4 +352,5 @@ function mt_on_transfer(
   [Metadata]: Metadata.md
   [NFT]: ../NonFungibleToken/Core.md
   [Approval Management]: ApprovalManagement.md
+  [FT]: ../FungibleToken/Core.md
 
