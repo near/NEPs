@@ -246,7 +246,7 @@ function mt_balance_of(account_id: string, token_id: string): string
 // Arguments:
 // * `account_id`: the NEAR account that owns the tokens.
 // * `token_ids`: the tokens to retrieve the balance from
-function mt_batch_balance_of(account_id: string, token_ids: string): string[]
+function mt_batch_balance_of(account_id: string, token_ids: string[]): string[]
 
 // Returns the token supply with the given `token_id` or `null` if no such token exists.
 // The supply though wrapped in quotes and treated like a string, the number will be stored 
