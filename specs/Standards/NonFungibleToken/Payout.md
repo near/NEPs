@@ -67,17 +67,13 @@ Financial contracts MAY take a cut of the NFT sale price as commission, subtract
 /// maximum length specified by the financial contract obtaining this
 /// payout data. Any mapping of length 10 or less MUST be accepted by
 /// financial contracts, so 10 is a safe upper limit.
-#[derive(Serialize, Deserialize)]
-#[serde(crate = "near_sdk::serde")]
-pub struct Payout {
-  pub payout: HashMap<AccountId, U128>,
-}
+pub type payout = HashMap<AccountId, U128>,
 
 pub trait Payouts {
   /// Given a `token_id` and NEAR-denominated balance, return the `Payout`.
   /// struct for the given token. Panic if the length of the payout exceeds
   /// `max_len_payout.`
-  fn nft_payout(&self, token_id: String, balance: U128, max_len_payout: u32) -> Payout;
+  fn nft_payout(&self, token_id: String, balance: U128, max_len_payout: Option<u32>) -> Payout;
   /// Given a `token_id` and NEAR-denominated balance, transfer the token
   /// and return the `Payout` struct for the given token. Panic if the
   /// length of the payout exceeds `max_len_payout.`
@@ -89,7 +85,7 @@ pub trait Payouts {
     approval_id: u64,
     memo: Option<u64>,
     balance: U128,
-    max_len_payout: u32,
+    max_len_payout: Option<u32>,
   ) -> Payout {
     assert_one_yocto();
     let payout = self.nft_payout(token_id, balance);
