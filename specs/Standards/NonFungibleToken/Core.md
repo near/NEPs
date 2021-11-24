@@ -177,7 +177,7 @@ Contracts which want to make use of `nft_transfer_call` must implement the follo
 // Take some action after receiving a non-fungible token
 //
 // Requirements:
-// * Contract MUST restrict calls to this function to a set of whitelisted NFT
+// * Contract MUST restrict calls to this function to a set of allowlisted NFT
 //   contracts
 //
 // Arguments:
