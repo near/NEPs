@@ -267,11 +267,17 @@ Those will be covered later, in their dedicated sections see sections TODO1, TOD
 ```rust
 message: PeerMessage::RoutingTableSync(SyncData::edge(new_edge)),
 ```
+
 ```rust
-pub struct SyncData {
+/// Contains metadata used for routing messages to particular `PeerId` or `AccountId`.
+pub struct RoutingTableSync {
+    /// List of known edges from `RoutingTableActor::edges_info`.
     pub(crate) edges: Vec<Edge>,
+    /// List of known `account_id` to `PeerId` mappings.
+    /// Useful for `send_message_to_account` method, to route message to particular account.
     pub(crate) accounts: Vec<AnnounceAccount>,
 }
+
 ```
 
 
