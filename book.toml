@@ -10,5 +10,6 @@ build-dir = "docs"
 use-default-preprocessors = false
 
 [output.html]
-git-repository-url = "https://github.com/near/NEPs/tree/master/specs"
+git-repository-url = "https://github.com/near/NEPs/tree/master/"
+edit-url-template = "https://github.com/near/NEPs/edit/master/{path}"
 mathjax-support = true
