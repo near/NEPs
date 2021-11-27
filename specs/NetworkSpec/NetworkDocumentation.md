@@ -1,10 +1,24 @@
 # 7. Adding new edges to routing tables.
 
-This section covers the process of adding new edges, received from another node, 
+This section covers the process of adding new edges, received from another nodes, 
 to the routing table. It consists of several steps covered below.
 
 ## 7.1 Step 1
-`PeerManagerActor` receives list of edges to add 
+`PeerManagerActor` receives `RoutingTableSync` message containing list of new `edges` to add.
+Field `accounts` will be covered in a different section.
+
+```rust
+pub struct RoutingTableSync {
+    /// List of known edges from `RoutingTableActor::edges_info`.
+    edges: Vec<Edge>,
+    /// List of known `account_id` to `PeerId` mappings.
+    /// Useful for `send_message_to_account` method, to route message to particular account.
+    accounts: Vec<AnnounceAccount>,
+}
+```   
+
+## 7.1 Step 2
+            
 
 TODO REWRITE
 `PeerManagerActor` -> `RoutingTableActor` -> `EdgeValidatorActor` ...
