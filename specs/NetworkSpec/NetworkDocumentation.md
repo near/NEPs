@@ -1,16 +1,52 @@
 # 10. Message transportation layers.
 
-## 10.1 Messages send between Actors
+This section describes different protocols of sending messages currently used in `Near`
 
-## 10.2 Messages send between Actors wrapper
+## 10.1 Messages between Actors.
 
-## 10.3 Message encoding on TCP level
-Message serialization - how messages are exchanged.
+`Near` is build on `Actix`'s `actor` framework. (https://actix.rs/book/actix/sec-2-actor.html)
+Usually each actor runs on its own dedicated thread.
+Only messages implementing `actix::Message`, can be sent using between threads.
 
-We use Tokio (https://github.com/tokio-rs/tokio) to handle the TCP connections steam, and on top of that the custom serialized Borsh (https://github.com/near/borsh-rs) to send messages between the nodes.
+On example of such message is `PeersRequest` :
+```
+pub struct PeersRequest {}
 
-## 9.4 Messages queries by JsonRpcServer
+impl actix::Message for PeersRequest {
+    type Result = PeerRequestResult;
+}
 
+pub struct PeerRequestResult {
+    pub peers: Vec<PeerInfo>,
+}
+```
+
+## 10.2 Messages sent through TCP
+Near using `borsh` serialization to exchange messages between nodes (See https://borsh.io/).
+Only messages implementing `BorshSerialize`, `BorshDeserialize` can be sent.
+
+Here is an example of on such message:
+```rust
+#[derive(BorshSerialize, BorshDeserialize)]
+pub struct SyncData {
+    pub(crate) edges: Vec<Edge>,
+    pub(crate) accounts: Vec<AnnounceAccount>,
+}
+```
+
+## 10.3 Messages sent/received through `chain/jsonrpc`
+Near runs a json rest server. (See `actix_web::HttpServer`).
+All messages sent and received must implement `serde::Serialize` and `serde::Deserialize`.
+
+`StreamerMessage` is a good example:
+```rust
+#[derive(serde::Serialize, serde::Deserialize)]
+pub struct StreamerMessage {
+    pub block: views::BlockView,
+    pub shards: Vec<IndexerShard>,
+    pub state_changes: views::StateChangesView,
+}
+```
 
 # 11. peer_store: PeerStore,
 
