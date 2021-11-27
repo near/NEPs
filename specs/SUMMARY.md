@@ -10,6 +10,7 @@
 - [Chain specification](ChainSpec/README.md)
   - [Network specification](ChainSpec/NetworkSpec.md)
     - [Messages](ChainSpec/Messages.md)
+    - [NetworkDocumentation](NetworkSpec/NetworkDocumentation.md)
   - [Consensus](ChainSpec/Consensus.md)
   - [Upgradability](ChainSpec/Upgradability.md)
   - [Transactions](ChainSpec/Transactions.md)
