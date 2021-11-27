@@ -1,18 +1,3 @@
-### 9. Edge pruning, storage and shortest paths
-TODO REWRITE
-
-Each node is also keeping the next edge-hop on the shortest path to each other node. This is the edge that will be used when it needs to transfer some data to the destination node.
-
-Nodes are also ‘refreshing’ the list of edges from time to time, and if they notice that a given edge hasn’t been updated for a while, they trigger the cleanup.
-
-During cleanup, we remove the selected edges from the graph and we write them down to disk (into ColComponent column). This is done to persist the information about the last nonce that we’ve seen.
-
-When we receive a new peer_id(node_id) that we don’t have in memory - we’d check the storage to see if we had any edges from it in the past - and load them from storage if needed.
-
-This way, we prevent the attack, where someone would be resending us the edges that existed in the past, but were deleted since then.
-
-
-
 # 9. Code flow - routing a message
 TODO REWRITE
 
