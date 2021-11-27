@@ -1,3 +1,22 @@
+# 9. Message transportation layers.
+
+## 9.1 Messages send between Actors
+
+## 9.2 Messages send between Actors wrapper
+
+## 9.3 Message encoding on TCP level
+Message serialization - how messages are exchanged.
+
+We use Tokio (https://github.com/tokio-rs/tokio) to handle the TCP connections steam, and on top of that the custom serialized Borsh (https://github.com/near/borsh-rs) to send messages between the nodes.
+
+## 9.4 Messages queries by JsonRpcServer
+
+# 10. Prometheus metrics      network_metrics: NetworkMetrics,
+
+# 11. peer_store: PeerStore,
+
+# 12  routing_table_view: RoutingTableView,
+
 # 9. Code flow - routing a message
 TODO REWRITE
 
@@ -20,46 +39,6 @@ NetworkRequests to PeerManager actor are triggering the RawRoutedMessage
 
 Lib_rs (ShardsManager) has a network_adapter - coming from client’s network_adapter that comes from ClientActor that comes from start_client call that comes from start_with_config
 (that crates PeerManagerActor - that is passed as target to network_recipent).
-
-
-# 10. Message serialization - how messages are exchanged on TCP level
-We use Tokio (https://github.com/tokio-rs/tokio) to handle the TCP connections steam, and on top of that the custom serialized Borsh (https://github.com/near/borsh-rs) to send messages between the nodes.
-
-
-
-
-
-
-
-
---------------------------------------------------------------------- FUTURE SECTIONS #########
-
-
-# 7. - New routing table exchange algorithm - nightly protocol
-
-This new algorithm is described in [RoutingTableExchangeAlgorithm.md]
-
-# 7. Code flow - exchanging routing tables
-Once a successful connection is established, the node will exchange the network layout information with other nodes (get the list of edges, list of validators etc) and will be ready to start forwarding the messages.
-
-From time to time, node will try to ‘prune’ its network - by removing the edges/nodes, that were not reachable for more than 1 hour.
-
-### 7.1. Routing table exchange - Old method
-TODO
-
-### 7.2. Routing table exchange - New method (nightly)
-Exchanging network graph & Inverted Bloom Filters
-
-As a part of their job, the nodes are also keeping the whole layout of the network (that is - all the edges between all the nodes). As this data can change dynamically, they often compare and ‘sync’ their graphs with their neighbours.
-
-In the past, they used to send the whole graph to each other, but as the size of the network grows, this becomes more and more expensive.
-The solution that was implemented recently is based on inverted bloom filters - that allows us to easily find which edges are missing from the neighbour and send over only those.
-
-
-
-
-# 10. Code flow - broadcasting a message
-TODO
 
 
 # 12. Database
@@ -95,8 +74,6 @@ ColPeerComponent      -> Mapping from `peer_id` to last component nonce if there
 # 13.1. NetworkRequest - types of messages send
 TODO
 
-# 13.2. `Consolidate` logic + communication with `PeerActor`
-
 # 14. PeerActor messages
 
 - Write handler + stream handler - TODO
@@ -113,4 +90,4 @@ TODO
 # 19. ThrottleRateLimiter
 NOT IMPLEMENTED YET - TODO once we add it
 
-# 20. Metrics
+# 13. PeerManagerActor Triggers
