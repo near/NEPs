@@ -148,7 +148,7 @@ Otherwise, `PeerActor` will be stopped immediately or after some timeout.
 TODO: Rename `Consolidate` to `RegisterPeer` + document all attributes.
 
 ```rust
-pub struct Consolidate {
+pub struct Consolidate { // will be renamed to `RegisterPeer` see #5479
     pub(crate) actor: Addr<PeerActor>,
     pub(crate) peer_info: PeerInfo,
     pub(crate) peer_type: PeerType,
@@ -175,7 +175,7 @@ TODO: Rename `ActivePeer` to `ConnectedPeer`.
 
 ```rust
 /// Contains information relevant to an active peer.
-struct ActivePeer {
+struct ActivePeer { // will be renamed to `ConnectedPeer` see #5428
     addr: Addr<PeerActor>,
     full_peer_info: FullPeerInfo,
     /// Number of bytes we've received from the peer.
@@ -204,7 +204,7 @@ message: PeerMessage::RoutingTableSync(SyncData::edge(new_edge)),
 
 ```rust
 /// Contains metadata used for routing messages to particular `PeerId` or `AccountId`.
-pub struct RoutingTableSync {
+pub struct RoutingTableSync { // also known as `SyncData` (#5489)
     /// List of known edges from `RoutingTableActor::edges_info`.
     pub(crate) edges: Vec<Edge>,
     /// List of known `account_id` to `PeerId` mappings.
