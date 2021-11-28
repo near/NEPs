@@ -1,30 +1,4 @@
-# 11. peer_store: PeerStore,
-
 # 12  routing_table_view: RoutingTableView,
-
-# 9. Code flow - routing a message
-TODO REWRITE
-
-
-This is the example of the message that is being sent between nodes (RawRoutedMessage) (https://github.com/near/nearcore/blob/fa8749dc60fe0de8e94c3046571731c622326e9f/chain/network-primitives/src/types.rs#L362)
-
-Each of these methods have a ‘target’ - that is either the account_id or peer_id or hash (which seems to be used only for route back..). If target is the account - it will be converted using ‘routing_table.account_owner’ to the peer.
-
-Upon receiving the message, the peer_manager will sign it (https://github.com/near/nearcore/blob/master/chain/network/src/peer_manager.rs#L1285)
-And convert into RoutedMessage (which also have things like TTL etc)
-
-Then it will use the routing_table, to find the route to the target peer (add route_back if needed) and then send the message over the network as PeerMessage::Routed.
-
-When Peer receives this message (as PeerMessage::Routed), it will pass it to PeerManager (as RoutedMessageFrom), which would then check if the message is for the current Peer (if yes, it would pass it for the client) and if not - it would pass it along the network.
-
-All these messages are handled by receive_client_message in Peer. (NetworkClientMessags) - and transferred to ClientActor in (chain/client/src/client_actor.rs)
-
-
-NetworkRequests to PeerManager actor are triggering the RawRoutedMessage
-
-Lib_rs (ShardsManager) has a network_adapter - coming from client’s network_adapter that comes from ClientActor that comes from start_client call that comes from start_with_config
-(that crates PeerManagerActor - that is passed as target to network_recipent).
-
 
 # 12. Database
 ### 12.1 Storage of deleted edges
@@ -42,7 +16,7 @@ ColPeerComponent      -> Mapping from `peer_id` to last component nonce if there
 ### 12.2 Storage of `account_id` to `peer_id` mapping
 +ColAccountAnouncements -> Stores a mapping from `account_id` to tuple (`account_id`, `peer_id`, `epoch_id`, `signature`).
 
-# 13. PeerManagerActor messages
+# 13. PeerManagerActor messages (different file)
 - NetworkRequest - TODO
 - InboundTcpConnect - TODO
 - GetRoutingOption - TODO
@@ -56,23 +30,23 @@ ColPeerComponent      -> Mapping from `peer_id` to last component nonce if there
 - RawRoutedMessage - TODO
 - PeerRequest - TODO
 
-# 13.1. NetworkRequest - types of messages send
+# 13.1. NetworkRequest - types of messages send  (different file)    
 TODO
 
-# 14. PeerActor messages
+# 14. PeerActor messages  (different file)
 
 - Write handler + stream handler - TODO
 - SendMessage - TODO
 - QueryPeerStats - TODO
 - PeerManagerRequest (Ban Peer, Unregister Peer) - TODO
 
-# 16. RoutingTableActor
+# 16. RoutingTableActor (different file)
 TODO
 
-# 17. EdgeVerifierActor
+# 17. EdgeVerifierActor (different file)
 TODO
 
-# 19. ThrottleRateLimiter
+# 19. ThrottleRateLimiter (different file)
 NOT IMPLEMENTED YET - TODO once we add it
 
-# 13. PeerManagerActor Triggers
+# 13. PeerManagerActor Triggers (different file)
