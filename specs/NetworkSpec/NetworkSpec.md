@@ -6,19 +6,19 @@ This document should serve as reference for all the clients to implement network
 
 ## Messages
 
-Data structures used for messages between peers are enumerated in [Message](Messages.md).
+Data structures used for messages between peers are enumerated in [Message](NetworkMessages.md).
 
 ## Discovering the network
 
 When a node starts for the first time it tries to connect to a list of bootstrap nodes specified via a config file. The address for each node
 
-It is expected that a node periodically requests a list of peers from its neighboring nodes to learn about other nodes in the network. This will allow every node to discover each other, and have relevant information to try to establish a new connection with it. When a node receives a message of type [`PeersRequest`](Messages.md#peermessage) it is expected to answer with a message of type [`PeersResponse`](Message.md#peermessage) with information from healthy peers known to this node.
+It is expected that a node periodically requests a list of peers from its neighboring nodes to learn about other nodes in the network. This will allow every node to discover each other, and have relevant information to try to establish a new connection with it. When a node receives a message of type [`PeersRequest`](NetworkMessages.md#peermessage) it is expected to answer with a message of type [`PeersResponse`](Message.md#peermessage) with information from healthy peers known to this node.
 
 ### Handshakes
 
-To establish a new connections between pair of nodes, they will follow the following protocol. Node A open a connection with node B and sends a [Handshake](Messages.md#Handshake) to it. If handshake is valid (see reasons to [decline the handshake](#Decline-handshake)) then node B will proceed to send [Handshake](Messages.md#Handshake) to node A. After each node accept a handshake it will mark the other node as an active connection, until one of them stop the connection.
+To establish a new connections between pair of nodes, they will follow the following protocol. Node A open a connection with node B and sends a [Handshake](NetworkMessages.md#Handshake) to it. If handshake is valid (see reasons to [decline the handshake](#Decline-handshake)) then node B will proceed to send [Handshake](NetworkMessages.md#Handshake) to node A. After each node accept a handshake it will mark the other node as an active connection, until one of them stop the connection.
 
-[Handshake](Messages.md#Handshake) contains relevant information about the node, the current chain and information to create a new edge between both nodes.
+[Handshake](NetworkMessages.md#Handshake) contains relevant information about the node, the current chain and information to create a new edge between both nodes.
 
 #### Decline handshake
 
@@ -29,7 +29,7 @@ When a node receives a handshake from other node it will decline this connection
 
 #### Edge
 
-Edges are used to let other nodes in the network know that there is currently an active connection between a pair of nodes. See the definition of [this data structure](Messages.md#Edge).
+Edges are used to let other nodes in the network know that there is currently an active connection between a pair of nodes. See the definition of [this data structure](NetworkMessages.md#Edge).
 
 If the nonce of the edge is odd, it denotes an `Added` edge, otherwise it denotes a `Removed` edge. Each node should keep track of the nonce used for edges between every pair of nodes. Peer C believes that the peers A and B are currently connected if and only if the edge with the highest nonce known to C for them has an odd nonce.
 
@@ -64,9 +64,9 @@ struct RoutingTable {
 
 ```
 
-- `account_peers` is a mapping from each known account to the correspondent [announcement](Messages.md#announceaccount). Given that validators are known by its [AccountId](Messages.md#accountid) when a node needs to send a message to a validator it finds the [PeerId](Messages.md#peerid) associated with the [AccountId](Messages.md#accountid) in this table.
+- `account_peers` is a mapping from each known account to the correspondent [announcement](NetworkMessages.md#announceaccount). Given that validators are known by its [AccountId](NetworkMessages.md#accountid) when a node needs to send a message to a validator it finds the [PeerId](NetworkMessages.md#peerid) associated with the [AccountId](NetworkMessages.md#accountid) in this table.
 
-- `peer_forwarding`: For node `S`, `peer_forwarding` constitutes a mapping from each [PeerId](Messages.md#peerid) `T`, to the set of peers that are directly connected to `S` and belong to the shortest route, in terms of number of edges, between `S` and `T`. When node `S` needs to send a message to node `T` and they are not directly connected, `S` choose one peer among the set `peer_forwarding[S]` and sends a routed message to it with destination `T`.
+- `peer_forwarding`: For node `S`, `peer_forwarding` constitutes a mapping from each [PeerId](NetworkMessages.md#peerid) `T`, to the set of peers that are directly connected to `S` and belong to the shortest route, in terms of number of edges, between `S` and `T`. When node `S` needs to send a message to node `T` and they are not directly connected, `S` choose one peer among the set `peer_forwarding[S]` and sends a routed message to it with destination `T`.
 
 <!-- TODO: Add example. Draw a graph. Show routing table for each node. -->
 <!-- TODO: Notice when two nodes are totally disconnected, and when two nodes are directly connected -->
@@ -122,15 +122,15 @@ def on_announce_accounts_received(self, announcements):
 
 ### Routing
 
-When a node needs to send a message to another peer, it checks in the routing table if it is connected to that peer, possibly not directly but through several hops. Then it select one of the shortest path to the target peer and sends a [`RoutedMessage`](Messages.md#routedmessage) to the first peer in the path.
+When a node needs to send a message to another peer, it checks in the routing table if it is connected to that peer, possibly not directly but through several hops. Then it select one of the shortest path to the target peer and sends a [`RoutedMessage`](NetworkMessages.md#routedmessage) to the first peer in the path.
 
-When it receives a [`RoutedMessage`](Messages.md#routedmessage), it check if it is the target, in that case consume the body of the message, otherwise it finds a route to the target following described approach and sends the message again. Is is important that before routing a message each peer check signature from original author of the message, passing a message with invalid signature can result in ban for the sender. It is not required however checking the content of the message itself.
+When it receives a [`RoutedMessage`](NetworkMessages.md#routedmessage), it check if it is the target, in that case consume the body of the message, otherwise it finds a route to the target following described approach and sends the message again. Is is important that before routing a message each peer check signature from original author of the message, passing a message with invalid signature can result in ban for the sender. It is not required however checking the content of the message itself.
 
-Each [`RoutedMessage`](Messages.md#routedmessage) is equipped with a time-to-live integer. If this message is not for the node processing it, it decrement the field by one before routing it; if the value is 0, the node drops the message instead of routing it.
+Each [`RoutedMessage`](NetworkMessages.md#routedmessage) is equipped with a time-to-live integer. If this message is not for the node processing it, it decrement the field by one before routing it; if the value is 0, the node drops the message instead of routing it.
 
 #### Routing back
 
-It is possible that node `A` is known to `B` but not the other way around. In case node `A` sends a request that requires a response to `B`, the response is routed back through the same path used to send the message from `A` to `B`. When a node receives a [RoutedMessage](Messages.md#routedmessage) that requires a response it stores in the map `route_back` the hash of the message mapped to the [PeerId](Messages.md#peerid) of the sender.   After the message reaches the final destination and response is computed it is routed back using as target the hash of the original message. When a node receives a Routed Message such that the target is a hash, the node checks for the previous sender in the `route_back` map, and sends the message to it if it exists, otherwise it drops the message.
+It is possible that node `A` is known to `B` but not the other way around. In case node `A` sends a request that requires a response to `B`, the response is routed back through the same path used to send the message from `A` to `B`. When a node receives a [RoutedMessage](NetworkMessages.md#routedmessage) that requires a response it stores in the map `route_back` the hash of the message mapped to the [PeerId](NetworkMessages.md#peerid) of the sender.   After the message reaches the final destination and response is computed it is routed back using as target the hash of the original message. When a node receives a Routed Message such that the target is a hash, the node checks for the previous sender in the `route_back` map, and sends the message to it if it exists, otherwise it drops the message.
 
 The hash of a `RoutedMessage` to be stored on the map `route_back` is computed as:
 

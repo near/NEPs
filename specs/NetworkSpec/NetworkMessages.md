@@ -1,4 +1,4 @@
-# Messages
+# Network Messages
 
 All message sent in the network are of type `PeerMessage`. They are encoded using [Borsh](https://borsh.io/) which allows a rich structure, small size and fast encoding/decoding. For details about data structures used as part of the message see the [reference code](https://github.com/nearprotocol/nearcore).
 
