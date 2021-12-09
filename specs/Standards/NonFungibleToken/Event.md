@@ -104,7 +104,7 @@ interface NftMintLog {
 // An event log to capture token burning
 // Arguments
 // * `owner_id`: owner of tokens to burn
-// * `authorized_id`: approved account to burn, if applicable
+// * `authorized_id`: approved account_id to burn, if applicable
 // * `token_ids`: ["1","2"]
 // * `memo`: optional message
 interface NftBurnLog {
@@ -116,7 +116,7 @@ interface NftBurnLog {
 
 // An event log to capture token transfer
 // Arguments
-// * `authorized_id`: approved account to transfer
+// * `authorized_id`: approved account_id to transfer, if applicable
 // * `old_owner_id`: "owner.near"
 // * `new_owner_id`: "receiver.near"
 // * `token_ids`: ["1", "12345abc"]
@@ -179,6 +179,19 @@ EVENT_JSON:{
   "event": "nft_transfer",
   "data": [
     {"old_owner_id": "user1.near", "new_owner_id": "user2.near", "token_ids": ["meme"], "memo": "have fun!"}
+  ]
+}
+```
+
+Authorized id:
+
+```js
+EVENT_JSON:{
+  "standard": "nep171",
+  "version": "1.0.0",
+  "event": "nft_burn",
+  "data": [
+    {"owner_id": "owner.near", "token_ids": ["goodbye", "aurevoir"], "authorized_id": "thirdparty.near"}
   ]
 }
 ```
