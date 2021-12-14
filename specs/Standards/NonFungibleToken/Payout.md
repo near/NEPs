@@ -95,7 +95,15 @@ pub trait Payouts {
 }
 ```
 
-Note that NFT and financial contracts will vary in implementation. This means that some extra CPU cycles may occur in one NFT contract and not another. Furthermore, a financial contract may accept fungible tokens, native NEAR, or another entity as payment. Transferring native NEAR tokens is less expensive in gas than sending fungible tokens. For these reasons, the maximum length of payouts may vary according to the customization of the smart contracts.
+## Fallback on error
+
+In the case where either the `max_len_payout` causes a panic, or a malformed `Payout` is returned, the caller contract should transfer all funds to the token owner.
+
+## Potential pitfalls
+
+The payout must include all accounts that should receive funds. Thus the token owner must be included.
+
+NFT and financial contracts vary in implementation. This means that some extra CPU cycles may occur in one NFT contract and not another. Furthermore, a financial contract may accept fungible tokens, native NEAR, or another entity as payment. Transferring native NEAR tokens is less expensive in gas than sending fungible tokens. For these reasons, the maximum length of payouts may vary according to the customization of the smart contracts.
 
 ## Drawbacks
 
