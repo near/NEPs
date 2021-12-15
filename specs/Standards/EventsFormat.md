@@ -96,3 +96,8 @@ EVENT_JSON:{
   }
 }
 ```
+
+## Drawbacks
+
+There is a known limitation of 16kb strings when capturing logs.
+This impacts the amount of events that can be processed.
