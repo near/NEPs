@@ -26,7 +26,7 @@ Prior art:
 - [NEAR Non-Fungible Token Standard][NFT]
 ## Rationale
 
-Why have another standard, aren't fungible and non-fungible tokens enough?  The current fungible token and non-fungible token standards, do not provide support for performing batch transactions, representing many tokens in a single contract, as well as the flexibility to define different token types with different behavior in a single contract. This is something that makes it impossible to be interoperable with other major blockchain networks such as Ethereum.
+Why have another standard, aren't fungible and non-fungible tokens enough?  The current fungible token and non-fungible token standards, do not provide support for representing many FT tokens in a single contract, as well as the flexibility to define different token types with different behavior in a single contract. This is something that makes it difficult to be interoperable with other major blockchain networks, that implement standards that allow for representation of many different FT tokens in a single contract such as Ethereum.
 
 The standard here introduces a few concepts that evolve the original [ERC-1155] standard to have more utility, while maintaining the original flexibilty of the standard. So keeping that in mind, there is no explicit token type. Where the token type is set to be something that is FT or NFT or something in between.
 
