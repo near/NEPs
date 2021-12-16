@@ -28,7 +28,8 @@ Prior art:
 
 Learn about NEP-141:
 
-- [Figment Learning Pathway](https://learn.figment.io/network-documentation/near/tutorials/1-project_overview/2-fungible-token)
+- [Complete guide to NEAR's new fungible token standard](https://learn.figment.io/tutorials/2-fungible-token)
+- [STAKE Fungible Token NEP-141 Rust Implementation](https://learn.figment.io/tutorials/3-stake-fungible-token)
 
 ## Guide-level explanation
 

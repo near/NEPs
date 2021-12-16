@@ -16,6 +16,11 @@ Prior art:
 
 - A previous fungible token standard ([NEP-21](https://github.com/near/NEPs/pull/21)) highlighting how [storage was paid](https://github.com/near/near-sdk-rs/blob/1d3535bd131b68f97a216e643ad1cba19e16dddf/examples/fungible-token/src/lib.rs#L92-L113) for when increasing the allowance of an escrow system.
 
+Learn about NEP-145:
+
+- [Complete guide to NEAR's new account storage standard](https://learn.figment.io/tutorials/5-account-storage)
+- [STAKE Account Storage NEP-145 Rust Implementation](https://learn.figment.io/tutorials/6-stake-account-storage)
+
 ## Example scenarios
 
 To show the flexibility and power of this standard, let's walk through two example contracts.
