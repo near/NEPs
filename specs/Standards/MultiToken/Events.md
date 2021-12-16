@@ -155,7 +155,7 @@ interface MtBurnLog {
 // Requirements
 // * Contract MUST emit event when transferring a token
 // Fields 
-// * `authorized_id`: approved account to transfer
+// * `authorized_id`: approved account_id to transfer
 // * `old_owner_id`: the account sending the tokens "sender.near"
 // * `new_owner_id`: the account receiving the tokens "receiver.near"
 // * `token_ids`: the tokens to transfer 
@@ -232,6 +232,15 @@ EVENT_JSON:{
     {"owner_id": "foundation.near", "token_ids": ["aurora", "proximitylabs_ft"], "amounts": ["1","100"]},
   ]
 }
+
+EVENT_JSON:{
+  "standard": "nep246",
+  "version": "1.0.0",
+  "event": "mt_burn",
+  "data": [
+    {"owner_id": "foundation.near", "token_ids": ["aurora_alpha", "proximitylabs_ft"], "amounts": ["1","100"], "authorized_id": "thirdparty.near" },
+  ]
+}
 ```
 
 ```js
@@ -241,6 +250,15 @@ EVENT_JSON:{
   "event": "mt_transfer",
   "data": [
     {"old_owner_id": "user1.near", "new_owner_id": "user2.near", "token_ids": ["meme"], "amounts":["1"], "memo": "have fun!"}
+  ]
+}
+
+EVENT_JSON:{
+  "standard": "nep246",
+  "version": "1.0.0",
+  "event": "mt_transfer",
+  "data": [
+    {"old_owner_id": "user2.near", "new_owner_id": "user3.near", "token_ids": ["meme"], "amounts":["1"], "authorized_id": "thirdparty.near", "memo": "have fun!"}
   ]
 }
 ```
