@@ -137,7 +137,7 @@ interface MtMintLog {
 // Fields 
 // * Contract token_ids and amounts MUST be the same length 
 // * `owner_id`: the account whose token(s) are being burned
-// * `authorized_id`: approved account to burn, if applicable
+// * `authorized_id`: approved account_id to burn, if applicable
 // * `token_ids`: the tokens being burned
 // * `amounts`: the number of tokens burned, wrapped in quotes and treated
 //    like a string, although the numbers will be stored as an unsigned integer
