@@ -156,7 +156,7 @@ The following behavior is required, but contract authors may name this function 
 // * `sender_id`: the sender of `nft_transfer_call`
 // * `receiver_id`: the `receiver_id` argument given to `nft_transfer_call`
 // * `token_id`: the `token_id` argument given to `nft_transfer_call`
-// * `approved_token_ids`: if using Approval Management, contract MUST provide
+// * `approved_account_ids `: if using Approval Management, contract MUST provide
 //   record of original approved accounts in this argument, and restore these
 //   approved accounts and their approval IDs in case of revert.
 //
