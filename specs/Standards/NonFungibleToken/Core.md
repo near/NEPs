@@ -150,10 +150,10 @@ The following behavior is required, but contract authors may name this function 
 // * Contract MUST forbid calls to this function by any account except self
 // * If promise chain failed, contract MUST revert token transfer
 // * If promise chain resolves with `true`, contract MUST return token to
-//   `sender_id`
+//   `owner_id`
 //
 // Arguments:
-// * `sender_id`: the sender of `nft_transfer_call`
+// * `owner_id`: the original owner of the NFT.
 // * `receiver_id`: the `receiver_id` argument given to `nft_transfer_call`
 // * `token_id`: the `token_id` argument given to `nft_transfer_call`
 // * `approved_account_ids `: if using Approval Management, contract MUST provide
