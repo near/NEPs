@@ -76,12 +76,12 @@ Batch mint:
 
 ```js
 EVENT_JSON:{
-  "standard": "nep141",
-  "version": "1.0.0",
-  "event": "ft_mint",
-  "data": [
-    {"owner_id": "foundation.near", "amount": "500"}
-  ]
+    "standard": "nep141",
+    "version": "1.0.0",
+    "event": "ft_mint",
+    "data": [
+        {"owner_id": "foundation.near", "amount": "500"}
+    ]
 }
 ```
 
@@ -89,13 +89,13 @@ Batch transfer:
 
 ```js
 EVENT_JSON:{
-  "standard": "nep141",
-  "version": "1.0.0",
-  "event": "ft_transfer",
-  "data": [
-    {"old_owner_id": "from.near", "new_owner_id": "to.near", "amount": "42", "memo": "hi hello bonjour"},
-    {"old_owner_id": "user1.near", "new_owner_id": "user2.near", "amount": "7500"}
-  ]
+    "standard": "nep141",
+    "version": "1.0.0",
+    "event": "ft_transfer",
+    "data": [
+        {"old_owner_id": "from.near", "new_owner_id": "to.near", "amount": "42", "memo": "hi hello bonjour"},
+        {"old_owner_id": "user1.near", "new_owner_id": "user2.near", "amount": "7500"}
+    ]
 }
 ```
 
@@ -103,12 +103,12 @@ Batch burn:
 
 ```js
 EVENT_JSON:{
-  "standard": "nep141",
-  "version": "1.0.0",
-  "event": "ft_burn",
-  "data": [
-    {"owner_id": "foundation.near", "amount": "100"},
-  ]
+    "standard": "nep141",
+    "version": "1.0.0",
+    "event": "ft_burn",
+    "data": [
+        {"owner_id": "foundation.near", "amount": "100"},
+    ]
 }
 ```
 
