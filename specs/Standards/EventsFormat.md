@@ -46,11 +46,23 @@ interface EventLogData {
 }
 ```
 
+To emit the event, you need to use `near_sdk::log` command. Example:
+```rust
+use near_sdk::log;
+
+// ...
+log!(
+    r#"EVENT_JSON:{"standard": "nepXXX", "version": "1.0.0", "event": "YYY", "data": {"token_id": "{}"}}"#,
+    token_id
+);
+// ...
+```
+
 #### Valid event logs:
 
 ```js
 EVENT_JSON:{
-  "standard": "nepXXX",
+    "standard": "nepXXX",
     "version": "1.0.0",
     "event": "xyz_is_triggered"
 }
@@ -58,12 +70,12 @@ EVENT_JSON:{
 
 ```js
 EVENT_JSON:{
-  "standard": "nepXXX",
+    "standard": "nepXXX",
     "version": "1.0.0",
     "event": "xyz_is_triggered",
     "data": {
-    "triggered_by": "foundation.near"
-  }
+        "triggered_by": "foundation.near"
+    }
 }
 ```
 
@@ -72,12 +84,12 @@ EVENT_JSON:{
 * Two events in a single log entry (instead, call `log` for each individual event)
 ```js
 EVENT_JSON:{
-  "standard": "nepXXX",
+    "standard": "nepXXX",
     "version": "1.0.0",
     "event": "abc_is_triggered"
 }
 EVENT_JSON:{
-  "standard": "nepXXX",
+    "standard": "nepXXX",
     "version": "1.0.0",
     "event": "xyz_is_triggered"
 }
@@ -89,11 +101,11 @@ EVENT_JSON:invalid json
 * Missing required fields `standard`, `version` or `event`
 ```js
 EVENT_JSON:{
-  "standard": "nepXXX",
+    "standard": "nepXXX",
     "event": "xyz_is_triggered",
     "data": {
-    "triggered_by": "foundation.near"
-  }
+        "triggered_by": "foundation.near"
+    }
 }
 ```
 
