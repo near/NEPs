@@ -1,6 +1,6 @@
 # Non-Fungible Token ([NEP-171](https://github.com/near/NEPs/discussions/171))
 
-Version `1.0.0`
+Version `1.0.1`
 
 ## Summary
 
@@ -150,22 +150,22 @@ The following behavior is required, but contract authors may name this function 
 // * Contract MUST forbid calls to this function by any account except self
 // * If promise chain failed, contract MUST revert token transfer
 // * If promise chain resolves with `true`, contract MUST return token to
-//   `sender_id`
+//   `owner_id`
 //
 // Arguments:
-// * `sender_id`: the sender of `nft_transfer_call`
+// * `owner_id`: the original owner of the NFT.
 // * `receiver_id`: the `receiver_id` argument given to `nft_transfer_call`
 // * `token_id`: the `token_id` argument given to `nft_transfer_call`
-// * `approved_token_ids`: if using Approval Management, contract MUST provide
-//   set of original approved accounts in this argument, and restore these
-//   approved accounts in case of revert.
+// * `approved_account_ids `: if using Approval Management, contract MUST provide
+//   record of original approved accounts in this argument, and restore these
+//   approved accounts and their approval IDs in case of revert.
 //
 // Returns true if token was successfully transferred to `receiver_id`.
 function nft_resolve_transfer(
   owner_id: string,
   receiver_id: string,
   token_id: string,
-  approved_account_ids: null|string[],
+  approved_account_ids: null|Record<string, number>,
 ): boolean {}
 ```
 
@@ -200,6 +200,7 @@ function nft_on_transfer(
 
 ## Errata
 
+* **2021-12-20**: updated `nft_resolve_transfer` argument `approved_account_ids` to be type `null|Record<string, number>` instead of `null|string[]`. This gives contracts a way to restore the original approved accounts and their approval IDs. More information can be found in [this](https://github.com/near/NEPs/issues/301) discussion.
 * **2021-07-16**: updated `nft_transfer_call` argument `approval_id` to be type `number|null` instead of `string|null`. As stated, approval IDs are not expected to exceed the JSON limit of 2^53.
 
   [ERC-721]: https://eips.ethereum.org/EIPS/eip-721
