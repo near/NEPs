@@ -46,7 +46,7 @@ interface EventLogData {
 }
 ```
 
-To emit the event, you need to use `near_sdk::log` command. Example:
+Thus, to emit an event, you only need to log a string following the rules above. Here is a barebones example using Rust SDK `near_sdk::log!` macro (security note: prefer using `serde_json` or alternatives to serialize the JSON string to avoid potential injections and corrupted events):
 ```rust
 use near_sdk::log;
 
