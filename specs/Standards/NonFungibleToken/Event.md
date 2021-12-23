@@ -17,6 +17,7 @@ This extension addresses that.
 It's common for NFT apps to transfer many or one token at a time.
 Other applications need to track these and similar events consistently.
 If not, tracking state across many NFT-driven apps become infeasible.
+Keep in mind that applications, including NEAR Wallet, could require implementing additional methods to display the NFTs correctly, such as [`nft_metadata`](Metadata.md) and [`nft_tokens_for_owner`](Enumeration.md).
 
 We need a standard way to capture events.
 This was discussed here https://github.com/near/NEPs/issues/254.
