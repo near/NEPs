@@ -159,6 +159,7 @@ The following behavior is required, but contract authors may name this function 
 // * `approved_account_ids `: if using Approval Management, contract MUST provide
 //   record of original approved accounts in this argument, and restore these
 //   approved accounts and their approval IDs in case of revert.
+// * `memo` (optional): to be included in event log if transfer is sucessful.
 //
 // Returns true if token was successfully transferred to `receiver_id`.
 function nft_resolve_transfer(
@@ -166,6 +167,7 @@ function nft_resolve_transfer(
   receiver_id: string,
   token_id: string,
   approved_account_ids: null|Record<string, number>,
+  memo: null|string
 ): boolean {}
 ```
 
