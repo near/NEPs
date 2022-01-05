@@ -166,6 +166,7 @@ function nft_resolve_transfer(
   owner_id: string,
   receiver_id: string,
   token_id: string,
+  authorized_id: null|string,
   approved_account_ids: null|Record<string, number>,
   memo: null|string
 ): boolean {}
