@@ -54,6 +54,7 @@
   - [Fungible Token](Standards/FungibleToken/README.md)
       - [Core Standard](Standards/FungibleToken/Core.md)
       - [Metadata](Standards/FungibleToken/Metadata.md)
+      - [Events](Standards/FungibleToken/Event.md)
   - [Non-Fungible Token](Standards/NonFungibleToken/README.md)
       - [Core Standard](Standards/NonFungibleToken/Core.md)
       - [Metadata](Standards/NonFungibleToken/Metadata.md)
