@@ -12,3 +12,4 @@
     - [Royalty Payout](NonFungibleToken/Payout.md)
     - [Events](NonFungibleToken/Event.md)
 - [Storage Management](StorageManagement.md)
+- [Events Format](EventsFormat.md)
