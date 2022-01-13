@@ -1,6 +1,6 @@
 # Standard for a Multiple-Recipient-Payout mechanic on NFT Contracts (NEP-199)
 
-Version `2.0.0`.
+Version `2.1.0`.
 
 This standard assumes the NFT contract has implemented
 [NEP-171](https://github.com/near/NEPs/blob/master/specs/Standards/NonFungibleToken/Core.md) (Core) and [NEP-178](https://github.com/near/NEPs/blob/master/specs/Standards/NonFungibleToken/ApprovalManagement.md) (Approval Management).
@@ -67,7 +67,7 @@ Financial contracts MAY take a cut of the NFT sale price as commission, subtract
 /// maximum length specified by the financial contract obtaining this
 /// payout data. Any mapping of length 10 or less MUST be accepted by
 /// financial contracts, so 10 is a safe upper limit.
-#[Derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize)]
 #[serde(crate = "near_sdk::serde")]
 pub struct Payout {
   payout: HashMap<AccountId, U128>,
@@ -85,7 +85,7 @@ pub trait Payouts {
     &mut self,
     receiver_id: AccountId,
     token_id: String,
-    approval_id: u64,
+    approval_id: Option<u64>,
     memo: Option<String>,
     balance: U128,
     max_len_payout: Option<u32>,
