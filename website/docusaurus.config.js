@@ -64,7 +64,7 @@ stylesheets: [
         title: 'NEAR',
         logo: {
           alt: 'My Site Logo',
-          src: 'img/logo.svg',
+          src: 'img/near_logo.svg',
         },
         items: [
 //          {
