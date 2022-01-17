@@ -132,8 +132,8 @@ stylesheets: [
             title: 'More',
             items: [
               {
-                label: 'Blog',
-                to: '/blog',
+                label: 'NEAR',
+                to: 'https://near.org',
               },
               {
                 label: 'GitHub',
