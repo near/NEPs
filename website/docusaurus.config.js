@@ -9,9 +9,9 @@ const katex = require('rehype-katex');
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: 'My Site',
-  tagline: 'Dinosaurs are cool',
-  url: 'https://your-docusaurus-test-site.com',
+  title: 'NEAR Protocol Specification',
+  tagline: 'NEAR Protocol Specification',
+  url: 'https://nomicon.io',
   baseUrl: '/',
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
@@ -63,7 +63,7 @@ stylesheets: [
       navbar: {
         title: 'NEAR',
         logo: {
-          alt: 'My Site Logo',
+          alt: 'NEAR Logo',
           src: 'img/near_logo.svg',
         },
         items: [
@@ -120,7 +120,7 @@ stylesheets: [
               },
               {
                 label: 'Discord',
-                href: 'https://discordapp.com/invite/docusaurus',
+                href: 'https://near.chat',
               },
               {
                 label: 'Twitter',

@@ -1,3 +1,7 @@
+---
+sidebar_position: 1
+---
+
 # The NEAR Protocol Specification
 
 Near Protocol is the scalable blockchain protocol.
