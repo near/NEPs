@@ -87,9 +87,8 @@ Alice wants to deposit 1000 DAI tokens to a compound interest contract to earn e
 - The 1000 tokens is `1000 * 10^18` or as a number is `1000000000000000000000`.
 - The compound contract can work with multiple token types.
 
-<details style="background-color: #000; padding: 3px; color: #fff">
+<details>
 <summary>For this example, you may expand this section to see how a previous fungible token standard using escrows would deal with the scenario.</summary>
-<hr/>
 
 **High-level explanation** (NEP-21 standard)
 
@@ -104,7 +103,7 @@ The second transaction is to the `compound` to start the deposit process. Compou
 2. `alice` calls `compound::deposit({"token_contract": "dai", "amount": "1000000000000000000000"})`. During the `deposit` call, `compound` does the following:
    1. makes async call `dai::transfer_from({"owner_id": "alice", "new_owner_id": "compound", "amount": "1000000000000000000000"})`.
    2. attaches a callback `compound::on_transfer({"owner_id": "alice", "token_contract": "dai", "amount": "1000000000000000000000"})`.
-<hr/>
+
 </details>
 
 **High-level explanation**
