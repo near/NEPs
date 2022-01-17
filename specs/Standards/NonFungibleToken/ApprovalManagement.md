@@ -1,4 +1,6 @@
-# Non-Fungible Token Approval Management ([NEP-178](https://github.com/near/NEPs/discussions/178))
+# Non-Fungible Token Approval Management
+
+## [NEP-178](https://github.com/near/NEPs/discussions/178)
 
 Version `1.0.0`
 

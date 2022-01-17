@@ -1,4 +1,6 @@
-# Events Format ([NEP-297](https://github.com/near/NEPs/issues/297))
+# Events Format
+
+## [NEP-297](https://github.com/near/NEPs/issues/297)
 
 Version `1.0.0`
 
