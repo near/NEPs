@@ -43,12 +43,7 @@ stylesheets: [
           "showLastUpdateAuthor": true,
           "showLastUpdateTime": true,
           "path": "../specs",
-        },
-        blog: {
-          showReadingTime: true,
-          // Please change this to your repo.
-          editUrl:
-            'https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/',
+          "routeBasePath": '/',
         },
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
@@ -73,7 +68,11 @@ stylesheets: [
 //            position: 'left',
 //            label: 'Specification',
 //          },
-          {to: '/docs', label: 'Specification', position: 'left'},
+          {
+            to: '/',
+            label: 'Specification',
+            position: 'left'
+          },
           {
             href: 'https://docs.near.org/',
             label: 'Dev Docs',
@@ -99,7 +98,7 @@ stylesheets: [
             items: [
               {
                 label: 'Specification',
-                to: '/docs',
+                to: '/',
               },
               {
                 label: 'Dev Docs',
