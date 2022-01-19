@@ -115,7 +115,7 @@ stylesheets: [
             items: [
               {
                 label: 'Stack Overflow',
-                href: 'https://stackoverflow.com/questions/tagged/docusaurus',
+                href: 'https://stackoverflow.com/questions/tagged/nearprotocol',
               },
               {
                 label: 'Discord',
@@ -123,7 +123,7 @@ stylesheets: [
               },
               {
                 label: 'Twitter',
-                href: 'https://twitter.com/docusaurus',
+                href: 'https://twitter.com/NEARProtocol',
               },
             ],
           },
@@ -131,8 +131,8 @@ stylesheets: [
             title: 'More',
             items: [
               {
-                label: 'NEAR',
-                to: 'https://near.org',
+                label: 'SDK Docs',
+                to: 'https://near-sdk.io/',
               },
               {
                 label: 'GitHub',
@@ -141,7 +141,7 @@ stylesheets: [
             ],
           },
         ],
-        copyright: `Copyright © ${new Date().getFullYear()} NEAR, Inc. Built with Docusaurus.`,
+        copyright: `Copyright © ${new Date().getFullYear()} <a href="https://near.org">NEAR Protocol</a> | All rights reserved | hello@near.org`,
       },
       prism: {
         theme: lightCodeTheme,

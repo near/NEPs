@@ -1,4 +1,4 @@
-## Proposals
+# Proposals
 
 This section contains the NEAR Enhancement Proposals (NEPs) that cover a fleshed out concept for NEAR. Before an idea is turned into a proposal, it will be fleshed out and discussed on the [NEAR Governance Forum](https://gov.near.org).
 

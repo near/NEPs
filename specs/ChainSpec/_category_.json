@@ -3,4 +3,9 @@
   "label": "Chain specification",
   "collapsible": true,
   "collapsed": true,
+  "link": {
+    "type": "generated-index",
+    "slug": "/ChainSpec",
+    "title": "Chain specification"
+  }
 }

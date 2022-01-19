@@ -1,4 +1,4 @@
-## Standards
+# Standards
 
 - [Fungible Token](FungibleToken/README.md)
     - [Core Standard](FungibleToken/Core.md)

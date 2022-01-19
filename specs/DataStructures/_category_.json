@@ -3,4 +3,9 @@
   "label": "Data Structures",
   "collapsible": true,
   "collapsed": true,
+  "link": {
+    "type": "generated-index",
+    "slug": "/DataStructures",
+    "title": "Data Structures"
+  }
 }
