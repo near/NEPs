@@ -63,6 +63,7 @@
       - [Royalty Payout](Standards/NonFungibleToken/Payout.md)
       - [Events](Standards/NonFungibleToken/Event.md)
   - [Storage Management](Standards/StorageManagement.md)
+  - [Events Format](Standards/EventsFormat.md)
 - [Proposals](Proposals/README.md)
   - [Access Keys](Proposals/0005-access-keys.md)
   - [Wasm bindings](Proposals/0006-bindings.md)
