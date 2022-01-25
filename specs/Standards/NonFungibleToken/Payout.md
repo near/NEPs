@@ -1,4 +1,7 @@
-# Standard for a Multiple-Recipient-Payout mechanic on NFT Contracts (NEP-199)
+# Standard for a Multiple-Recipient-Payout mechanic on NFT Contracts
+
+## (NEP-199)
+
 Version `2.0.0`.
 
 This standard assumes the NFT contract has implemented

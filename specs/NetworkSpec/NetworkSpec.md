@@ -12,7 +12,7 @@ Data structures used for messages between peers are enumerated in [Message](Mess
 
 When a node starts for the first time it tries to connect to a list of bootstrap nodes specified via a config file. The address for each node
 
-It is expected that a node periodically requests a list of peers from its neighboring nodes to learn about other nodes in the network. This will allow every node to discover each other, and have relevant information to try to establish a new connection with it. When a node receives a message of type [`PeersRequest`](Messages.md#peermessage) it is expected to answer with a message of type [`PeersResponse`](Message.md#peermessage) with information from healthy peers known to this node.
+It is expected that a node periodically requests a list of peers from its neighboring nodes to learn about other nodes in the network. This will allow every node to discover each other, and have relevant information to try to establish a new connection with it. When a node receives a message of type [`PeersRequest`](Messages.md#peermessage) it is expected to answer with a message of type [`PeersResponse`](Messages.md#peermessage) with information from healthy peers known to this node.
 
 ### Handshakes
 

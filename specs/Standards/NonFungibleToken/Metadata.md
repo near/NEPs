@@ -1,4 +1,6 @@
-# Non-Fungible Token Metadata ([NEP-177](https://github.com/near/NEPs/discussions/177))
+# Non-Fungible Token Metadata
+
+## [NEP-177](https://github.com/near/NEPs/discussions/177)
 
 Version `2.0.0`
 

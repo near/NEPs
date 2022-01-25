@@ -1,4 +1,6 @@
-# Non-Fungible Token ([NEP-171](https://github.com/near/NEPs/discussions/171))
+# Non-Fungible Token
+
+## [NEP-171](https://github.com/near/NEPs/discussions/171)
 
 Version `1.0.1`
 
