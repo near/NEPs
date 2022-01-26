@@ -59,21 +59,21 @@ There are 2 types of Receipt: [ActionReceipt](#actionreceipt) and [DataReceipt](
 
 - **`type`**: `AccountId`
 
-An account_id which signed the original [transaction](Transaction.md).
+An account_id which signed the original [transaction](Transactions.md).
 In case of a deposit refund, the account ID is `system`.
 
 #### signer_public_key
 
 - **`type`**: `PublicKey`
 
-The public key of an [AccessKey](../Primitives/AccessKey.md) which was used to sign the original transaction.
+The public key of an [AccessKey](../DataStructures/AccessKey.md) which was used to sign the original transaction.
 In case of a deposit refund, the public key is empty (all bytes are 0).
 
 #### gas_price
 
 - **`type`**: `u128`
 
-Gas price which was set in a block where the original [transaction](Transaction.md) has been applied.
+Gas price which was set in a block where the original [transaction](Transactions.md) has been applied.
 
 #### output_data_receivers
 

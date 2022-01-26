@@ -31,7 +31,7 @@ A full list of the data available for the contract can be found in [Context API]
 ## Execution
 
 First of all, runtime does prepare the Wasm binary to be executed:
-- loads the contract code from the `receiver_id` [account](../Primitives/Account.md#account) storage
+- loads the contract code from the `receiver_id` [account](../DataStructures/Account.md#account) storage
 - deserializes and validates the `code` Wasm binary (see `prepare::prepare_contract`)
 - injects the gas counting function `gas` which will charge gas on the beginning of the each code block
 - instantiates [Bindings Spec](Components/BindingsSpec/BindingsSpec.md) with binary and calls the `FunctionCall.method_name` exported function

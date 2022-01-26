@@ -1,4 +1,6 @@
-# Non-Fungible Token Enumeration ([NEP-181](https://github.com/near/NEPs/discussions/181))
+# Non-Fungible Token Enumeration
+
+## [NEP-181](https://github.com/near/NEPs/discussions/181)
 
 Version `1.0.0`
 

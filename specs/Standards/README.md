@@ -1,8 +1,9 @@
-## Standards
+# Standards
 
 - [Fungible Token](FungibleToken/README.md)
     - [Core Standard](FungibleToken/Core.md)
     - [Metadata](FungibleToken/Metadata.md)
+    - [Events](FungibleToken/Event.md)
 - [Non-Fungible Token](NonFungibleToken/README.md)
     - [Core Standard](NonFungibleToken/Core.md)
     - [Metadata](NonFungibleToken/Metadata.md)
@@ -11,3 +12,4 @@
     - [Royalty Payout](NonFungibleToken/Payout.md)
     - [Events](NonFungibleToken/Event.md)
 - [Storage Management](StorageManagement.md)
+- [Events Format](EventsFormat.md)

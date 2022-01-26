@@ -184,7 +184,7 @@ pub struct AddKeyAction {
 ```
 
 **Outcome**:
-- Adds a new [AccessKey](AccessKey) to the receiver's account and associates it with a `public_key` provided.
+- Adds a new [AccessKey](../DataStructures/AccessKey) to the receiver's account and associates it with a `public_key` provided.
 
 ### Errors:
 
@@ -228,7 +228,7 @@ pub struct DeleteKeyAction {
 ```
 
 **Outcome**:
-- Deletes the [AccessKey](AccessKey) associated with `public_key`.
+- Deletes the [AccessKey](../DataStructures/AccessKey) associated with `public_key`.
 
 ### Errors
 

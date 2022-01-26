@@ -1,3 +1,7 @@
+---
+sidebar_position: 4
+---
+
 # Architecture
 
 Near node consists roughly of a blockchain layer and a runtime layer.

@@ -1,4 +1,6 @@
-# Fungible Token Metadata ([NEP-148](https://github.com/near/NEPs/discussions/148))
+# Fungible Token Metadata
+
+## [NEP-148](https://github.com/near/NEPs/discussions/148)
 
 Version `1.0.0`
 
@@ -80,7 +82,7 @@ type FungibleTokenMetadata = {
 
 **An implementing contract MUST include the following fields on-chain**
 
-- `spec`: a string. Should be `ft-1.0.0` to indicate that a Fungible Token contract adheres to the current versions of this Metadata and the [Fungible Token Core](./FungibleTokenCore.md) specs. This will allow consumers of the Fungible Token to know if they support the features of a given contract.
+- `spec`: a string. Should be `ft-1.0.0` to indicate that a Fungible Token contract adheres to the current versions of this Metadata and the [Fungible Token Core](./Core.md) specs. This will allow consumers of the Fungible Token to know if they support the features of a given contract.
 - `name`: the human-readable name of the token.
 - `symbol`: the abbreviation, like wETH or AMPL.
 - `decimals`: used in frontends to show the proper significant digits of a token. This concept is explained well in this [OpenZeppelin post](https://docs.openzeppelin.com/contracts/3.x/erc20#a-note-on-decimals).
