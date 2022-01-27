@@ -243,7 +243,7 @@ function ft_transfer_call(
 /* CHANGE METHODS on receiving contract */
 /****************************************/
 
-// This function is implemented on the receving contract.
+// This function is implemented on the receiving contract.
 // As mentioned, the `msg` argument contains information necessary for the receiving contract to know how to process the request. This may include method names and/or arguments. 
 // Returns a value, or a promise which resolves with a value. The value is the
 // number of unused tokens in string form. For instance, if `amount` is 10 but only 9 are
