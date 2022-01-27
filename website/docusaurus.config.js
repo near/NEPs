@@ -48,6 +48,10 @@ stylesheets: [
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
         },
+        sitemap: {
+          changefreq: 'weekly',
+          priority: 0.5,
+        },
       }),
     ],
   ],
@@ -56,18 +60,13 @@ stylesheets: [
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
       navbar: {
-        title: 'NEAR',
+        title: 'Nomicon',
         logo: {
           alt: 'NEAR Logo',
           src: 'img/near_logo.svg',
+          srcDark: 'img/near_logo_white.svg',
         },
         items: [
-//          {
-//            type: 'doc',
-//            docId: 'SUMMARY',
-//            position: 'left',
-//            label: 'Specification',
-//          },
           {
             to: '/',
             label: 'Specification',
