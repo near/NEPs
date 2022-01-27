@@ -5,7 +5,7 @@ This includes the core protocol specification, APIs, contract standards, process
 
 Changes to the protocol specification and standards are called NEAR Enhancement Proposals (NEPs).
 
-This repository uses [mdBook](https://rust-lang.github.io/mdBook) for the [Nomicon website](https://nomicon.io).
+This repository uses [Docusaurus](https://docusaurus.io/) for the [Nomicon website](https://nomicon.io).
 
 ## Specification
 
@@ -43,19 +43,35 @@ Pull request (only when governance discussion has concluded)
 
 Tip: build consensus and integrate feedback. NEPs that have broad support are much more likely to make progress than those that don't receive any comments. Feel free to reach out to the NEP assignee in particular to get help identify stakeholders and obstacles.
 
-### Running mdBook
+### Running Docusaurus
 
-For Linux and OS X, you may run:
+1. Move into the `/website` folder where you will run the following commands:
 
-`./build.sh`
+   - Make sure all the dependencies for the website are installed:
 
-For Windows:
+     ```sh
+     # Install dependencies
+     yarn
+     ```
 
-```bash
-cargo install mdbook
-mdbook build
-```
+   - Run the local docs development server
 
-To quickly iterate, you may also use the command:
+      ```sh
+      # Start the site
+      yarn start
+      ```
 
-`mdbook serve`
+      _Expected Output_
+
+      ```sh
+      # Website with live reload is started
+      Docusaurus server started on port 3000
+      ```
+
+      The website for docs will open your browser locally to port `3000`
+
+2. Make changes to the docs
+
+3. Observe those changes reflected in the local docs
+
+4. Submit a pull request with your changes
