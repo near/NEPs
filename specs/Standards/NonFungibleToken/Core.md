@@ -185,7 +185,7 @@ Contracts which want to make use of `nft_transfer_call` must implement the follo
 // Arguments:
 // * `sender_id`: the sender of `nft_transfer_call`
 // * `previous_owner_id`: the account that owned the NFT prior to it being
-//   transfered to this contract, which can differ from `sender_id` if using
+//   transferred to this contract, which can differ from `sender_id` if using
 //   Approval Management extension
 // * `token_id`: the `token_id` argument given to `nft_transfer_call`
 // * `msg`: information necessary for this contract to know how to process the
