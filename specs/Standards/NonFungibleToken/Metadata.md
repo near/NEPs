@@ -2,7 +2,7 @@
 
 ## [NEP-177](https://github.com/near/NEPs/discussions/177)
 
-Version `2.0.0`
+Version `2.0.1`
 
 ## Summary
 
@@ -62,7 +62,7 @@ A new attribute MUST be added to each `Token` struct:
 
 ```diff
  type Token = {
-   id: string,
+   token_id: string,
    owner_id: string,
 +  metadata: TokenMetadata,
  }
@@ -114,6 +114,8 @@ Contracts should be implemented in a way to avoid extra gas fees for serializati
 - A fleshed out schema for what the `reference` object should contain.
 
 ## Errata
+
+* **2022-02-03**: updated `Token` struct field names. `id` was changed to `token_id`. This is to be consistent with current implementations of the standard and the rust SDK docs.
 
 The first version (`1.0.0`) had confusing language regarding the fields:
 - `issued_at`

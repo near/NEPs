@@ -2,7 +2,7 @@
 
 ## [NEP-171](https://github.com/near/NEPs/discussions/171)
 
-Version `1.0.1`
+Version `1.0.2`
 
 ## Summary
 
@@ -47,9 +47,9 @@ Prior art:
 // extensions such as Approval Management, Metadata, or other
 // attributes may be included in this structure.
 type Token = {
-  id: string,
-  owner_id: string,
-}
+   token_id: string,
+   owner_id: string,
+ }
 
 /******************/
 /* CHANGE METHODS */
@@ -201,6 +201,8 @@ function nft_on_transfer(
 ```
 
 ## Errata
+
+* **2022-02-03**: updated `Token` struct field names. `id` was changed to `token_id`. This is to be consistent with current implementations of the standard and the rust SDK docs.
 
 * **2021-12-20**: updated `nft_resolve_transfer` argument `approved_account_ids` to be type `null|Record<string, number>` instead of `null|string[]`. This gives contracts a way to restore the original approved accounts and their approval IDs. More information can be found in [this](https://github.com/near/NEPs/issues/301) discussion.
 * **2021-07-16**: updated `nft_transfer_call` argument `approval_id` to be type `number|null` instead of `string|null`. As stated, approval IDs are not expected to exceed the JSON limit of 2^53.
