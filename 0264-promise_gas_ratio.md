@@ -34,8 +34,8 @@ This host function definition would look like this (as a Rust consumer):
     /// # Gas
     ///
     /// Gas can be specified using a static amount, a ratio of remaining prepaid gas, or a mixture
-    /// of both. To omit a static gas amount, [`u64::MAX`] can be passed for the `gas` parameter.
-    /// To omit assigning remaining gas, [`u64::MAX`] can be passed as the `gas_ratio` parameter.
+    /// of both. To omit a static gas amount, `0` can be passed for the `gas` parameter.
+    /// To omit assigning remaining gas, `0` can be passed as the `gas_ratio` parameter.
     ///
     /// The gas ratio parameter works as the following:
     ///
@@ -50,10 +50,7 @@ This host function definition would look like this (as a Rust consumer):
     /// # Errors
     ///
     /// <...Ommitted previous errors as they do not change>
-    /// - If the [`u64::MAX`] special value is passed for `gas` and `gas_ratio` parameters
-    ///
-    ///
-    /// [`u64::MAX`]: std::u64::MAX
+    /// - If `0` is passed for both `gas` and `gas_ratio` parameters
     pub fn promise_batch_action_function_call_ratio(
         promise_index: u64,
         method_name_len: u64,
