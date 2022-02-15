@@ -122,4 +122,4 @@ In the future, the NFT contract itself may be able to place an NFT transfer is a
 ## Errata
 
 - Version `2.1.0` adds a memo parameter to `nft_transfer_payout`, which previously forced implementers of `2.0.0` to pass `None` to the inner `nft_transfer`. Also refactors `max_len_payout` to be an option type.
-Version `2.0.0` contains the intended `approval_id` of `u64` instead of the stringified `U64` version. This was an oversight, but since the standard was live for a few months before noticing, the team thought it best to bump the major version.
+- Version `2.0.0` contains the intended `approval_id` of `u64` instead of the stringified `U64` version. This was an oversight, but since the standard was live for a few months before noticing, the team thought it best to bump the major version.
