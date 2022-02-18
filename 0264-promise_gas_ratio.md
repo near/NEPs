@@ -1,4 +1,4 @@
-- Proposal Name: `promise_gas_ratio`
+- Proposal Name: `promise_gas_weight`
 - Start Date: 2021-09-30
 - NEP PR: [nearprotocol/neps#264](https://github.com/nearprotocol/neps/pull/264)
 - Issue(s): https://github.com/near/near-sdk-rs/issues/526
@@ -6,7 +6,7 @@
 # Summary
 [summary]: #summary
 
-This proposal is to introduce a new host function on the NEAR runtime that allows for scheduling cross-contract function calls using a percentage/ratio of the remaining gas in addition to the statically defined amount. This will enable async promise execution to use the remaining gas more efficiently by utilizing unspent gas from the current transaction.
+This proposal is to introduce a new host function on the NEAR runtime that allows for scheduling cross-contract function calls using a percentage/weight of the remaining gas in addition to the statically defined amount. This will enable async promise execution to use the remaining gas more efficiently by utilizing unspent gas from the current transaction.
 
 # Motivation
 [motivation]: #motivation
@@ -16,42 +16,42 @@ We are proposing this to be able to utilize gas more efficiently but also to imp
 # Guide-level explanation
 [guide-level-explanation]: #guide-level-explanation
 
-This host function is similar to [`promise_batch_action_function_call`](https://github.com/near/nearcore/blob/7d15bbc996282c8ae8f15b8f49d110fc901b84d8/runtime/near-vm-logic/src/logic.rs#L1526), except with an additional parameter that lets you specify how much of the excess gas should be attached to the function call. This parameter is a ratio value that determines how much of the excess gas is attached to each function. 
+This host function is similar to [`promise_batch_action_function_call`](https://github.com/near/nearcore/blob/7d15bbc996282c8ae8f15b8f49d110fc901b84d8/runtime/near-vm-logic/src/logic.rs#L1526), except with an additional parameter that lets you specify how much of the excess gas should be attached to the function call. This parameter is a weight value that determines how much of the excess gas is attached to each function. 
 
-So, for example, if there is 40 gas leftover and three function calls that select ratios of 1, 5, and 2, the runtime will add 5, 25, and 10 gas to each function call. A developer can specify whether they want to attach a fixed amount of gas, a ratio of remaining gas, or both. If at least one function call uses a ratio of remaining gas, then all excess gas will be attached to future calls. This proposal allows developers the ability to utilize prepaid gas more efficiently than currently possible.
+So, for example, if there is 40 gas leftover and three function calls that select weights of 1, 5, and 2, the runtime will add 5, 25, and 10 gas to each function call. A developer can specify whether they want to attach a fixed amount of gas, a weight of remaining gas, or both. If at least one function call uses a weight of remaining gas, then all excess gas will be attached to future calls. This proposal allows developers the ability to utilize prepaid gas more efficiently than currently possible.
 
 # Reference-level explanation
 [reference-level-explanation]: #reference-level-explanation
 
-This host function would need to be implemented in `nearcore` and parallel [`promise_batch_action_function_call`](https://github.com/near/nearcore/blob/7d15bbc996282c8ae8f15b8f49d110fc901b84d8/runtime/near-vm-logic/src/logic.rs#L1526). Most details of these functions will be consistent, except that there will be additional bookkeeping for keeping track of which functions specified a ratio for unused gas. This will not affect or replace any existing host functions, but this will likely require a slightly higher gas cost than the original `promise_batch_action_function_call` host function due to this additional overhead.
+This host function would need to be implemented in `nearcore` and parallel [`promise_batch_action_function_call`](https://github.com/near/nearcore/blob/7d15bbc996282c8ae8f15b8f49d110fc901b84d8/runtime/near-vm-logic/src/logic.rs#L1526). Most details of these functions will be consistent, except that there will be additional bookkeeping for keeping track of which functions specified a weight for unused gas. This will not affect or replace any existing host functions, but this will likely require a slightly higher gas cost than the original `promise_batch_action_function_call` host function due to this additional overhead.
 
 This host function definition would look like this (as a Rust consumer):
 ```rust
     /// Appends `FunctionCall` action to the batch of actions for the given promise pointed by
     /// `promise_idx`. This function allows not specifying a specific gas value and allowing the
-    /// runtime to assign remaining gas based on a ratio.
+    /// runtime to assign remaining gas based on a weight.
     ///
     /// # Gas
     ///
-    /// Gas can be specified using a static amount, a ratio of remaining prepaid gas, or a mixture
+    /// Gas can be specified using a static amount, a weight of remaining prepaid gas, or a mixture
     /// of both. To omit a static gas amount, `0` can be passed for the `gas` parameter.
-    /// To omit assigning remaining gas, `0` can be passed as the `gas_ratio` parameter.
+    /// To omit assigning remaining gas, `0` can be passed as the `gas_weight` parameter.
     ///
-    /// The gas ratio parameter works as the following:
+    /// The gas weight parameter works as the following:
     ///
     /// All unused prepaid gas from the current function call is split among all function calls
-    /// which supply this gas ratio. The amount attached to each respective call depends on the
-    /// value of the ratio.
+    /// which supply this gas weight. The amount attached to each respective call depends on the
+    /// value of the weight.
     ///
     /// For example, if 40 gas is leftover from the current method call and three functions specify
-    /// the ratios 1, 5, 2 then 5, 25, 10 gas will be added to each function call respectively,
+    /// the weights 1, 5, 2 then 5, 25, 10 gas will be added to each function call respectively,
     /// using up all remaining available gas.
     ///
     /// # Errors
     ///
     /// <...Ommitted previous errors as they do not change>
-    /// - If `0` is passed for both `gas` and `gas_ratio` parameters
-    pub fn promise_batch_action_function_call_ratio(
+    /// - If `0` is passed for both `gas` and `gas_weight` parameters
+    pub fn promise_batch_action_function_call_weight(
         promise_index: u64,
         method_name_len: u64,
         method_name_ptr: u64,
@@ -59,16 +59,16 @@ This host function definition would look like this (as a Rust consumer):
         arguments_ptr: u64,
         amount_ptr: u64,
         gas: u64,
-        gas_ratio: u64,
+        gas_weight: u64,
     );
 
 ```
 
-The only difference from the existing API is `gas_ratio` added as another parameter, as an unsigned 64-bit integer.
+The only difference from the existing API is `gas_weight` added as another parameter, as an unsigned 64-bit integer.
 
-As for calculations, the remaining gas at the end of the transaction can be floor divided by the sum of all the ratios tracked. Then, after getting this value, just attach that value multiplied by the ratio gas to each function call action. 
+As for calculations, the remaining gas at the end of the transaction can be floor divided by the sum of all the weights tracked. Then, after getting this value, just attach that value multiplied by the weight gas to each function call action. 
 
-For example, if there are three ratios, `a`, `b`, `c`:
+For example, if there are three weights, `a`, `b`, `c`:
 ```
 v = remaining_gas.div_floor(a + b + c)
 a_gas += a * v
@@ -80,7 +80,7 @@ c_gas += c * v
 
 ### SDK changes
 
-This protocol change will allow cross-contract calls to provide a fixed amount of gas and/or adjust the ratio of unused gas to use. If neither is provided, it will default to using a ratio of 1 for each and no static amount of gas. If no function modifies this ratio, the runtime will split the unused gas evenly among all function calls.
+This protocol change will allow cross-contract calls to provide a fixed amount of gas and/or adjust the weight of unused gas to use. If neither is provided, it will default to using a weight of 1 for each and no static amount of gas. If no function modifies this weight, the runtime will split the unused gas evenly among all function calls.
 
 Currently, the API for a cross-contract call looks like:
 ```rust
@@ -92,10 +92,10 @@ When the intended API should not require thinking about how much gas to attach b
 
 ```rust
 ext::some_method(/* parameters */, contract_account_id)
-      // Optional configuration
+      // Optional configuweightn
       .with_amount(1 /* default deposit of 0 */)
       .with_static_gas(5_000_000_000_000 /* default of 0 */)
-      .with_unused_gas_ratio(2 /* default 1 */)
+      .with_unused_gas_weight(2 /* default 1 */)
 ```
 
 At a basic level, a developer has only to include the parameters for the function call and specify the account id of the contract being called. Currently, only the amount can be optional because there is no way to set a reasonable default for the amount of gas to use for each function call.
@@ -115,7 +115,7 @@ At a basic level, a developer has only to include the parameters for the functio
 [rationale-and-alternatives]: #rationale-and-alternatives
 
 Alternative 1 (fraction parameters):
-The primary alternative is using a numerator and denominator to represent a fraction instead of a ratio. This alternative would be equivalent to the one listed above except for two u64 additional parameters instead of just the one for ratio. I'll list the tradeoff as pros and cons:
+The primary alternative is using a numerator and denominator to represent a fraction instead of a weight. This alternative would be equivalent to the one listed above except for two u64 additional parameters instead of just the one for weight. I'll list the tradeoff as pros and cons:
 
 Pros:
 - Can under-utilize the gas for the current transaction to limit gas allowed for certain functions 
@@ -149,12 +149,12 @@ Cons:
 
 What needs to be addressed before this gets merged: 
 - How much refactoring exactly is needed to handle this pattern?
-    - Can we keep a queue of receipt and action indices with their respective ratios and update their gas values after the current method is executed? Is there a cleaner way to handle this while keeping order?
+    - Can we keep a queue of receipt and action indices with their respective weights and update their gas values after the current method is executed? Is there a cleaner way to handle this while keeping order?
 - Do we want to attach the gas lost due to precision on division to any function?
 
 What would be addressed in future independently of the solution:
-- How many users would expect the ability to refund part of the gas after the initial transaction? (is this worth considering the API difference of using fractions rather than ratios)
-- Will ratios be an intuitive experience for developers?
+- How many users would expect the ability to refund part of the gas after the initial transaction? (is this worth considering the API difference of using fractions rather than weights)
+- Will weights be an intuitive experience for developers?
 
 # Future possibilities
 [future-possibilities]: #future-possibilities
