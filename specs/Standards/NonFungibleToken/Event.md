@@ -1,4 +1,4 @@
-# Non-Fungible Token Event
+# Events
 
 Version `1.0.0`
 

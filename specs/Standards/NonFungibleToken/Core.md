@@ -1,4 +1,4 @@
-# Non-Fungible Token
+# Core Functionality
 
 ## [NEP-171](https://github.com/near/NEPs/discussions/171)
 
