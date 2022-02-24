@@ -1,4 +1,4 @@
-# Standard for a Multiple-Recipient-Payout mechanic on NFT Contracts
+# Royalties and Payouts
 
 ## (NEP-199)
 

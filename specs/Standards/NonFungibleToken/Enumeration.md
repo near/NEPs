@@ -1,4 +1,4 @@
-# Non-Fungible Token Enumeration
+# Enumeration
 
 ## [NEP-181](https://github.com/near/NEPs/discussions/181)
 

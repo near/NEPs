@@ -1,4 +1,4 @@
-# Non-Fungible Token Metadata
+# Metadata
 
 ## [NEP-177](https://github.com/near/NEPs/discussions/177)
 
