@@ -252,7 +252,7 @@ function ft_on_transfer(
     sender_id: string,
     amount: string,
     msg: string
-): string {}
+): u128 {}
 
 /****************/
 /* VIEW METHODS */
@@ -264,7 +264,7 @@ function ft_total_supply(): string {}
 // Returns the balance of an account in string form representing a value as an unsigned 128-bit integer. If the account doesn't exist must returns `"0"`.
 function ft_balance_of(
     account_id: string
-): string {}
+): u128 {}
 ```
 
 The following behavior is required, but contract authors may name this function something other than the conventional `ft_resolve_transfer` used here.
@@ -301,7 +301,7 @@ function ft_resolve_transfer(
    sender_id: string,
    receiver_id: string,
    amount: string
-): string {}
+): u128 {}
 ```
 
 ## Drawbacks
