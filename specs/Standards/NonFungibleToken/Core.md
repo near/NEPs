@@ -2,7 +2,7 @@
 
 ## [NEP-171](https://github.com/near/NEPs/discussions/171)
 
-Version `1.0.2`
+Version `1.1.0`
 
 ## Summary
 
