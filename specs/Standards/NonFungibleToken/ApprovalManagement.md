@@ -2,7 +2,7 @@
 
 ## [NEP-178](https://github.com/near/NEPs/discussions/178)
 
-Version `1.0.0`
+Version `1.1.0`
 
 ## Summary
 
@@ -21,7 +21,7 @@ However, some Non-Fungible Token developers, marketplaces, dApps, or artists may
 Prior art:
 
 - Ethereum's [ERC-721]
-- [NEP-4](https://github.com/near/NEPs/pull/4), NEAR's old NFT standard that does not include approvals per token ID
+- [NEP-4](https://github.com/near/NEPs/pull/4), NEAR's old NFT standard that does not include approved_account_ids per token ID
 
 ## Example Scenarios
 
@@ -75,9 +75,9 @@ Alice approves Bob to transfer her token.
    The response:
 
        {
-         "id": "1",
+         "token_id": "1",
          "owner_id": "alice.near",
-         "approvals": {
+         "approved_account_ids": {
            "bob": 1,
          }
        }
@@ -234,23 +234,23 @@ Again, note that no previous approvers will get cross-contract calls in this cas
 
 ## Reference-level explanation
 
-The `Token` structure returned by `nft_token` must include an `approvals` field, which is a map of account IDs to approval IDs. Using TypeScript's [Record type](https://www.typescriptlang.org/docs/handbook/utility-types.html#recordkeystype) notation:
+The `Token` structure returned by `nft_token` must include an `approved_account_ids` field, which is a map of account IDs to approval IDs. Using TypeScript's [Record type](https://www.typescriptlang.org/docs/handbook/utility-types.html#recordkeystype) notation:
 
 ```diff
- type Token = {
-   id: string,
+type Token = {
+   token_id: string,
    owner_id: string,
-+  approvals: Record<string, number>,
- };
++  approved_account_ids: Record<string, number>,
+ }
 ```
 
 Example token data:
 
 ```json
 {
-  "id": "1",
+  "token_id": "1",
   "owner_id": "alice.near",
-  "approvals": {
+  "approved_account_ids": {
     "bob.near": 1,
     "carol.near": 2,
   }
@@ -271,26 +271,26 @@ Note that while this describes an honest mistake, the possibility of such a bug 
 
 To avoid this possibility, the NFT contract generates a unique approval ID each time it approves an account. Then when calling `nft_transfer` or `nft_transfer_call`, the approved account passes `approval_id` with this value to make sure the underlying state of the token hasn't changed from what the approved account expects.
 
-Keeping with the example above, say the initial approval of the second marketplace generated the following `approvals` data:
+Keeping with the example above, say the initial approval of the second marketplace generated the following `approved_account_ids` data:
 
 ```json
 {
-  "id": "1",
+  "token_id": "1",
   "owner_id": "alice.near",
-  "approvals": {
+  "approved_account_ids": {
     "marketplace_1.near": 1,
     "marketplace_2.near": 2,
   }
 }
 ```
 
-But after the transfers and re-approval described above, the token might have `approvals` as:
+But after the transfers and re-approval described above, the token might have `approved_account_ids` as:
 
 ```json
 {
-  "id": "1",
+  "token_id": "1",
   "owner_id": "alice.near",
-  "approvals": {
+  "approved_account_ids": {
     "marketplace_2.near": 3,
   }
 }
@@ -330,7 +330,7 @@ The NFT contract must implement the following methods:
 //
 // Arguments:
 // * `token_id`: the token for which to add an approval
-// * `account_id`: the account to add to `approvals`
+// * `account_id`: the account to add to `approved_account_ids`
 // * `msg`: optional string to be passed to `nft_on_approve`
 //
 // Returns void, if no `msg` given. Otherwise, returns promise call to
@@ -352,7 +352,7 @@ function nft_approve(
 //
 // Arguments:
 // * `token_id`: the token for which to revoke an approval
-// * `account_id`: the account to remove from `approvals`
+// * `account_id`: the account to remove from `approved_account_ids`
 function nft_revoke(
   token_id: string,
   account_id: string
@@ -364,11 +364,11 @@ function nft_revoke(
 // * Caller of the method must attach a deposit of 1 yoctoⓃ for security
 //   purposes
 // * If contract requires >1yN deposit on `nft_approve`, contract
-//   MUST refund all associated storage deposit when owner revokes approvals
+//   MUST refund all associated storage deposit when owner revokes approved_account_ids
 // * Contract MUST panic if called by someone other than token owner
 //
 // Arguments:
-// * `token_id`: the token with approvals to revoke
+// * `token_id`: the token with approved_account_ids to revoke
 function nft_revoke_all(token_id: string) {}
 
 /****************/
@@ -380,7 +380,7 @@ function nft_revoke_all(token_id: string) {}
 //
 // Arguments:
 // * `token_id`: the token for which to revoke an approval
-// * `approved_account_id`: the account to check the existence of in `approvals`
+// * `approved_account_id`: the account to check the existence of in `approved_account_ids`
 // * `approval_id`: an optional approval ID to check against current approval ID for given account
 //
 // Returns:
@@ -404,11 +404,11 @@ What does this mean?
 
 First, it's useful to understand what we mean by "single-block gas limit". This refers to the [hard cap on gas per block at the protocol layer](https://docs.near.org/docs/concepts/gas#thinking-in-gas). This number will increase over time.
 
-Removing data from a contract uses gas, so if an NFT had a large enough number of approvals, `nft_revoke_all` would fail, because calling it would exceed the maximum gas.
+Removing data from a contract uses gas, so if an NFT had a large enough number of approved_account_ids, `nft_revoke_all` would fail, because calling it would exceed the maximum gas.
 
-Contracts must prevent this by capping the number of approvals for a given token. However, it is up to contract authors to determine a sensible cap for their contract (and the single block gas limit at the time they deploy). Since contract implementations can vary, some implementations will be able to support a larger number of approvals than others, even with the same maximum gas per block.
+Contracts must prevent this by capping the number of approved_account_ids for a given token. However, it is up to contract authors to determine a sensible cap for their contract (and the single block gas limit at the time they deploy). Since contract implementations can vary, some implementations will be able to support a larger number of approved_account_ids than others, even with the same maximum gas per block.
 
-Contract authors may choose to set a cap of something small and safe like 10 approvals, or they could dynamically calculate whether a new approval would break future calls to `nft_revoke_all`. But every contract MUST ensure that they never break the functionality of `nft_revoke_all`.
+Contract authors may choose to set a cap of something small and safe like 10 approved_account_ids, or they could dynamically calculate whether a new approval would break future calls to `nft_revoke_all`. But every contract MUST ensure that they never break the functionality of `nft_revoke_all`.
 
 
 ### Approved Account Contract Interface
@@ -439,8 +439,12 @@ function nft_on_approve(
 
 Note that the NFT contract will fire-and-forget this call, ignoring any return values or errors generated. This means that even if the approved account does not have a contract or does not implement `nft_on_approve`, the approval will still work correctly from the point of view of the NFT contract.
 
-Further note that there is no parallel `nft_on_revoke` when revoking either a single approval or when revoking all. This is partially because scheduling many `nft_on_revoke` calls when revoking all approvals could incur prohibitive [gas fees](https://docs.near.org/docs/concepts/gas). Apps and contracts which cache NFT approvals can therefore not rely on having up-to-date information, and should periodically refresh their caches. Since this will be the necessary reality for dealing with `nft_revoke_all`, there is no reason to complicate `nft_revoke` with an `nft_on_revoke` call.
+Further note that there is no parallel `nft_on_revoke` when revoking either a single approval or when revoking all. This is partially because scheduling many `nft_on_revoke` calls when revoking all approved_account_ids could incur prohibitive [gas fees](https://docs.near.org/docs/concepts/gas). Apps and contracts which cache NFT approved_account_ids can therefore not rely on having up-to-date information, and should periodically refresh their caches. Since this will be the necessary reality for dealing with `nft_revoke_all`, there is no reason to complicate `nft_revoke` with an `nft_on_revoke` call.
 
 ### No incurred cost for core NFT behavior
 
-NFT contracts should be implemented in a way to avoid extra gas fees for serialization & deserialization of `approvals` for calls to `nft_*` methods other than `nft_token`. See `near-contract-standards` [implementation of `ft_metadata` using `LazyOption`](https://github.com/near/near-sdk-rs/blob/c2771af7fdfe01a4e8414046752ee16fb0d29d39/examples/fungible-token/ft/src/lib.rs#L71) as a reference example.
+NFT contracts should be implemented in a way to avoid extra gas fees for serialization & deserialization of `approved_account_ids` for calls to `nft_*` methods other than `nft_token`. See `near-contract-standards` [implementation of `ft_metadata` using `LazyOption`](https://github.com/near/near-sdk-rs/blob/c2771af7fdfe01a4e8414046752ee16fb0d29d39/examples/fungible-token/ft/src/lib.rs#L71) as a reference example.
+
+## Errata
+
+* **2022-02-03**: updated `Token` struct field names. `id` was changed to `token_id` and `approvals` was changed to `approved_account_ids`. This is to be consistent with current implementations of the standard and the rust SDK docs.
