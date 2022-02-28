@@ -9,7 +9,7 @@ execution of the [`DeployContractAction`]. The results are then saved and later 
 user when a [`FunctionCall`] is invoked.
 
 Note that only some parts of this document are normative. This document delves into implementation
-details, which may change in the future as long as the behaviour documented by the normative
+details, which may change in the future as long as the behavior documented by the normative
 portions of this book is maintained. The non-normative portions of this document will be called out
 as such.
 
@@ -74,7 +74,7 @@ genesis configuration parameters, the limits are reset to the configured paramet
 
 ## Gas instrumentation
 
-In order to implement precise and efficient gas accounting, the contract code is analysed and
+In order to implement precise and efficient gas accounting, the contract code is analyzed and
 instrumented with additional operations before the compilation occurs. One such instrumentation
 implements accounting of the gas fees.
 
@@ -85,27 +85,24 @@ gas budget before continuing execution. In the case where the remaining gas bala
 to continue execution, the `GasExceeded` error is raised and execution of the contract is
 terminated.
 
-Let metered block to refer to a set of wasm instructions. Analysis segments wasm functions
-into metered blocks such that every instruction belongs to exactly one metered block. The
-instructions belonging to a metered block need not immediately follow another instruction within
-the same metered block.
-
-During analysis metered blocks form a stack and the instructions are assigned to the metered block
-on top of the stack. The following terminology will be used throughout this section to refer to
-metered block operations:
+The gas instrumentation analysis will segment a wasm function into metered blocks. In the end,
+every instruction will belong to exactly one metered block. The algorithm uses a stack of metered
+blocks and instructions are assigned to the metered block on top of the stack. The following
+terminology will be used throughout this section to refer to metered block operations:
 
 * active metered block – the metered block at the top of the stack;
 * pop – the active metered block is removed from the top of the stack;
-* push – a new metered block is added to the stack, becoming the new active metered block;
+* push – a new metered block is added to the stack, becoming the new active metered block.
 
 A metered block is pushed onto the stack upon a function entry and after every `if` and `loop`
 instruction. After the `br`, `br_if`, `br_table`, `else` & `return` (pseudo-)instructions the
-active metered block is poppsed and a new metered block is pushed onto the stack.
+active metered block is popped and a new metered block is pushed onto the stack.
 
 The `end` pseudo-instruction associated with the `if` & `loop` instructions, or when it terminates
-the function body, will cause the top-most metered block to be popped off the stack. Furthermore,
-if the `if..end`, `loop..end` or `block..end` control block terminated by this `end`
-pseudo-instruction contained any branching instructions targetting control blocks other than the
+the function body, will cause the top-most metered block to be popped off the stack. As a
+consequence, the instructions within a metered block need not be consecutive in the original
+function. If the `if..end`, `loop..end` or `block..end` control block terminated by this `end`
+pseudo-instruction contained any branching instructions targeting control blocks other than the
 control block terminated by this `end` pseudo instruction, the currently active metered block is
 popped and a new metered block is pushed.
 
@@ -124,7 +121,7 @@ then charged by instrumentation inserted at the beginning of each metered block.
 In this section some examples of the instrumentation are presented as an understanding aid to the
 specification above. The examples are annotated with comments describing how much gas is charged at
 a specific point of the program. The programs presented here are not intended to be executable or
-to produce meaningful behaviour.
+to produce meaningful behavior.
 
 #### `block` instruction does not terminate a metered block
 
@@ -226,8 +223,7 @@ operand stack may contain during the contract execution.
 The maximum operand stack height required for a function to execute successfully is computed
 statically by emulating operand stack operations each instruction executes. For example `i32.const
 1` pushes 1 entry on the operand stack, whereas `i32.add` pops two entries and pushes 1 entry
-containing the result value. The number of entries an initially empty stack may contain at any
-point of execution of the function constitutes its required stack.
+containing the result value.
 
 Before a `call` instruction is executed, the callee's required stack is added to the current stack
 height counter and is compared with the `max_stack_height` parameter. A trap is raised if the

@@ -52,6 +52,11 @@ In order to implement this action, the runtime will:
 - invoke the function that has been exported from the wasm module with the name matching
   that specified in the `FunctionCall.method_name` field.
 
+Note that some of these steps may be executed during the
+[`DeployContractAction`](./Actions.md#DeployContractAction) instead. This is largely an
+optimization of the `FunctionCall` gas fee, and must not result in an observable behavioral
+difference of the `FunctionCall` action.
+
 During the execution of the contract, the runtime will:
 
 - count burnt gas on execution;
@@ -60,11 +65,6 @@ During the execution of the contract, the runtime will:
 - collect logs produced by the contract;
 - set the return data; and
 - create new receipts through [PromisesAPI](Components/BindingsSpec/PromisesAPI.md).
-
-Note that, as an implementation detail, some of these steps may be executed as part of the
-prerequisite actions such as [`DeployContractAction`](./Actions.md#DeployContractAction). This is
-largely an optimization of the gas fee structure, and may not result in an observable functional
-difference.
 
 ## Output
 
