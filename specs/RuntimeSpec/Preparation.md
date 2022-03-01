@@ -200,7 +200,7 @@ body, for the `end` pseudo-instruction as well as `br 0` cause a backward jump b
 beginning of the loop body. A similar reasoning works for `if .. else .. end` sequence since the
 body is only executed conditionally:
 
-```
+```wat
 (func
   (; charge_gas([i32.const.42 if nop]) ;)
   i32.const 42
@@ -223,13 +223,43 @@ operand stack may contain during the contract execution.
 The maximum operand stack height required for a function to execute successfully is computed
 statically by emulating operand stack operations each instruction executes. For example `i32.const
 1` pushes 1 entry on the operand stack, whereas `i32.add` pops two entries and pushes 1 entry
-containing the result value.
+containing the result value. The maximum operand stack height of the `if..else..end` control block
+is the larger of the heights for two bodies of the conditional. Stack operations for each
+instruction are otherwise specified in the section 4 of the WebAssembly core 1.0 specification.
 
-Before a `call` instruction is executed, the callee's required stack is added to the current stack
-height counter and is compared with the `max_stack_height` parameter. A trap is raised if the
-counter exceeds the limit. The call instruction is executed, otherwise.
+Before the `call` or `call_indirect` instructions are executed, the callee's required stack is
+added to the current stack height counter and is compared with the `max_stack_height` parameter. A
+trap is raised if the counter exceeds the limit. The instruction is executed, otherwise.
 
-<!-- TODO: describe order between gas and stack depth instrumentation (and why it matters!) -->
-<!-- TODO: expand on the operand stack depth instrumentation -->
-<!-- TODO: describe the ahead-of-time compilation implementation detail and the errors it may cause
-           or limits it may impose -->
+Note that the stack depth instrumentation runs after the gas instrumentation. At each point where
+gas is charged one entry worth of operand stack space is considered to be used.
+
+### Examples
+
+**This section is not normative.**
+
+Picking the example from the gas instrumentation section, we can tell that this function will use
+just 1 operand slot. Lets annotate the operand stack operations at each of the instructions:
+
+```wat
+(func
+  (; charge_gas(...) ;)    (; [] => [gas] => [] ;)
+  i32.const 42             (; [] => [i32]       ;)
+  if                       (; [i32] => []       ;)
+    (; charge_gas(...) ;)    (; [] => [gas] => [] ;)
+    nop                      (; []                ;)
+    nop                      (; []                ;)
+  else
+    (; charge_gas(...) ;)    (; [] => [gas] => [] ;)
+    unreachable              (; []                ;)
+  end
+  nop                      (; [] ;)
+)
+```
+
+We can see that at no point in time the operand stack contained more than 1 entry. As a result,
+the runtime will check that 1 entry is available in the operand stack before the function is
+invoked.
+
+<!-- TODO: describe the ahead-of-time compilation details and the errors it may cause or limits it
+     may impose -->
