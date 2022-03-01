@@ -92,7 +92,7 @@ When the intended API should not require thinking about how much gas to attach b
 
 ```rust
 ext::some_method(/* parameters */, contract_account_id)
-      // Optional configuweightn
+      // Optional config
       .with_amount(1 /* default deposit of 0 */)
       .with_static_gas(5_000_000_000_000 /* default of 0 */)
       .with_unused_gas_weight(2 /* default 1 */)
