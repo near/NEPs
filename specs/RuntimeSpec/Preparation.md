@@ -26,8 +26,8 @@ validation, instrumentation, conversion to machine code (compilation) and storag
 artifacts in the account’s storage.
 
 Functions exported from the contract module may then be invoked through the mechanisms provided
-by the protocol. To common ways to call a function is by submitting a function call action onto
-chain or via a cross-contract call.
+by the protocol. Two common ways to call a function is by submitting a function call action onto
+the chain or via a cross-contract call.
 
 Most of the errors that have occurred as part of validation, instrumentation, compilation, etc. are
 saved and reported when a `FunctionCallAction` is submitted. Deployment itself may only report
@@ -35,31 +35,37 @@ errors relevant to itself, as described in the specification for [`DeployContrac
 
 ## Validation
 
-A number of limits are imposed on the WASM module that is being parsed:
+A number of limits are imposed on the WebAssembly module that is being parsed:
 
-* The length of wasm code must not exceed `max_contract_size` genesis configuration parameter;
-* Module must be a valid module according to the WebAssembly core 1.0 specification (this means no
-  extensions such as multi value or simd; this limitation may be relaxed in the future).
-* The wasm module may contain no more than `1_000_000` distinct signatures;
-* The wasm module may contain no more than `1_000_000` function imports and local function
-  definitions;
-* The wasm module may contain no more than `100_000` imports;
-* The wasm module may contain no more than `100_000` exports;
-* The wasm module may contain no more than `1_000_000` global definitions and imports;
-* The wasm module may contain no more than `100_000` data segments;
+* The length of the wasm code must not exceed `max_contract_size` genesis configuration parameter;
+* The wasm module must be a valid module according to the WebAssembly core 1.0 specification (this
+  means no extensions such as multi value returns or SIMD; this limitation may be relaxed in the
+  future).
+* The wasm module may contain no more than:
+  * `1_000_000` distinct signatures;
+  * `1_000_000` function imports and local function definitions;
+  * `100_000` imports;
+  * `100_000` exports;
+  * `1_000_000` global definitions and imports;
+  * `100_000` data segments;
+  * `1` table;
+  * `1` memory;
 * UTF-8 strings comprising the wasm module definition (e.g. export name) may not exceed `100_000`
   bytes each;
 * Function definitions may not specify more than `50_000` locals;
 * Signatures may not specify more than `1_000` parameters;
 * Signatures may not specify more than `1_000` results;
 * Tables may not specify more than `10_000_000` entries;
-* Module may not specify more than `1` table;
-* Module may not specify more than `1` memory;
 
-These additional requirements are imposed at a later stage:
+If the contract code is invalid, the first violation in the binary encoding of the WebAssembly
+module shall be reported. These additional requirements are imposed after the module is parsed:
 
 * The wasm module may contain no more function imports and local definitions than specified in the
   `max_functions_number_per_contract` genesis configuration parameter; and
+
+These additional requirements are imposed after the instrumentation, as documented in the later
+sections:
+
 * All imports may only import from the `env` module.
 
 ## Memory normalization
@@ -110,7 +116,7 @@ Note that some of the instructions considered to affect the control flow in the 
 specification such as `call`, `call_indirect` or `unreachable` do not affect metered block
 construction and are accounted for much like other instructions not mentioned in this section.
 
-All the instructions covered by a metered block are assigned a fee based on `regular_op_cost`
+All the instructions covered by a metered block are assigned a fee based on the `regular_op_cost`
 genesis parameter. Pseudo-instructions do not cause any fee to be charged. A sum of these fees is
 then charged by instrumentation inserted at the beginning of each metered block.
 
@@ -221,10 +227,10 @@ The `max_stack_height` genesis parameter imposes a limit on the number of entrie
 operand stack may contain during the contract execution.
 
 The maximum operand stack height required for a function to execute successfully is computed
-statically by emulating operand stack operations each instruction executes. For example `i32.const
-1` pushes 1 entry on the operand stack, whereas `i32.add` pops two entries and pushes 1 entry
-containing the result value. The maximum operand stack height of the `if..else..end` control block
-is the larger of the heights for two bodies of the conditional. Stack operations for each
+statically by simulating the operand stack operations executed by each instruction. For example,
+`i32.const 1` pushes 1 entry on the operand stack, whereas `i32.add` pops two entries and pushes 1
+entry containing the result value. The maximum operand stack height of the `if..else..end` control
+block is the larger of the heights for two bodies of the conditional. Stack operations for each
 instruction are otherwise specified in the section 4 of the WebAssembly core 1.0 specification.
 
 Before the `call` or `call_indirect` instructions are executed, the callee's required stack is

@@ -46,7 +46,7 @@ In order to implement this action, the runtime will:
 - load the contract code from the `receiver_id` [account](../DataStructures/Account.md#account)’s
   storage;
 - parse, validate and instrument the contract code (see [Preparation](./Preparation.md));
-- optionally, compile the contract code to an executable form;
+- optionally, convert the contract code to a different executable format;
 - instantiate the WASM module, linking runtime-provided functions defined in the
   [Bindings Spec](Components/BindingsSpec/BindingsSpec.md) & running the start function; and
 - invoke the function that has been exported from the wasm module with the name matching
