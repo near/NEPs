@@ -1,6 +1,6 @@
 # Contract Metadata
 
-## [NEP-329](https://github.com/near/NEPs/discussions/329)
+## [NEP-330](https://github.com/near/NEPs/discussions/329)
 
 Version `1.0.0`
 
@@ -10,7 +10,7 @@ The contract metadata is a standard interface to allow for auditing and viewing 
 
 ## Motivation
 
-There is no trivial way of finding the source code or author of a deployed smart contract. By having a standard that outlines how to view the source code of an abitrary smart contract, an environment of openness and collaboration is created.
+There is no trivial way of finding the source code or author of a deployed smart contract. By having a standard that outlines how to view the source code of an arbitrary smart contract, an environment of openness and collaboration is created.
 
 The initial discussion can be found [here](https://github.com/near/NEPs/discussions/329).
 
