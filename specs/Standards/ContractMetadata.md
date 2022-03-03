@@ -31,13 +31,7 @@ A new function for querying the metadata must be supported on each smart contrac
 function contract_metadata(): ContractMetadata {}
 ```
 
-A new function for setting the contract metadata in case of updates to the currently deployed wasm or link to the open source code may optionally be implemented:
-
-```ts
-function set_contract_metadata(
-  metadata: ContractMetadata,
-): ContractMetadata {}
-```
+It is up to the author of the contract to keep the version and link up to date when new code is deployed. They can choose to update the metadata with a setter, have it static on the contract, or any other way of their choosing.
 
 ### An implementing contract MAY include the following fields on-chain
 
