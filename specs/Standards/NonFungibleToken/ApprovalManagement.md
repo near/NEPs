@@ -59,9 +59,11 @@ Alice approves Bob to transfer her token.
 
 1. Alice calls `nft::nft_approve({ "token_id": "1", "account_id": "bob" })`. She attaches 1 yoctoⓃ, (.000000000000000000000001Ⓝ). Using [NEAR CLI](https://docs.near.org/docs/tools/near-cli) to make this call, the command would be:
 
+      ```bash
        near call nft nft_approve \
          '{ "token_id": "1", "account_id": "bob" }' \
          --accountId alice --depositYocto 1
+      ```
 
    The response:
 
@@ -69,11 +71,14 @@ Alice approves Bob to transfer her token.
 
 2. Alice calls view method `nft_token`:
 
+      ```bash
        near view nft nft_token \
          '{ "token_id": "1" }'
+      ```
 
    The response:
 
+      ```bash
        {
          "token_id": "1",
          "owner_id": "alice.near",
@@ -81,11 +86,14 @@ Alice approves Bob to transfer her token.
            "bob": 1,
          }
        }
+      ```
 
 3. Alice calls view method `nft_is_approved`:
 
+      ```bash
        near view nft nft_is_approved \
          '{ "token_id": "1", "approved_account_id": "bob" }'
+      ```
 
    The response:
 
@@ -105,22 +113,26 @@ Alice approves Market to transfer one of her tokens and passes `msg` so that NFT
 
 1. Using near-cli:
 
+      ```bash
        near call nft nft_approve '{
          "token_id": "1",
          "account_id": "market",
          "msg": "{\"action\": \"list\", \"price\": \"100\", \"token\": \"nDAI\" }"
        }' --accountId alice --depositYocto 1
+      ```
 
    At this point, near-cli will hang until the cross-contract call chain fully resolves, which would also be true if Alice used a Market frontend using [near-api-js](https://docs.near.org/docs/develop/front-end/near-api-js). Alice's part is done, though. The rest happens behind the scenes.
 
 2. `nft` schedules a call to `nft_on_approve` on `market`. Using near-cli notation for easy cross-reference with the above, this would look like:
 
+      ```bash
        near call market nft_on_approve '{
          "token_id": "1",
          "owner_id": "alice",
          "approval_id": 2,
          "msg": "{\"action\": \"list\", \"price\": \"100\", \"token\": \"nDAI\" }"
        }' --accountId nft
+      ```
 
 3. `market` now knows that it can sell Alice's token for 100 [nDAI](https://explorer.mainnet.near.org/accounts/6b175474e89094c44da98b954eedeac495271d0f.factory.bridge.near), and that when it transfers it to a buyer using `nft_transfer`, it can pass along the given `approval_id` to ensure that Alice hasn't changed her mind. It can schedule any further cross-contract calls it wants, and if it returns these promises correctly, Alice's initial near-cli call will resolve with the outcome from the final step in the chain. If Alice actually made this call from a Market frontend, the frontend can use this return value for something useful.
 
@@ -141,27 +153,33 @@ Not to worry, though, she checks `nft_is_approved` and sees that she did success
 
 1. Using near-cli:
 
+      ```bash
        near call nft nft_approve '{
          "token_id": "1",
          "account_id": "bazaar",
          "msg": "{\"action\": \"list\", \"price\": \"100\", \"token\": \"nDAI\" }"
        }' --accountId alice --depositYocto 1
+      ```
 
 2. `nft` schedules a call to `nft_on_approve` on `market`. Using near-cli notation for easy cross-reference with the above, this would look like:
 
+      ```bash
        near call bazaar nft_on_approve '{
          "token_id": "1",
          "owner_id": "alice",
          "approval_id": 3,
          "msg": "{\"action\": \"list\", \"price\": \"100\", \"token\": \"nDAI\" }"
        }' --accountId nft
+      ```
 
 3. 💥 `bazaar` doesn't implement this method, so the call results in an error. Alice sees this error in the output from near-cli.
 
 4. Alice checks if the approval itself worked, despite the error on the cross-contract call:
 
+      ```bash
        near view nft nft_is_approved \
          '{ "token_id": "1", "approved_account_id": "bazaar" }'
+      ```
 
    The response:
 
@@ -179,11 +197,13 @@ Bob buys Alice's token via Market. Bob probably does this via Market's frontend,
 
 Using near-cli notation for consistency:
 
+```bash
     near call nft nft_transfer '{
       "receiver_id": "bob",
       "token_id": "1",
       "approval_id": 2,
     }' --accountId market --depositYocto 1
+```
 
 ### 5. Approval IDs, edge case
 
@@ -197,11 +217,13 @@ Bob signs some transaction which results in the `bazaar` contract calling `nft_t
 
 Using near-cli notation for consistency:
 
+```bash
     near call nft nft_transfer '{
       "receiver_id": "bob",
       "token_id": "1",
       "approval_id": 3,
     }' --accountId bazaar --depositYocto 1
+```
 
 ### 6. Revoke one
 
@@ -211,10 +233,12 @@ Alice revokes Market's approval for this token.
 
 Using near-cli:
 
+```bash
     near call nft nft_revoke '{
       "account_id": "market",
       "token_id": "1",
     }' --accountId alice --depositYocto 1
+```
 
 Note that `market` will not get a cross-contract call in this case. The implementors of the Market app should implement [cron](https://en.wikipedia.org/wiki/Cron)-type functionality to intermittently check that Market still has the access they expect.
 
@@ -226,9 +250,11 @@ Alice revokes all approval for this token.
 
 Using near-cli:
 
+```bash
     near call nft nft_revoke_all '{
       "token_id": "1",
     }' --accountId alice --depositYocto 1
+```
 
 Again, note that no previous approvers will get cross-contract calls in this case.
 
