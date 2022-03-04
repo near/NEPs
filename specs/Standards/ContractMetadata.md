@@ -6,11 +6,11 @@ Version `1.0.0`
 
 ## Summary
 
-The contract metadata is a standard interface to allow for auditing and viewing source code for a deployed smart contract. Implementation of this standard is purely optional but is recommended for developers whose contracts are open source.
+The contract metadata is a standard interface that allows auditing and viewing source code for a deployed smart contract. Implementation of this standard is purely optional but is recommended for developers whose contracts are open source.
 
 ## Motivation
 
-There is no trivial way of finding the source code or author of a deployed smart contract. By having a standard that outlines how to view the source code of an arbitrary smart contract, an environment of openness and collaboration is created.
+There is no trivial way of finding the source code or author of a deployed smart contract. Having a standard that outlines how to view the source code of an arbitrary smart contract creates an environment of openness and collaboration.
 
 The initial discussion can be found [here](https://github.com/near/NEPs/discussions/329).
 
@@ -36,7 +36,7 @@ It is up to the author of the contract to keep the version and link up to date w
 ### An implementing contract MAY include the following fields on-chain
 
 - `version`: a string that references the specific commit hash or version of the code that is currently deployed on-chain. This can be included regardless of whether or not the contract is open-sourced and can also be used for organizational purposes.
-- `link`: a string that references the link to the open source code. This can be anything such as Github or a CID to somewhere on IPFS.
+- `link`: a string that references the link to the open-source code. This can be anything such as Github or a CID to somewhere on IPFS.
 
 ## Future possibilities
 
