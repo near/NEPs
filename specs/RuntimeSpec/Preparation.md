@@ -85,7 +85,7 @@ instrumented with additional operations before the compilation occurs. One such 
 implements accounting of the gas fees.
 
 Gas fees are accounted for at a granularity of sequences of instructions forming a metered block
-and is consumed before execution of any instruction part of such a sequence. The accounting
+and are consumed before execution of any instruction part of such a sequence. The accounting
 mechanism verifies the remaining gas is sufficient, and subtracts the gas fee from the remaining
 gas budget before continuing execution. In the case where the remaining gas balance is insufficient
 to continue execution, the `GasExceeded` error is raised and execution of the contract is
@@ -114,7 +114,9 @@ popped and a new metered block is pushed.
 
 Note that some of the instructions considered to affect the control flow in the WebAssembly
 specification such as `call`, `call_indirect` or `unreachable` do not affect metered block
-construction and are accounted for much like other instructions not mentioned in this section.
+construction and are accounted for much like other instructions not mentioned in this section. This
+also means that calling `used_gas` host function at different points of the same metered block will
+return the same value.
 
 All the instructions covered by a metered block are assigned a fee based on the `regular_op_cost`
 genesis parameter. Pseudo-instructions do not cause any fee to be charged. A sum of these fees is
