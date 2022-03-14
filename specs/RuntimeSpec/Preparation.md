@@ -115,8 +115,8 @@ popped and a new metered block is pushed.
 Note that some of the instructions considered to affect the control flow in the WebAssembly
 specification such as `call`, `call_indirect` or `unreachable` do not affect metered block
 construction and are accounted for much like other instructions not mentioned in this section. This
-also means that calling `used_gas` host function at different points of the same metered block will
-return the same value.
+also means that calling the `used_gas` host function at different points of the same metered block
+would return the same value if the `base` cost was `0`.
 
 All the instructions covered by a metered block are assigned a fee based on the `regular_op_cost`
 genesis parameter. Pseudo-instructions do not cause any fee to be charged. A sum of these fees is
