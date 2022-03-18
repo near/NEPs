@@ -10,24 +10,20 @@ Created: 03-Mar-2022
 ---
 
 ## Summary
-[summary]: #summary
 
 One paragraph explanation of the proposal.
 
 ## Motivation
-[motivation]: #motivation
 
 Why are we doing this? What use cases does it support? What is the expected outcome?
 
 ## Rationale and alternatives
-[rationale-and-alternatives]: #rationale-and-alternatives
 
 - Why is this design the best in the space of possible designs?
 - What other designs have been considered and what is the rationale for not choosing them?
 - What is the impact of not doing this?
 
 ## Specification
-[specification]: #specification
 
 Explain the proposal as if it was already implemented and you were teaching it to another developer. That generally means:
 
@@ -39,7 +35,6 @@ Explain the proposal as if it was already implemented and you were teaching it t
 For user-facing NEPs this section should focus on user stories.
 
 ## Reference Implementation
-[reference-implementation]: #reference-implementation
 
 This is the technical portion of the NEP. Explain the design in sufficient detail that:
 
@@ -55,19 +50,16 @@ The section should return to the examples given in the previous section, and exp
 If there are security concerns in relation to the NEP, those concerns should be explicitly written out to make sure reviewers of the NEP are aware of them.
 
 ## Drawbacks (Optional)
-[drawbacks]: #drawbacks
 
 Why should we *not* do this?
 
 ## Unresolved Issues (Optional)
-[unresolved-issues]: #unresolved-issues
 
 - What parts of the design do you expect to resolve through the NEP process before this gets merged?
 - What parts of the design do you expect to resolve through the implementation of this feature before stabilization?
 - What related issues do you consider out of scope for this NEP that could be addressed in the future independently of the solution that comes out of this NEP?
 
 ## Future possibilities
-[future-possibilities]: #future-possibilities
 
 Think about what the natural extension and evolution of your proposal would
 be and how it would affect the project as a whole in a holistic
