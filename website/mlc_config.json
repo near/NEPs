@@ -1,13 +1,7 @@
 {
   "ignorePatterns": [
     {
-      "pattern": "^https://near-node.zendesk.com"
-    }
-  ],
-  "replacementPatterns": [
-    {
-      "pattern": "^/",
-      "replacement": "https://nomicon.io/"
+      "pattern": "^/"
     }
   ],
   "timeout": "20s",
