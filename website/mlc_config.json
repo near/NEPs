@@ -2,6 +2,9 @@
   "ignorePatterns": [
     {
       "pattern": "^/"
+    },
+    {
+      "pattern": "^https://codepen.io"
     }
   ],
   "timeout": "20s",

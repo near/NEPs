@@ -300,7 +300,7 @@ promise_batch_action_add_key_with_function_call(promise_idx: u64,
 
 Appends `AddKey` action to the batch of actions for the given promise pointed by `promise_idx`.
 Details for the action: https://github.com/nearprotocol/NEPs/pull/8/files#diff-156752ec7d78e7b85b8c7de4a19cbd4R54
-The access key will have `FunctionCall` permission, details: https://github.com/nearprotocol/NEPs/blob/master/text/0005-access-keys.md#guide-level-explanation
+The access key will have `FunctionCall` permission, details: [/Proposals/0005-access-keys.md#guide-level-explanation](click here)
 
 - If the `allowance` value (not the pointer) is `0`, the allowance is set to `None` (which means unlimited allowance). And positive value represents a `Some(...)` allowance.
 - Given `method_names` is a `utf-8` string with `,` used as a separator. The vm will split the given string into a vector of strings.

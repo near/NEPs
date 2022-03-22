@@ -228,7 +228,7 @@ pub struct DeleteKeyAction {
 ```
 
 **Outcome**:
-- Deletes the [AccessKey](../DataStructures/AccessKey.md) associated with `public_key`.
+- Deletes the [AccessKey](/DataStructures/AccessKey.md) associated with `public_key`.
 
 ### Errors
 
