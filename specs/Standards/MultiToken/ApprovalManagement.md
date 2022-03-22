@@ -222,7 +222,7 @@ Again, note that no previous approvers will get cross-contract calls in this cas
 
 ## Reference-level explanation
 
-The `Token` structure returned by `mt_tokens` must include an `approvals` field, which is a map of account IDs to `Approval`. The `amount` field though wrapped in quotes and treated like strings, the number will be stored as an unsigned integer with 128 bits.
+The `Token` structure returned by `mt_tokens` must include an `approved_account_ids` field, which is a map of account IDs to `Approval`. The `amount` field though wrapped in quotes and treated like strings, the number will be stored as an unsigned integer with 128 bits.
  in approval is  Using TypeScript's [Record type](https://www.typescriptlang.org/docs/handbook/utility-types.html#recordkeystype) notation:
 
 ```diff
@@ -233,7 +233,7 @@ The `Token` structure returned by `mt_tokens` must include an `approvals` field,
  type Token = {
    id: string,
    owner_id: string,
-+  approvals: Record<string, Approval>,
++  approved_account_ids: Record<string, Approval>,
  };
 ```
 
@@ -242,7 +242,7 @@ Example token data:
 ```json
 {
   "id": "1",
-  "approvals": {
+  "approved_account_ids": {
     "bob.near": {
       "amount": "100",
       "approval_id":1,
@@ -269,13 +269,13 @@ Note that while this describes an honest mistake, the possibility of such a bug 
 
 To avoid this possibility, the MT contract generates a unique approval ID each time it approves an account. Then when calling `mt_transfer`, `mt_transfer_call`, `mt_batch_transfer`, or `mt_batch_transfer_call` the approved account passes `approval_id` or `approval_ids` with this value to make sure the underlying state of the token(s) hasn't changed from what the approved account expects.
 
-Keeping with the example above, say the initial approval of the second marketplace generated the following `approvals` data:
+Keeping with the example above, say the initial approval of the second marketplace generated the following `approved_account_ids` data:
 
 ```json
 {
   "id": "1",
   "owner_id": "alice.near",
-  "approvals": {
+  "approved_account_ids": {
     "marketplace_1.near": {
       "approval_id": 1,
       "amount": "100",
@@ -287,13 +287,13 @@ Keeping with the example above, say the initial approval of the second marketpla
 }
 ```
 
-But after the transfers and re-approval described above, the token might have `approvals` as:
+But after the transfers and re-approval described above, the token might have `approved_account_ids` as:
 
 ```json
 {
   "id": "1",
   "owner_id": "alice.near",
-  "approvals": {
+  "approved_account_ids": {
     "marketplace_2.near": {
       "approval_id": 3,
       "amount": "50",
@@ -336,7 +336,7 @@ The MT contract must implement the following methods:
 //
 // Arguments:
 // * `token_ids`: the token ids for which to add an approval
-// * `account_id`: the account to add to `approvals`
+// * `account_id`: the account to add to `approved_account_ids`
 // * `amounts`: the number of tokens to approve for transfer, wrapped in quotes and treated
 //    like an array of string, although the numbers will be stored as an array of
 //    unsigned integer with 128 bits.  
@@ -362,7 +362,7 @@ function mt_approve(
 // * Contract MUST panic if called by someone other than token owner
 //
 // Arguments:
-// * `token_ids`: the token for which to revoke approvals
+// * `token_ids`: the token for which to revoke approved_account_ids
 // * `account_id`: the account to remove from `approvals`
 function mt_revoke(
   token_ids: [string],
@@ -375,11 +375,11 @@ function mt_revoke(
 // * Caller of the method must attach a deposit of 1 yoctoⓃ for security
 //   purposes
 // * If contract requires >1yN deposit on `mt_approve`, contract
-//   MUST refund all associated storage deposit when owner revokes approvals
+//   MUST refund all associated storage deposit when owner revokes approved_account_ids
 // * Contract MUST panic if called by someone other than token owner
 //
 // Arguments:
-// * `token_ids`: the token ids with approvals to revoke
+// * `token_ids`: the token ids with approved_account_ids to revoke
 function mt_revoke_all(token_ids: [string]) {}
 
 /****************/
@@ -395,7 +395,7 @@ function mt_revoke_all(token_ids: [string]) {}
 //
 // Arguments:
 // * `token_ids`: the tokens for which to check an approval
-// * `approved_account_id`: the account to check the existence of in `approvals`
+// * `approved_account_id`: the account to check the existence of in `approved_account_ids`
 // * `amounts`: specify the positionally corresponding amount for the `token_id`
 //    that at least must be approved. The number of tokens to approve for transfer,
 //    wrapped in quotes and treated like an array of string, although the numbers will be
@@ -473,4 +473,4 @@ Further note that there is no parallel `mt_on_revoke` when revoking either a sin
 
 ### No incurred cost for core MT behavior
 
-MT contracts should be implemented in a way to avoid extra gas fees for serialization & deserialization of `approvals` for calls to `mt_*` methods other than `mt_tokens`. See `near-contract-standards` [implementation of `ft_metadata` using `LazyOption`](https://github.com/near/near-sdk-rs/blob/c2771af7fdfe01a4e8414046752ee16fb0d29d39/examples/fungible-token/ft/src/lib.rs#L71) as a reference example.
+MT contracts should be implemented in a way to avoid extra gas fees for serialization & deserialization of `approved_account_ids` for calls to `mt_*` methods other than `mt_tokens`. See `near-contract-standards` [implementation of `ft_metadata` using `LazyOption`](https://github.com/near/near-sdk-rs/blob/c2771af7fdfe01a4e8414046752ee16fb0d29d39/examples/fungible-token/ft/src/lib.rs#L71) as a reference example.
