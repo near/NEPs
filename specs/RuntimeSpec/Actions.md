@@ -184,7 +184,7 @@ pub struct AddKeyAction {
 ```
 
 **Outcome**:
-- Adds a new [AccessKey](../DataStructures/AccessKey) to the receiver's account and associates it with a `public_key` provided.
+- Adds a new [AccessKey](/DataStructures/AccessKey.md) to the receiver's account and associates it with a `public_key` provided.
 
 ### Errors:
 

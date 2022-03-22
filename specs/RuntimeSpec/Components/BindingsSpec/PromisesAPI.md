@@ -274,7 +274,7 @@ promise_batch_action_add_key_with_full_access(promise_idx: u64,
 
 Appends `AddKey` action to the batch of actions for the given promise pointed by `promise_idx`.
 Details for the action: https://github.com/nearprotocol/NEPs/pull/8/files#diff-15b6752ec7d78e7b85b8c7de4a19cbd4R54
-The access key will have `FullAccess` permission, details: https://github.com/nearprotocol/NEPs/blob/master/text/0005-access-keys.md#guide-level-explanation
+The access key will have `FullAccess` permission, details: [/Proposals/0005-access-keys.md#guide-level-explanation](click here)
 
 ###### Panics
 
