@@ -56,7 +56,7 @@ To recap, we choose to create this standard, to improve interoperability, develo
 // extensions such as Approval Management, Enumeration, Metadata, or other
 // attributes may be included in this structure.
 type Token = {
-  id: string,
+  token_id: string,
   owner_id: string | null
 }
 
