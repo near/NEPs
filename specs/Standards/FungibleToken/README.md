@@ -1,5 +1,6 @@
-## Fungible Token Standard
+import DocCardList from '@theme/DocCardList';
+import {useCurrentSidebarCategory} from '@docusaurus/theme-common';
 
-- [Fungible Token Core](Core.md)
-- [Fungible Token Metadata](Metadata.md)
-- [Fungible Token Events](Event.md)
+# Fungible Token Standard
+
+<DocCardList items={useCurrentSidebarCategory().items}/>

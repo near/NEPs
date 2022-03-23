@@ -1,4 +1,11 @@
+import DocCardList from '@theme/DocCardList';
+import {useCurrentSidebarCategory} from '@docusaurus/theme-common';
+
 # Standards
+
+<DocCardList items={useCurrentSidebarCategory().items}/>
+
+## Table of Contents
 
 - [Fungible Token](FungibleToken/README.md)
     - [Core Standard](FungibleToken/Core.md)
