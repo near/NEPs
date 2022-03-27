@@ -1,6 +1,6 @@
 # Access Keys
 
-Access key provides an access for a particular account. Each access key belongs to some account and
+Access key provides access for a particular account. Each access key belongs to some account and
 is identified by a unique (within the account) public key. Access keys are stored as `account_id,public_key` in a trie state. Account can have from [zero](#account-without-access-keys) to multiple access keys.
 
 ```rust
@@ -21,6 +21,7 @@ There are 2 types of `AccessKeyPermission` in Near currently: `FullAccess` and `
 pub enum AccessKeyPermission {
     FunctionCall(FunctionCallPermission),
     FullAccess,
+    DelegateCall(DelegateCallPermission),
 }
 ```
 
@@ -48,6 +49,35 @@ pub struct FunctionCallPermission {
 }
 ```
 
+## AccountKeyPermission::DelegateCall
+
+Grants limited permission to make some type of actions from a specified `sender_id`.
+
+```rust
+/// Permission per each type of `Action`.
+pub enum ActionPermission {
+    CreateAccount,
+    DeployContract,
+    FunctionCall,
+    Transfer,
+    Stake,
+    AddKey,
+    DeleteKey,
+    DeleteAccount,
+    DelegateAction,
+}
+
+pub struct DelegateCallPermission {
+    /// The access key only allows actions from the given set from given sender account id.
+    pub sender_id: AccountId,
+    
+    /// Set of allowed actions by given `sender_id`.
+    pub allowed: Set<ActionPermission>, 
+}
+```
+
 ## Account without access keys
 
-If account has no access keys attached it means that it has no owner who can run transactions from its behalf. However, if such accounts has code it can be invoked by other accounts and contracts.
+If account has no access keys attached it means that it has no external party who can run transactions from its behalf. 
+However, if such account has code, it can be invoked by other accounts and contracts.
+Contract code can also add and remove keys or call actions on the account it's deployed.

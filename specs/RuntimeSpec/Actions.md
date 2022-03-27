@@ -12,6 +12,7 @@ pub enum Action {
     AddKey(AddKeyAction),
     DeleteKey(DeleteKeyAction),
     DeleteAccount(DeleteAccountAction),
+    DelegateAction(DelegateAction),
 }
 ```
 
@@ -276,3 +277,29 @@ DeleteAccountStaking { account_id: AccountId }
 
 **Execution Error**:
 - If state or storage is corrupted, a `StorageError` is returned.
+
+## DelegateAction
+
+Delegate action allows to execute an action on antoher account.
+
+```rust
+pub struct DelegateAction {
+    /// Which account to delegate given action.
+    pub delegatee_id: AccountId,
+    /// Specific action to call on the delegatee account.
+    pub action: Action,
+}
+```
+
+**Outcomes**:
+- A new receipt is created toward `delegatee_id` with `action`. Receiver will consider permissions (delegated keys) when receipt arrives which will result in execution of such action or failure.
+
+### Errors
+
+**Validation Error**
+- If `delegatee_id` is not a valid account id, the following error will be returned
+```rust
+/// Invalid account ID.
+InvalidAccountId { account_id: AccountId },
+```
+
