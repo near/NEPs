@@ -1,4 +1,4 @@
-# Multi Token ([NEP-246](https://github.com/near/NEPs/discussions/246))
+# Multi Token ([NEP-245](https://github.com/near/NEPs/discussions/246))
 
 Version `1.0.0`
 

@@ -1,4 +1,4 @@
-# Multi Token Metadata([NEP-246](https://github.com/near/NEPs/discussions/246))
+# Multi Token Metadata([NEP-245](https://github.com/near/NEPs/discussions/246))
 
 
 Version `1.0.0`
@@ -20,7 +20,7 @@ Prior art:
 - NEAR's [Fungible Token Metadata Standard](../FungibleToken/Metadata.md)
 - NEAR's [Non-Fungible Token Metadata Standard](../NonFungibleToken/Metadata.md)
 - Discussion about NEAR's complete NFT standard: #171
-- Discussion about NEAR's complete Multi Token standard: #246
+- Discussion about NEAR's complete Multi Token standard: #245
 
 ## Interface
 

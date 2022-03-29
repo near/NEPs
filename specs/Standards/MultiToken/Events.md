@@ -1,4 +1,4 @@
-# Multi Token Event([NEP-246](https://github.com/near/NEPs/discussions/246))
+# Multi Token Event([NEP-245](https://github.com/near/NEPs/discussions/246))
 
 
 Version `1.0.0`
@@ -16,14 +16,14 @@ NEAR and third-party applications need to track
 Note that applications, including NEAR Wallet, could require implementing additional methods to display tokens correctly such as [`mt_metadata`](Metadata.md) and [`mt_tokens_for_owner`](Enumeration.md).
 
 ## Interface
-Multi Token Events MUST have `standard` set to `"nep246"`, standard version set to `"1.0.0"`, `event` value is one of `mt_mint`, `mt_burn`, `mt_transfer`, and `data` must be of one of the following relavant types: `MtMintLog[] | MtBurnLog[] | MtTransferLog[]`:
+Multi Token Events MUST have `standard` set to `"nep245"`, standard version set to `"1.0.0"`, `event` value is one of `mt_mint`, `mt_burn`, `mt_transfer`, and `data` must be of one of the following relavant types: `MtMintLog[] | MtBurnLog[] | MtTransferLog[]`:
 
 
 
 ```ts
 interface MtEventLogData {
   EVENT_JSON: {
-    standard: "nep246",
+    standard: "nep245",
     version: "1.0.0",
     event: MtEvent,
     data: MtMintLog[] | MtBurnLog[] | MtTransferLog[]
@@ -97,7 +97,7 @@ Single owner minting (pretty-formatted for readability purposes):
 
 ```js
 EVENT_JSON:{
-  "standard": "nep246",
+  "standard": "nep245",
   "version": "1.0.0",
   "event": "mt_mint",
   "data": [
@@ -110,7 +110,7 @@ Different owners minting:
 
 ```js
 EVENT_JSON:{
-  "standard": "nep246",
+  "standard": "nep245",
   "version": "1.0.0",
   "event": "mt_mint",
   "data": [
@@ -124,7 +124,7 @@ Different events (separate log entries):
 
 ```js
 EVENT_JSON:{
-  "standard": "nep246",
+  "standard": "nep245",
   "version": "1.0.0",
   "event": "mt_burn",
   "data": [
@@ -137,7 +137,7 @@ Authorized id:
 
 ```js
 EVENT_JSON:{
-  "standard": "nep246",
+  "standard": "nep245",
   "version": "1.0.0",
   "event": "mt_burn",
   "data": [
@@ -148,7 +148,7 @@ EVENT_JSON:{
 
 ```js
 EVENT_JSON:{
-  "standard": "nep246",
+  "standard": "nep245",
   "version": "1.0.0",
   "event": "mt_transfer",
   "data": [
@@ -157,7 +157,7 @@ EVENT_JSON:{
 }
 
 EVENT_JSON:{
-  "standard": "nep246",
+  "standard": "nep245",
   "version": "1.0.0",
   "event": "mt_transfer",
   "data": [
