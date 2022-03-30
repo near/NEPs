@@ -1,4 +1,4 @@
-# Multi Token Standard Approval Management([NEP-246](https://github.com/near/NEPs/discussions/246))
+# Multi Token Standard Approval Management([NEP-245](https://github.com/near/NEPs/discussions/246))
 
 
 Version `1.0.0`
@@ -222,7 +222,7 @@ Again, note that no previous approvers will get cross-contract calls in this cas
 
 ## Reference-level explanation
 
-The `Token` structure returned by `mt_tokens` must include an `approved_account_ids` field, which is a map of account IDs to `Approval`. The `amount` field though wrapped in quotes and treated like strings, the number will be stored as an unsigned integer with 128 bits.
+The `TokenApproval` structure returned by `mt_token_approvals` returns `approved_account_ids` field, which is a map of account IDs to `Approval` and `owner_id` which is the associated account approved for removal from. The `amount` field though wrapped in quotes and treated like strings, the number will be stored as an unsigned integer with 128 bits. 
  in approval is  Using TypeScript's [Record type](https://www.typescriptlang.org/docs/handbook/utility-types.html#recordkeystype) notation:
 
 ```diff
@@ -230,18 +230,17 @@ The `Token` structure returned by `mt_tokens` must include an `approved_account_
 +   amount: string 
 +   approval_id: string
 + }
- type Token = {
-   id: string,
-   owner_id: string,
++ type TokenApproval = {
++  owner_id: string,
 +  approved_account_ids: Record<string, Approval>,
- };
++ };
 ```
 
-Example token data:
+Example token approval data:
 
 ```json
-{
-  "id": "1",
+[{
+  "owner_id": "alice.near",
   "approved_account_ids": {
     "bob.near": {
       "amount": "100",
@@ -252,7 +251,7 @@ Example token data:
       "approval_id": 2,
     }
   }
-}
+}]
 ```
 
 ### What is an "approval ID"?
@@ -273,7 +272,6 @@ Keeping with the example above, say the initial approval of the second marketpla
 
 ```json
 {
-  "id": "1",
   "owner_id": "alice.near",
   "approved_account_ids": {
     "marketplace_1.near": {
@@ -291,7 +289,6 @@ But after the transfers and re-approval described above, the token might have `a
 
 ```json
 {
-  "id": "1",
   "owner_id": "alice.near",
   "approved_account_ids": {
     "marketplace_2.near": {
@@ -415,6 +412,19 @@ function mt_is_approved(
   approval_ids: number[]|null
 ): boolean {}
 
+// Get a list of all approvals for a given token_id 
+//
+// Arguments:
+// * `from_index`: a string representing an unsigned 128-bit integer,
+//    representing the starting index of tokens to return
+// * `limit`: the maximum number of tokens to return
+//
+// Returns an array of TokenApproval objects, as described in Approval Management standard, and an empty array if there are no approvals
+function mt_token_approvals(
+  token_id: string,
+  from_index: string|null, // default: "0"
+  limit: number|null,
+): TokenApproval[] {}
 
 ```
 
