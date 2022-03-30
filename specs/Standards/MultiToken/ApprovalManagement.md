@@ -412,6 +412,19 @@ function mt_is_approved(
   approval_ids: number[]|null
 ): boolean {}
 
+// Get a the list of approvals for a given token_id and account_id 
+//
+// Arguments:
+// * `token_id`: the token for which to check an approval
+// * `account_id`: the account to check the existence of approvals for 
+//
+// Returns a TokenApproval object, as described in Approval Management standard
+function mt_token_approval(
+  token_id: string,
+  account_id: string,
+): TokenApproval {}
+
+
 // Get a list of all approvals for a given token_id 
 //
 // Arguments:
@@ -425,7 +438,6 @@ function mt_token_approvals(
   from_index: string|null, // default: "0"
   limit: number|null,
 ): TokenApproval[] {}
-
 ```
 
 ### Why must `mt_approve` panic if `mt_revoke_all` would fail later?
