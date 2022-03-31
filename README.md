@@ -22,6 +22,7 @@ Changes to the protocol specification and standards are called NEAR Enhancement 
 |[0178](https://github.com/near/NEPs/blob/master/neps/nep-0178.md)   | Non Fungible Token Approval Management | @chadoh @thor314 | Final |
 |[0181](https://github.com/near/NEPs/blob/master/neps/nep-0181.md)   | Non Fungible Token Enumeration | @chadoh @thor314 | Final |
 |[0199](https://github.com/near/NEPs/blob/master/neps/nep-0199.md)   | Non Fungible Token Royalties and Payouts | @thor314 @mattlockyer | Final |
+|[0245](https://github.com/near/NEPs/blob/master/neps/nep-0245.md)   | Multi Token Standard | @zcstarr @riqi @jriemann @marcos.sun | Draft |
 |[0297](https://github.com/near/NEPs/blob/master/neps/nep-0297.md)   | Contract Events Standard | @telezhnaya | Final |
 |[0330](https://github.com/near/NEPs/blob/master/neps/nep-0330.md)   | Contract Metadata | @BenKurrek | Review |
 
