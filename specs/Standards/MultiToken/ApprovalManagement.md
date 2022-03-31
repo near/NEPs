@@ -222,7 +222,7 @@ Again, note that no previous approvers will get cross-contract calls in this cas
 
 ## Reference-level explanation
 
-The `TokenApproval` structure returned by `mt_token_approvals` returns `approved_account_ids` field, which is a map of account IDs to `Approval` and `owner_id` which is the associated account approved for removal from. The `amount` field though wrapped in quotes and treated like strings, the number will be stored as an unsigned integer with 128 bits. 
+The `TokenApproval` structure returned by `mt_token_approvals` returns `approved_account_ids` field, which is a map of account IDs to `Approval` and `approval_owner_id` which is the associated account approved for removal from. The `amount` field though wrapped in quotes and treated like strings, the number will be stored as an unsigned integer with 128 bits. 
  in approval is  Using TypeScript's [Record type](https://www.typescriptlang.org/docs/handbook/utility-types.html#recordkeystype) notation:
 
 ```diff
@@ -230,8 +230,9 @@ The `TokenApproval` structure returned by `mt_token_approvals` returns `approved
 +   amount: string 
 +   approval_id: string
 + }
++
 + type TokenApproval = {
-+  owner_id: string,
++  approval_owner_id: string,
 +  approved_account_ids: Record<string, Approval>,
 + };
 ```
@@ -240,7 +241,7 @@ Example token approval data:
 
 ```json
 [{
-  "owner_id": "alice.near",
+  "approval_owner_id": "alice.near",
   "approved_account_ids": {
     "bob.near": {
       "amount": "100",
@@ -272,7 +273,7 @@ Keeping with the example above, say the initial approval of the second marketpla
 
 ```json
 {
-  "owner_id": "alice.near",
+  "approval_owner_id": "alice.near",
   "approved_account_ids": {
     "marketplace_1.near": {
       "approval_id": 1,
@@ -289,7 +290,7 @@ But after the transfers and re-approval described above, the token might have `a
 
 ```json
 {
-  "owner_id": "alice.near",
+  "approval_owner_id": "alice.near",
   "approved_account_ids": {
     "marketplace_2.near": {
       "approval_id": 3,
@@ -416,7 +417,7 @@ function mt_is_approved(
 //
 // Arguments:
 // * `token_id`: the token for which to check an approval
-// * `account_id`: the account to check the existence of approvals for 
+// * `account_id`: the account to retrieve approvals for 
 //
 // Returns a TokenApproval object, as described in Approval Management standard
 function mt_token_approval(
