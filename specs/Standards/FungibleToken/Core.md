@@ -155,7 +155,7 @@ Altogether then, Alice may take two steps, though the first may be a background 
 
    Then Alice (or the app she uses) will hold onto the result and use it in the next step. Let's say this result is `"swap:bnna,2"`.
 
-2. Call `wnear::ft_on_transfer`. Using NEAR CLI:
+2. Call `wnear::ft_transfer_call`. Using NEAR CLI:
        near call wnear ft_transfer_call '{
          "receiver_id": "amm",
          "amount": "5000000000000000000000000",
@@ -166,7 +166,7 @@ Altogether then, Alice may take two steps, though the first may be a background 
 
    1. Decrease the balance of `alice` and increase the balance of `amm` by 5000000000000000000000000.
    2. Makes async call `amm::ft_on_transfer({"sender_id": "alice", "amount": "5000000000000000000000000", "msg": "swap:bnna,2"})`.
-   3. Attaches a callback `wnear::ft_resolve_transfer({"sender_id": "alice", "receiver_id": "compound", "amount": "5000000000000000000000000"})`.
+   3. Attaches a callback `wnear::ft_resolve_transfer({"sender_id": "alice", "receiver_id": "amm", "amount": "5000000000000000000000000"})`.
    4. `amm` finishes the swap, either successfully swapping all 5 wNEAR within the desired slippage, or failing.
    5. The `wnear::ft_resolve_transfer` function receives success/failure of the promise. Assuming `amm` implements all-or-nothing transfers (as in, it will not transfer less-than-the-specified amount in order to fulfill the slippage requirements), `wnear` will do nothing at this point if the swap succeeded, or it will decrease the balance of `amm` and increase the balance of `alice` by 5000000000000000000000000.
 
