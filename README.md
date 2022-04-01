@@ -58,8 +58,11 @@ Spec changes are ultimately done via pull requests to this repository (formalize
    * Create a Pull request, using [nep-0000-template.md](nep-0000-template.md) to describe motivation and details of the new Contract or Protocol specification. In the document header, ensure the `Status` is marked as `Draft`, and any relevant discussion links are added to the `DiscussionsTo` section.
    Use the pull request number padded with zeroes. For instance, the pull request `219` should be created as `neps/nep-0219.md`.
    * Add your Draft standard to the `NEPs` section of this README.md. This helps advertise your standard via github.
-   * Update Docusaurus documentation under the `specs/Standards` to describe the contract standard at a high level, how to integrate it into a Dapp, and a link to the standard document (ie. `neps/nep-0123.md`). This helps advertise your standard via [nomicon](https://nomicon.io/).
-   * Once complete, submit the pull request for editor review. 
+   * Update Docusaurus documentation under the `specs/Standards` to describe the contract standard at a high level, how to integrate it into a Dapp, and a link to the standard document (ie. `neps/nep-0123.md`). This helps advertise your standard via [nomicon](https://nomicon.io/). Any nomicon sections should be prefixed with the following note following the header:
+
+    <span style="color:red">Note: this is part of proposed spec [NEP-123](https://github.com/near/NEPs/blob/master/neps/nep-0123.md) and subject to change.</span>
+
+   * Once complete, submit the pull request for editor review.
   
    * The formalization dance begins:
      * NEP Editors, who are unopinionated shepherds of the process, check document formatting, completeness and adherence to [NEP-0001](neps/nep-0001.md) and approve the pull request.
