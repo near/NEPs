@@ -50,7 +50,7 @@ Ideas presented ultimately as NEPs will need to be driven by the author through 
 Spec changes are ultimately done via pull requests to this repository (formalized process [here](neps/nep-0001.md)). In an effort to keep the pull request clean and readable, please follow these instructions to flesh out an idea.
 
 1. Sign up for the [governance site](https://gov.near.org/) and make a post to the appropriate section. For instance, during the ideation phase of a standard, one might start a new conversation in the [Development » Standards section](https://gov.near.org/c/dev/standards/29). The other suggested category in the governance forum is the [Development » Proposals section](https://gov.near.org/c/dev/proposals/68).
-2. The forum has comment threading which allows the community and NEAR Collective to ideate, ask questions, wrestle with approaches, etc. If more immediate responses are desired, consider bringing the conversation [to Discord](https://near.chat).
+2. The forum has comment threading which allows the community and NEAR Collective to ideate, ask questions, wrestle with approaches, etc. If more immediate responses are desired, consider bringing the conversation [Zulip](https://near.zulipchat.com/#narrow/stream/320497-nep-standards) or [to Discord](https://near.chat).
 3. When the governance conversations have reached a point where a clear plan is evident, create a pull request, using the instructions below.
 
    * Clone this repository and create a branch with "my-feature".
