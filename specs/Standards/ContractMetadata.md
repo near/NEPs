@@ -1,6 +1,8 @@
 # Contract Metadata
 
-<span style="color:red">Note: this is part of proposed spec [NEP-330](https://github.com/near/NEPs/blob/master/neps/nep-0330.md) and subject to change.</span>
+:::caution
+This is part of proposed spec [NEP-330](https://github.com/near/NEPs/blob/master/neps/nep-0330.md) and subject to change.
+:::
 
 Version `1.0.0`
 
