@@ -1,5 +1,7 @@
 # Contract Metadata
 
+## [NEP-330](https://github.com/near/NEPs/blob/master/neps/nep-0330.md)
+
 :::caution
 This is part of proposed spec [NEP-330](https://github.com/near/NEPs/blob/master/neps/nep-0330.md) and subject to change.
 :::

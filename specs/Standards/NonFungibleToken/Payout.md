@@ -1,6 +1,6 @@
 # Royalties and Payouts
 
-## (NEP-199)
+## [NEP-199](https://github.com/near/NEPs/blob/master/neps/nep-0199.md)
 
 Version `2.0.0`.
 

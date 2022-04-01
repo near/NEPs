@@ -1,6 +1,6 @@
 # Storage Management
 
-## [NEP-145](https://github.com/near/NEPs/discussions/145)
+## [NEP-145](https://github.com/near/NEPs/blob/master/neps/nep-0145.md)
 
 Version `1.0.0`
 

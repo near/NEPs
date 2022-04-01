@@ -1,6 +1,6 @@
 # Core Functionality
 
-## [NEP-171](https://github.com/near/NEPs/discussions/171)
+## [NEP-171](https://github.com/near/NEPs/blob/master/neps/nep-0171.md)
 
 Version `1.0.2`
 

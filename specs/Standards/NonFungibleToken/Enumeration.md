@@ -1,6 +1,6 @@
 # Enumeration
 
-## [NEP-181](https://github.com/near/NEPs/discussions/181)
+## [NEP-181](https://github.com/near/NEPs/blob/master/neps/nep-0181.md)
 
 Version `1.0.0`
 

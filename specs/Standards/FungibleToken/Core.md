@@ -1,6 +1,6 @@
 # Fungible Token
 
-## [NEP-141](https://github.com/near/NEPs/issues/141)
+## [NEP-141](https://github.com/near/NEPs/blob/master/neps/nep-0141.md)
 
 Version `1.0.0`
 
