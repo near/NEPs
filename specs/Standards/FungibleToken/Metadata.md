@@ -1,6 +1,6 @@
 # Fungible Token Metadata
 
-## [NEP-148](https://github.com/near/NEPs/discussions/148)
+## [NEP-148](https://github.com/near/NEPs/blob/master/neps/nep-0148.md)
 
 Version `1.0.0`
 

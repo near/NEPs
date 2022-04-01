@@ -1,6 +1,6 @@
 # Approval Management
 
-## [NEP-178](https://github.com/near/NEPs/discussions/178)
+## [NEP-178](https://github.com/near/NEPs/blob/master/neps/nep-0178.md)
 
 Version `1.1.0`
 
