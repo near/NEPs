@@ -73,7 +73,7 @@ interface MtBurnLog {
     memo?: string
 }
 
-// Transfer event log. Emitted when a token is transfered.  
+// Transfer event log. Emitted when a token is transferred.  
 // Requirements
 // * Contract MUST emit event when transferring a token
 // Fields 
