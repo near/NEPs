@@ -1,4 +1,4 @@
-# Contract Metadata
+# Source Metadata
 
 ## [NEP-330](https://github.com/near/NEPs/blob/master/neps/nep-0330.md)
 
@@ -10,7 +10,7 @@ Version `1.0.0`
 
 ## Summary
 
-The contract metadata is a standard interface that allows auditing and viewing source code for a deployed smart contract. Implementation of this standard is purely optional but is recommended for developers whose contracts are open source.
+The contract source metadata is a standard interface that allows auditing and viewing source code for a deployed smart contract. Implementation of this standard is purely optional but is recommended for developers whose contracts are open source.
 
 ## Motivation
 
@@ -24,14 +24,14 @@ There is a lot of information that can be held about a contract. Ultimately, we 
 
 ## Specification
 
-Successful implementations of this standard will introduce a new  (`ContractMetadata`) struct that will hold all the necessary information to be queried for. This struct will be kept on the contract level.
+Successful implementations of this standard will introduce a new  (`ContractSourceMetadata`) struct that will hold all the necessary information to be queried for. This struct will be kept on the contract level.
 
 The metadata will include two optional fields:
 - `version`: a string that references the specific commit hash or version of the code that is currently deployed on-chain. This can be included regardless of whether or not the contract is open-sourced and can also be used for organizational purposes.
 - `link`: a string that references the link to the open-source code. This can be anything such as Github or a CID to somewhere on IPFS.
 
 ```ts
-type ContractMetadata = {
+type ContractSourceMetadata = {
   version: string|null, // optional, commit hash being used for the currently deployed wasm. If the contract is not open-sourced, this could also be a numbering system for internal organization / tracking such as "1.0.0" and "2.1.0".
   link: string|null, //optional,  link to open source code such as a Github repository or a CID to somewhere on IPFS.
 }
@@ -40,7 +40,7 @@ type ContractMetadata = {
 In order to view this information, contracts must include a getter which will return the struct.
 
 ```ts
-function contract_metadata(): ContractMetadata {}
+function contract_source_metadata(): ContractSourceMetadata {}
 ```
 
 ## Reference Implementation
@@ -48,7 +48,7 @@ function contract_metadata(): ContractMetadata {}
 As an example, say there was an NFT contract deployed on-chain which was currently using the commit hash `39f2d2646f2f60e18ab53337501370dc02a5661c` and had its open source code located at `https://github.com/near-examples/nft-tutorial`. This contract would then include a struct which has the following fields:
 
 ```ts
-type ContractMetadata = {
+type ContractSourceMetadata = {
   version: "39f2d2646f2f60e18ab53337501370dc02a5661c"
   link: "https://github.com/near-examples/nft-tutorial"
 }
@@ -69,25 +69,25 @@ An example implementation can be seen below.
 /// Simple Implementation
 #[near_bindgen]
 pub struct Contract {
-    pub contract_metadata: ContractMetadata
+    pub contract_metadata: ContractSourceMetadata
 }
 
 /// Contract metadata structure
-pub struct ContractMetadata {
+pub struct ContractSourceMetadata {
     pub version: String,
     pub link: String,
 }
 
 /// Minimum Viable Interface
-pub trait ContractMetadataTrait {
-    fn contract_metadata(&self) -> ContractMetadata;
+pub trait ContractSourceMetadataTrait {
+    fn contract_source_metadata(&self) -> ContractSourceMetadata;
 }
 
 /// Implementation of the view function
 #[near_bindgen]
-impl ContractMetadataTrait for Contract {
-    fn contract_metadata(&self) -> ContractMetadata {
-        self.contract_metadata.get().unwrap()
+impl ContractSourceMetadataTrait for Contract {
+    fn contract_source_metadata(&self) -> ContractSourceMetadata {
+        self.contract_source_metadata.get().unwrap()
     }
 }
 ```
