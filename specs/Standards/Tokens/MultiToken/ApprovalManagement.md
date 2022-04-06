@@ -36,7 +36,7 @@ Let's consider some examples. Our cast of characters & apps:
 * Market: a contract with account `market` which sells tokens from `mt` as well as other token contracts
 * Bazaar: similar to Market, but implemented differently (spoiler alert: has no `mt_on_approve` function!), has account `bazaar`
 
-Alice and Bob are already [registered](../StorageManagement.md) with MT, Market, and Bazaar, and Alice owns a token on the MT contract with ID=`"1"` and a fungible style token with ID =`"2"` and AMOUNT =`"100"`.
+Alice and Bob are already [registered](../../StorageManagement.md) with MT, Market, and Bazaar, and Alice owns a token on the MT contract with ID=`"1"` and a fungible style token with ID =`"2"` and AMOUNT =`"100"`.
 
 Let's examine the technical calls through the following scenarios:
 

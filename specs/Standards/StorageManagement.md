@@ -36,7 +36,7 @@ To show the flexibility and power of this standard, let's walk through two examp
 
 ### Example 1: Fungible Token Contract
 
-Imagine a [fungible token](FungibleToken/Core.md) contract deployed at `ft`. Let's say this contract saves all user balances to a Map data structure internally, and adding a key for a new user requires 0.00235Ⓝ. This contract therefore uses the Storage Management standard to pass this cost onto users, so that a new user must effectively pay a registration fee to interact with this contract of 0.00235Ⓝ, or 2350000000000000000000 yoctoⓃ ([yocto](https://www.metricconversion.us/prefixes.htm) = 10<sup>-24</sup>).
+Imagine a [fungible token](Tokens/FungibleToken/Core.md) contract deployed at `ft`. Let's say this contract saves all user balances to a Map data structure internally, and adding a key for a new user requires 0.00235Ⓝ. This contract therefore uses the Storage Management standard to pass this cost onto users, so that a new user must effectively pay a registration fee to interact with this contract of 0.00235Ⓝ, or 2350000000000000000000 yoctoⓃ ([yocto](https://www.metricconversion.us/prefixes.htm) = 10<sup>-24</sup>).
 
 For this contract, `storage_balance_bounds` will be:
 
@@ -170,7 +170,7 @@ Bob wants to close his account, but has a non-zero balance of `ft` tokens.
 
    It fails with a message like "Cannot gracefully close account with positive remaining balance; bob has balance N"
 
-2. Bob transfers his tokens to a friend using `ft_transfer` from the [Fungible Token Core](FungibleToken/Core.md) standard.
+2. Bob transfers his tokens to a friend using `ft_transfer` from the [Fungible Token Core](Tokens/FungibleToken/Core.md) standard.
 
 3. Bob tries the call from Step 1 again. It works.
 

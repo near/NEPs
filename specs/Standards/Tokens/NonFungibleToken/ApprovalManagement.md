@@ -33,7 +33,7 @@ Let's consider some examples. Our cast of characters & apps:
 * Market: a contract with account `market` which sells tokens from `nft` as well as other NFT contracts
 * Bazaar: similar to Market, but implemented differently (spoiler alert: has no `nft_on_approve` function!), has account `bazaar`
 
-Alice and Bob are already [registered](../StorageManagement.md) with NFT, Market, and Bazaar, and Alice owns a token on the NFT contract with ID=`"1"`.
+Alice and Bob are already [registered](../../StorageManagement.md) with NFT, Market, and Bazaar, and Alice owns a token on the NFT contract with ID=`"1"`.
 
 Let's examine the technical calls through the following scenarios:
 
