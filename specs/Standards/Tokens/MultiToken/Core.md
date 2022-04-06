@@ -1,4 +1,4 @@
-# Multi Token ([NEP-245](https://github.com/near/NEPs/discussions/246))
+# Multi Token
 
 :::caution
 This is part of the proposed spec [NEP-245](https://github.com/near/NEPs/blob/master/neps/nep-0245.md) and is subject to change.
