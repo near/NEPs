@@ -173,9 +173,9 @@ EVENT_JSON:{
 
 Note that the example events covered above cover two different kinds of events:
 1. Events that are not specified in the MT Standard (`mt_mint`, `mt_burn`)
-2. An event that is covered in the [Multi Token Core Standard](https://nomicon.io/Standards/MultiToken/Core.html#mt-interface). (`mt_transfer`)
+2. An event that is covered in the [Multi Token Core Standard](Core.md). (`mt_transfer`)
 
-This event standard also applies beyond the three events highlighted here, where future events follow the same convention of as the second type. For instance, if an MT contract uses the [approval management standard](https://nomicon.io/Standards/MultiToken/ApprovalManagement.html), it may emit an event for `mt_approve` if that's deemed as important by the developer community.
+This event standard also applies beyond the three events highlighted here, where future events follow the same convention of as the second type. For instance, if an MT contract uses the [approval management standard](ApprovalManagement.md), it may emit an event for `mt_approve` if that's deemed as important by the developer community.
 
 Please feel free to open pull requests for extending the events standard detailed here as needs arise.
 
