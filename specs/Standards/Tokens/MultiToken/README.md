@@ -1,7 +1,6 @@
-## Multi Token Standard
+import DocCardList from '@theme/DocCardList';
+import {useCurrentSidebarCategory} from '@docusaurus/theme-common';
 
-- [Multi Token Core](Core.md)
-- [Multi Token Metadata](Metadata.md)
-- [Multi Token Approval Management](ApprovalManagement.md)
-- [Multi Token Enumeration](Enumeration.md)
-- [Multi Token Events](Events.md)
+# Multi Token Standard
+
+<DocCardList items={useCurrentSidebarCategory().items}/>
