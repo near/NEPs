@@ -13,7 +13,7 @@ Changes to the protocol specification and standards are called NEAR Enhancement 
 
 |NEP #   | Title  | Author  | Status  |
 |---|---|---|---|
-|[0001](https://github.com/near/NEPs/blob/master/neps/nep-0001.md)   | NEP Purpose and Guidelines  | @jlogelin  | Living  |
+|[0001](https://github.com/near/NEPs/blob/master/neps/nep-0001.md)   | NEP Purpose and Guidelines  | @nearmax @matklad @jlogelin  | Living  |
 |[0021](https://github.com/near/NEPs/blob/master/neps/nep-0021.md)   | Fungible Token Standard (Deprecated) | @evgenykuzyakov | Final |
 |[0141](https://github.com/near/NEPs/blob/master/neps/nep-0141.md)   | Fungible Token Standard | @evgenykuzyakov @oysterpack | Final |
 |[0145](https://github.com/near/NEPs/blob/master/neps/nep-0145.md)   | Storage Management | @evgenykuzyakov | Final |
