@@ -269,7 +269,7 @@ This is a unique number given to each approval that allows well-intentioned mark
 4. The original owner approves the token for the second marketplace again to list at a new price. But for some reason the second marketplace still lists the token at the previous price and is unaware of the transfers happening.
 5. The second marketplace, operating from old information, attempts to again sell the token at the old price.
 
-Note that while this describes an honest mistake, the possibility of such a bug can also be taken advantage of by malicious parties via [front-running](https://defi.cx/front-running-ethereum/).
+Note that while this describes an honest mistake, the possibility of such a bug can also be taken advantage of by malicious parties via [front-running](https://users.encs.concordia.ca/~clark/papers/2019_wtsc_front.pdf).
 
 To avoid this possibility, the MT contract generates a unique approval ID each time it approves an account. Then when calling `mt_transfer`, `mt_transfer_call`, `mt_batch_transfer`, or `mt_batch_transfer_call` the approved account passes `approval_id` or `approval_ids` with this value to make sure the underlying state of the token(s) hasn't changed from what the approved account expects.
 
