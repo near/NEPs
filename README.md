@@ -1,7 +1,6 @@
 # NEAR Protocol Specifications and Standards
 
 [![project chat](https://img.shields.io/badge/zulip-join_chat-brightgreen.svg)](https://near.zulipchat.com/#narrow/stream/320497-nep-standards)
-[![Discord](https://img.shields.io/discord/490367152054992913.svg)](http://near.chat)
 [![CI](https://github.com/near/NEPs/actions/workflows/build.yml/badge.svg)](https://github.com/near/NEPs/actions/workflows/build.yml)
 
 This repository hosts the current NEAR Protocol specification and standards.
@@ -51,8 +50,8 @@ Ideas presented ultimately as NEPs will need to be driven by the author through 
 
 Spec changes are ultimately done via pull requests to this repository (formalized process [here](neps/nep-0001.md)). In an effort to keep the pull request clean and readable, please follow these instructions to flesh out an idea.
 
-1. Sign up for the [governance site](https://gov.near.org/) and make a post to the appropriate section. For instance, during the ideation phase of a standard, one might start a new conversation in the [Development » Standards section](https://gov.near.org/c/dev/standards/29). The other suggested category in the governance forum is the [Development » Proposals section](https://gov.near.org/c/dev/proposals/68).
-2. The forum has comment threading which allows the community and NEAR Collective to ideate, ask questions, wrestle with approaches, etc. If more immediate responses are desired, consider bringing the conversation to [Zulip](https://near.zulipchat.com/#narrow/stream/320497-nep-standards) or [Discord](https://near.chat).
+1. Sign up for the [governance site](https://gov.near.org/) and make a post to the appropriate section. For instance, during the ideation phase of a standard, one might start a new conversation in the [Development » Standards section](https://gov.near.org/c/dev/standards/29) or the [NEP Discussions Forum](https://github.com/near/NEPs/discussions).
+2. The forum has comment threading which allows the community and NEAR Collective to ideate, ask questions, wrestle with approaches, etc. If more immediate responses are desired, consider bringing the conversation to [Zulip](https://near.zulipchat.com/#narrow/stream/320497-nep-standards).
 3. When the governance conversations have reached a point where a clear plan is evident, create a pull request, using the instructions below.
 
    * Clone this repository and create a branch with "my-feature".
