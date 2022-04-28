@@ -46,7 +46,7 @@ A number of limits are imposed on the WebAssembly module that is being parsed:
   * `1_000_000` function imports and local function definitions;
   * `100_000` imports;
   * `100_000` exports;
-  * `1_000_000` global definitions and imports;
+  * `1_000_000` global imports and module-local global definitions;
   * `100_000` data segments;
   * `1` table;
   * `1` memory;
