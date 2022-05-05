@@ -18,7 +18,7 @@ Suppose Alice has account `alice_near` and Bob has account `bob_near`. Also, som
 each of them has created a public-secret key-pair, saved the secret key somewhere (e.g. in a wallet application)
 and created a full access key with the public key for the account.
 
-We also need to assume that both Alice and Bob has some number of tokens on their accounts. Alice needs >100 tokens on the account
+We also need to assume that both Alice and Bob have some number of tokens on their accounts. Alice needs >100 tokens on the account
 so that she could transfer 100 tokens to Bob, but also Alice and Bob need to have some tokens to pay for the _rent_ of their account --
 which is essentially the cost of the storage occupied by the account in the Near Protocol network.
 
