@@ -137,15 +137,16 @@ interface NftBurnLog {
 
 ## Unresolved Issues
 
-### Dealing with minted NTNFTs at the time of lost/stolen or new account
+### Dealing with minted NTNFTs in cases of lost, stolen or new accounts
 
 Implementers should consider the case of what should happen to these NTNFTs if the user loses access to their account, it is somehow compromised or they simply wish to use a new account. As there are a number of ways this can be handled, this standard does not explicitly mandate that any particular function MUST be implemented to handle this.
 
-However, the following method MAY be considered:
-- The service which created the smart contract would make efforts (off-chain) to identify the user. Once they're satisfied, at the user's request, they would then revoke the NTNFT in the user's old account and mint a new token (presumably with the same metadata) to the new account. This would require adding: `function burn_token(token_id: string): null {}`, which would be callable only by the contract creator.
-- The service implements a Validity status in the NTNFT's metadata that can be updated through the smart contract
-- The service could implement burn function [transfer to 0 address] when implementing. It must be mentioned that this is only applicable when the owner of the address wishes to remove the NTNFT from their wallet, but is not applicable in the situation of lost/stolen keys. 
-- [TODO]() - Are there other common ways to handle this?
+For each of these methods, it would presumably be necessary for the service which created the smart contract to make efforts (off-chain) to identify the user. Once they're satisfied the user has identified themselves they could use any of the following methods to invalidate the old NTNFT and, if required, mint a new token (presumably with the same metadata) to the new account.
+
+- The service would burn the NTNFT in the user's old account using: `function burn_token(token_id: string): null {}`. Giving the user access to this function may also be considered - in cases where they still have access to their account users could pre-emptively call this to prevent anyone using their NTNFTs to impersonate them.
+- The service could implement a `validity` status in the NTNFT's metadata that can be updated to show that the NTNFT is no longer valid. This would require the client services to understand the importance of this field and not simply check for the existence of the NTNFT when gating.
+
+The above methods may also be useful to services when they wish to revoke a users NTNFT, e.g. if the service finds the user was acting fraudulently.
 
 ### Preventing transfer of account via trading wallet keys
 
