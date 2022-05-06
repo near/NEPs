@@ -16,12 +16,13 @@ A standardised interface for constructing NFTs (non fungible tokens) that are no
 
 ## Motivation
 
-There are cases when a service would like to attribute something to a specific address and only that address. In such cases these attestations would no longer be applicable if they were transfered to a different account.
+There are cases when a web3 service would like to attribute something to a specific address and only that address. In such cases these attestations would no longer be applicable if they were transfered to a different account.
 
 Example use-cases:
 
 - badges, POAPs
 - proofs of KYC or other verifications
+- credentials
 - ticketing, access control
 - certificates
 
@@ -136,12 +137,14 @@ interface NftBurnLog {
 
 ## Unresolved Issues
 
-### The ability to transfer NTNFTs due to lost/stolen or new account
+### Dealing with minted NTNFTs at the time of lost/stolen or new account
 
-Worth considering is the case of what should happen to these NTNFTs if the user loses access to their account, it is somehow compromised or they simply wish to use a new account. As there are a number of ways this can be handled, this standard does not explicitly mandate that any particular function MUST be implemented to handle this.
+Implementers should consider the case of what should happen to these NTNFTs if the user loses access to their account, it is somehow compromised or they simply wish to use a new account. As there are a number of ways this can be handled, this standard does not explicitly mandate that any particular function MUST be implemented to handle this.
 
 However, the following method MAY be considered:
 - The service which created the smart contract would make efforts (off-chain) to identify the user. Once they're satisfied, at the user's request, they would then revoke the NTNFT in the user's old account and mint a new token (presumably with the same metadata) to the new account. This would require adding: `function burn_token(token_id: string): null {}`, which would be callable only by the contract creator.
+- The service implements a Validity status in the NTNFT's metadata that can be updated through the smart contract
+- The service could implement burn function [transfer to 0 address] when implementing. It must be mentioned that this is only applicable when the owner of the address wishes to remove the NTNFT from their wallet, but is not applicable in the situation of lost/stolen keys. 
 - [TODO]() - Are there other common ways to handle this?
 
 ### Preventing transfer of account via trading wallet keys
