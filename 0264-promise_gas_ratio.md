@@ -45,7 +45,8 @@ This host function definition would look like this (as a Rust consumer):
     ///
     /// For example, if 40 gas is leftover from the current method call and three functions specify
     /// the weights 1, 5, 2 then 5, 25, 10 gas will be added to each function call respectively,
-    /// using up all remaining available gas.
+    /// using up all remaining available gas. Any remaining gas will be allocated to the last
+    /// function call.
     ///
     /// # Errors
     ///
@@ -70,13 +71,13 @@ As for calculations, the remaining gas at the end of the transaction can be floo
 
 For example, if there are three weights, `a`, `b`, `c`:
 ```
-v = remaining_gas.div_floor(a + b + c)
-a_gas += a * v
-b_gas += b * v
-c_gas += c * v
+weight_sum = a + b + c
+a_gas += remaining_gas * a / weight_sum
+b_gas += remaining_gas * b / weight_sum
+c_gas += remaining_gas * c / weight_sum
 ``` 
 
-<!-- TODO add more info on specific changes to nearcore when necessary/scoped -->
+Any remaining gas that is not allocated to any of these function calls will be attached to the last function call scheduled.
 
 ### SDK changes
 
@@ -88,14 +89,17 @@ let contract_account_id: AccountId = todo!();
 ext::some_method(/* parameters */, contract_account_id, 0 /* deposit amount */, 5_000_000_000_000 /* static amount of gas to attach */)
 ```
 
-When the intended API should not require thinking about how much gas to attach by default, the API will look something like what's shown in [this PR](https://github.com/near/near-sdk-rs/pull/523), which can look like the following:
+When the intended API should not require thinking about how much gas to attach by default, the API will look something like what's shown in [this PR](https://github.com/near/near-sdk-rs/pull/742), which can look like the following:
 
 ```rust
-ext::some_method(/* parameters */, contract_account_id)
-      // Optional config
-      .with_amount(1 /* default deposit of 0 */)
-      .with_static_gas(5_000_000_000_000 /* default of 0 */)
-      .with_unused_gas_weight(2 /* default 1 */)
+cross_contract::ext(contract_account_id)
+ 	// Optional config
+	.with_attached_deposit(1 /* default deposit of 0 */)
+ 	.with_static_gas(Gas(5_000_000_000_000) /* default of 0 */)
+ 	.with_unused_gas_weight(2 /* default 1 */)
+
+ 	// Then call any method to schedule the function call
+ 	.some_method(/* parameters */)
 ```
 
 At a basic level, a developer has only to include the parameters for the function call and specify the account id of the contract being called. Currently, only the amount can be optional because there is no way to set a reasonable default for the amount of gas to use for each function call.
@@ -148,9 +152,10 @@ Cons:
 [unresolved-questions]: #unresolved-questions
 
 What needs to be addressed before this gets merged: 
-- How much refactoring exactly is needed to handle this pattern?
-    - Can we keep a queue of receipt and action indices with their respective weights and update their gas values after the current method is executed? Is there a cleaner way to handle this while keeping order?
-- Do we want to attach the gas lost due to precision on division to any function?
+~~- How much refactoring exactly is needed to handle this pattern?~~
+    ~~- Can we keep a queue of receipt and action indices with their respective weights and update their gas values after the current method is executed? Is there a cleaner way to handle this while keeping order?~~
+~~- Do we want to attach the gas lost due to precision on division to any function?~~
+  - The remaining gas is now attached to the last function call
 
 What would be addressed in future independently of the solution:
 - How many users would expect the ability to refund part of the gas after the initial transaction? (is this worth considering the API difference of using fractions rather than weights)
