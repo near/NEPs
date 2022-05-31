@@ -2,7 +2,7 @@
 
 ## [NEP-177](https://github.com/near/NEPs/blob/master/neps/nep-0177.md)
 
-Version `2.0.1`
+Version `2.1.0`
 
 ## Summary
 
