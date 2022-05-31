@@ -7,7 +7,7 @@ The state of the light client is defined by:
 
 The `epoch_id` refers to the epoch to which the block that is the current known head belongs, and `next_epoch_id` is the epoch that will follow.
 
-Light clients operate by periodically fetching instances of `LightClientBlockView` via particular RPC end-point described [below](#rpc-end-point).
+Light clients operate by periodically fetching instances of `LightClientBlockView` via particular RPC end-point described [below](#rpc-end-points).
 
 Light client doesn't need to receive `LightClientBlockView` for all the blocks. Having the `LightClientBlockView` for block `B` is sufficient to be able to verify any statement about state or outcomes in any block in the ancestry of `B` (including `B` itself). In particular, having the `LightClientBlockView` for the head is sufficient to locally verify any statement about state or outcomes in any block on the canonical chain.
 

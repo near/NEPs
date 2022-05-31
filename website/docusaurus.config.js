@@ -21,6 +21,7 @@ const config = {
   scripts: [
     "/js/hotjar.js",
   ],
+  plugins: [require.resolve('docusaurus-lunr-search')],
   stylesheets: [
     {
       href: 'https://cdn.jsdelivr.net/npm/katex@0.13.24/dist/katex.min.css',
@@ -52,6 +53,10 @@ const config = {
           changefreq: 'weekly',
           priority: 0.5,
         },
+        gtag: {
+          trackingID: 'G-G8LCVP41F0',
+          anonymizeIP: true,
+        },
       }),
     ],
   ],
@@ -59,6 +64,9 @@ const config = {
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
+      colorMode: {
+        respectPrefersColorScheme: true
+      },
       navbar: {
         title: 'Nomicon',
         logo: {
