@@ -85,7 +85,7 @@ For `NFTContractMetadata`:
 
 For `TokenMetadata`:
 
-- `name`:  The name of this specific token.
+- `title`:  The name of this specific token.
 - `description`: A longer description of the token.
 - `media`: URL to associated media. Preferably to decentralized, content-addressed storage.
 - `media_hash`: the base64-encoded sha256 hash of content referenced by the `media` field. This is to guard against off-chain tampering.
