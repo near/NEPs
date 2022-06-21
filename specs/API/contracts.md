@@ -19,7 +19,7 @@ import TabItem from '@theme/TabItem';
 - method: `query`
 - params:
   - `request_type`: `view_account`
-  - [`finality`](/docs/api/rpc#using-finality-param) _OR_ [`block_id`](/docs/api/rpc#using-block_id-param)
+  - [`finality`](/API/setup#using-finality-param) _OR_ [`block_id`](/API/setup#using-block_id-param)
   - `account_id`: _`"example.testnet"`_
 
 Example:
@@ -215,7 +215,7 @@ Here is the exhaustive list of the error variants that can be returned by `view_
 - params:
   - `changes_type`: `account_changes`
   - `account_ids`: [`"example.testnet"`]
-  - [`finality`](/docs/api/rpc#using-finality-param) _OR_ [`block_id`](/docs/api/rpc#using-block_id-param)
+  - [`finality`](/API/setup#using-finality-param) _OR_ [`block_id`](/API/setup#using-block_id-param)
 
 Example:
 
@@ -407,7 +407,7 @@ Here is the exhaustive list of the error variants that can be returned by `EXPER
 - method: `query`
 - params:
   - `request_type`: `view_code`
-  - [`finality`](/docs/api/rpc#using-finality-param) _OR_ [`block_id`](/docs/api/rpc#using-block_id-param)
+  - [`finality`](/API/setup#using-finality-param) _OR_ [`block_id`](/API/setup#using-block_id-param)
   - `account_id`: `"guest-book.testnet"`,
 
 Example:
@@ -609,7 +609,7 @@ Here is the exhaustive list of the error variants that can be returned by `view_
 - method: `query`
 - params:
   - `request_type`: `view_state`
-  - [`finality`](/docs/api/rpc#using-finality-param) _OR_ [`block_id`](/docs/api/rpc#using-block_id-param)
+  - [`finality`](/API/setup#using-finality-param) _OR_ [`block_id`](/API/setup#using-block_id-param)
   - `account_id`: `"guest-book.testnet"`,
   - `prefix_base64`: `""`
 
@@ -1007,7 +1007,7 @@ Here is the exhaustive list of the error variants that can be returned by `view_
   - `changes_type`: `data_changes`
   - `account_ids`: `["example.testnet"]`,
   - `key_prefix_base64`: `"base64 encoded key value"`,
-  - [`finality`](/docs/api/rpc#using-finality-param) _OR_ [`block_id`](/docs/api/rpc#using-block_id-param)
+  - [`finality`](/API/setup#using-finality-param) _OR_ [`block_id`](/API/setup#using-block_id-param)
 
 Example:
 
@@ -1197,7 +1197,7 @@ Here is the exhaustive list of the error variants that can be returned by `EXPER
 - params:
   - `changes_type`: `contract_code_changes`
   - `account_ids`: `["example.testnet"]`,
-  - [`finality`](/docs/api/rpc#using-finality-param) _OR_ [`block_id`](/docs/api/rpc#using-block_id-param)
+  - [`finality`](/API/setup#using-finality-param) _OR_ [`block_id`](/API/setup#using-block_id-param)
 
 Example:
 
@@ -1365,12 +1365,12 @@ Here is the exhaustive list of the error variants that can be returned by `EXPER
 
 ### Call a contract function {#call-a-contract-function}
 
-> Allows you to call a contract method as a [view function](/docs/develop/contracts/as/intro#view-and-change-functions).
+> Allows you to call a contract method as a [view function](https://docs.near.org/docs/develop/contracts/as/intro#view-and-change-functions).
 
 - method: `query`
 - params:
   - `request_type`: `call_function`
-  - [`finality`](/docs/api/rpc#using-finality-param) _OR_ [`block_id`](/docs/api/rpc#using-block_id-param)
+  - [`finality`](/API/setup#using-finality-param) _OR_ [`block_id`](/API/setup#using-block_id-param)
   - `account_id`: _`"example.testnet"`_
   - `method_name`: `name_of_a_example.testnet_method`
   - `args_base64`: `method_arguments_base_64_encoded`

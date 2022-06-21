@@ -15,7 +15,7 @@ sidebar_label: Setup
   - betanet `https://rpc.betanet.near.org` _(may be unstable)_
   - localnet `http://localhost:3030`
 
-Querying historical data (older than 5 [epochs](/docs/concepts/epoch) or ~2.5 days), you may get responses that the data is not available anymore. In that case, archival RPC nodes will come to your rescue:
+Querying historical data (older than 5 [epochs](https://docs.near.org/docs/concepts/epoch) or ~2.5 days), you may get responses that the data is not available anymore. In that case, archival RPC nodes will come to your rescue:
 
 - mainnet `https://archival-rpc.mainnet.near.org`
 - testnet `https://archival-rpc.testnet.near.org`
@@ -38,8 +38,8 @@ After that is set up, just copy/paste the `JSON object` example snippets below i
 
 > All of the queries listed below can be called using [`near-api-js`](https://github.com/near/near-api-js).
 
-- For `near-api-js` installation and setup please refer to `near-api-js` [quick reference documentation](/docs/api/naj-quick-reference).
-- All JavaScript code snippets below require a `near` object. For examples of how to instantiate, [ [**click here**](/docs/api/naj-quick-reference#connect) ].
+- For `near-api-js` installation and setup please refer to `near-api-js` [quick reference documentation](https://docs.near.org/docs/api/naj-quick-reference).
+- All JavaScript code snippets below require a `near` object. For examples of how to instantiate, [ [**click here**](https://docs.near.org/docs/api/naj-quick-reference#connect) ].
 
 ### HTTPie Setup {#httpie-setup}
 

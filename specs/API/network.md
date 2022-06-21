@@ -436,7 +436,7 @@ Here is the exhaustive list of the error variants that can be returned by `netwo
 - method: `validators`
 - params: `["block hash"]`, `[block number]`, or `[null]` for the latest block
 
-**Note:** For `["block hash"]` & `[block number]` you will need to query recent blocks as they become garbage collected after five [epochs](/docs/concepts/epoch).
+**Note:** For `["block hash"]` & `[block number]` you will need to query recent blocks as they become garbage collected after five [epochs](https://docs.near.org/docs/concepts/epoch).
 
 `[block number]`
 

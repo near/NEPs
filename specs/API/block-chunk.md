@@ -19,7 +19,7 @@ import TabItem from '@theme/TabItem';
 
 - method: `block`
 - params:
-  - [`finality`](/docs/api/rpc#using-finality-param) _OR_ [`block_id`](/docs/api/rpc#using-block_id-param)
+  - [`finality`](/API/setup#using-finality-param) _OR_ [`block_id`](/API/setup#using-block_id-param)
 
 `finality` example:
 
@@ -346,7 +346,7 @@ Here is the exhaustive list of the error variants that can be returned by `block
 
 - method: `EXPERIMENTAL_changes_in_block`
 - params:
-  - [`finality`](/docs/api/rpc#using-finality-param) _OR_ [`block_id`](/docs/api/rpc#using-block_id-param)
+  - [`finality`](/API/setup#using-finality-param) _OR_ [`block_id`](/API/setup#using-block_id-param)
 
 `finality`
 
@@ -593,11 +593,11 @@ Here is the exhaustive list of the error variants that can be returned by `EXPER
 
 ### Chunk Details {#chunk-details}
 
-> Returns details of a specific chunk. You can run a [block details](/docs/api/rpc#block-details) query to get a valid chunk hash.
+> Returns details of a specific chunk. You can run a [block details](/API/setup#block-details) query to get a valid chunk hash.
 
 - method: `chunk`
 - params:
-  - `chunk_id` _OR_ [`block_id`, `shard_id`](/docs/api/rpc#using-block_id-param)
+  - `chunk_id` _OR_ [`block_id`, `shard_id`](/API/setup#using-block_id-param)
 
 `chunk_id` example:
 

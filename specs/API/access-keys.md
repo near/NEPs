@@ -21,7 +21,7 @@ import TabItem from '@theme/TabItem';
 - method: `query`
 - params:
   - `request_type`: `view_access_key`
-  - [`finality`](/docs/api/rpc#using-finality-param) _OR_ [`block_id`](/docs/api/rpc#using-block_id-param)
+  - [`finality`](/API/setup#using-finality-param) _OR_ [`block_id`](/API/setup#using-block_id-param)
   - `account_id`: _`"example.testnet"`_
   - `public_key`: _`"example.testnet's public key"`_
 
@@ -235,7 +235,7 @@ Here is the exhaustive list of the error variants that can be returned by `view_
 - method: `query`
 - params:
   - `request_type`: `view_access_key_list`
-  - [`finality`](/docs/api/rpc#using-finality-param) _OR_ [`block_id`](/docs/api/rpc#using-block_id-param)
+  - [`finality`](/API/setup#using-finality-param) _OR_ [`block_id`](/API/setup#using-block_id-param)
   - `account_id`: _`"example.testnet"`_
 
 Example:
@@ -541,7 +541,7 @@ Here is the exhaustive list of the error variants that can be returned by `view_
 - params:
   - `changes_type`: `single_access_key_changes`
   - `keys`: `[{ account_id, public_key }]`
-  - [`finality`](/docs/api/rpc#using-finality-param) _OR_ [`block_id`](/docs/api/rpc#using-block_id-param)
+  - [`finality`](/API/setup#using-finality-param) _OR_ [`block_id`](/API/setup#using-block_id-param)
 
 Example:
 
@@ -734,7 +734,7 @@ Here is the exhaustive list of the error variants that can be returned by `EXPER
 - params:
   - `changes_type`: `all_access_key_changes`
   - `account_ids`: `[ "example.testnet", "example2.testnet"]`
-  - [`finality`](/docs/api/rpc#using-finality-param) _OR_ [`block_id`](/docs/api/rpc#using-block_id-param)
+  - [`finality`](/API/setup#using-finality-param) _OR_ [`block_id`](/API/setup#using-block_id-param)
 
 Example:
 
