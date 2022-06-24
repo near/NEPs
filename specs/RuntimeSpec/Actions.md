@@ -12,7 +12,6 @@ pub enum Action {
     AddKey(AddKeyAction),
     DeleteKey(DeleteKeyAction),
     DeleteAccount(DeleteAccountAction),
-    DelegateAction(DelegationAction),
 }
 ```
 
@@ -277,84 +276,3 @@ DeleteAccountStaking { account_id: AccountId }
 
 **Execution Error**:
 - If state or storage is corrupted, a `StorageError` is returned.
-
-## DelegateAction
-
-Delegate action allows for an account to initiate a batch of actions on behalf of the receiving account, allowing to proxy actions. This is used in implementation of meta transactions.
-
-```rust
-pub struct DelegateAction {
-    /// Receiver of the delegated actions.
-    receiver_id: AccountId,
-    /// List of actions to be executed.
-    actions: Vec<Action>,
- 
-    /// Public key that is used to sign this delegated action.
-    signer_pk: PublicKey,
-    /// Nonce is used to determine that the same delegate action is not sent twice by relayers and should match for given account's `signer_pk`. 
-    /// After this action is processed it will increment.
-    nonce: Nonce,
-    /// Signature of the originating user signing `DelegateActionMessage` formed out of the data in the `DelegateAction`.
-    signature: Signature,
-}
-```
-
- Supporting a batch of `actions` means `DelegateAction` can initiate a complex steps like creating a new account and transferring funds, deploying a contract and executing an initialization function.
-
-***Validation***:
-To ensure that `DelegateAction` is correct, on receival the verification of signature is done: `verify_signature(hash(message), signer_pk, signature)`.
-
-The `message` is formed in the next format and must be signed by the user:
-```rust
-struct DelegateActionMessage {
-    /// Matching the `predecessor_id` that have created `DelegateAction`.
-    sender_id: AccountId,
-    /// Matching the given account_id.
-    signer_id: AccountId,
-    /// Matching the `signer_pk` from `DelegateAction`.
-    public_key: PublicKey,
-    /// Nonce for the given `public_key` from `DelegateAction`.
-    nonce: Nonce,
-    /// Matching the `receiver_id` from `DelegateAction`.
-    receiver_id: AccountId,
-    /// Block hash to ensure validity.
-    /// Actions matching `actions` from `DelegateAction`.
-    actions: Vec<Action>,
-}
-```
-
-The next set of security concerns are addressed by this format:
- - If format matches `Transaction`, the relayer can just send it directly, not receiving payment.
- - Because set of actions can include pay back to the relayer (for example by paying in FT), the `sender_id` is added directly into the message to ensure that nobody else can send this message.
- - `nonce` is included to ensure that this message can't be replayed again.
- - `public_key` and `signer_id` are needed to ensure the on the right account, work across rotating keys and fetch correct `nonce`.
-
-The permissions are verified based on kind `AccessKeyPermission` of `signer_pk`:
- - `AccessKeyPermission::FullAccess`, all actions are allowed.
- - `AccessKeyPermission::FunctionCall`, only a single `FunctionCall` action is allowed in `actions`. 
-    - `DelegateAction.receiver_id` must match to the `account[public_key].receiver_id`
-    - `DelegateAction.actions[0].method_name` must be in the `account[public_key].method_names`
-
-***Outcomes***:
-- If `signature` matches receiver's accounts `signer_pk`, new receipt is created from this account with set of `ActionReceipt { receiver_id, action }` for each item in `actions`. 
-
-### Errors
-
-**Validation Error**
-- If `signer_pk` does not exist for the given account, the following error will be returned
-```rust
-/// Signer key for delegate action is missing from given account
-DelegateActionSignerDoesNotExist
-```
-
-- If `nonce` does not exist match `signer_pk` for  `receiver_id`, the following error will be returned
-```rust
-/// Nonce must be account[signer_pk].nonce + 1
-DelegateActionInvalidNonce
-```
-
-- If `signature` does not match to the data and `signer_pk` of the given key, the following error will be returned
-```rust
-/// Signature does not match the provided actions and given signer public key.
-DelegateActionInvalidSignature
-```
