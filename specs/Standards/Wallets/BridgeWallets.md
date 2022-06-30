@@ -149,42 +149,29 @@ interface SignAndSendTransactionsResponse {
 
 **Sign in (optional)**
 
-1. dApp generates a key pair for each account in the session.
+1. dApp generates a key pair for one or more accounts in the session.
 2. dApp makes `near_signIn` request with `contractId`, `accounts` and optionally `methodNames`.
 3. wallet receives request and executes a transaction containing an `AddKey` Action for each account.
-4. dApp stores the newly generated key pairs securely.
+4. wallet responds with `null`.
+5. dApp stores the newly generated key pairs securely.
 
 **Sign out (optional)**
 
 1. dApp makes `near_signOut` request with `accounts`.
 2. wallet receives request and executes a transaction containing a `DeleteKey` Action for each account.
-3. dApp clears stored key pairs.
+3. wallet responds with `null`.
+4. dApp clears stored key pairs.
 
-**Transaction signing (gas-only `FunctionCall`)**
-
-1. dApp makes `near_signAndSendTransaction` request.
-2. wallet determines the Transaction can be signed with the `FunctionCall` access key.
-3. wallet "silently" signs the transaction without need for an approval prompt.
-4. wallet responds with `providers.FinalExecutionOutcome`.
-
-**Transaction signing (elevated permission required)**
+**Sign transaction**
 
 1. dApp makes `near_signAndSendTransaction` request.
-2. wallet determines the Transaction can't be signed with the `FunctionCall` access key (or one doesn't exist if `near_signIn` hasn't used).
-3. wallet presents approval prompt before using the account's "root" (`FullAccess` access key).
+2. wallet prompts approval of transaction.
+3. wallet signs the transaction.
 4. wallet responds with `providers.FinalExecutionOutcome`.
 
-**Add account(s)**
+**Sign transactions**
 
-1. wallet prepares to update session by adding new account(s).
-2. wallet generates a key pair for each new account.
-3. wallet sends a Transaction containing an `AddKey` Action for each key pair.
-4. wallet triggers `session_update` with WalletConnect client.
-
-**Remove account(s)**
-
-1. wallet prepares to update session by removing account(s).
-2. wallet gathers the public key (`FunctionCall` access key) of each account to remove.
-3. wallet sends a Transaction containing an `DeleteKey` Action for each public key.
-4. wallet clears stored key pairs of each account (related to WalletConnect session `topicId`).
-5. wallet triggers `session_update` with WalletConnect client.
+1. dApp makes `near_signAndSendTransactions` request.
+2. wallet prompts approval of transactions.
+3. wallet signs the transactions.
+4. wallet responds with `Array<providers.FinalExecutionOutcome>`.
