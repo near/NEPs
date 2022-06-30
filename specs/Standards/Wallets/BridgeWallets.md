@@ -147,11 +147,12 @@ interface SignAndSendTransactionsResponse {
 3. dApp makes session proposal (with methods described above).
 4. wallet prompts selection of accounts and approval of proposal.
 
-1. dApp makes `near_signIn` request with `contractId` and optionally `methodNames`.
-2. wallet receives request and generates a key pair for each account in the session.
-3. wallet sends a Transaction containing an `AddKey` Action for each key pair.
-4. wallet stores the newly generated key pairs securely (mapped to WalletConnect session `topicId`).
-5. wallet responds with each account and its respective public key (`FunctionCall` access key).
+**Sign in (optional)**
+
+1. dApp generates a key pair for each account in the session.
+2. dApp makes `near_signIn` request with `contractId`, `accounts` and optionally `methodNames`.
+3. wallet receives request and executes a transaction containing an `AddKey` Action for each account.
+4. dApp stores the newly generated key pairs securely.
 
 **Signing out**
 
