@@ -54,7 +54,7 @@ type SignAndSendTransactionsResponse = Array<providers.FinalExecutionOutcome>;
 
 ### `signIn`
 
-For dApps that often sign gas-only transactions, `FunctionCall` access keys can be created for one or more accounts to greatly improve the UX. While this could be achieved with `near_signAndSendTransactions`, it suggests a direct intention that a user wishes to sign in to a dApp's smart contract.
+For dApps that often sign gas-only transactions, `FunctionCall` access keys can be created for one or more accounts to greatly improve the UX. While this could be achieved with `signAndSendTransactions`, it suggests a direct intention that a user wishes to sign in to a dApp's smart contract.
 
 ```ts
 interface Account {
@@ -73,7 +73,7 @@ type SignInResponse = null;
 
 ### `signOut`
 
-Delete one or more `FunctionCall` access keys created with `near_signIn`. While this could be achieved with `near_signAndSendTransactions`, it suggests a direct intention that a user wishes to sign out from a dApp's smart contract.
+Delete one or more `FunctionCall` access keys created with `signIn`. While this could be achieved with `signAndSendTransactions`, it suggests a direct intention that a user wishes to sign out from a dApp's smart contract.
 
 ```ts
 interface Account {
@@ -115,28 +115,28 @@ type GetAccountsResponse = Array<Account>;
 **Sign in (optional)**
 
 1. dApp generates a key pair for one or more accounts in the session.
-2. dApp makes `near_signIn` request with `contractId`, `accounts` and optionally `methodNames`.
+2. dApp makes `signIn` request with `contractId`, `accounts` and optionally `methodNames`.
 3. wallet receives request and executes a transaction containing an `AddKey` Action for each account.
 4. wallet responds with `null`.
 5. dApp stores the newly generated key pairs securely.
 
 **Sign out (optional)**
 
-1. dApp makes `near_signOut` request with `accounts`.
+1. dApp makes `signOut` request with `accounts`.
 2. wallet receives request and executes a transaction containing a `DeleteKey` Action for each account.
 3. wallet responds with `null`.
 4. dApp clears stored key pairs.
 
 **Sign transaction**
 
-1. dApp makes `near_signAndSendTransaction` request.
+1. dApp makes `signAndSendTransaction` request.
 2. wallet prompts approval of transaction.
 3. wallet signs the transaction.
 4. wallet responds with `providers.FinalExecutionOutcome`.
 
 **Sign transactions**
 
-1. dApp makes `near_signAndSendTransactions` request.
+1. dApp makes `signAndSendTransactions` request.
 2. wallet prompts approval of transactions.
 3. wallet signs the transactions.
 4. wallet responds with `Array<providers.FinalExecutionOutcome>`.
