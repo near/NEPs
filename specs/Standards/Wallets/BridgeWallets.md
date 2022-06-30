@@ -8,9 +8,9 @@ Standard interface for bridge wallets.
 
 Bridge wallets such as [WalletConnect](https://docs.walletconnect.com/2.0/) are powerful messaging layers for communicating with various blockchains. Since they lack opinion on how payloads are structured, without a standard, it can be impossible for dApps and wallets to universally communicate without compatibility problems.
 
-## JSON-RPC Methods
+## Methods
 
-**near_signAndSendTransaction**
+### `signAndSendTransaction`
 
 Sign a transaction using a `FullAccess` key related to the `signerId`. This request should require explicit approval from the user.
 
@@ -24,23 +24,14 @@ interface Transaction {
   actions: Array<Action>;
 }
 
-interface SignAndSendTransactionRequest {
-  id: 1;
-  jsonrpc: "2.0";
-  method: "near_signAndSendTransaction";
-  params: {
-    transaction: Transaction;
-  };
+interface SignAndSendTransactionParams {
+  transaction: Transaction;
 }
 
-interface SignAndSendTransactionResponse {
-  id: 1;
-  jsonrpc: "2.0";
-  result: providers.FinalExecutionOutcome;
-}
+type SignAndSendTransactionResponse = providers.FinalExecutionOutcome;
 ```
 
-**near_signAndSendTransactions**
+### `signAndSendTransactions`
 
 Sign a list of transactions using the respective `FullAccess` key related to each `signerId`. This request should require explicit approval from the user.
 
@@ -54,23 +45,14 @@ interface Transaction {
   actions: Array<Action>;
 }
 
-interface SignAndSendTransactionsRequest {
-  id: 1;
-  jsonrpc: "2.0";
-  method: "near_signAndSendTransactions";
-  params: {
-    transactions: Array<Transaction>;
-  };
+interface SignAndSendTransactionsParams {
+  transactions: Array<Transaction>;
 }
 
-interface SignAndSendTransactionsResponse {
-  id: 1;
-  jsonrpc: "2.0";
-  result: Array<providers.FinalExecutionOutcome>;
-}
+type SignAndSendTransactionsResponse = Array<providers.FinalExecutionOutcome>;
 ```
 
-**near_signIn**
+### `signIn`
 
 For dApps that often sign gas-only transactions, `FunctionCall` access keys can be created for one or more accounts to greatly improve the UX. While this could be achieved with `near_signAndSendTransactions`, it suggests a direct intention that a user wishes to sign in to a dApp's smart contract.
 
@@ -80,25 +62,16 @@ interface Account {
   publicKey: string;
 }
 
-interface SignInRequest {
-  id: 1;
-  jsonrpc: "2.0";
-  method: "near_signIn";
-  params: {
-    contractId: string;
-    methodNames?: Array<string>;
-    accounts: Array<Account>;
-  };
+interface SignInParams {
+  contractId: string;
+  methodNames?: Array<string>;
+  accounts: Array<Account>;
 }
 
-interface SignInResponse {
-  id: 1;
-  jsonrpc: "2.0";
-  result: null;
-}
+type SignInResponse = null;
 ```
 
-**near_signOut**
+### `signOut`
 
 Delete one or more `FunctionCall` access keys created with `near_signIn`. While this could be achieved with `near_signAndSendTransactions`, it suggests a direct intention that a user wishes to sign out from a dApp's smart contract.
 
@@ -108,23 +81,14 @@ interface Account {
   publicKey: string;
 }
 
-interface SignOutRequest {
-  id: 1;
-  jsonrpc: "2.0";
-  method: "near_signOut";
-  params: {
-    accounts: Array<Account>;
-  };
+interface SignOutParams {
+  accounts: Array<Account>;
 }
 
-interface SignOutResponse {
-  id: 1;
-  jsonrpc: "2.0";
-  result: null;
-}
+type SignOutResponse = null;
 ```
 
-**near_getAccounts**
+### `getAccounts`
 
 Retrieve all accounts visible to the session. `publicKey` references the underlying `FullAccess` key linked to each account.
 
@@ -134,18 +98,9 @@ interface Account {
   publicKey: string;
 }
 
-interface GetAccountsRequest {
-  id: 1;
-  jsonrpc: "2.0";
-  method: "near_getAccounts";
-  params: {};
-}
+interface GetAccountsParams {}
 
-interface GetAccountsResponse {
-  id: 1;
-  jsonrpc: "2.0";
-  result: Array<Account>;
-}
+type GetAccountsResponse = Array<Account>;
 ```
 
 ## Flows
