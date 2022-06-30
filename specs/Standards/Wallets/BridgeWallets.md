@@ -6,84 +6,13 @@ Standard interface for bridge wallets.
 
 ## Motivation
 
-Bridge wallets such as [WalletConnect](https://docs.walletconnect.com/2.0/) are powerful messaging layers for communicating with various blockchains. Since they lack opinion on how payloads should be structured, without a standard, it can be impossible for dApps and wallets to universally communicate without compatibility problems.
+Bridge wallets such as [WalletConnect](https://docs.walletconnect.com/2.0/) are powerful messaging layers for communicating with various blockchains. Since they lack opinion on how payloads are structured, without a standard, it can be impossible for dApps and wallets to universally communicate without compatibility problems.
 
 ## JSON-RPC Methods
 
-**near_signIn**
-
-Request access (via `FunctionCall` access keys) to one or more accounts.
-
-```ts
-interface Account {
-  accountId: string;
-  publicKey: string;
-}
-
-interface SignInRequest {
-  id: 1;
-  jsonrpc: "2.0";
-  method: "near_signIn";
-  params: {
-    contractId: string;
-    methodNames?: Array<string>;
-    accounts: Array<Account>;
-  };
-}
-
-interface SignInResponse {
-  id: 1;
-  jsonrpc: "2.0";
-  result: null;
-}
-```
-
-**near_signOut**
-
-Remove access (via `FunctionCall` access keys) to one or more accounts.
-
-```ts
-interface SignOutRequest {
-  id: 1;
-  jsonrpc: "2.0";
-  method: "near_signOut";
-  params: {
-    accounts: Array<Account>;
-  };
-}
-
-interface SignOutResponse {
-  id: 1;
-  jsonrpc: "2.0";
-  result: null;
-}
-```
-
-**near_getAccounts**
-
-Retrieve `FullAccess` accounts linked to the session.
-
-```ts
-interface Account {
-  accountId: string;
-  publicKey: string;
-}
-
-interface GetAccountsRequest {
-  id: 1;
-  jsonrpc: "2.0";
-  method: "near_getAccounts";
-  params: {};
-}
-
-interface GetAccountsResponse {
-  id: 1;
-  jsonrpc: "2.0";
-  result: Array<Account>;
-}
-```
-
 **near_signAndSendTransaction**
+
+Sign a transaction using a `FullAccess` key related to the `signerId`. This request should require explicit approval from the user.
 
 ```ts
 import { providers } from "near-api-js";
@@ -113,6 +42,8 @@ interface SignAndSendTransactionResponse {
 
 **near_signAndSendTransactions**
 
+Sign a list of transactions using the respective `FullAccess` key related to each `signerId`. This request should require explicit approval from the user.
+
 ```ts
 import { providers } from "near-api-js";
 
@@ -136,6 +67,84 @@ interface SignAndSendTransactionsResponse {
   id: 1;
   jsonrpc: "2.0";
   result: Array<providers.FinalExecutionOutcome>;
+}
+```
+
+**near_signIn**
+
+For dApps that often sign gas-only transactions, `FunctionCall` access keys can be created for one or more accounts to greatly improve the UX. While this could be achieved with `near_signAndSendTransactions`, it suggests a direct intention that a user wishes to sign in to a dApp's smart contract.
+
+```ts
+interface Account {
+  accountId: string;
+  publicKey: string;
+}
+
+interface SignInRequest {
+  id: 1;
+  jsonrpc: "2.0";
+  method: "near_signIn";
+  params: {
+    contractId: string;
+    methodNames?: Array<string>;
+    accounts: Array<Account>;
+  };
+}
+
+interface SignInResponse {
+  id: 1;
+  jsonrpc: "2.0";
+  result: null;
+}
+```
+
+**near_signOut**
+
+Delete one or more `FunctionCall` access keys created with `near_signIn`. While this could be achieved with `near_signAndSendTransactions`, it suggests a direct intention that a user wishes to sign out from a dApp's smart contract.
+
+```ts
+interface Account {
+  accountId: string;
+  publicKey: string;
+}
+
+interface SignOutRequest {
+  id: 1;
+  jsonrpc: "2.0";
+  method: "near_signOut";
+  params: {
+    accounts: Array<Account>;
+  };
+}
+
+interface SignOutResponse {
+  id: 1;
+  jsonrpc: "2.0";
+  result: null;
+}
+```
+
+**near_getAccounts**
+
+Retrieve all accounts visible to the session. `publicKey` references the underlying `FullAccess` key linked to each account.
+
+```ts
+interface Account {
+  accountId: string;
+  publicKey: string;
+}
+
+interface GetAccountsRequest {
+  id: 1;
+  jsonrpc: "2.0";
+  method: "near_getAccounts";
+  params: {};
+}
+
+interface GetAccountsResponse {
+  id: 1;
+  jsonrpc: "2.0";
+  result: Array<Account>;
 }
 ```
 
@@ -176,3 +185,88 @@ interface SignAndSendTransactionsResponse {
 2. wallet prompts approval of transactions.
 3. wallet signs the transactions.
 4. wallet responds with `Array<providers.FinalExecutionOutcome>`.
+
+## Actions
+
+Below are the 8 NEAR Actions used for signing transactions. Plain objects have been used to remove an unnecessary dependency on `near-api-js`.
+
+```ts
+interface CreateAccountAction {
+  type: "CreateAccount";
+}
+
+interface DeployContractAction {
+  type: "DeployContract";
+  params: {
+    code: Uint8Array;
+  };
+}
+
+interface FunctionCallAction {
+  type: "FunctionCall";
+  params: {
+    methodName: string;
+    args: object;
+    gas: string;
+    deposit: string;
+  };
+}
+
+interface TransferAction {
+  type: "Transfer";
+  params: {
+    deposit: string;
+  };
+}
+
+interface StakeAction {
+  type: "Stake";
+  params: {
+    stake: string;
+    publicKey: string;
+  };
+}
+
+type AddKeyPermission =
+  | "FullAccess"
+  | {
+      receiverId: string;
+      allowance?: string;
+      methodNames?: Array<string>;
+    };
+
+interface AddKeyAction {
+  type: "AddKey";
+  params: {
+    publicKey: string;
+    accessKey: {
+      nonce?: number;
+      permission: AddKeyPermission;
+    };
+  };
+}
+
+interface DeleteKeyAction {
+  type: "DeleteKey";
+  params: {
+    publicKey: string;
+  };
+}
+
+interface DeleteAccountAction {
+  type: "DeleteAccount";
+  params: {
+    beneficiaryId: string;
+  };
+}
+
+type Action =
+  | CreateAccountAction
+  | DeployContractAction
+  | FunctionCallAction
+  | TransferAction
+  | StakeAction
+  | AddKeyAction
+  | DeleteKeyAction
+  | DeleteAccountAction;
+```
