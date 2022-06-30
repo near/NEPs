@@ -140,7 +140,12 @@ interface SignAndSendTransactionsResponse {
 
 ### Flows
 
-**Signing in**
+**Connect**
+
+1. dApp initiates pairing via QR modal.
+2. wallet establishes pairing.
+3. dApp makes session proposal (with methods described above).
+4. wallet prompts selection of accounts and approval of proposal.
 
 1. dApp makes `near_signIn` request with `contractId` and optionally `methodNames`.
 2. wallet receives request and generates a key pair for each account in the session.
