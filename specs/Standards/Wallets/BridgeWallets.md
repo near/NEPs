@@ -154,13 +154,11 @@ interface SignAndSendTransactionsResponse {
 3. wallet receives request and executes a transaction containing an `AddKey` Action for each account.
 4. dApp stores the newly generated key pairs securely.
 
-**Signing out**
+**Sign out (optional)**
 
-1. dApp makes `near_signOut` request.
-2. wallet receives request and gathers each account's public key (`FunctionCall` access key).
-3. wallet sends a Transaction containing a `DeleteKey` Action for each public key.
-4. wallet clears stored key pairs (related to WalletConnect session `topicId`).
-5. wallet responds with `null`.
+1. dApp makes `near_signOut` request with `accounts`.
+2. wallet receives request and executes a transaction containing a `DeleteKey` Action for each account.
+3. dApp clears stored key pairs.
 
 **Transaction signing (gas-only `FunctionCall`)**
 
