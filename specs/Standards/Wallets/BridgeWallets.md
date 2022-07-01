@@ -6,7 +6,7 @@ Standard interface for bridge wallets.
 
 ## Motivation
 
-Bridge wallets such as [WalletConnect](https://docs.walletconnect.com/2.0/) are powerful messaging layers for communicating with various blockchains. Since they lack opinion on how payloads are structured, without a standard, it can be impossible for dApps and wallets to universally communicate without compatibility problems.
+Bridge wallets such as [WalletConnect](https://docs.walletconnect.com/2.0/) and [Nightly Connect](https://connect.nightly.app/) are powerful messaging layers for communicating with various blockchains. Since they lack an opinion on how payloads are structured, without a standard, it can be impossible for dApps and wallets to universally communicate without compatibility problems.
 
 ## Methods
 
@@ -108,9 +108,9 @@ type GetAccountsResponse = Array<Account>;
 **Connect**
 
 1. dApp initiates pairing via QR modal.
-2. wallet establishes pairing.
-3. dApp makes session proposal (with methods described above).
-4. wallet prompts selection of accounts and approval of proposal.
+2. wallet establishes pairing and prompts selection of accounts for new session.
+3. wallet responds with session (id and accounts).
+4. dApp stores reference to session.
 
 **Sign in (optional)**
 
