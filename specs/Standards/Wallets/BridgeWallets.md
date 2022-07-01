@@ -12,20 +12,13 @@ Bridge wallets such as [WalletConnect](https://docs.walletconnect.com/2.0/) and 
 
 ### `signAndSendTransaction`
 
-Sign a transaction using a `FullAccess` key related to the `signerId`. This request should require explicit approval from the user.
+Sign and send a transaction. This request should require explicit approval from the user.
 
 ```ts
-import { providers } from "near-api-js";
-
-interface Transaction {
-  signerId: string;
-  receiverId: string;
-  // NEAR Actions (plain objects). See "Actions" section for details.
-  actions: Array<Action>;
-}
+import { providers, transactions } from "near-api-js";
 
 interface SignAndSendTransactionParams {
-  transaction: Transaction;
+  transaction: transactions.Transaction;
 }
 
 type SignAndSendTransactionResponse = providers.FinalExecutionOutcome;
@@ -33,20 +26,13 @@ type SignAndSendTransactionResponse = providers.FinalExecutionOutcome;
 
 ### `signAndSendTransactions`
 
-Sign a list of transactions using the respective `FullAccess` key related to each `signerId`. This request should require explicit approval from the user.
+Sign and send a list of transaction. This request should require explicit approval from the user.
 
 ```ts
-import { providers } from "near-api-js";
-
-interface Transaction {
-  signerId: string;
-  receiverId: string;
-  // NEAR Actions (plain objects). See "Actions" section for details.
-  actions: Array<Action>;
-}
+import { providers, transactions } from "near-api-js";
 
 interface SignAndSendTransactionsParams {
-  transactions: Array<Transaction>;
+  transactions: Array<transactions.Transaction>;
 }
 
 type SignAndSendTransactionsResponse = Array<providers.FinalExecutionOutcome>;
@@ -57,14 +43,15 @@ type SignAndSendTransactionsResponse = Array<providers.FinalExecutionOutcome>;
 For dApps that often sign gas-only transactions, `FunctionCall` access keys can be created for one or more accounts to greatly improve the UX. While this could be achieved with `signAndSendTransactions`, it suggests a direct intention that a user wishes to sign in to a dApp's smart contract.
 
 ```ts
+import { transactions } from "near-api-js";
+
 interface Account {
   accountId: string;
   publicKey: string;
 }
 
 interface SignInParams {
-  contractId: string;
-  methodNames?: Array<string>;
+  permission: transactions.FunctionCallPermission;
   accounts: Array<Account>;
 }
 
@@ -115,7 +102,7 @@ type GetAccountsResponse = Array<Account>;
 **Sign in (optional)**
 
 1. dApp generates a key pair for one or more accounts in the session.
-2. dApp makes `signIn` request with `contractId`, `accounts` and optionally `methodNames`.
+2. dApp makes `signIn` request with `permission` and `accounts`.
 3. wallet receives request and executes a transaction containing an `AddKey` Action for each account.
 4. wallet responds with `null`.
 5. dApp stores the newly generated key pairs securely.
@@ -131,7 +118,7 @@ type GetAccountsResponse = Array<Account>;
 
 1. dApp makes `signAndSendTransaction` request.
 2. wallet prompts approval of transaction.
-3. wallet signs the transaction.
+3. wallet signs the transaction before sending it.
 4. wallet responds with `providers.FinalExecutionOutcome`.
 
 **Sign transactions**
@@ -140,88 +127,3 @@ type GetAccountsResponse = Array<Account>;
 2. wallet prompts approval of transactions.
 3. wallet signs the transactions.
 4. wallet responds with `Array<providers.FinalExecutionOutcome>`.
-
-## Actions
-
-Below are the 8 NEAR Actions used for signing transactions. Plain objects have been used to remove an unnecessary dependency on `near-api-js`.
-
-```ts
-interface CreateAccountAction {
-  type: "CreateAccount";
-}
-
-interface DeployContractAction {
-  type: "DeployContract";
-  params: {
-    code: Uint8Array;
-  };
-}
-
-interface FunctionCallAction {
-  type: "FunctionCall";
-  params: {
-    methodName: string;
-    args: object;
-    gas: string;
-    deposit: string;
-  };
-}
-
-interface TransferAction {
-  type: "Transfer";
-  params: {
-    deposit: string;
-  };
-}
-
-interface StakeAction {
-  type: "Stake";
-  params: {
-    stake: string;
-    publicKey: string;
-  };
-}
-
-type AddKeyPermission =
-  | "FullAccess"
-  | {
-      receiverId: string;
-      allowance?: string;
-      methodNames?: Array<string>;
-    };
-
-interface AddKeyAction {
-  type: "AddKey";
-  params: {
-    publicKey: string;
-    accessKey: {
-      nonce?: number;
-      permission: AddKeyPermission;
-    };
-  };
-}
-
-interface DeleteKeyAction {
-  type: "DeleteKey";
-  params: {
-    publicKey: string;
-  };
-}
-
-interface DeleteAccountAction {
-  type: "DeleteAccount";
-  params: {
-    beneficiaryId: string;
-  };
-}
-
-type Action =
-  | CreateAccountAction
-  | DeployContractAction
-  | FunctionCallAction
-  | TransferAction
-  | StakeAction
-  | AddKeyAction
-  | DeleteKeyAction
-  | DeleteAccountAction;
-```
