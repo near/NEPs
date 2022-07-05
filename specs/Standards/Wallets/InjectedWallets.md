@@ -134,6 +134,26 @@ interface Wallet {
 - `signAndSendTransactions`: Sign and Send one or more NEAR Transactions.
 -->
 
+### `connect`
+
+Request visibility for a one or more accounts from the wallet. This should explicitly prompt the user to select from their list of imported accounts. dApps should use `getAccounts` once connected to retrieve the list of visible accounts.
+
+```ts
+const accounts = await window.near.myWallet.request({
+  method: "connect",
+});
+```
+
+### `connect`
+
+Remove visibility of all accounts from the wallet.
+
+```ts
+const accounts = await window.near.myWallet.request({
+  method: "disconnect",
+});
+```
+
 ### `signIn`
 
 For dApps that often sign gas-only transactions, `FunctionCall` access keys can be created for one or more accounts to greatly improve the UX. While this could be achieved with `signAndSendTransactions`, it suggests a direct intention that a user wishes to sign in to a dApp's smart contract.
