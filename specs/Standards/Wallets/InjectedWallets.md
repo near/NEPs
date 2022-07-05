@@ -154,6 +154,59 @@ const accounts = await window.near.myWallet.request({
 });
 ```
 
+### `signAndSendTransaction`
+
+Sign and send a transaction. This request should require explicit approval from the user.
+
+```ts
+import { transactions } from "near-api-js";
+
+// Retrieve first account.
+const [account] = await window.near.myWallet.request({
+  method: "getAccounts",
+});
+
+const provider = new providers.JsonRpcProvider({
+  url: "https://rpc.testnet.near.org",
+});
+const [block, accessKey] = await Promise.all([
+  provider.block({ finality: "final" }),
+  provider.query<AccessKeyView>({
+    request_type: "view_access_key",
+    finality: "final",
+    account_id: account.accountId,
+    public_key: account.publicKey,
+  }),
+]);
+
+const response = await window.near.myWallet.request({
+  method: "signAndSendTransaction",
+  params: {
+    transaction: transactions.createTransaction(
+      account.accountId,
+      utils.PublicKey.from(account.publicKey),
+      "guest-book.testnet",
+      accessKey.nonce + i + 1,
+      [transactions.functionCall(
+        "addMessage",
+        { text: "Hello World!" },
+        utils.format.parseNearAmount("0.00000000003"),
+        utils.format.parseNearAmount("0.01")
+      )],
+      utils.serialize.base_decode(block.header.hash)
+    ),
+  }
+});
+```
+
+### `signAndSendTransactions`
+
+Sign and send a list of transactions. This request should require explicit approval from the user.
+
+```ts
+// TODO.
+```
+
 ### `disconnect`
 
 Remove visibility of all accounts from the wallet.
