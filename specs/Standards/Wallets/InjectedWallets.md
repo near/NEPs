@@ -126,7 +126,7 @@ interface Wallet {
 <!--
 - `connect`: Request visibility for a one or more accounts from the wallet.
 - `disconnect`: Remove visibility of all accounts from the wallet.
-- `getAccounts`: Get accounts visible to the dApp.
+- `getAccounts`: 
 - `getNetwork`: Get the currently selected network.
 - `signIn`: Request access to one or more accounts.
 - `signOut`: Remove access to all accounts.
@@ -141,6 +141,16 @@ Request visibility for a one or more accounts from the wallet. This should expli
 ```ts
 const accounts = await window.near.myWallet.request({
   method: "connect",
+});
+```
+
+### `getAccounts`
+
+Retrieve all accounts visible to the dApp.
+
+```ts
+const accounts = await window.near.myWallet.request({
+  method: "getAccounts",
 });
 ```
 
@@ -181,7 +191,7 @@ await window.near.myWallet.request({
         accountId,
         publicKey: keyPair.getPublicKey().toString()
       };
-    })
+    }),
   }
 });
 ```
