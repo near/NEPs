@@ -12,7 +12,7 @@ dApps are finding it increasingly difficult to support the ever expanding choice
 
 Injected wallets are browser extensions that implement the `Wallet` API (see below) on the `window` object. To avoid namespace collisions seen in other chains such as Ethereum, wallets will mount under their own key within `window.near` (e.g. `window.near.sender`). This approach solves the problem of detecting which wallet(s) are available and supports multiple injected wallets simultaneously!
 
-### Wallet API
+## Wallet API
 
 At it's most basic, the Wallet API has main two features:
 
@@ -24,7 +24,7 @@ The decision to implement `request` instead of dedicated methods means wallets c
 Heavily inspired by [Ethereum's JSON-RPC Methods](https://docs.metamask.io/guide/rpc-api.html#ethereum-json-rpc-methods), below is a high-level overview of what an injected wallet should look like.
 
 ```ts
-import { providers } from "near-api-js";
+import { providers, transactions } from "near-api-js";
 
 interface Account {
   accountId: string;
@@ -37,26 +37,20 @@ interface Network {
 }
 
 interface SignInParams {
-  contractId: string;
-  methodNames?: Array<string>;
+  permission: transactions.FunctionCallPermission;
+  accounts: Array<Account>;
+}
+
+interface SignOutParams {
+  accounts: Array<Account>;
 }
 
 interface SignAndSendTransactionParams {
-  signerId?: string;
-  receiverId: string;
-  // NEAR Actions (plain objects). See "Actions" section for details.
-  actions: Array<Action>;
-}
-
-interface Transaction {
-  signerId?: string;
-  receiverId: string;
-  // NEAR Actions (plain objects). See "Actions" section for details.
-  actions: Array<Action>;
+  transaction: transactions.Transaction;
 }
 
 interface SignAndSendTransactionsParams {
-  transactions: Array<Transaction>;
+  transactions: Array<transactions.Transaction>;
 }
 
 interface Methods {
@@ -82,6 +76,7 @@ interface Methods {
   signOut: {
     params: {
       method: "signOut";
+      params: SignOutParams;
     };
     response: void;
   };
@@ -126,114 +121,56 @@ interface Wallet {
 }
 ```
 
-### Request Methods
+## Methods
 
-- `getAccounts`: Get accounts exposed to dApp. An empty list of accounts means we aren't signed in.
+<!--
+- `connect`: Request visibility for a one or more accounts from the wallet.
+- `disconnect`: Remove visibility of all accounts from the wallet.
+- `getAccounts`: Get accounts visible to the dApp.
 - `getNetwork`: Get the currently selected network.
 - `signIn`: Request access to one or more accounts.
 - `signOut`: Remove access to all accounts.
 - `signAndSendTransaction`: Sign and Send one or more NEAR Actions.
 - `signAndSendTransactions`: Sign and Send one or more NEAR Transactions.
+-->
+
+### `signIn`
+
+For dApps that often sign gas-only transactions, `FunctionCall` access keys can be created for one or more accounts to greatly improve the UX. While this could be achieved with `signAndSendTransactions`, it suggests a direct intention that a user wishes to sign in to a dApp's smart contract.
+
+```ts
+import { utils } from "near-api-js";
+
+// Retrieve the list of accounts we have visibility of.
+const accounts = await window.near.myWallet.request({
+  method: "getAccounts",
+});
+
+// Request FunctionCall access to the 'guest-book.testnet' smart contract for each account.
+await window.near.myWallet.request({
+  method: "signIn",
+  params: {
+    permission: {
+      receiverId: "guest-book.testnet",
+      methodNames: [],
+    },
+    accounts: accounts.map(({ accountId }) => {
+      const keyPair = utils.KeyPair.fromRandom("ed25519");
+      
+      return {
+        accountId,
+        publicKey: keyPair.getPublicKey().toString()
+      };
+    })
+  }
+});
+```
 
 ### Events
 
 - `accountsChanged`: Triggered whenever accounts are updated (e.g. calling `signIn` and `signOut`).
 
-### Actions
-
-Below are the 8 NEAR Actions used for signing transactions. Plain objects have been used to remove an unnecessary dependency on `near-api-js`.
-
-```ts
-interface CreateAccountAction {
-  type: "CreateAccount";
-}
-
-interface DeployContractAction {
-  type: "DeployContract";
-  params: {
-    code: Uint8Array;
-  };
-}
-
-interface FunctionCallAction {
-  type: "FunctionCall";
-  params: {
-    methodName: string;
-    args: object;
-    gas: string;
-    deposit: string;
-  };
-}
-
-interface TransferAction {
-  type: "Transfer";
-  params: {
-    deposit: string;
-  };
-}
-
-interface StakeAction {
-  type: "Stake";
-  params: {
-    stake: string;
-    publicKey: string;
-  };
-}
-
-type AddKeyPermission =
-  | "FullAccess"
-  | {
-      receiverId: string;
-      allowance?: string;
-      methodNames?: Array<string>;
-    };
-
-interface AddKeyAction {
-  type: "AddKey";
-  params: {
-    publicKey: string;
-    accessKey: {
-      nonce?: number;
-      permission: AddKeyPermission;
-    };
-  };
-}
-
-interface DeleteKeyAction {
-  type: "DeleteKey";
-  params: {
-    publicKey: string;
-  };
-}
-
-interface DeleteAccountAction {
-  type: "DeleteAccount";
-  params: {
-    beneficiaryId: string;
-  };
-}
-
-type Action =
-  | CreateAccountAction
-  | DeployContractAction
-  | FunctionCallAction
-  | TransferAction
-  | StakeAction
-  | AddKeyAction
-  | DeleteKeyAction
-  | DeleteAccountAction;
-```
-
 ### Examples
-
-**Sign in to the wallet**
-
-```ts
-const accounts = await window.near.myWallet.request({
-  method: "signIn",
-  params: { contractId: "guest-book.testnet" }
-});
-```
 
 **Get accounts (after previously calling `signIn`)**
 
@@ -279,16 +216,3 @@ const result = await window.near.myWallet.request({
   }
 });
 ```
-
-## Sign In
-
-The purpose of signing in to a wallet is to give dApps access to one or more accounts using `FunctionCall` access keys.
-
-### Considerations
-
-- If there's only one imported account, the flow can be simplified to an approval prompt to sign in with the only account.
-- If there are problems with the `AddKey` action for any account, we should continue unless none were successful.
-
-### Multiple Accounts
-
-An important concept of this architecture is dApps have access to multiple accounts. This might seem confusing at first because why would a dApp want to sign transactions with multiple accounts? The idea is the dApp might still maintain the concept of a single "active" account, but users won't need to sign in and out of accounts each time. The dApp can just display a switcher and sign transactions with the new account without having to further prompt the user, thus improving the UX flow.
