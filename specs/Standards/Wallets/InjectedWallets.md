@@ -2,21 +2,15 @@
 
 ## Summary
 
-Standard interface for injected wallets to maintain a consistent dApp experience.
+Standard interface for injected wallets.
 
 ## Motivation
 
-After working with various wallets such as Sender and Math Wallet, it's clear the lack of a standard has made it difficult for dApps to support more than one wallet.
-
-## Terminology
-
-- **Signed in**: The state of whether a dApp has access to one or more accounts in the form of `FunctionCall` access keys.
+dApps are finding it increasingly difficult to support the ever expanding choice of wallets due to their wildly different implementations. While projects such as [Wallet Selector](https://github.com/near/wallet-selector) attempt to mask this problem, it's clear the ecosystem is crying out for a standard that will not only benefit dApps but make it easier for existing wallets to add support for NEAR.
 
 ## What is an Injected Wallet?
 
-Injected wallets are browser extensions that implement the `Wallet` API (see below) via `window.near` where dApps can determine which wallet is available by inspecting the `id` property.
-
-> Note: It's difficult to overlook the drawback of having a single namespace for wallets (even if Ethereum does this). Users must disable other wallets to avoid conflicts. Maybe `window.near` should be `Record<string, Wallet>`. This approach solves the problem of detecting which wallet(s) are available and supports multiple injected wallets simultaneously!
+Injected wallets are browser extensions that implement the `Wallet` API (see below) on the `window` object. To avoid namespace collisions seen in other chains such as Ethereum, wallets will mount under their own key within `window.near` (e.g. `window.near.sender`). This approach solves the problem of detecting which wallet(s) are available and supports multiple injected wallets simultaneously!
 
 ### Wallet API
 
@@ -25,7 +19,7 @@ At it's most basic, the Wallet API has main two features:
 - `request`: Communication with the wallet.
 - `on` and `off`: Subscribe to notable events such as account updates.
 
-The decision to implement `request` instead of dedicated methods means wallets can define their own custom functionality without polluting the top-level namespace. The purpose of this spec is to define the minimum set of methods to be considered an official NEAR injected wallet. Wallets are free to innovate with functionality they believe could eventually become part of the spec such as querying the locked status.
+The decision to implement `request` instead of dedicated methods means wallets can define their own custom functionality without polluting the top-level namespace. The purpose of this standard is to define the minimum set of methods to be considered an official NEAR injected wallet. Wallets are free to innovate with functionality they believe could eventually become part of the standard such as querying the locked status.
 
 Heavily inspired by [Ethereum's JSON-RPC Methods](https://docs.metamask.io/guide/rpc-api.html#ethereum-json-rpc-methods), below is a high-level overview of what an injected wallet should look like.
 
@@ -235,7 +229,7 @@ type Action =
 **Sign in to the wallet**
 
 ```ts
-const accounts = await window.near.request({
+const accounts = await window.near.myWallet.request({
   method: "signIn",
   params: { contractId: "guest-book.testnet" }
 });
@@ -244,7 +238,7 @@ const accounts = await window.near.request({
 **Get accounts (after previously calling `signIn`)**
 
 ```ts
-const accounts = await window.near.request({
+const accounts = await window.near.myWallet.request({
   method: "getAccounts"
 });
 ```
@@ -252,7 +246,7 @@ const accounts = await window.near.request({
 **Subscribe to account changes**
 
 ```ts
-await window.near.on("accountsChanged", (accounts) => {
+window.near.myWallet.on("accountsChanged", (accounts) => {
   console.log("Accounts Changed", accounts);
 });
 ```
@@ -260,7 +254,7 @@ await window.near.on("accountsChanged", (accounts) => {
 **Get network configuration**
 
 ```ts
-const network = await window.near.request({ 
+const network = await window.near.myWallet.request({ 
   method: "getNetwork" 
 });
 ```
@@ -268,7 +262,7 @@ const network = await window.near.request({
 **Sign and send a transaction**
 
 ```ts
-const result = await window.near.request({
+const result = await window.near.myWallet.request({
   method: "signAndSendTransaction",
   params: {
     signerId: "test.testnet",
