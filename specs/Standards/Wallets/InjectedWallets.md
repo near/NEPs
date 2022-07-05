@@ -144,7 +144,7 @@ const accounts = await window.near.myWallet.request({
 });
 ```
 
-### `connect`
+### `disconnect`
 
 Remove visibility of all accounts from the wallet.
 
