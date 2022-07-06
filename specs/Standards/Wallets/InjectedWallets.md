@@ -348,6 +348,43 @@ await window.near.myWallet.request({
 });
 ```
 
+### `signOut`
+
+Delete one or more `FunctionCall` access keys created with `signIn`. While this could be achieved with `signTransactions`, it suggests a direct intention that a user wishes to sign out from a dApp's smart contract.
+
+```ts
+import { utils, keyStores } from "near-api-js";
+
+// Setup keystore to retrieve locally stored FunctionCall access keys.
+const keystore = new keyStores.BrowserLocalStorageKeyStore();
+
+// Retrieve the list of accounts we have visibility of.
+const accounts = await window.near.myWallet.request({
+  method: "getAccounts",
+});
+
+// Retrieve network details from the wallet.
+const network = await window.near.myWallet.request({
+  method: "getNetwork",
+});
+
+
+// Remove FunctionCall access (previously granted via signIn) for each account.
+await window.near.myWallet.request({
+  method: "signOut",
+  params: {
+    accounts: await Promise.all(accounts.map(async ({ accountId }) => {
+      const keyPair = await keystore.getKey(network.networkId, accountId);
+      
+      return {
+        accountId,
+        publicKey: keyPair.getPublicKey().toString()
+      };
+    })),
+  }
+});
+```
+
 ## Events
 
 ### `accountsChanged`
