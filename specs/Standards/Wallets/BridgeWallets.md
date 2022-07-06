@@ -10,37 +10,39 @@ Bridge wallets such as [WalletConnect](https://docs.walletconnect.com/2.0/) and 
 
 ## Methods
 
-### `signAndSendTransaction`
+### `signTransaction`
 
-Sign and send a transaction. This request should require explicit approval from the user.
+Sign a transaction. This request should require explicit approval from the user.
 
 ```ts
 import { providers, transactions } from "near-api-js";
 
-interface SignAndSendTransactionParams {
+interface SignTransactionParams {
   transaction: transactions.Transaction;
 }
 
-type SignAndSendTransactionResponse = providers.FinalExecutionOutcome;
+// Encoded transaction.
+type SignTransactionResponse = Uint8Array;
 ```
 
-### `signAndSendTransactions`
+### `signTransactions`
 
-Sign and send a list of transaction. This request should require explicit approval from the user.
+Sign a list of transaction. This request should require explicit approval from the user.
 
 ```ts
 import { providers, transactions } from "near-api-js";
 
-interface SignAndSendTransactionsParams {
+interface SignTransactionsParams {
   transactions: Array<transactions.Transaction>;
 }
 
-type SignAndSendTransactionsResponse = Array<providers.FinalExecutionOutcome>;
+// Encoded transactions.
+type SignTransactionsResponse = Array<Uint8Array>;
 ```
 
 ### `signIn`
 
-For dApps that often sign gas-only transactions, `FunctionCall` access keys can be created for one or more accounts to greatly improve the UX. While this could be achieved with `signAndSendTransactions`, it suggests a direct intention that a user wishes to sign in to a dApp's smart contract.
+For dApps that often sign gas-only transactions, `FunctionCall` access keys can be created for one or more accounts to greatly improve the UX. While this could be achieved with `signTransactions`, it suggests a direct intention that a user wishes to sign in to a dApp's smart contract.
 
 ```ts
 import { transactions } from "near-api-js";
@@ -60,7 +62,7 @@ type SignInResponse = null;
 
 ### `signOut`
 
-Delete one or more `FunctionCall` access keys created with `signIn`. While this could be achieved with `signAndSendTransactions`, it suggests a direct intention that a user wishes to sign out from a dApp's smart contract.
+Delete one or more `FunctionCall` access keys created with `signIn`. While this could be achieved with `signTransactions`, it suggests a direct intention that a user wishes to sign out from a dApp's smart contract.
 
 ```ts
 interface Account {
@@ -116,14 +118,18 @@ type GetAccountsResponse = Array<Account>;
 
 **Sign transaction**
 
-1. dApp makes `signAndSendTransaction` request.
+1. dApp makes `signTransaction` request.
 2. wallet prompts approval of transaction.
-3. wallet signs the transaction before sending it.
-4. wallet responds with `providers.FinalExecutionOutcome`.
+3. wallet signs the transaction.
+4. wallet responds with `Uint8Array`.
+5. dApp decodes signed transaction.
+6. dApp sends signed transaction.
 
 **Sign transactions**
 
 1. dApp makes `signAndSendTransactions` request.
 2. wallet prompts approval of transactions.
 3. wallet signs the transactions.
-4. wallet responds with `Array<providers.FinalExecutionOutcome>`.
+4. wallet responds with `Array<Uint8Array>`.
+5. dApp decodes signed transactions.
+6. dApp sends signed transactions.
