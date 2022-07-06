@@ -116,6 +116,7 @@ type Unsubscribe = () => void;
 
 interface Wallet {
   id: string;
+  connected: boolean;
   request<
     MethodName extends keyof Methods,
     Method extends Methods[MethodName]
