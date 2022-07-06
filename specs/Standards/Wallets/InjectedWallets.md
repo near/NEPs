@@ -188,7 +188,7 @@ const response = await window.near.myWallet.request({
       account.accountId,
       utils.PublicKey.from(account.publicKey),
       "guest-book.testnet",
-      accessKey.nonce + i + 1,
+      accessKey.nonce + 1,
       [transactions.functionCall(
         "addMessage",
         { text: "Hello World!" },
