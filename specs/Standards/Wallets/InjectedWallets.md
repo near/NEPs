@@ -54,6 +54,12 @@ interface SignAndSendTransactionsParams {
 }
 
 interface Methods {
+  connect: {
+    params: {
+      method: "connect";
+    };
+    response: Array<Account>;
+  };
   getAccounts: {
     params: {
       method: "getAccounts";
@@ -93,6 +99,12 @@ interface Methods {
       params: SignAndSendTransactionsParams;
     };
     response: Array<providers.FinalExecutionOutcome>;
+  };
+  disconnect: {
+    params: {
+      method: "disconnect";
+    };
+    response: void;
   };
 }
 
