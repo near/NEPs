@@ -77,7 +77,7 @@ interface Methods {
       method: "signIn";
       params: SignInParams;
     };
-    response: Array<Account>;
+    response: void;
   };
   signOut: {
     params: {
