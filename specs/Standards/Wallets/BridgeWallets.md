@@ -127,7 +127,7 @@ type GetAccountsResponse = Array<Account>;
 
 **Sign transactions**
 
-1. dApp makes `signAndSendTransactions` request.
+1. dApp makes `signTransactions` request.
 2. wallet prompts approval of transactions.
 3. wallet signs the transactions.
 4. wallet responds with `Array<Uint8Array>`.
