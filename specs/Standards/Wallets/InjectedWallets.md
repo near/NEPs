@@ -242,7 +242,7 @@ Sign and send a list of transactions. This request should require explicit appro
 Remove visibility of all accounts from the wallet.
 
 ```ts
-const accounts = await window.near.myWallet.request({
+await window.near.myWallet.request({
   method: "disconnect",
 });
 ```
