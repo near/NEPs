@@ -45,11 +45,11 @@ interface SignOutParams {
   accounts: Array<Account>;
 }
 
-interface SignAndSendTransactionParams {
+interface SignTransactionParams {
   transaction: transactions.Transaction;
 }
 
-interface SignAndSendTransactionsParams {
+interface SignTransactionsParams {
   transactions: Array<transactions.Transaction>;
 }
 
@@ -86,19 +86,19 @@ interface Methods {
     };
     response: void;
   };
-  signAndSendTransaction: {
+  signTransaction: {
     params: {
-      method: "signAndSendTransaction";
-      params: SignAndSendTransactionParams;
+      method: "signTransaction";
+      params: SignTransactionParams;
     };
-    response: providers.FinalExecutionOutcome;
+    response: transactions.SignedTransaction;
   };
-  signAndSendTransactions: {
+  signTransactions: {
     params: {
-      method: "signAndSendTransactions";
-      params: SignAndSendTransactionsParams;
+      method: "SignTransactions";
+      params: SignTransactionsParams;
     };
-    response: Array<providers.FinalExecutionOutcome>;
+    response: Array<transactions.SignedTransaction>;
   };
   disconnect: {
     params: {
@@ -177,9 +177,9 @@ const accounts = await window.near.myWallet.request({
 });
 ```
 
-### `signAndSendTransaction`
+### `signTransaction`
 
-Sign and send a transaction. This request should require explicit approval from the user.
+Sign a transaction. This request should require explicit approval from the user.
 
 ```ts
 import { transactions } from "near-api-js";
@@ -209,8 +209,8 @@ const [block, accessKey] = await Promise.all([
   }),
 ]);
 
-const response = await window.near.myWallet.request({
-  method: "signAndSendTransaction",
+const signedTx = await window.near.myWallet.request({
+  method: "signTransaction",
   params: {
     transaction: transactions.createTransaction(
       account.accountId,
@@ -227,11 +227,14 @@ const response = await window.near.myWallet.request({
     ),
   }
 });
+
+// Send the transaction to the blockchain.
+await provider.sendTransaction(signedTx);
 ```
 
-### `signAndSendTransactions`
+### `signTransactions`
 
-Sign and send a list of transactions. This request should require explicit approval from the user.
+Sign a list of transactions. This request should require explicit approval from the user.
 
 ```ts
 // TODO.
@@ -249,7 +252,7 @@ await window.near.myWallet.request({
 
 ### `signIn`
 
-For dApps that often sign gas-only transactions, `FunctionCall` access keys can be created for one or more accounts to greatly improve the UX. While this could be achieved with `signAndSendTransactions`, it suggests a direct intention that a user wishes to sign in to a dApp's smart contract.
+For dApps that often sign gas-only transactions, `FunctionCall` access keys can be created for one or more accounts to greatly improve the UX. While this could be achieved with `signTransactions`, it suggests a direct intention that a user wishes to sign in to a dApp's smart contract.
 
 ```ts
 import { utils } from "near-api-js";
@@ -279,53 +282,14 @@ await window.near.myWallet.request({
 });
 ```
 
-### Events
+## Events
 
-- `accountsChanged`: Triggered whenever accounts are updated (e.g. calling `signIn` and `signOut`).
+### `accountsChanged`
 
-### Examples
-
-**Get accounts (after previously calling `signIn`)**
-
-```ts
-const accounts = await window.near.myWallet.request({
-  method: "getAccounts"
-});
-```
-
-**Subscribe to account changes**
+Triggered whenever accounts are updated (e.g. calling `connect` or `disconnect`).
 
 ```ts
 window.near.myWallet.on("accountsChanged", (accounts) => {
   console.log("Accounts Changed", accounts);
-});
-```
-
-**Get network configuration**
-
-```ts
-const network = await window.near.myWallet.request({ 
-  method: "getNetwork" 
-});
-```
-
-**Sign and send a transaction**
-
-```ts
-const result = await window.near.myWallet.request({
-  method: "signAndSendTransaction",
-  params: {
-    signerId: "test.testnet",
-    receiverId: "guest-book.testnet",
-    actions: [{
-      type: "FunctionCall",
-      params: {
-        methodName: "addMessage",
-        args: { text: "Hello World!" },
-        gas: "30000000000000",
-        deposit: "10000000000000000000000",
-      },
-    }]
-  }
 });
 ```
