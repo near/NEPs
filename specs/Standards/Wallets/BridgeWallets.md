@@ -27,7 +27,7 @@ type SignTransactionResponse = Uint8Array;
 
 ### `signTransactions`
 
-Sign a list of transaction. This request should require explicit approval from the user.
+Sign a list of transactions. This request should require explicit approval from the user.
 
 ```ts
 import { providers, transactions } from "near-api-js";
