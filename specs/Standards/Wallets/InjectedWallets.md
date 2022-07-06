@@ -166,9 +166,14 @@ const [account] = await window.near.myWallet.request({
   method: "getAccounts",
 });
 
+// Retrieve network details from the wallet.
+const network = await window.near.myWallet.request({
+  method: "getNetwork",
+});
+
 // Setup RPC to retrieve transaction-related prerequisites.
 const provider = new providers.JsonRpcProvider({
-  url: "https://rpc.testnet.near.org",
+  url: network.nodeUrl,
 });
 
 const [block, accessKey] = await Promise.all([
