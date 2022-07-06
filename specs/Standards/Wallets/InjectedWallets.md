@@ -237,7 +237,73 @@ await provider.sendTransaction(signedTx);
 Sign a list of transactions. This request should require explicit approval from the user.
 
 ```ts
-// TODO.
+import { transactions } from "near-api-js";
+
+// Retrieve first account (assuming already connected).
+const [account] = await window.near.myWallet.request({
+  method: "getAccounts",
+});
+
+// Retrieve network details from the wallet.
+const network = await window.near.myWallet.request({
+  method: "getNetwork",
+});
+
+// Setup RPC to retrieve transaction-related prerequisites.
+const provider = new providers.JsonRpcProvider({
+  url: network.nodeUrl,
+});
+
+const [block, accessKey] = await Promise.all([
+  provider.block({ finality: "final" }),
+  provider.query<AccessKeyView>({
+    request_type: "view_access_key",
+    finality: "final",
+    account_id: account.accountId,
+    public_key: account.publicKey,
+  }),
+]);
+
+const signedTxs = await window.near.myWallet.request({
+  method: "signTransactions",
+  params: {
+    transactions: [
+      transactions.createTransaction(
+        account.accountId,
+        utils.PublicKey.from(account.publicKey),
+        "guest-book.testnet",
+        accessKey.nonce + 1,
+        [transactions.functionCall(
+          "addMessage",
+          { text: "Hello World! (1/2)" },
+          utils.format.parseNearAmount("0.00000000003"),
+          utils.format.parseNearAmount("0.01")
+        )],
+        utils.serialize.base_decode(block.header.hash)
+      ),
+      transactions.createTransaction(
+        account.accountId,
+        utils.PublicKey.from(account.publicKey),
+        "guest-book.testnet",
+        accessKey.nonce + 2,
+        [transactions.functionCall(
+          "addMessage",
+          { text: "Hello World! (2/2)" },
+          utils.format.parseNearAmount("0.00000000003"),
+          utils.format.parseNearAmount("0.01")
+        )],
+        utils.serialize.base_decode(block.header.hash)
+      )
+    ]
+  }
+});
+
+for (let i = 0; i < signedTxs.length; i += 1) {
+  const signedTx = signedTxs[i];
+  
+  // Send the transaction to the blockchain.
+  await provider.sendTransaction(signedTx);
+}
 ```
 
 ### `disconnect`
