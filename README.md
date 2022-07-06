@@ -25,7 +25,7 @@ Changes to the protocol specification and standards are called NEAR Enhancement 
 | [0245](https://github.com/near/NEPs/blob/master/neps/nep-0245.md) | Multi Token Standard                                              | @zcstarr @riqi @jriemann @marcos.sun        | Review |
 | [0297](https://github.com/near/NEPs/blob/master/neps/nep-0297.md) | Events Standard                                                   | @telezhnaya                                 | Final  |
 | [0330](https://github.com/near/NEPs/blob/master/neps/nep-0330.md) | Source Metadata                                                   | @BenKurrek                                  | Review |
-| [0330](https://github.com/near/NEPs/blob/master/neps/nep-0330.md) | Efficient signature verification and hashing precompile functions |                                             | Draft  |
+| [0330](https://github.com/near/NEPs/blob/master/neps/nep-0330.md) | Efficient signature verification and hashing host functions |                                             | Draft  |
 
 ## Specification
 
