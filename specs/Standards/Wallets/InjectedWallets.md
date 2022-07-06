@@ -146,7 +146,7 @@ const accounts = await window.near.myWallet.request({
 
 ### `getNetwork`
 
-Retrieve the wallet's current network info.
+Retrieve the currently selected network.
 
 ```ts
 const network = await window.near.myWallet.request({
