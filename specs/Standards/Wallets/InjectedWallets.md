@@ -357,19 +357,20 @@ const network = await window.near.myWallet.request({
   method: "getNetwork",
 });
 
-
 // Remove FunctionCall access (previously granted via signIn) for each account.
 await window.near.myWallet.request({
   method: "signOut",
   params: {
-    accounts: await Promise.all(accounts.map(async ({ accountId }) => {
-      const keyPair = await keystore.getKey(network.networkId, accountId);
-      
-      return {
-        accountId,
-        publicKey: keyPair.getPublicKey().toString()
-      };
-    })),
+    accounts: await Promise.all(
+      accounts.map(async ({ accountId }) => {
+        const keyPair = await keystore.getKey(network.networkId, accountId);
+
+        return {
+          accountId,
+          publicKey: keyPair.getPublicKey().toString()
+        };
+      })
+    ),
   }
 });
 ```
