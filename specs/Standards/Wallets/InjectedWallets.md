@@ -136,17 +136,6 @@ interface Wallet {
 
 ## Methods
 
-<!--
-- `connect`: Request visibility for a one or more accounts from the wallet.
-- `disconnect`: Remove visibility of all accounts from the wallet.
-- `getAccounts`: 
-- `getNetwork`: Get the currently selected network.
-- `signIn`: Request access to one or more accounts.
-- `signOut`: Remove access to all accounts.
-- `signAndSendTransaction`: Sign and Send one or more NEAR Actions.
-- `signAndSendTransactions`: Sign and Send one or more NEAR Transactions.
--->
-
 ### `connect`
 
 Request visibility for a one or more accounts from the wallet. This should explicitly prompt the user to select from their list of imported accounts. dApps should use `getAccounts` once connected to retrieve the list of visible accounts.
