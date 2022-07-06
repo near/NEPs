@@ -161,14 +161,16 @@ Sign and send a transaction. This request should require explicit approval from 
 ```ts
 import { transactions } from "near-api-js";
 
-// Retrieve first account.
+// Retrieve first account (assuming already connected).
 const [account] = await window.near.myWallet.request({
   method: "getAccounts",
 });
 
+// Setup RPC to retrieve transaction-related prerequisites.
 const provider = new providers.JsonRpcProvider({
   url: "https://rpc.testnet.near.org",
 });
+
 const [block, accessKey] = await Promise.all([
   provider.block({ finality: "final" }),
   provider.query<AccessKeyView>({
