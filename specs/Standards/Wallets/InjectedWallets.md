@@ -144,6 +144,16 @@ const accounts = await window.near.myWallet.request({
 });
 ```
 
+### `getNetwork`
+
+Retrieve the wallet's current network info.
+
+```ts
+const network = await window.near.myWallet.request({
+  method: "getNetwork",
+});
+```
+
 ### `getAccounts`
 
 Retrieve all accounts visible to the dApp.
