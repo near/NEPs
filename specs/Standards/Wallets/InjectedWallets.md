@@ -88,6 +88,18 @@ const { id } = window.near.wallet;
 console.log(id) // "wallet"
 ```
 
+### `connected`
+
+Determine whether we're already connected to the wallet and have visibility of at least one account.
+
+> Note: It's not required to be connected when using `signTransaction` and `signTransactions`.
+
+```ts
+const { connected } = window.near.wallet;
+
+console.log(connected) // true
+```
+
 ### `network`
 
 Retrieve the currently selected network.
