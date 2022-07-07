@@ -14,7 +14,7 @@ Injected wallets are browser extensions that implement the `Wallet` API (see bel
 
 ## Wallet API
 
-TODO: Description here.
+Below is the entire API for injected wallets. It makes use of `near-api-js` to enable interoperability with dApps that will already use it for constructing transactions and communicating with RPC endpoints.
 
 ```ts
 import { transactions } from "near-api-js";
