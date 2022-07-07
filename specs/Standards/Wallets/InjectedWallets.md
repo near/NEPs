@@ -10,18 +10,11 @@ dApps are finding it increasingly difficult to support the ever expanding choice
 
 ## What is an Injected Wallet?
 
-Injected wallets are browser extensions that implement the `Wallet` API (see below) on the `window` object. To avoid namespace collisions seen in other chains such as Ethereum, wallets will mount under their own key within `window.near` (e.g. `window.near.sender`). This approach solves the problem of detecting which wallet(s) are available and supports multiple injected wallets simultaneously!
+Injected wallets are browser extensions that implement the `Wallet` API (see below) on the `window` object. To avoid namespace collisions seen in other chains such as Ethereum, wallets will mount under their own key within `window.near` (e.g. `window.near.sender`). This approach solves the problem of detecting which wallet(s) are available and supports multiple injected wallets simultaneously.
 
 ## Wallet API
 
-At it's most basic, the Wallet API has main two features:
-
-- `request`: Communication with the wallet.
-- `on` and `off`: Subscribe to notable events such as account updates.
-
-The decision to implement `request` instead of dedicated methods means wallets can define their own custom functionality without polluting the top-level namespace. The purpose of this standard is to define the minimum set of methods to be considered an official NEAR injected wallet. Wallets are free to innovate with functionality they believe could eventually become part of the standard such as querying the locked status.
-
-Heavily inspired by [Ethereum's JSON-RPC Methods](https://docs.metamask.io/guide/rpc-api.html#ethereum-json-rpc-methods), below is a high-level overview of what an injected wallet should look like.
+TODO: Description here.
 
 ```ts
 import { providers, transactions } from "near-api-js";
@@ -53,63 +46,9 @@ interface SignTransactionsParams {
   transactions: Array<transactions.Transaction>;
 }
 
-interface Methods {
-  connect: {
-    params: {
-      method: "connect";
-    };
-    response: Array<Account>;
-  };
-  getAccounts: {
-    params: {
-      method: "getAccounts";
-    };
-    response: Array<Account>;
-  };
-  getNetwork: {
-    params: {
-      method: "getNetwork";
-    };
-    response: Network;
-  };
-  signIn: {
-    params: {
-      method: "signIn";
-      params: SignInParams;
-    };
-    response: void;
-  };
-  signOut: {
-    params: {
-      method: "signOut";
-      params: SignOutParams;
-    };
-    response: void;
-  };
-  signTransaction: {
-    params: {
-      method: "signTransaction";
-      params: SignTransactionParams;
-    };
-    response: transactions.SignedTransaction;
-  };
-  signTransactions: {
-    params: {
-      method: "SignTransactions";
-      params: SignTransactionsParams;
-    };
-    response: Array<transactions.SignedTransaction>;
-  };
-  disconnect: {
-    params: {
-      method: "disconnect";
-    };
-    response: void;
-  };
-}
-
 interface Events {
   accountsChanged: { accounts: Array<Account> };
+  networkChanged: { network: Network };
 };
 
 type Unsubscribe = () => void;
@@ -117,12 +56,15 @@ type Unsubscribe = () => void;
 interface Wallet {
   id: string;
   connected: boolean;
-  request<
-    MethodName extends keyof Methods,
-    Method extends Methods[MethodName]
-  >(
-    params: Method["params"]
-  ): Promise<Method["response"]>;
+  network: Network;
+  accounts: Array<Account>;
+  
+  connect(): Promise<void>;
+  signIn(params: SignInParams): Promise<void>;
+  signOut(params: SignOutParams): Promise<void>;
+  signTransaction(params: SignTransactionParams): Promise<transactions.SignedTransaction>;
+  signTransactions(params: SignTransactionsParams): Promise<Array<transactions.SignedTransaction>>;
+  disconnect(): Promise<void>;
   on<EventName extends keyof Events>(
     event: EventName,
     callback: (params: Events[EventName]) => void
@@ -134,6 +76,32 @@ interface Wallet {
 }
 ```
 
+## Properties
+
+### `id`
+
+TODO: Description here.
+
+### `network`
+
+Retrieve the currently selected network.
+
+```ts
+const { network } = window.near.wallet;
+
+console.log(network) // { networkId: "testnet", nodeUrl: "https://rpc.testnet.near.org" }
+```
+
+### `accounts`
+
+Retrieve all accounts visible to the dApp.
+
+```ts
+const { accounts } = window.near.wallet;
+
+console.log(accounts) // [{ accountId: "test.testnet", publicKey: "..." }]
+```
+
 ## Methods
 
 ### `connect`
@@ -143,29 +111,7 @@ Request visibility for a one or more accounts from the wallet. This should expli
 > Note: Calling this method when already connected will allow users to modify their selection, triggering the 'accountsChanged' event.
 
 ```ts
-const accounts = await window.near.myWallet.request({
-  method: "connect",
-});
-```
-
-### `getNetwork`
-
-Retrieve the currently selected network.
-
-```ts
-const network = await window.near.myWallet.request({
-  method: "getNetwork",
-});
-```
-
-### `getAccounts`
-
-Retrieve all accounts visible to the dApp.
-
-```ts
-const accounts = await window.near.myWallet.request({
-  method: "getAccounts",
-});
+const accounts = await window.near.wallet.connect();
 ```
 
 ### `signTransaction`
@@ -175,48 +121,36 @@ Sign a transaction. This request should require explicit approval from the user.
 ```ts
 import { transactions } from "near-api-js";
 
-// Retrieve first account (assuming already connected).
-const [account] = await window.near.myWallet.request({
-  method: "getAccounts",
-});
-
-// Retrieve network details from the wallet.
-const network = await window.near.myWallet.request({
-  method: "getNetwork",
-});
+// Retrieve accounts (assuming already connected) and current network.
+const { network, accounts } = window.near.wallet;
 
 // Setup RPC to retrieve transaction-related prerequisites.
-const provider = new providers.JsonRpcProvider({
-  url: network.nodeUrl,
-});
+const provider = new providers.JsonRpcProvider({ url: network.nodeUrl });
 
 const [block, accessKey] = await Promise.all([
   provider.block({ finality: "final" }),
   provider.query<AccessKeyView>({
     request_type: "view_access_key",
     finality: "final",
-    account_id: account.accountId,
-    public_key: account.publicKey,
+    account_id: accounts[0].accountId,
+    public_key: accounts[0].publicKey,
   }),
 ]);
 
-const signedTx = await window.near.myWallet.request({
-  method: "signTransaction",
-  params: {
-    transaction: transactions.createTransaction(
-      account.accountId,
-      utils.PublicKey.from(account.publicKey),
-      "guest-book.testnet",
-      accessKey.nonce + 1,
-      [transactions.functionCall(
-        "addMessage",
-        { text: "Hello World!" },
-        utils.format.parseNearAmount("0.00000000003"),
-        utils.format.parseNearAmount("0.01")
-      )],
-      utils.serialize.base_decode(block.header.hash)
-    ),
-  }
+const signedTx = await window.near.wallet.signTransaction({
+  transaction: transactions.createTransaction(
+    accounts[0].accountId,
+    utils.PublicKey.from(accounts[0].publicKey),
+    "guest-book.testnet",
+    accessKey.nonce + 1,
+    [transactions.functionCall(
+      "addMessage",
+      { text: "Hello World!" },
+      utils.format.parseNearAmount("0.00000000003"),
+      utils.format.parseNearAmount("0.01")
+    )],
+    utils.serialize.base_decode(block.header.hash)
+  ),
 });
 
 // Send the transaction to the blockchain.
@@ -230,63 +164,51 @@ Sign a list of transactions. This request should require explicit approval from 
 ```ts
 import { transactions } from "near-api-js";
 
-// Retrieve first account (assuming already connected).
-const [account] = await window.near.myWallet.request({
-  method: "getAccounts",
-});
-
-// Retrieve network details from the wallet.
-const network = await window.near.myWallet.request({
-  method: "getNetwork",
-});
+// Retrieve accounts (assuming already connected) and current network.
+const { network, accounts } = window.near.wallet;
 
 // Setup RPC to retrieve transaction-related prerequisites.
-const provider = new providers.JsonRpcProvider({
-  url: network.nodeUrl,
-});
+const provider = new providers.JsonRpcProvider({ url: network.nodeUrl });
 
 const [block, accessKey] = await Promise.all([
   provider.block({ finality: "final" }),
   provider.query<AccessKeyView>({
     request_type: "view_access_key",
     finality: "final",
-    account_id: account.accountId,
-    public_key: account.publicKey,
+    account_id: accounts[0].accountId,
+    public_key: accounts[0].publicKey,
   }),
 ]);
 
-const signedTxs = await window.near.myWallet.request({
-  method: "signTransactions",
-  params: {
-    transactions: [
-      transactions.createTransaction(
-        account.accountId,
-        utils.PublicKey.from(account.publicKey),
-        "guest-book.testnet",
-        accessKey.nonce + 1,
-        [transactions.functionCall(
-          "addMessage",
-          { text: "Hello World! (1/2)" },
-          utils.format.parseNearAmount("0.00000000003"),
-          utils.format.parseNearAmount("0.01")
-        )],
-        utils.serialize.base_decode(block.header.hash)
-      ),
-      transactions.createTransaction(
-        account.accountId,
-        utils.PublicKey.from(account.publicKey),
-        "guest-book.testnet",
-        accessKey.nonce + 2,
-        [transactions.functionCall(
-          "addMessage",
-          { text: "Hello World! (2/2)" },
-          utils.format.parseNearAmount("0.00000000003"),
-          utils.format.parseNearAmount("0.01")
-        )],
-        utils.serialize.base_decode(block.header.hash)
-      )
-    ]
-  }
+const signedTxs = await window.near.wallet.signTransactions({
+  transactions: [
+    transactions.createTransaction(
+      accounts[0].accountId,
+      utils.PublicKey.from(accounts[0].publicKey),
+      "guest-book.testnet",
+      accessKey.nonce + 1,
+      [transactions.functionCall(
+        "addMessage",
+        { text: "Hello World! (1/2)" },
+        utils.format.parseNearAmount("0.00000000003"),
+        utils.format.parseNearAmount("0.01")
+      )],
+      utils.serialize.base_decode(block.header.hash)
+    ),
+    transactions.createTransaction(
+      accounts[0].accountId,
+      utils.PublicKey.from(accounts[0].publicKey),
+      "guest-book.testnet",
+      accessKey.nonce + 2,
+      [transactions.functionCall(
+        "addMessage",
+        { text: "Hello World! (2/2)" },
+        utils.format.parseNearAmount("0.00000000003"),
+        utils.format.parseNearAmount("0.01")
+      )],
+      utils.serialize.base_decode(block.header.hash)
+    )
+  ]
 });
 
 for (let i = 0; i < signedTxs.length; i += 1) {
@@ -302,9 +224,7 @@ for (let i = 0; i < signedTxs.length; i += 1) {
 Remove visibility of all accounts from the wallet.
 
 ```ts
-await window.near.myWallet.request({
-  method: "disconnect",
-});
+await window.near.wallet.disconnect();
 ```
 
 ### `signIn`
@@ -315,27 +235,22 @@ For dApps that often sign gas-only transactions, `FunctionCall` access keys can 
 import { utils } from "near-api-js";
 
 // Retrieve the list of accounts we have visibility of.
-const accounts = await window.near.myWallet.request({
-  method: "getAccounts",
-});
+const { accounts } = window.near.wallet;
 
 // Request FunctionCall access to the 'guest-book.testnet' smart contract for each account.
-await window.near.myWallet.request({
-  method: "signIn",
-  params: {
-    permission: {
-      receiverId: "guest-book.testnet",
-      methodNames: [],
-    },
-    accounts: accounts.map(({ accountId }) => {
-      const keyPair = utils.KeyPair.fromRandom("ed25519");
-      
-      return {
-        accountId,
-        publicKey: keyPair.getPublicKey().toString()
-      };
-    }),
-  }
+await window.near.wallet.signIn({
+  permission: {
+    receiverId: "guest-book.testnet",
+    methodNames: [],
+  },
+  accounts: accounts.map(({ accountId }) => {
+    const keyPair = utils.KeyPair.fromRandom("ed25519");
+
+    return {
+      accountId,
+      publicKey: keyPair.getPublicKey().toString()
+    };
+  }),
 });
 ```
 
@@ -349,31 +264,21 @@ import { utils, keyStores } from "near-api-js";
 // Setup keystore to retrieve locally stored FunctionCall access keys.
 const keystore = new keyStores.BrowserLocalStorageKeyStore();
 
-// Retrieve the list of accounts we have visibility of.
-const accounts = await window.near.myWallet.request({
-  method: "getAccounts",
-});
-
-// Retrieve network details from the wallet.
-const network = await window.near.myWallet.request({
-  method: "getNetwork",
-});
+// Retrieve accounts (assuming already connected) and current network.
+const { network, accounts } = window.near.wallet;
 
 // Remove FunctionCall access (previously granted via signIn) for each account.
-await window.near.myWallet.request({
-  method: "signOut",
-  params: {
-    accounts: await Promise.all(
-      accounts.map(async ({ accountId }) => {
-        const keyPair = await keystore.getKey(network.networkId, accountId);
+await window.near.wallet.signOut({
+  accounts: await Promise.all(
+    accounts.map(async ({ accountId }) => {
+      const keyPair = await keystore.getKey(network.networkId, accountId);
 
-        return {
-          accountId,
-          publicKey: keyPair.getPublicKey().toString()
-        };
-      })
-    ),
-  }
+      return {
+        accountId,
+        publicKey: keyPair.getPublicKey().toString()
+      };
+    })
+  ),
 });
 ```
 
@@ -384,7 +289,17 @@ await window.near.myWallet.request({
 Triggered whenever accounts are updated (e.g. calling `connect` or `disconnect`).
 
 ```ts
-window.near.myWallet.on("accountsChanged", (accounts) => {
+window.near.wallet.on("accountsChanged", ({ accounts }) => {
   console.log("Accounts Changed", accounts);
+});
+```
+
+### `networkChanged`
+
+Triggered whenever the wallet changes network.
+
+```ts
+window.near.wallet.on("networkChanged", ({ network }) => {
+  console.log("Network Changed", network);
 });
 ```
