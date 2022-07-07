@@ -8,6 +8,12 @@ Standard interface for injected wallets.
 
 dApps are finding it increasingly difficult to support the ever expanding choice of wallets due to their wildly different implementations. While projects such as [Wallet Selector](https://github.com/near/wallet-selector) attempt to mask this problem, it's clear the ecosystem is crying out for a standard that will not only benefit dApps but make it easier for existing wallets to add support for NEAR.
 
+## Rationale and alternatives
+
+Having this standard opens up the possibility for `near-api-js` to become wallet-agnostic and move away from the high amount coupling it has with NEAR Wallet. dApps will have the freedom to integrate with wallets without the need for projects such as [Wallet Selector](https://github.com/near/wallet-selector) that must implement various abstractions to normalise the different APIs before it can even address displaying a UI to select a wallet.
+
+This standard takes a different approach to a wallet API than other chains such as [Ethereum's JSON-RPC Methods](https://docs.metamask.io/guide/rpc-api.html#ethereum-json-rpc-methods). Mainly, it rejects the `request` abstraction that feels unnecessary and adds to the complexity both in terms of implementation and types. Instead, it exposes various methods directly on the top-level object that makes it easier to discover functionality.
+
 ## What is an Injected Wallet?
 
 Injected wallets are browser extensions that implement the `Wallet` API (see below) on the `window` object. To avoid namespace collisions seen in other chains such as Ethereum, wallets will mount under their own key within `window.near` (e.g. `window.near.sender`). This approach solves the problem of detecting which wallet(s) are available and supports multiple injected wallets simultaneously.
