@@ -140,6 +140,8 @@ interface Wallet {
 
 Request visibility for a one or more accounts from the wallet. This should explicitly prompt the user to select from their list of imported accounts. dApps should use `getAccounts` once connected to retrieve the list of visible accounts.
 
+> Note: Calling this method when already connected will allow users to modify their selection, triggering the 'accountsChanged' event.
+
 ```ts
 const accounts = await window.near.myWallet.request({
   method: "connect",
