@@ -80,7 +80,13 @@ interface Wallet {
 
 ### `id`
 
-TODO: Description here.
+Retrieve the wallet's unique identifier.
+
+```ts
+const { id } = window.near.wallet;
+
+console.log(id) // "wallet"
+```
 
 ### `network`
 
