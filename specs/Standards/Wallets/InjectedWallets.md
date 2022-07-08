@@ -143,7 +143,8 @@ const accounts = await window.near.wallet.connect();
 Sign a transaction. This request should require explicit approval from the user.
 
 ```ts
-import { transactions, providers } from "near-api-js";
+import { transactions, providers, utils } from "near-api-js";
+import { AccessKeyView } from "near-api-js/lib/providers/provider";
 
 // Retrieve accounts (assuming already connected) and current network.
 const { network, accounts } = window.near.wallet;
@@ -186,7 +187,8 @@ await provider.sendTransaction(signedTx);
 Sign a list of transactions. This request should require explicit approval from the user.
 
 ```ts
-import { transactions, providers } from "near-api-js";
+import { transactions, providers, utils } from "near-api-js";
+import { AccessKeyView } from "near-api-js/lib/providers/provider";
 
 // Retrieve accounts (assuming already connected) and current network.
 const { network, accounts } = window.near.wallet;
