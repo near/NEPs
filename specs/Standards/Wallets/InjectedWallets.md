@@ -55,7 +55,7 @@ interface SignTransactionsParams {
 interface Events {
   accountsChanged: { accounts: Array<Account> };
   networkChanged: { network: Network };
-};
+}
 
 type Unsubscribe = () => void;
 
