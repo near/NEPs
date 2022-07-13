@@ -6,13 +6,30 @@ Standard interface for injected wallets.
 
 ## Motivation
 
-dApps are finding it increasingly difficult to support the ever expanding choice of wallets due to their wildly different implementations. While projects such as [Wallet Selector](https://github.com/near/wallet-selector) attempt to mask this problem, it's clear the ecosystem is crying out for a standard that will not only benefit dApps but make it easier for existing wallets to add support for NEAR.
+dApps are finding it increasingly difficult to support the ever expanding choice of wallets due to their wildly different implementations. While projects such as [Wallet Selector](https://github.com/near/wallet-selector) attempt to mask this problem, it's clear the ecosystem requires a standard that will not only benefit dApps but make it easier for established wallets to support NEAR.
 
 ## Rationale and alternatives
 
-Having this standard opens up the possibility for `near-api-js` to become wallet-agnostic and move away from the high amount coupling it has with NEAR Wallet. dApps will have the freedom to integrate with wallets without the need for projects such as [Wallet Selector](https://github.com/near/wallet-selector) that must implement various abstractions to normalise the different APIs before it can even address displaying a UI to select a wallet.
+At its most basic, a wallet contains key pairs required to sign messages. This standard aims to define an API (based on our learning from [Wallet Selector](https://github.com/near/wallet-selector)) that achieves this requirement through a number of methods exposed on the `window` object.
 
-This standard takes a different approach to a wallet API than other chains such as [Ethereum's JSON-RPC Methods](https://docs.metamask.io/guide/rpc-api.html#ethereum-json-rpc-methods). Mainly, it rejects the `request` abstraction that feels unnecessary and adds to the complexity both in terms of implementation and types. Instead, it exposes various methods directly on the top-level object that makes it easier to discover functionality.
+The introduction of this standard makes it possible for `near-api-js` to become wallet-agnostic and eventually move away from the high amount of coupling with NEAR Wallet. It simplifies projects such as [Wallet Selector](https://github.com/near/wallet-selector) that must implement various abstractions to normalise the different APIs before it can display a modal for selecting a wallet.
+
+This standard takes a different approach to a wallet API than other blockchains such as [Ethereum's JSON-RPC Methods](https://docs.metamask.io/guide/rpc-api.html#ethereum-json-rpc-methods). Mainly, it rejects the `request` abstraction that feels unnecessary and only adds to the complexity both in terms of implementation and types. Instead, it exposes various methods directly on the top-level object that makes it easier to discover functionality.
+
+There has been many iterations of this standard to help inform what we consider the "best" approach right now for NEAR. Below is summary of the key design choices:
+
+### Single account vs. multiple account
+
+Almost every wallet implementation we had seen in NEAR used a single account model until work began on [WalletConnect](https://walletconnect.com/). In WalletConnect, sessions can contain any number of accounts that can be modified by the dApp or wallet. The decision to use a multiple account model was influenced by the following reasons:
+
+- It future-proofs the API even if wallets (such as MetaMask) only support a single account.
+- Other blockchains such as [Ethereum](https://docs.metamask.io/guide/rpc-api.html#eth-requestaccounts) implement this model.
+- Access to multiple accounts allows dApps more freedom to improve UX as users can switch between accounts seamlessly.
+- Aligns with WalletConnect via the Bridge Wallet Standard.
+
+### Store FunctionCall access keys in dApp vs. wallet
+
+TODO: Description here
 
 ## What is an Injected Wallet?
 
