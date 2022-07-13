@@ -29,7 +29,11 @@ Almost every wallet implementation we had seen in NEAR used a single account mod
 
 ### Store FunctionCall access keys in dApp vs. wallet
 
-TODO: Description here
+TODO: Description here.
+
+### What it means to sign in/out?
+
+TODO: Description here.
 
 ## What is an Injected Wallet?
 
