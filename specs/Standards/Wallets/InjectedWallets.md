@@ -29,11 +29,13 @@ Almost every wallet implementation we had seen in NEAR used a single account mod
 
 ### Store FunctionCall access keys in dApp vs. wallet
 
-TODO: Description here.
+NEAR's unique concept of `FunctionCall` access keys makes it possible for dApps to execute transactions without having to prompt the user each time. This limited access means they can be shared with relatively low risk, provided gas allowance and method names are appropriately defined.
 
-### What it means to sign in/out?
+There has been mixed views on exactly who should store these key pairs as there are trade-off to be considered with either option:
 
-TODO: Description here.
+- Storing key pairs in the wallet means users have a contextual view of what dApps have limited access to their accounts. This can be solved however through improvements to the `view_access_key` endpoints to include a description and/or url that helps inform users on whether they want to remove it.
+- Although risk is limited with `FunctionCall` access keys if they're ever compromised, storing key pairs in the dApp means a level of trust is required to ensure they're stored securely which isn't guaranteed.
+- Signing transactions that match the `FunctionCall` access key don't require connection to a wallet when stored in the dApp. This is particularly useful for wallets such as Ledger and WalletConnect where a connection isn't always available. This however increases the complexity of the dApp as the logic for signing transactions isn't centralised and effectively makes dApps miniature wallets.
 
 ## What is an Injected Wallet?
 
