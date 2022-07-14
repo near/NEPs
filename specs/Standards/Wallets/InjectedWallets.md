@@ -37,9 +37,9 @@ There has been mixed views on exactly who should store these key pairs as there 
 - Although risk is limited with `FunctionCall` access keys, storing key pairs in the dApp means a level of trust is required to ensure they're kept securely to avoid being compromised.
 - Signing transactions that match the `FunctionCall` access key stored in the dApp means we don't require connection to a wallet. This is particularly useful for wallets such as Ledger and WalletConnect where it isn't always available. The downside to this approach is the dApp must handle much of the logic found already in the wallet such as storing and key pairs and matching applicable access keys during signing.
 
-Although we had some technical challenges, the decision to store `FunctionCall` access keys on the dApp means users own their key pairs and gas-only intensive `FunctionCall` dApps work seamlessly with wallets that aren't always available. The expectation for `near-api-js` to become wallet-agnostic will reduce the complexity shifted onto the dApp as it can abstract away the logic required for handling the key pairs and only redirect to the wallet when further permission is needed.
+Although we had some technical challenges, the decision to store the key pairs of `FunctionCall` access keys on the dApp means users own them and gas-only intensive `FunctionCall` dApps work seamlessly with wallets that aren't always available. The expectation for `near-api-js` to become wallet-agnostic will reduce the complexity shifted onto the dApp as it can abstract away the logic required for handling the key pairs and only redirect to the wallet when further permission is needed.
 
-<!-- TODO: Talk about why we also need connect/disconnect. -->
+A side effect to this approach (coupled with multiple accounts) means we must generate the key pairs ahead of time and pass each public key to the `signIn` method as a list of `accounts`. The introduction of the `connect` and `disconnect` methods allows dApps to request visibility for a subset of accounts imported in the wallet to help populate this list as well as signing transactions.
 
 ## What is an Injected Wallet?
 
