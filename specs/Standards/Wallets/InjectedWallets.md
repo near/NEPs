@@ -16,7 +16,7 @@ The introduction of this standard makes it possible for `near-api-js` to become 
 
 This standard takes a different approach to a wallet API than other blockchains such as [Ethereum's JSON-RPC Methods](https://docs.metamask.io/guide/rpc-api.html#ethereum-json-rpc-methods). Mainly, it rejects the `request` abstraction that feels unnecessary and only adds to the complexity both in terms of implementation and types. Instead, it exposes various methods directly on the top-level object that also improves discoverability.
 
-There has been many iterations of this standard to help inform what we consider the "best" approach right now for NEAR. Below is summary of the key design choices:
+There has been many iterations of this standard to help inform what we consider the "best" approach right now for NEAR. Below is a summary of the key design choices:
 
 ### Single account vs. multiple account
 
@@ -27,7 +27,7 @@ Almost every wallet implementation in NEAR used a single account model until we 
 - Access to multiple accounts allow dApps more freedom to improve UX as users can seamlessly switch between accounts.
 - Aligns with WalletConnect via the [Bridge Wallet Standard](#TODO).
 
-### Store FunctionCall access keys in dApp vs. wallet
+### Store key pairs of FunctionCall access keys in dApp vs. wallet
 
 NEAR's unique concept of `FunctionCall` access keys makes it possible for dApps to execute transactions without having to prompt the user each time. This limited access means they can be shared with relatively low risk, provided gas allowance and method names are appropriately defined.
 
@@ -35,9 +35,9 @@ There has been mixed views on exactly who should store these key pairs as there 
 
 - Storing key pairs in the wallet means users have a contextual view of which dApps have limited access to their accounts. However, this can be solved through improvements to the `view_access_key` endpoints to include a description and/or url that helps users make a more informed decision on whether they want to remove it.
 - Although risk is limited with `FunctionCall` access keys, storing key pairs in the dApp means a level of trust is required to ensure they're kept securely to avoid being compromised.
-- Signing transactions that match the `FunctionCall` access key stored in the dApp means we don't require connection to a wallet. This is particularly useful for wallets such as Ledger and WalletConnect where it isn't always available. The downside to this approach is the dApp must handle much of the logic found already in the wallet such as storing and key pairs and matching applicable access keys during signing.
+- Signing transactions that match the `FunctionCall` access key stored in the dApp means we don't require connection to a wallet. This is particularly useful for wallets such as Ledger and WalletConnect where it isn't always available. The drawback to this approach is the dApp must handle much of the logic found already in the wallet such as storing and key pairs and matching applicable access keys during signing.
 
-Although we had some technical challenges, the decision to store the key pairs of `FunctionCall` access keys on the dApp means users own them and gas-only intensive `FunctionCall` dApps work seamlessly with wallets that aren't always available. The expectation for `near-api-js` to become wallet-agnostic will reduce the complexity shifted onto the dApp as it can abstract away the logic required for handling the key pairs and only redirect to the wallet when further permission is needed.
+Although we had some technical challenges, the decision to store the key pairs in the dApp means users own them and gas-only intensive `FunctionCall` dApps work seamlessly with wallets that aren't always available. The expectation for `near-api-js` to become wallet-agnostic will reduce the complexity shifted onto the dApp as it can abstract away the logic required for handling the key pairs and only redirect to the wallet when further permission is needed.
 
 A side effect to this approach (coupled with multiple accounts) means we must generate the key pairs ahead of time and pass each public key to the `signIn` method as a list of `accounts`. The introduction of the `connect` and `disconnect` methods allows dApps to request visibility for a subset of accounts imported in the wallet to help populate this list as well as signing transactions.
 
