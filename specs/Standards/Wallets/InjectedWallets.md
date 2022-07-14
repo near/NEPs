@@ -41,11 +41,13 @@ Although we had some technical challenges, the decision to store the key pairs i
 
 A side effect to this approach (coupled with multiple accounts) means we must generate the key pairs ahead of time and pass each public key to the `signIn` method as a list of `accounts`. The introduction of the `connect` and `disconnect` methods allows dApps to request visibility for a subset of accounts imported in the wallet to help populate this list as well as signing transactions.
 
-## What is an Injected Wallet?
+## Specification
 
-Injected wallets are browser extensions that implement the `Wallet` API (see below) on the `window` object. To avoid namespace collisions seen in other chains such as Ethereum, wallets will mount under their own key within `window.near` (e.g. `window.near.sender`). This approach solves the problem of detecting which wallet(s) are available and supports multiple injected wallets simultaneously.
+### What is an Injected Wallet?
 
-## Wallet API
+Injected wallets are browser extensions that implement the `Wallet` API (see below) on the `window` object. To avoid namespace collisions and easily detect when they're available, wallets will mount under their own key within `window.near` (e.g. `window.near.sender`).
+
+### Wallet API
 
 Below is the entire API for injected wallets. It makes use of `near-api-js` to enable interoperability with dApps that will already use it for constructing transactions and communicating with RPC endpoints.
 
@@ -109,9 +111,9 @@ interface Wallet {
 }
 ```
 
-## Properties
+#### Properties
 
-### `id`
+##### `id`
 
 Retrieve the wallet's unique identifier.
 
@@ -121,7 +123,7 @@ const { id } = window.near.wallet;
 console.log(id) // "wallet"
 ```
 
-### `connected`
+##### `connected`
 
 Determine whether we're already connected to the wallet and have visibility of at least one account.
 
@@ -133,7 +135,7 @@ const { connected } = window.near.wallet;
 console.log(connected) // true
 ```
 
-### `network`
+##### `network`
 
 Retrieve the currently selected network.
 
@@ -143,7 +145,7 @@ const { network } = window.near.wallet;
 console.log(network) // { networkId: "testnet", nodeUrl: "https://rpc.testnet.near.org" }
 ```
 
-### `accounts`
+##### `accounts`
 
 Retrieve all accounts visible to the dApp.
 
@@ -153,9 +155,9 @@ const { accounts } = window.near.wallet;
 console.log(accounts) // [{ accountId: "test.testnet", publicKey: "..." }]
 ```
 
-## Methods
+#### Methods
 
-### `connect`
+##### `connect`
 
 Request visibility for one or more accounts from the wallet. This should explicitly prompt the user to select from their list of imported accounts. dApps can use the `accounts` property once connected to retrieve the list of visible accounts.
 
@@ -165,7 +167,7 @@ Request visibility for one or more accounts from the wallet. This should explici
 const accounts = await window.near.wallet.connect();
 ```
 
-### `signTransaction`
+##### `signTransaction`
 
 Sign a transaction. This request should require explicit approval from the user.
 
@@ -209,7 +211,7 @@ const signedTx = await window.near.wallet.signTransaction({
 await provider.sendTransaction(signedTx);
 ```
 
-### `signTransactions`
+##### `signTransactions`
 
 Sign a list of transactions. This request should require explicit approval from the user.
 
@@ -272,7 +274,7 @@ for (let i = 0; i < signedTxs.length; i += 1) {
 }
 ```
 
-### `disconnect`
+##### `disconnect`
 
 Remove visibility of all accounts from the wallet.
 
@@ -280,7 +282,7 @@ Remove visibility of all accounts from the wallet.
 await window.near.wallet.disconnect();
 ```
 
-### `signIn`
+##### `signIn`
 
 For dApps that often sign gas-only transactions, `FunctionCall` access keys can be created for one or more accounts to greatly improve the UX. While this could be achieved with `signTransactions`, it suggests a direct intention that a user wishes to sign in to a dApp's smart contract.
 
@@ -307,7 +309,7 @@ await window.near.wallet.signIn({
 });
 ```
 
-### `signOut`
+##### `signOut`
 
 Delete one or more `FunctionCall` access keys created with `signIn`. While this could be achieved with `signTransactions`, it suggests a direct intention that a user wishes to sign out from a dApp's smart contract.
 
@@ -335,9 +337,9 @@ await window.near.wallet.signOut({
 });
 ```
 
-## Events
+#### Events
 
-### `accountsChanged`
+##### `accountsChanged`
 
 Triggered whenever accounts are updated (e.g. calling `connect` or `disconnect`).
 
@@ -347,7 +349,7 @@ window.near.wallet.on("accountsChanged", ({ accounts }) => {
 });
 ```
 
-### `networkChanged`
+##### `networkChanged`
 
 Triggered whenever the wallet changes network.
 
