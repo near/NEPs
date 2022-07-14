@@ -14,18 +14,18 @@ At its most basic, a wallet contains key pairs required to sign messages. This s
 
 The introduction of this standard makes it possible for `near-api-js` to become wallet-agnostic and eventually move away from the high amount of coupling with NEAR Wallet. It simplifies projects such as [Wallet Selector](https://github.com/near/wallet-selector) that must implement various abstractions to normalise the different APIs before it can display a modal for selecting a wallet.
 
-This standard takes a different approach to a wallet API than other blockchains such as [Ethereum's JSON-RPC Methods](https://docs.metamask.io/guide/rpc-api.html#ethereum-json-rpc-methods). Mainly, it rejects the `request` abstraction that feels unnecessary and only adds to the complexity both in terms of implementation and types. Instead, it exposes various methods directly on the top-level object that makes it easier to discover functionality.
+This standard takes a different approach to a wallet API than other blockchains such as [Ethereum's JSON-RPC Methods](https://docs.metamask.io/guide/rpc-api.html#ethereum-json-rpc-methods). Mainly, it rejects the `request` abstraction that feels unnecessary and only adds to the complexity both in terms of implementation and types. Instead, it exposes various methods directly on the top-level object that also improves discoverability.
 
 There has been many iterations of this standard to help inform what we consider the "best" approach right now for NEAR. Below is summary of the key design choices:
 
 ### Single account vs. multiple account
 
-Almost every wallet implementation we had seen in NEAR used a single account model until work began on [WalletConnect](https://walletconnect.com/). In WalletConnect, sessions can contain any number of accounts that can be modified by the dApp or wallet. The decision to use a multiple account model was influenced by the following reasons:
+Almost every wallet implementation in NEAR used a single account model until we began integrating with [WalletConnect](https://walletconnect.com/). In WalletConnect, sessions can contain any number of accounts that can be modified by the dApp or wallet. The decision to use a multiple account model was influenced by the following reasons:
 
-- It future-proofs the API even if wallets (such as MetaMask) only support a single account.
+- It future-proofs the API even if wallets (such as MetaMask) only support a single "active" account.
 - Other blockchains such as [Ethereum](https://docs.metamask.io/guide/rpc-api.html#eth-requestaccounts) implement this model.
-- Access to multiple accounts allows dApps more freedom to improve UX as users can switch between accounts seamlessly.
-- Aligns with WalletConnect via the Bridge Wallet Standard.
+- Access to multiple accounts allow dApps more freedom to improve UX as users can seamlessly switch between accounts.
+- Aligns with WalletConnect via the [Bridge Wallet Standard](#TODO).
 
 ### Store FunctionCall access keys in dApp vs. wallet
 
@@ -33,9 +33,9 @@ NEAR's unique concept of `FunctionCall` access keys makes it possible for dApps 
 
 There has been mixed views on exactly who should store these key pairs as there are trade-off to be considered with either option:
 
-- Storing key pairs in the wallet means users have a contextual view of what dApps have limited access to their accounts. This can be solved however through improvements to the `view_access_key` endpoints to include a description and/or url that helps inform users on whether they want to remove it.
-- Although risk is limited with `FunctionCall` access keys if they're ever compromised, storing key pairs in the dApp means a level of trust is required to ensure they're stored securely which isn't guaranteed.
-- Signing transactions that match the `FunctionCall` access key don't require connection to a wallet when stored in the dApp. This is particularly useful for wallets such as Ledger and WalletConnect where a connection isn't always available. This however increases the complexity of the dApp as the logic for signing transactions isn't centralised and effectively makes dApps miniature wallets.
+- Storing key pairs in the wallet means users have a contextual view of which dApps have limited access to their accounts. However, this can be solved through improvements to the `view_access_key` endpoints to include a description and/or url that helps users make a more informed decision on whether they want to remove it.
+- Although risk is limited with `FunctionCall` access keys, storing key pairs in the dApp means a level of trust is required to ensure they're kept securely to avoid being compromised.
+- Signing transactions that match the `FunctionCall` access key stored in the dApp means we don't require connection to a wallet. This is particularly useful for wallets such as Ledger and WalletConnect where it isn't always available. The downside to this approach is the dApp must handle much of the logic found already in the wallet such as storing and key pairs and matching applicable access keys during signing.
 
 ## What is an Injected Wallet?
 
