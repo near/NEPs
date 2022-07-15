@@ -47,11 +47,11 @@ The section should return to the examples given in the previous section, and exp
 
 ## Security Implications (Optional)
 
-If there are security concerns in relation to the NEP, those concerns should be explicitly written out to make sure reviewers of the NEP are aware of them.
+If there are security concerns concerning the NEP, those concerns should be explicitly written out to make sure reviewers of the NEP are aware of them.
 
 ## Drawbacks (Optional)
 
-Why should we _not_ do this?
+Why should we **not** do this?
 
 ## Unresolved Issues (Optional)
 
