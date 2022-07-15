@@ -39,7 +39,7 @@ There has been mixed views on exactly who should store these key pairs as there 
 
 Although we had some technical challenges, the decision to store the key pairs in the dApp means users own them and gas-only intensive `FunctionCall` dApps work seamlessly with wallets that aren't always available. The expectation for `near-api-js` to become wallet-agnostic will reduce the complexity shifted onto the dApp as it can abstract away the logic required for handling the key pairs and only redirect to the wallet when further permission is needed.
 
-A side effect to this approach (coupled with multiple accounts) means we must generate the key pairs ahead of time and pass each public key to the `signIn` method as a list of `accounts`. The introduction of the `connect` and `disconnect` methods allows dApps to request visibility for a subset of accounts imported in the wallet to help populate this list as well as signing transactions.
+A side effect to this approach (coupled with multiple accounts) means we must generate the key pairs ahead of time and pass each public key to the `signIn` method as a list of `accounts`. The introduction of the `connect` and `disconnect` methods allows dApps to request visibility for a subset of accounts imported in the wallet to help populate this list and sign transactions.
 
 ## Specification
 
