@@ -43,9 +43,16 @@ A side effect to this approach (coupled with multiple accounts) means we must ge
 
 ## Specification
 
-### What is an Injected Wallet?
-
 Injected wallets are browser extensions that implement the `Wallet` API (see below) on the `window` object. To avoid namespace collisions and easily detect when they're available, wallets will mount under their own key within `window.near` (e.g. `window.near.sender`).
+
+At the core of a wallet is [`signTransaction`](#signtransaction) and [`signTransaction`](##signtransactions). These methods, when given a [`Transaction`](https://nomicon.io/RuntimeSpec/Transactions) instance from [`near-api-js`](https://github.com/near/near-api-js), will prompt the user to sign with a key pair previously imported (with the assumption it has [`FullAccess`](https://nomicon.io/DataStructures/AccessKey) permission).
+
+In most cases, a dApp will need a reference to an account and associated public key to construct a [`Transaction`](https://nomicon.io/RuntimeSpec/Transactions). The [`connect`](#connect) method helps solve this issue by prompting the user to select one or more accounts they would like to make visible to the dApp. When at least one account is visible, the wallet considers the dApp [`connected`](#connected) and they can access a list of [`accounts`](#accounts) containing an `accountId` and `publicKey`.
+
+<!---
+TODO: Document the sign in/out methods and why they're favoured over the sign transaction methods.
+TODO: Document the use case for a donate button (and the drawback of directly using Transaction from near-api-js).
+-->
 
 ### Wallet API
 
@@ -303,7 +310,7 @@ await window.near.wallet.signIn({
 
     return {
       accountId,
-      publicKey: keyPair.getPublicKey().toString()
+      publicKey: keyPair.getPublicKey()
     };
   }),
 });
@@ -330,7 +337,7 @@ await window.near.wallet.signOut({
 
       return {
         accountId,
-        publicKey: keyPair.getPublicKey().toString()
+        publicKey: keyPair.getPublicKey()
       };
     })
   ),
