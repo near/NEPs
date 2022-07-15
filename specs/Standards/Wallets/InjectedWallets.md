@@ -52,11 +52,11 @@ Injected wallets are browser extensions that implement the `Wallet` API (see bel
 Below is the entire API for injected wallets. It makes use of `near-api-js` to enable interoperability with dApps that will already use it for constructing transactions and communicating with RPC endpoints.
 
 ```ts
-import { transactions } from "near-api-js";
+import { transactions, utils } from "near-api-js";
 
 interface Account {
   accountId: string;
-  publicKey: string;
+  publicKey: utils.PublicKey;
 }
 
 interface Network {
@@ -94,7 +94,7 @@ interface Wallet {
   network: Network;
   accounts: Array<Account>;
   
-  connect(): Promise<void>;
+  connect(): Promise<Array<Account>>;
   signIn(params: SignInParams): Promise<void>;
   signOut(params: SignOutParams): Promise<void>;
   signTransaction(params: SignTransactionParams): Promise<transactions.SignedTransaction>;
@@ -187,14 +187,14 @@ const [block, accessKey] = await Promise.all([
     request_type: "view_access_key",
     finality: "final",
     account_id: accounts[0].accountId,
-    public_key: accounts[0].publicKey,
+    public_key: accounts[0].publicKey.toString(),
   }),
 ]);
 
 const signedTx = await window.near.wallet.signTransaction({
   transaction: transactions.createTransaction(
     accounts[0].accountId,
-    utils.PublicKey.from(accounts[0].publicKey),
+    accounts[0].publicKey,
     "guest-book.testnet",
     accessKey.nonce + 1,
     [transactions.functionCall(
@@ -231,7 +231,7 @@ const [block, accessKey] = await Promise.all([
     request_type: "view_access_key",
     finality: "final",
     account_id: accounts[0].accountId,
-    public_key: accounts[0].publicKey,
+    public_key: accounts[0].publicKey.toString(),
   }),
 ]);
 
@@ -239,7 +239,7 @@ const signedTxs = await window.near.wallet.signTransactions({
   transactions: [
     transactions.createTransaction(
       accounts[0].accountId,
-      utils.PublicKey.from(accounts[0].publicKey),
+      accounts[0].publicKey,
       "guest-book.testnet",
       accessKey.nonce + 1,
       [transactions.functionCall(
@@ -252,7 +252,7 @@ const signedTxs = await window.near.wallet.signTransactions({
     ),
     transactions.createTransaction(
       accounts[0].accountId,
-      utils.PublicKey.from(accounts[0].publicKey),
+      accounts[0].publicKey,
       "guest-book.testnet",
       accessKey.nonce + 2,
       [transactions.functionCall(
