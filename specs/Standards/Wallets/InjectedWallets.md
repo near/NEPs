@@ -49,6 +49,8 @@ At the core of a wallet is [`signTransaction`](#signtransaction) and [`signTrans
 
 In most cases, a dApp will need a reference to an account and associated public key to construct a [`Transaction`](https://nomicon.io/RuntimeSpec/Transactions). The [`connect`](#connect) method helps solve this issue by prompting the user to select one or more accounts they would like to make visible to the dApp. When at least one account is visible, the wallet considers the dApp [`connected`](#connected) and they can access a list of [`accounts`](#accounts) containing an `accountId` and `publicKey`.
 
+
+
 <!---
 TODO: Document the sign in/out methods and why they're favoured over the sign transaction methods.
 TODO: Document the use case for a donate button (and the drawback of directly using Transaction from near-api-js).
@@ -133,8 +135,6 @@ console.log(id) // "wallet"
 ##### `connected`
 
 Determine whether we're already connected to the wallet and have visibility of at least one account.
-
-> Note: It's not required to be connected when using `signTransaction` and `signTransactions`.
 
 ```ts
 const { connected } = window.near.wallet;
