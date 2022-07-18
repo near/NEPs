@@ -154,7 +154,7 @@ Retrieve all accounts visible to the dApp.
 ```ts
 const { accounts } = window.near.wallet;
 
-console.log(accounts) // [{ accountId: "test.testnet", publicKey: "..." }]
+console.log(accounts) // [{ accountId: "test.testnet", publicKey: PublicKey }]
 ```
 
 #### Methods
