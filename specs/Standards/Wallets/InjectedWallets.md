@@ -286,7 +286,7 @@ await window.near.wallet.disconnect();
 
 ##### `signIn`
 
-Add `FunctionCall` access key(s) for one or more accounts.
+Add `FunctionCall` access key(s) for one or more accounts. This request should require explicit approval from the user.
 
 ```ts
 import { utils } from "near-api-js";
@@ -313,7 +313,7 @@ await window.near.wallet.signIn({
 
 ##### `signOut`
 
-Delete `FunctionCall` access key(s) for one or more accounts.
+Delete `FunctionCall` access key(s) for one or more accounts. This request should require explicit approval from the user.
 
 ```ts
 import { utils, keyStores } from "near-api-js";
