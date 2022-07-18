@@ -365,3 +365,7 @@ window.near.wallet.on("networkChanged", ({ network }) => {
   console.log("Network Changed", network);
 });
 ```
+
+## Drawbacks
+
+- There are cases where a dApp wants to sign a transaction with a signer that's yet to be determined (i.e. "Donate" button). Using the `Transaction` instance from `near-api-js` sadly limits this possibility as it requires the details of a `signerId` and `publicKey` upfront. A workaround might involve creating transactions with empty an `signerId` and `publicKey` to signal to wallets during validation that a prompt is required to select an account (similar to `connect`) before reconstructing the transaction.
