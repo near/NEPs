@@ -49,12 +49,7 @@ At the core of a wallet is [`signTransaction`](#signtransaction) and [`signTrans
 
 In most cases, a dApp will need a reference to an account and associated public key to construct a [`Transaction`](https://nomicon.io/RuntimeSpec/Transactions). The [`connect`](#connect) method helps solve this issue by prompting the user to select one or more accounts they would like to make visible to the dApp. When at least one account is visible, the wallet considers the dApp [`connected`](#connected) and they can access a list of [`accounts`](#accounts) containing an `accountId` and `publicKey`.
 
-
-
-<!---
-TODO: Document the sign in/out methods and why they're favoured over the sign transaction methods.
-TODO: Document the use case for a donate button (and the drawback of directly using Transaction from near-api-js).
--->
+For dApps that often sign gas-only transactions, `FunctionCall` access keys can be added/deleted for one or more accounts using the `signIn` and `signOut` methods. While this functionality could be achieved with `signTransactions`, it suggests a direct intention that a user wishes to sign in/out of a dApp's smart contract.
 
 ### Wallet API
 
@@ -291,7 +286,7 @@ await window.near.wallet.disconnect();
 
 ##### `signIn`
 
-For dApps that often sign gas-only transactions, `FunctionCall` access keys can be created for one or more accounts to greatly improve the UX. While this could be achieved with `signTransactions`, it suggests a direct intention that a user wishes to sign in to a dApp's smart contract.
+Add `FunctionCall` access key(s) for one or more accounts.
 
 ```ts
 import { utils } from "near-api-js";
@@ -318,7 +313,7 @@ await window.near.wallet.signIn({
 
 ##### `signOut`
 
-Delete one or more `FunctionCall` access keys created with `signIn`. While this could be achieved with `signTransactions`, it suggests a direct intention that a user wishes to sign out from a dApp's smart contract.
+Delete `FunctionCall` access key(s) for one or more accounts.
 
 ```ts
 import { utils, keyStores } from "near-api-js";
