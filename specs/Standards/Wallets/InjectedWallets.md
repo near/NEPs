@@ -49,7 +49,7 @@ At the core of a wallet is [`signTransaction`](#signtransaction) and [`signTrans
 
 In most cases, a dApp will need a reference to an account and associated public key to construct a [`Transaction`](https://nomicon.io/RuntimeSpec/Transactions). The [`connect`](#connect) method helps solve this issue by prompting the user to select one or more accounts they would like to make visible to the dApp. When at least one account is visible, the wallet considers the dApp [`connected`](#connected) and they can access a list of [`accounts`](#accounts) containing an `accountId` and `publicKey`.
 
-For dApps that often sign gas-only transactions, `FunctionCall` access keys can be added/deleted for one or more accounts using the `signIn` and `signOut` methods. While this functionality could be achieved with `signTransactions`, it suggests a direct intention that a user wishes to sign in/out of a dApp's smart contract.
+For dApps that often sign gas-only transactions, [`FunctionCall`](https://nomicon.io/DataStructures/AccessKey#accesskeypermissionfunctioncall) access keys can be added/deleted for one or more accounts using the [`signIn`](#signin) and [`signOut`](#signout) methods. While this functionality could be achieved with [`signTransactions`](#signtransactions), it suggests a direct intention that a user wishes to sign in/out of a dApp's smart contract.
 
 ### Wallet API
 
