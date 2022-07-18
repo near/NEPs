@@ -365,7 +365,7 @@ window.near.wallet.on("networkChanged", ({ network }) => {
 
 ### Transactions with an unknown signer
 
-There are cases when a dApp wants to sign a transaction with a signer that's yet to be determined (i.e. "Donate" button). Using the `Transaction` instance from `near-api-js` sadly limits this possibility as it requires the details of a `signerId` and `publicKey` upfront. Below are suggested solutions:
+There are cases when a dApp wants to sign a transaction with a signer that's yet to be determined (e.g. "Donate" button). Using the `Transaction` instance from `near-api-js` sadly limits this possibility as it requires the details of a `signerId` and `publicKey` upfront. Below are suggested solutions:
 
 - A workaround that maintains the `Transaction` instance might involve creating transactions with empty an `signerId` and `publicKey` to signal to wallets during validation that a prompt is required to select an account (similar to `connect`) before reconstructing the transaction.
 - Consider an intermediate abstraction between the dApp and wallet to defer some parameters for transactions (or at least make them optional). This gives wallets an opportunity to prompt for missing data and in some cases reduce complexity for dApps as the `nonce` and `blockHash` can be handled internally.
