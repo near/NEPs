@@ -23,13 +23,14 @@ TODO: Description here.
 Sign a transaction. This request should require explicit approval from the user.
 
 ```ts
-import { providers, transactions } from "near-api-js";
+import { transactions } from "near-api-js";
 
 interface SignTransactionParams {
-  transaction: transactions.Transaction;
+  // Encoded Transaction via transactions.Transaction.encode().
+  transaction: Uint8Array;
 }
 
-// Encoded transaction.
+// Encoded SignedTransaction via transactions.SignedTransaction.encode().
 type SignTransactionResponse = Uint8Array;
 ```
 
@@ -41,10 +42,11 @@ Sign a list of transactions. This request should require explicit approval from 
 import { providers, transactions } from "near-api-js";
 
 interface SignTransactionsParams {
-  transactions: Array<transactions.Transaction>;
+  // Encoded Transaction via transactions.Transaction.encode().
+  transactions: Array<Uint8Array>;
 }
 
-// Encoded transactions.
+// Encoded SignedTransaction via transactions.SignedTransaction.encode().
 type SignTransactionsResponse = Array<Uint8Array>;
 ```
 
