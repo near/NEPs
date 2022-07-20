@@ -10,7 +10,9 @@ Bridge wallets such as [WalletConnect](https://docs.walletconnect.com/2.0/) and 
 
 ## Rationale and alternatives
 
-TODO: Description here.
+At its most basic, a wallet contains key pairs required to sign messages. This standard aims to define an API (based on our learning from [Wallet Selector](https://github.com/near/wallet-selector)) that achieves this requirement through a number of methods compatible with a relay architecture.
+
+There has been many iterations of this standard to help inform what we consider the "best" approach right now for NEAR. You can find more detail in the [Injected Wallet Standard](./InjectedWallets.md).
 
 ## Specification
 
