@@ -25,7 +25,7 @@ Almost every wallet implementation in NEAR used a single account model until we 
 - It future-proofs the API even if wallets (such as MetaMask) only support a single "active" account.
 - Other blockchains such as [Ethereum](https://docs.metamask.io/guide/rpc-api.html#eth-requestaccounts) implement this model.
 - Access to multiple accounts allow dApps more freedom to improve UX as users can seamlessly switch between accounts.
-- Aligns with WalletConnect via the [Bridge Wallet Standard](#TODO).
+- Aligns with WalletConnect via the [Bridge Wallet Standard](./BridgeWallets.md).
 
 ### Store key pairs of FunctionCall access keys in dApp vs. wallet
 
