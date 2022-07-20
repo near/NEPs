@@ -8,9 +8,17 @@ Standard interface for bridge wallets.
 
 Bridge wallets such as [WalletConnect](https://docs.walletconnect.com/2.0/) and [Nightly Connect](https://connect.nightly.app/) are powerful messaging layers for communicating with various blockchains. Since they lack an opinion on how payloads are structured, without a standard, it can be impossible for dApps and wallets to universally communicate without compatibility problems.
 
-## Methods
+## Rationale and alternatives
 
-### `signTransaction`
+TODO: Description here.
+
+## Specification
+
+TODO: Description here.
+
+### Methods
+
+#### `signTransaction`
 
 Sign a transaction. This request should require explicit approval from the user.
 
@@ -25,7 +33,7 @@ interface SignTransactionParams {
 type SignTransactionResponse = Uint8Array;
 ```
 
-### `signTransactions`
+#### `signTransactions`
 
 Sign a list of transactions. This request should require explicit approval from the user.
 
@@ -40,7 +48,7 @@ interface SignTransactionsParams {
 type SignTransactionsResponse = Array<Uint8Array>;
 ```
 
-### `signIn`
+#### `signIn`
 
 For dApps that often sign gas-only transactions, `FunctionCall` access keys can be created for one or more accounts to greatly improve the UX. While this could be achieved with `signTransactions`, it suggests a direct intention that a user wishes to sign in to a dApp's smart contract.
 
@@ -60,7 +68,7 @@ interface SignInParams {
 type SignInResponse = null;
 ```
 
-### `signOut`
+#### `signOut`
 
 Delete one or more `FunctionCall` access keys created with `signIn`. While this could be achieved with `signTransactions`, it suggests a direct intention that a user wishes to sign out from a dApp's smart contract.
 
@@ -77,7 +85,7 @@ interface SignOutParams {
 type SignOutResponse = null;
 ```
 
-### `getAccounts`
+#### `getAccounts`
 
 Retrieve all accounts visible to the session. `publicKey` references the underlying `FullAccess` key linked to each account.
 
