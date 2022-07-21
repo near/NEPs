@@ -16,7 +16,14 @@ There has been many iterations of this standard to help inform what we consider 
 
 ## Specification
 
-TODO: Description here.
+Bridge wallets use a relay architecture to forward requests between dApps and wallets using Web Sockets. The concept of a session wraps this connection to expose NEAR accounts to a dApp. This relay architecture decouples the dApp and wallet to enable communication that's no longer limited to the same device and/or browser.
+
+<!--
+TODO: Write about the core methods, `signTransaction` and `signTransactions`.
+TODO: Write about `signIn` and `signOut` and why they're preferred over `signTransaction(s)`.
+TODO: Write about `getAccounts` and why it's needed (e.g. WalletConnect only supports account identifiers).
+TODO: Talk about differences to the Injected Wallet and how this is slightly more low-level (e.g. we use public key strings instead of instances and transactions must be encoded/decoded).
+-->
 
 ### Methods
 
