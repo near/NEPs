@@ -16,7 +16,7 @@ There has been many iterations of this standard to help inform what we consider 
 
 ## Specification
 
-Bridge wallets use a relay architecture to forward requests between dApps and wallets using Web Sockets. The concept of a session wraps this connection to expose NEAR accounts to a dApp. This relay architecture decouples the dApp and wallet to enable communication that's no longer limited to the same device and/or browser.
+Bridge wallets use a relay architecture to forward requests between dApps and wallets using Web Sockets. The concept of a session wraps this connection to expose NEAR accounts to a dApp. This relay architecture decouples the dApp and wallet to enable communication that isn't limited to the same device and/or browser.
 
 <!--
 TODO: Write about the core methods, `signTransaction` and `signTransactions`.
