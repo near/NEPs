@@ -24,9 +24,11 @@ With a session created, the dApp can make requests to sign transactions using ei
 
 For dApps that often sign gas-only transactions, [`FunctionCall`](https://nomicon.io/DataStructures/AccessKey#accesskeypermissionfunctioncall) access keys can be added/deleted for one or more accounts using the [`signIn`](#signin) and [`signOut`](#signout) methods. While this functionality could be achieved with [`signTransactions`](#signtransactions), it suggests a direct intention that a user wishes to sign in/out of a dApp's smart contract.
 
-<!--
-TODO: Talk about differences to the Injected Wallet and how this is slightly more low-level (e.g. we use public key strings instead of instances and transactions must be encoded/decoded).
--->
+Although similar in many respects to the [Injected Wallet Standard](./InjectedWallets.md) (intentionally), it's worth pointing out the differences between the two which is largely because this standard focuses on the transport layer instead of the high-level abstractions found with injected wallets:
+
+- [Transactions](https://nomicon.io/RuntimeSpec/Transactions) passed to `signTransaction` and `signTransactions` must be encoded.
+- The result of `signTransaction` and `signTransactions` are encoded [SignedTransaction](https://nomicon.io/RuntimeSpec/Transactions#signed-transaction) models.
+- Accounts contain only a string representation of public keys.
 
 ### Methods
 
