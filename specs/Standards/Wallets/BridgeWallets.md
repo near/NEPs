@@ -18,6 +18,8 @@ There has been many iterations of this standard to help inform what we consider 
 
 Bridge wallets use a relay architecture to forward requests between dApps and wallets using Web Sockets. The concept of a session wraps this connection to expose NEAR accounts to a dApp. This relay architecture decouples the dApp and wallet to enable communication that isn't limited to the same device and/or browser.
 
+To establish a session, the dApp must first pair with the wallet. Pairing often includes a QR code to improve UX. Once both clients are paired, a request to initialise a session is made. During this phase, the user is prompted to select one or more accounts (previously imported) to be visible in the session before approving the request.
+
 <!--
 TODO: Write about the core methods, `signTransaction` and `signTransactions`.
 TODO: Write about `signIn` and `signOut` and why they're preferred over `signTransaction(s)`.
