@@ -18,12 +18,13 @@ There has been many iterations of this standard to help inform what we consider 
 
 Bridge wallets use a relay architecture to forward requests between dApps and wallets using Web Sockets. The concept of a session wraps this connection to expose NEAR accounts to a dApp. This relay architecture decouples the dApp and wallet to enable communication that isn't limited to the same device and/or browser.
 
-To establish a session, the dApp must first pair with the wallet. Pairing often includes a QR code to improve UX. Once both clients are paired, a request to initialise a session is made. During this phase, the user is prompted to select one or more accounts (previously imported) to be visible in the session before approving the request.
+To establish a session, the dApp must first pair with the wallet. Pairing often includes a QR code to improve UX. Once both clients are paired, a request to initialise a session is made. During this phase, the user is prompted to select one or more accounts (previously imported) to be visible to the session before approving the request.
+
+With a session created, the dApp can make requests to sign transactions using either [`signTransaction`](#signtransaction) or [`signTransactions`](#signtransactions). These methods accept encoded [Transactions](https://nomicon.io/RuntimeSpec/Transactions) created with `near-api-js`. Since transactions need a public key for the `signerId`, a call to [`getAccounts`](#getaccounts) is required to retrieve a list of the accounts visible to the session along with their associated public key. Requests to both [`signTransaction`](#signtransaction) and [`signTransactions`](#signtransactions) require explicit approval from the user since [`FullAccess`](https://nomicon.io/DataStructures/AccessKey) keys are used.
+
+For dApps that often sign gas-only transactions, [`FunctionCall`](https://nomicon.io/DataStructures/AccessKey#accesskeypermissionfunctioncall) access keys can be added/deleted for one or more accounts using the [`signIn`](#signin) and [`signOut`](#signout) methods. While this functionality could be achieved with [`signTransactions`](#signtransactions), it suggests a direct intention that a user wishes to sign in/out of a dApp's smart contract.
 
 <!--
-TODO: Write about the core methods, `signTransaction` and `signTransactions`.
-TODO: Write about `signIn` and `signOut` and why they're preferred over `signTransaction(s)`.
-TODO: Write about `getAccounts` and why it's needed (e.g. WalletConnect only supports account identifiers).
 TODO: Talk about differences to the Injected Wallet and how this is slightly more low-level (e.g. we use public key strings instead of instances and transactions must be encoded/decoded).
 -->
 
