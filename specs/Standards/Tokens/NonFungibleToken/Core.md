@@ -208,8 +208,8 @@ function nft_on_transfer(
 * **2021-07-16**: updated `nft_transfer_call` argument `approval_id` to be type `number|null` instead of `string|null`. As stated, approval IDs are not expected to exceed the JSON limit of 2^53.
 
   [ERC-721]: https://eips.ethereum.org/EIPS/eip-721
-  [storage staking]: https://docs.near.org/docs/concepts/storage-staking
-  [gas]: https://docs.near.org/docs/concepts/gas
+  [storage staking]: https://docs.near.org/concepts/storage/storage-staking
+  [gas]: https://docs.near.org/concepts/basics/transactions/gas
   [Metadata]: Metadata.md
   [Approval Management]: ApprovalManagement.md
 
