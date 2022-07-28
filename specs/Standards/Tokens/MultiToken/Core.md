@@ -390,8 +390,8 @@ function mt_on_transfer(
 
   [ERC-721]: https://eips.ethereum.org/EIPS/eip-721
   [ERC-1155]: https://eips.ethereum.org/EIPS/eip-1155
-  [storage staking]: https://docs.near.org/docs/concepts/storage-staking
-  [gas]: https://docs.near.org/docs/concepts/gas
+  [storage staking]: https://docs.near.org/concepts/storage/storage-staking
+  [gas]: https://docs.near.org/concepts/basics/transactions/gas
   [Metadata]: Metadata.md
   [NFT]: ../NonFungibleToken/Core.md
   [Approval Management]: ApprovalManagement.md

@@ -48,11 +48,11 @@ There are a few concepts in the scenarios above:
 - **Balance**: an amount of tokens.
 - **Transfer**: an action that moves some amount from one account to another account, either an externally owned account or a contract account.
 - **Transfer and call**: an action that moves some amount from one account to a contract account where the receiver calls a method.
-- **Storage amount**: the amount of storage used for an account to be "registered" in the fungible token. This amount is denominated in Ⓝ, not bytes, and represents the [storage staked](https://docs.near.org/docs/concepts/storage-staking).
+- **Storage amount**: the amount of storage used for an account to be "registered" in the fungible token. This amount is denominated in Ⓝ, not bytes, and represents the [storage staked](https://docs.near.org/concepts/storage/storage-staking).
 
 Note that precision (the number of decimal places supported by a given token) is not part of this core standard, since it's not required to perform actions. The minimum value is always 1 token. See the [Fungible Token Metadata Standard](Metadata.md) to learn how to support precision/decimals in a standardized way.
 
-Given that multiple users will use a Fungible Token contract, and their activity will result in an increased [storage staking](https://docs.near.org/docs/concepts/storage-staking) burden for the contract's account, this standard is designed to interoperate nicely with [the Account Storage standard](../../StorageManagement.md) for storage deposits and refunds.
+Given that multiple users will use a Fungible Token contract, and their activity will result in an increased [storage staking](https://docs.near.org/concepts/storage/storage-staking) burden for the contract's account, this standard is designed to interoperate nicely with [the Account Storage standard](../../StorageManagement.md) for storage deposits and refunds.
 
 ### Example scenarios
 
