@@ -19,7 +19,7 @@ const config = {
   organizationName: 'near', // Usually your GitHub org/user name.
   projectName: 'NEPs', // Usually your repo name.
   scripts: [
-    "/js/hotjar.js",
+//    "/js/hotjar.js",
   ],
   plugins: [require.resolve('docusaurus-lunr-search')],
   stylesheets: [
