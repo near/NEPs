@@ -18,8 +18,6 @@ const config = {
   favicon: 'img/favicon.ico',
   organizationName: 'near', // Usually your GitHub org/user name.
   projectName: 'NEPs', // Usually your repo name.
-  scripts: [
-  ],
   plugins: [require.resolve('docusaurus-lunr-search')],
   stylesheets: [
     {
