@@ -136,7 +136,7 @@ Total account balance consists of unlocked balance and locked balance.
 Unlocked balance is tokens that the account can use for transaction fees, transfers staking and other operations.
 
 Locked balance is the tokens that are currently in use for staking to be a validator or to become a validator.
-Locked balance may become unlocked at the beginning of an epoch. See [Staking] for details.
+Locked balance may become unlocked at the beginning of an epoch. See [Staking](../BlockchainLayer/EpochManager/Staking) for details.
 
 #### Contracts
 
@@ -159,9 +159,9 @@ An access key grants an access to a account. Each access key on the account is i
 This public key is used to validate signature of transactions.
 Each access key contains a unique nonce to differentiate or order transactions signed with this access key.
 
-An access keys have a permission associated with it. The permission can be one of two types:
+An access key has a permission associated with it. The permission can be one of two types:
 
-- Full permission. It grants full access to the account.
-- Function call permission. It grants access to only issue function call transactions.
+- `FullAccess` permission. It grants full access to the account.
+- `FunctionCall` permission. It grants access to only issued function call transactions.
 
-See [Access Keys] for more details.
+See [Access Keys](AccessKey.md) for more details.
