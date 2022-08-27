@@ -1,0 +1,108 @@
+---
+NEP: xxxx
+Title: Host function for fetching block hashes in contract runtime
+Author: Seun Lanlege <seunlanlege@gmail.com>
+DiscussionsTo: https://github.com/near/NEPs/pull/9999
+Status: Draft
+Type: Runtime Spec
+Category: Contract
+Created: 27-Aug-2022
+---
+
+## Summary
+
+A new host function `env::block_hash` which will allow contract authors access the blockhashes of 256 of the most reccent blocks. This is akin to the [`blockhash`](https://docs.soliditylang.org/en/v0.8.15/units-and-global-variables.html#block-and-transaction-properties) api in ethereum.
+
+
+## Motivation
+
+The IBC protocol requires that blockchains (aka host state machines) are able to introspect their own `ConsensusState` (aka Header). This is stated, amongst other requirements in their [IBC host requrements](https://github.com/cosmos/ibc/blob/main/spec/core/ics-024-host-requirements/README.md#consensus-state-introspection). This api is what allows trustless IBC connection handshakes to happen: 
+
+```ts
+// ConnOpenTry relays notice of a connection attempt on chain A to chain B (this code is executed on chain B).
+function connOpenTry(
+  counterpartyConnectionIdentifier: Identifier,
+  counterpartyPrefix: CommitmentPrefix,
+  counterpartyClientIdentifier: Identifier,
+  clientIdentifier: Identifier,
+  clientState: ClientState,
+  counterpartyVersions: string[],
+  delayPeriodTime: uint64,
+  delayPeriodBlocks: uint64,
+  proofInit: CommitmentProof,
+  proofClient: CommitmentProof,
+  proofConsensus: CommitmentProof,
+  proofHeight: Height,
+  consensusHeight: Height) {
+    // generate a new identifier
+    identifier = generateIdentifier()
+    
+    abortTransactionUnless(validateSelfClient(clientState))
+    abortTransactionUnless(consensusHeight < getCurrentHeight())
+    expectedConsensusState = getHostConsensusState(consensusHeight) // we need to return a near header at this height.
+    expectedConnectionEnd = ConnectionEnd{INIT, "", getCommitmentPrefix(), counterpartyClientIdentifier,
+                             clientIdentifier, counterpartyVersions, delayPeriodTime, delayPeriodBlocks}
+
+    versionsIntersection = intersection(counterpartyVersions, getCompatibleVersions())
+    version = pickVersion(versionsIntersection)
+
+    connection = ConnectionEnd{TRYOPEN, counterpartyConnectionIdentifier, counterpartyPrefix,
+                               clientIdentifier, counterpartyClientIdentifier, version, delayPeriodTime, delayPeriodBlocks}
+    abortTransactionUnless(connection.verifyConnectionState(proofHeight, proofInit, counterpartyConnectionIdentifier, expectedConnectionEnd))
+    abortTransactionUnless(connection.verifyClientState(proofHeight, proofClient, clientState))
+    abortTransactionUnless(connection.verifyClientConsensusState(
+      proofHeight, proofConsensus, counterpartyClientIdentifier, consensusHeight, expectedConsensusState))
+
+    provableStore.set(connectionPath(identifier), connection)
+    addConnectionToClient(clientIdentifier, identifier)
+}
+
+// ConnOpenAck relays acceptance of a connection open attempt from chain B back to chain A (this code is executed on chain A).
+function connOpenAck(
+  identifier: Identifier,
+  clientState: ClientState,
+  version: string,
+  counterpartyIdentifier: Identifier,
+  proofTry: CommitmentProof,
+  proofClient: CommitmentProof,
+  proofConsensus: CommitmentProof,
+  proofHeight: Height,
+  consensusHeight: Height) {
+    abortTransactionUnless(consensusHeight < getCurrentHeight())
+    abortTransactionUnless(validateSelfClient(clientState))
+    connection = provableStore.get(connectionPath(identifier))
+    abortTransactionUnless((connection.state === INIT && connection.version.indexOf(version) !== -1)
+    expectedConsensusState = getHostConsensusState(consensusHeight) // we need to return a near header at this height.
+    expectedConnectionEnd = ConnectionEnd{TRYOPEN, identifier, getCommitmentPrefix(),
+                             connection.counterpartyClientIdentifier, connection.clientIdentifier,
+                             version, connection.delayPeriodTime, connection.delayPeriodBlocks}
+    abortTransactionUnless(connection.verifyConnectionState(proofHeight, proofTry, counterpartyIdentifier, expectedConnectionEnd)) // so we can verify that the counterparty chain has the correct header.
+    abortTransactionUnless(connection.verifyClientState(proofHeight, proofClient, clientState))
+    abortTransactionUnless(connection.verifyClientConsensusState(
+      proofHeight, proofConsensus, connection.counterpartyClientIdentifier, consensusHeight, expectedConsensusState))
+    connection.state = OPEN
+    connection.version = version
+    connection.counterpartyConnectionIdentifier = counterpartyIdentifier
+    provableStore.set(connectionPath(identifier), connection)
+}
+```
+
+The api `env::block_hash` allows us validate the full header submitted via contract calldata by comparing hashes.
+
+## Rationale and alternatives
+
+A few other designs were considered such as a function `env::block_header` which would return the full header at a given height, but was discouraged against a result of expensive db calls. This mapping of block numbers to headers are cheap enough to be stored on-chain.
+
+
+## Specification
+
+```rust
+/// This function should return a blockhash for 256 of the most reccent blocks
+fn block_hash(number: u32) -> Option<[u8; 32]>;
+```
+
+## Copyright
+
+[copyright]: #copyright
+
+Copyright and related rights waived via [CC0](https://creativecommons.org/publicdomain/zero/1.0/).
