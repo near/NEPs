@@ -13,7 +13,7 @@ Currently, the near blockchain only has one shard and it needs to be split into 
 # Motivation
 [motivation]: #motivation
 
-To enable sharding, specifically, [Simple Nightshade](https://gov.near.org/t/road-to-simple-nightshade/1790), we need to find a way to split the current one shard state into eight shards.
+To enable sharding, specifically, phase 0 of Simple Nightshade, we need to find a way to split the current one shard state into eight shards.
 
 # Guide-level explanation 
 [guide-level-explanation]: #guide-level-explanation
@@ -38,7 +38,7 @@ The former is a protocol change and the latter only affects validators' internal
 ### Protocol Change
 Sharding config for an epoch will be encapsulated in a struct `ShardLayout`, which not only contains the number of shards, but also layout information to decide which account ids should be mapped to which shards. 
 The `ShardLayout` information will be stored as part of `EpochConfig`. 
-Right now, `EpochConfig` is stored in `EpochManager` and remains static across epochs. 
+Right now, `EpochConfig` is stored in `EpochManager` and remains static accross epochs. 
 That will be changed in the new implementation so that `EpochConfig` can be changed according to protocol versions, similar to how `RuntimeConfig` is implemented right now.
 
 The switch to Simple Nightshade will be implemented as a protocol upgrade.
@@ -72,7 +72,7 @@ pub struct ShardUId {
 }
 ```
 The version number is different between different shard layouts, to ensure `ShardUId`s for shards from different epochs are different.
-`EpochManager` will be responsible for managing shard versions and `ShardUId` across epochs.
+`EpochManager` will be responsible for managing shard versions and `ShardUId` accross epochs.
 
 ## Build New States
 Currently, when receiving the first block of every epoch, validators start downloading states to prepare for the next epoch.
@@ -140,11 +140,11 @@ maps account id to shard id given a shard layout
 #### `ShardLayoutV0`
 ```rust
 pub struct ShardLayoutV0 {
-    /// map accounts evenly across all shards
+    /// map accounts evenly accross all shards
     num_shards: NumShards,
 }
 ```
-A shard layout that maps accounts evenly across all shards -- by calculate the hash of account id and mod number of shards. This is added to capture the current `account_id_to_shard_id` algorithm, to keep backward compatibility for some existing tests. `parent_shards` for `ShardLayoutV1` is always `None` and `version`is always `0`.
+A shard layout that maps accounts evenly accross all shards -- by calculate the hash of account id and mod number of shards. This is added to capture the current `account_id_to_shard_id` algorithm, to keep backward compatibility for some existing tests. `parent_shards` for `ShardLayoutV1` is always `None` and `version`is always `0`.
 
 #### `ShardLayoutV1`
 ```rust
@@ -326,7 +326,7 @@ fn apply_chunks(...) -> Result<(), Error> {
 ## Garbage Collection
 The old states need to be garbage collected after the resharding finishes. The garbage collection algorithm today won't automatically handle that. (#TODO: why?)
 
-Althought we need to handle garbage collection eventually, it is not a pressing issue. Thus, we leave the discussion from this NEP for now and will add a detailed plan later.
+Although we need to handle garbage collection eventually, it is not a pressing issue. Thus, we leave the discussion from this NEP for now and will add a detailed plan later.
 
 # Drawbacks
 [drawbacks]: #drawbacks
@@ -341,7 +341,7 @@ Thus, most of the change will likely be a one time use that only works for the S
     Considering we want to launch Simple Nightshade as soon as possible by Q4 2021 and we will not enable challenges any time soon, this is the best option we have.
 - What other designs have been considered and what is the rationale for not choosing them?
   - We have considered other designs that change states incrementally and keep state roots on chain to make it compatible with challenges.
-However, the implementaion of those approaches are overly complicated and does not fit into our timeline for launching Simple Nightshade.
+However, the implementation of those approaches are overly complicated and does not fit into our timeline for launching Simple Nightshade.
 - What is the impact of not doing this?
   - The impact will be the delay of launching Simple Nightshade, or no launch at all.
 
