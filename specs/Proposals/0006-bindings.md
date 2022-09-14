@@ -1,6 +1,6 @@
 - Proposal Name: `wasm_bindings`
 - Start Date: 2019-07-22
-- NEP PR: [nearprotocol/neps#0000](https://github.com/nearprotocol/neps/pull/0000)
+- NEP PR: [nearprotocol/neps#0000](https://github.com/near/NEPs/blob/master/nep-0000-template.md)
 
 # Summary
 [summary]: #summary
