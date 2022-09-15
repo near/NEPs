@@ -94,5 +94,5 @@ Interestingly, the following concepts are for the blockchain layer only and the 
 
 ## Runtime Layer Concepts
 
-- Fees and rewards -- fees and rewards are neatly encapsulated in the runtime layer. The blockchain layer, however
+- Fees and rewards -- fees and rewards are neatly encapsulated in the runtime layer. The blockchain layer, however,
   has an indirect knowledge of them through the computation of the tokens-to-gas exchange rate and the inflation.
