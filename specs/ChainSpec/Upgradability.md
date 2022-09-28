@@ -3,8 +3,8 @@
 This part of specification describes specifics of upgrading the protocol, and touches on few different parts of the system.
 
 Three different levels of upgradability are:
-1. Updating without any changes to underlaying data structures or protocol;
-2. Updating when underlaying data structures changed (config, database or something else internal to the node and probably client specific);
+1. Updating without any changes to underlying data structures or protocol;
+2. Updating when underlying data structures changed (config, database or something else internal to the node and probably client specific);
 3. Updating with protocol changes that all validating nodes must adjust to.
 
 ## Versioning
@@ -48,7 +48,7 @@ enum VersionedBlockHeader {
 ```
 
 Where `VersionedBlockHeader` will be stored on disk and sent over the wire.
-This allows to encode and decode old versions (up to 256 given https://borsh.io specficiation). If some data structures has more than 256 versions, old versions are probably can be retired and reused.
+This allows to encode and decode old versions (up to 256 given https://borsh.io specification). If some data structures has more than 256 versions, old versions are probably can be retired and reused.
 
 Internally current version is used. Previous versions either much interfaces / traits that are defined by different components or are up-casted into the next version (saving for hash validation).
 
@@ -59,7 +59,7 @@ Internally current version is used. Previous versions either much interfaces / t
 | `PROTOCOL_UPGRADE_BLOCK_THRESHOLD` | `80%` |
 | `PROTOCOL_UPGRADE_NUM_EPOCHS` | `2` |
 
-The way the version will be indicated by validators, will be via 
+The way the version will be indicated by validators, will be via
 
 ```rust
 /// Add `version` into block header.

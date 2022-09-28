@@ -54,7 +54,7 @@ and potentially errors returned when they fail.
 ### Basic Validation
 
 Basic validation of a transaction can be done without the state. Such validation includes
-- Whether `signer_id` is valid. If not, a 
+- Whether `signer_id` is valid. If not, a
 ```rust
 /// TX signer_id is not in a valid format or not satisfy requirements see `near_core::primitives::utils::is_valid_account_id`
 InvalidSignerId { signer_id: AccountId },
@@ -77,10 +77,10 @@ error is returned.
  /// The number of actions exceeded the given limit.
 TotalNumberOfActionsExceeded { total_number_of_actions: u64, limit: u64 }
 ```
-is returned.
+error is returned.
 - Among the actions in the transaction, whether `DeleteAccount`, if present, is the last action. If not, a
 ```rust
-/// The delete action must be a final aciton in transaction
+/// The delete action must be a final action in transaction
 DeleteActionMustBeFinal
 ```
 error is returned.
@@ -149,15 +149,15 @@ error is returned.
 * `InvalidAccessKeyError::RequiresFullAccess` if the transaction contains more than one action or if the only action it
 contains is not a `FunctionCall` action.
 * `InvalidAccessKeyError::DepositWithFunctionCall` if the function call action has nonzero `deposit`.
-* 
+*
 ```rust
 /// Transaction `receiver_id` doesn't match the access key receiver_id
 InvalidAccessKeyError::ReceiverMismatch { tx_receiver: AccountId, ak_receiver: AccountId },
 ```
 is returned when transaction's `receiver_id` does not match the `receiver_id` of the access key.
-* 
+*
 ```rust
 /// Transaction method name isn't allowed by the access key
 InvalidAccessKeyError::MethodNameMismatch { method_name: String },
 ```
-is returned if the name of the method that the transaction tries to call is not allowed by the access key. 
+is returned if the name of the method that the transaction tries to call is not allowed by the access key.

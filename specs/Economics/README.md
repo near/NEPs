@@ -58,7 +58,7 @@ If `epochFee[t] > reward[t]` the issuance is negative, thus the `totalSupply[t]`
 
 Each transaction before inclusion must buy gas enough to cover the cost of bandwidth and execution.
 
-Gas unifies execution and bytes of bandwidth usage of blockchain. Each WASM instruction or pre-compiled function gets assigned an amount of gas based on measurements on common-denominator computer. Same goes for weighting the used bandwidth based on general unified costs. For specific gas mapping numbers see [???]().
+Gas unifies execution and bytes of bandwidth usage of blockchain. Each WASM instruction or pre-compiled function gets assigned an amount of gas based on measurements on common-denominator computer. Same goes for weighting the used bandwidth based on general unified costs. For specific gas mapping numbers see [???](#).
 
 Gas is priced dynamically in `NEAR` tokens. At each block `t`, we update `gasPrice[t] = gasPrice[t - 1] * (gasUsed[t - 1] / gasLimit[t - 1] - 0.5) * ADJ_FEE`.
 
@@ -96,7 +96,7 @@ def on_account_change(block_height, account):
 
 Where `sizeOf(account)` includes size of `account_id`, `account` structure and size of all the data stored under the account.
 
-Account can end up with not enough balance in case it gets slashed. Account will become unusable as all orginating transactions will fail (including deletion).
+Account can end up with not enough balance in case it gets slashed. Account will become unusable as all originating transactions will fail (including deletion).
 The only way to recover it in this case is by sending extra funds from a different accounts.
 
 ## Validators
@@ -166,27 +166,33 @@ def findSeatPrice(stakes, num_seats):
         right = mid
 ```
 
-### Rewards Calculation
+### Validator Rewards Calculation
 
-| Name | Value |
-| - | - |
-| `epochFee[t]` | `sum([(1 - DEVELOPER_PCT_PER_YEAR) * txFee[i]])`, where [i] represents any considered block within the epoch[t] |
-
-Note: all calculations are done in Rational numbers first with final result converted into integer with rounding down.
+Note: all calculations are done in Rational numbers.
 
 Total reward every epoch `t` is equal to:
 ```python
-reward[t] = totalSupply * ((1 + REWARD_PCT_PER_YEAR) ** (1 / EPOCHS_A_YEAR) - 1)
+total_reward[t] = floor(totalSupply * max_inflation_rate * num_blocks_per_year / epoch_length)
 ```
 
-Uptime of a specific validator is computed:
+where `max_inflation_rate`, `num_blocks_per_year`, `epoch_length` are genesis parameters and `totalSupply` is
+taken from the last block in the epoch.
+
+After that a fraction of the reward goes to the treasury and the remaining amount will be used for computing validator rewards:
+```python
+treasury_reward[t] = floor(reward[t] * protocol_reward_rate)
+validator_reward[t] = total_reward[t] - treasury_reward[t]
+```
+
+Validators that didn't meet the threshold for either blocks or chunks get kicked out and don't get any reward, otherwise uptime
+of a validator is computed:
 
 ```python
 pct_online[t][j] = (num_produced_blocks[t][j] / expected_produced_blocks[t][j] + num_produced_chunks[t][j] / expected_produced_chunks[t][j]) / 2
 if pct_online > ONLINE_THRESHOLD:
-    uptime[t][j] = min(1., (pct_online[t][j] - ONLINE_THRESHOLD_MIN) / (ONLINE_THRESHOLD_MAX - ONLINE_THRESHOLD_MIN))
+    uptime[t][j] = min(1, (pct_online[t][j] - ONLINE_THRESHOLD_MIN) / (ONLINE_THRESHOLD_MAX - ONLINE_THRESHOLD_MIN))
 else:
-    uptime[t][j] = 0.
+    uptime[t][j] = 0
 ```
 
 Where `expected_produced_blocks` and `expected_produced_chunks` is the number of blocks and chunks respectively that is expected to be produced by given validator `j` in the epoch `t`.
@@ -194,7 +200,7 @@ Where `expected_produced_blocks` and `expected_produced_chunks` is the number of
 The specific `validator[t][j]` reward for epoch `t` is then proportional to the fraction of stake of this validator from total stake:
 
 ```python
-validatorReward[t][j] = (uptime[t][j] * stake[t][j] * reward[t]) / total_stake[t]
+validatorReward[t][j] = floor(uptime[t][j] * stake[t][j] * validator_reward[t] / total_stake[t])
 ```
 
 ### Slashing
@@ -240,5 +246,14 @@ Treasury account `TREASURY_ACCOUNT_ID` receives fraction of reward every epoch `
 # At the end of the epoch, update treasury
 def end_of_epoch(..., reward):
     # ...
-    accounts[TREASURY_ACCOUNT_ID].amount = TREASURY_PCT * reward
+    accounts[TREASURY_ACCOUNT_ID].amount = treasury_reward[t]
 ```
+
+## Contract Rewards
+
+Contract account is rewarded with 30% of gas burnt during the execution of its functions.
+The reward is credited to the contract account after applying the corresponding receipt with [`FunctionCallAction`](../RuntimeSpec/Actions.md#functioncallaction), gas is converted to tokens using gas price of the current block.
+
+You can read more about:
+- [receipts execution](../RuntimeSpec/Receipts.md);
+- [runtime fees](../RuntimeSpec/Fees/Fees.md) with description [how gas is charged](../RuntimeSpec/Fees/Fees.md#gas-tracking).
