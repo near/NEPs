@@ -15,7 +15,7 @@ pub struct AccessKey {
 }
 ```
 
-There are 2 types of `AccessKeyPermission` in Near currently: `FullAccess` and `FunctionCall`. `FunctionCall` grants a permission to issue any action on account like [DeployContract](Transaction.md#DeployContract), [Transfer](Transaction.md#Transfer) tokens to other account, call functions [FunctionCall](Transaction.md#FunctionCall), [Stake](Transaction.md#Stake) and even delete account [DeleteAccountAction](Transaction.md#DeleteAccountAction). `FullAccess` also allow to manage access keys. `AccessKeyPermission::FunctionCall` limits to do only contract calls.
+There are 2 types of `AccessKeyPermission` in Near currently: `FullAccess` and `FunctionCall`. `FullAccess` grants permission to request any action on an account like [DeployContract](Transaction.md#DeployContract), [Transfer](Transaction.md#Transfer) tokens to other account, calling functions on smart contracts [FunctionCall](Transaction.md#FunctionCall), [Stake](Transaction.md#Stake) and even delete accounts [DeleteAccountAction](Transaction.md#DeleteAccountAction). `FullAccess` also allows managing access keys. `AccessKeyPermission::FunctionCall` is limited to only having permission to call non-payable methods on contracts.
 
 ```rust
 pub enum AccessKeyPermission {
