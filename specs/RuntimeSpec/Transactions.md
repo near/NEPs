@@ -77,7 +77,7 @@ error is returned.
  /// The number of actions exceeded the given limit.
 TotalNumberOfActionsExceeded { total_number_of_actions: u64, limit: u64 }
 ```
-is returned.
+error is returned.
 - Among the actions in the transaction, whether `DeleteAccount`, if present, is the last action. If not, a
 ```rust
 /// The delete action must be a final action in transaction
