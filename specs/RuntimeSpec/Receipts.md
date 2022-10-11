@@ -126,7 +126,7 @@ A Receipt which runtime stores until all the designated [`DataReceipt`s](#datare
 - **`key`** = `account_id`,`receipt_id`
 - **`value`** = `[u8]`
 
-_Where `account_id` is [`Receipt.receiver_id`](#receiver_id), `receipt_id` is [`Receipt.receiver_id`](#receipt_id) and value is a serialized [`Receipt`](#receipt) (which [type](#type) must be [ActionReceipt](#actionreceipt))._
+_Where `account_id` is [`Receipt.receiver_id`](#receiver_id), `receipt_id` is [`Receipt.receipt_id`](#receipt_id) and value is a serialized [`Receipt`](#receipt) (which [type](#type) must be [ActionReceipt](#actionreceipt))._
 
 #### Pending DataReceipt Count
 
