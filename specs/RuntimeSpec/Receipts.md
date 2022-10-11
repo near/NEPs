@@ -41,7 +41,7 @@ The destination account_id.
 
 #### receipt_id
 
-- **`type`**: `AccountId`
+- **`type`**: `CryptoHash`
 
 An unique id for the receipt.
 
