@@ -167,7 +167,7 @@ To create a new account we can create a new `Transaction`:
 This transaction is sent from `vasya.near` signed with a `public_key`.
 The receiver is `vitalik.vasya.near`, which is a new account id.
 The transaction contains a batch of actions.
-First we create the account, then we transaction a few tokens on the new account, then we deploy code on the new account, add a new access key with some given public key, and as a final action initializing the deployed code by calling a method `init` with some arguments.
+First we create the account, then we transfer a few tokens to the newly created account, then we deploy code on the new account, add a new access key with some given public key, and as a final action initializing the deployed code by calling a method `init` with some arguments.
 
 For this transaction to work `vasya.near` needs to have enough balance on the account cover gas and deposits for all actions at once.
 Every action has some associated action gas fee with it. While `transfer` and `function_call` actions need additional balance for deposits and gas (for executions and promises).
