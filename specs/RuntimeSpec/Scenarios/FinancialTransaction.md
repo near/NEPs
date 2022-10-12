@@ -110,10 +110,11 @@ If any of the above operations fail all of the changes will be reverted.
 The receipt created in the previous section will eventually arrive to a runtime on the shard that hosts `bob_near` account.
 Again, it will be processed by `Runtime::apply` which will immediately call `Runtime::process_receipt`.
 It will check that this receipt does not have data dependencies (which is only the case of function calls) and will then call `Runtime::apply_action_receipt` on `TransferAction`.
+
 `Runtime::apply_action_receipt` will perform the following checks:
 
 - Retrieves the state of `bob_near` account, if it still exists (it is possible that Bob has deleted his account concurrently with the transfer transaction);
-- Applies the rent to Bob's account;
+- Checks if `bob_near` has enough balance for storage staking;
 - Computes the cost of processing a receipt and a transfer action;
-- Checks if `bob_near` still exists and if it is deposits the transferred tokens;
-- Computes how much reward should be paid to the validators from the burnt gas.
+- Computes how much reward should be burnt as a means to indirectly reward validators
+- Checks if `bob_near` still exists and if so, deposits the gas reward to the `bob_near` account;
