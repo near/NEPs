@@ -107,7 +107,7 @@ It will check that this receipt does not have data dependencies (which is only t
 `Runtime::apply_action_receipt` will perform the following checks:
 
 - Retrieves the state of `bob_near` account, if it still exists (it is possible that Bob has deleted his account concurrently with the transfer transaction);
-- Checks if `bob_near` has enough balance for storage staking;
 - Computes the cost of processing a receipt and a transfer action;
 - Computes how much reward should be burnt as a means to indirectly reward validators
 - Checks if `bob_near` still exists and if so, deposits the gas reward to the `bob_near` account;
+- Checks if `bob_near` has enough balance for storage staking, the transaction's temporary state is dropped/rolled back if there is not enough balance;
