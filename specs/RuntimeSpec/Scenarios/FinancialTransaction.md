@@ -92,7 +92,7 @@ Specifically it does the following checks:
 - Retrieves the state of the access key of that `alice_near` used to sign the transaction;
 - Checks that transaction nonce is greater than the nonce of the latest transaction executed with that access key;
 - Subtracts the `total_cost` of the transaction from the account balance, or throws `InvalidTxError::NotEnoughBalance`. If the transaction is part of a transaction by a FunctionCall Access Key, subtracts the `total_cost` from the `allowance` or throws `InvalidAccessKeyError::NotEnoughAllowance`;
-- Checks whether the `signer` account has insufficient balance for storage staking and throws `InvalidTxError::LackBalanceForState` if so
+- Checks whether the `signer` account has insufficient balance for the storage deposit and throws `InvalidTxError::LackBalanceForState` if so
 - If the transaction is part of a transaction by a FunctionCall Access Key, throws `InvalidAccessKeyError::RequiresFullAccess`;
 - Updates the `alice_near` account with the new balance and the used access key with the new nonce;
 
@@ -111,4 +111,4 @@ It will check that this receipt does not have data dependencies (which is only t
 - Computes how much reward should be burnt;
 - Checks if `bob_near` still exists and if it does, deposits the transferred tokens to `bob_near`;
 - Checks if `bob_near` still exists and if so, deposits the gas reward to the `bob_near` account;
-- Checks if `bob_near` has enough balance for storage staking, the transaction's temporary state is dropped/rolled back if there is not enough balance;
+- Checks if `bob_near` has enough balance for the storage deposit, the transaction's temporary state is dropped/rolled back if there is not enough balance;
