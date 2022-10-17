@@ -88,7 +88,10 @@ interface SignTransactionsParams {
 
 interface Events {
   accountsChanged: { accounts: Array<Account> };
-  networkChanged: { network: Network };
+}
+
+interface ConnectParams {
+    networkId: string;
 }
 
 type Unsubscribe = () => void;
@@ -99,7 +102,7 @@ interface Wallet {
   network: Network;
   accounts: Array<Account>;
   
-  connect(): Promise<Array<Account>>;
+  connect(params: ConnectParams): Promise<Array<Account>>;
   signIn(params: SignInParams): Promise<void>;
   signOut(params: SignOutParams): Promise<void>;
   signTransaction(params: SignTransactionParams): Promise<transactions.SignedTransaction>;
@@ -349,15 +352,5 @@ Triggered whenever accounts are updated (e.g. calling `connect` or `disconnect`)
 ```ts
 window.near.wallet.on("accountsChanged", ({ accounts }) => {
   console.log("Accounts Changed", accounts);
-});
-```
-
-##### `networkChanged`
-
-Triggered whenever the wallet changes network.
-
-```ts
-window.near.wallet.on("networkChanged", ({ network }) => {
-  console.log("Network Changed", network);
 });
 ```
