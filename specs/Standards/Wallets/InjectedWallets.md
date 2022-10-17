@@ -72,12 +72,18 @@ interface SignOutParams {
   accounts: Array<Account>;
 }
 
+interface TransactionOptions {
+    receiverId: string;
+    actions: Array<transactions.Action>;
+    signerId?: string;
+}
+
 interface SignTransactionParams {
-  transaction: transactions.Transaction;
+  transaction: TransactionOptions;
 }
 
 interface SignTransactionsParams {
-  transactions: Array<transactions.Transaction>;
+  transactions: Array<TransactionOptions>;
 }
 
 interface Events {
@@ -355,10 +361,3 @@ window.near.wallet.on("networkChanged", ({ network }) => {
   console.log("Network Changed", network);
 });
 ```
-
-## Drawbacks
-
-There are cases when a dApp wants to sign a transaction, but does not yet know the account ID to use to request the transaction be signed (e.g. "Donate" button). The `Transaction` class from `near-api-js` precludes this behavior, as it **must** be instantiated with both `signerId` and `publicKey`. Below are suggested solutions:
-
-- A workaround that maintains the `Transaction` instance might involve creating transactions with empty an `signerId` and `publicKey` to signal to wallets during validation that a prompt is required to select an account (similar to `connect`) before reconstructing the transaction.
-- Consider an intermediate abstraction between the dApp and wallet to defer some parameters for transactions (or at least make them optional). This gives wallets an opportunity to prompt for missing data and in some cases reduce complexity for dApps as the `nonce` and `blockHash` can be handled internally.
