@@ -34,7 +34,7 @@ Explain the proposal as if it was already implemented and you were teaching it t
 
 For user-facing NEPs this section should focus on user stories.
 
-## Reference Implementation (Required for Contract category, optional for other categories)
+## Reference Implementation (Required for Protocol Working Group proposals, optional for other categories)
 
 This is the technical portion of the NEP. Explain the design in sufficient detail that:
 
