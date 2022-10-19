@@ -1,6 +1,6 @@
 # Receipt
 
-All cross-contract (we assume that each account lives in its own shard) communication in Near happens through Receipts.
+All cross-contract (we assume that each account lives in it's own shard) communication in Near happens through Receipts.
 Receipts are stateful in a sense that they serve not only as messages between accounts but also can be stored in the account storage to await DataReceipts.
 
 Each receipt has a [`predecessor_id`](#predecessor_id) (who sent it) and [`receiver_id`](#receiver_id) the current account.
@@ -275,7 +275,7 @@ mainly two types of errors:
 ```rust
 /// The `receiver_id` of a Receipt is not valid.
 InvalidReceiverId { account_id: AccountId },
-``` 
+```
 error is returned.
 - some action is invalid. The errors returned here are the same as the validation errors mentioned in [actions](Actions.md).
 * Whether the account still has enough balance to pay for storage. If, for example, the execution of one function call
