@@ -1,0 +1,90 @@
+---
+NEP: TODO
+Title: Remove attached_deposit view panic
+Author: Austin Abell <austin.abell@near.org>
+DiscussionsTo: https://github.com/nearprotocol/neps/pull/0000
+Status: Draft
+Type: Standards Track
+Category: Contract
+Created: 18-Oct-2022
+---
+
+## Summary
+
+This proposal is to switch the behavior of the `attached_deposit` host function on the runtime from panicking in view contexts to returning 0. This results in a better devX because instead of having to configure an assertion that there was no attached deposit to a function call only for transactions and not view calls, which is impossible because you can send a transaction to any method, you could just apply this assertion without the runtime aborting in view contexts.
+
+## Motivation
+
+This will allow contract SDK frameworks to add the `attached_deposit == 0` assertion for every function on a contract by default. This behavior matches the Solidity/Eth payable modifier and will ensure that funds aren't sent accidentally to a contract in more cases than currently possible.
+
+This can't be done at a contract level because there is no way of checking if a function call is within view context to call `attached_deposit` conditionally. This means that there is no way of restricting the sending of funds to functions intended to be view only because the abort from within `attached_deposit` can't be caught and ignored from inside the contract.
+
+Initial discussion: https://near.zulipchat.com/#narrow/stream/295306-pagoda.2Fcontract-runtime/topic/attached_deposit.20view.20error
+
+## Rationale and alternatives
+
+The rationale for assigning `0u128` to the pointer (`u64`) passed into `attached_deposit` is that it's the least breaking change. 
+
+The alternative of returning some special value, say `u128::MAX`, is that it would cause some unintended side effects for view calls using the `attached_deposit`. For example, if `attached_deposit` is called within a function, older versions of a contract that do not check the special value will return a result assuming that the attached deposit is `u128::MAX`. This is not a large concern since it would just be a view call, but it might be a bad UX in some edge cases, where returning 0 wouldn't be an issue.
+
+## Specification
+
+After the protocol version, the error inside `attached_deposit` will be skipped, and for all view calls, `0u128` will be set at the pointer passed in.
+
+## Reference Implementation (Required for Protocol Working Group proposals, optional for other categories)
+
+
+Currently, the implementation for `attached_deposit` is as follows:
+```rust
+pub fn attached_deposit(&mut self, balance_ptr: u64) -> Result<()> {
+	self.gas_counter.pay_base(base)?;
+
+	if self.context.is_view() {
+		return Err(HostError::ProhibitedInView {
+			method_name: "attached_deposit".to_string(),
+		}
+		.into());
+	}
+	self.memory_set_u128(balance_ptr, self.context.attached_deposit)
+}
+```
+
+Which would just have to add the check:
+
+```rust
+pub fn attached_deposit(&mut self, balance_ptr: u64) -> Result<()> {
+	self.gas_counter.pay_base(base)?;
+
+	if self.context.protocol_version < VIEW_ATTACHED_DEPOSIT_PROTOCOL_VERSION && self.context.is_view() {
+		return Err(HostError::ProhibitedInView {
+			method_name: "attached_deposit".to_string(),
+		}
+		.into());
+	}
+	self.memory_set_u128(balance_ptr, self.context.attached_deposit)
+}
+```
+
+This assumes that in all cases, `self.context.attached_deposit` is set to 0 in all cases. This can be asserted, or just to be safe, can check if `self.context.is_view()` and set `0u128` explicitly.
+
+## Security Implications (Optional)
+
+This won't have any implications outside of view calls, so this will not affect anything that is persisted on-chain. This only affects view calls. This can only have a negative side effect if a contract is under the assumption that `attached_deposit` will panic in view contexts. The possibility that this is done _and_ has some value connected with a view call result off-chain seems extremely unlikely.
+
+## Drawbacks (Optional)
+
+This has a breaking change of the functionality of `attached_deposit` and affects the behavior of some function calls in view contexts if they use `attached_deposit` and no other prohibited host functions.
+
+## Unresolved Issues (Optional)
+
+- Is the assumption that in all view calls, the `attached_deposit` in the VMContext is zero correct?
+
+## Future possibilities
+
+- The Rust SDK, as well as other SDKs, can add the `attached_deposit() == 0` check by default to all methods for safety of use.
+- Potentially, other host functions can be allowed where reasonable values can be inferred. For example, `prepaid_gas`, `used_gas` could return 0.
+
+## Copyright
+[copyright]: #copyright
+
+Copyright and related rights waived via [CC0](https://creativecommons.org/publicdomain/zero/1.0/).
