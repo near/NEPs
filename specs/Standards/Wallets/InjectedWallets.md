@@ -101,7 +101,8 @@ interface Wallet {
   connected: boolean;
   network: Network;
   accounts: Array<Account>;
-  
+
+  supportsNetwork(networkId: string): Promise<boolean>;
   connect(params: ConnectParams): Promise<Array<Account>>;
   signIn(params: SignInParams): Promise<void>;
   signOut(params: SignOutParams): Promise<void>;
