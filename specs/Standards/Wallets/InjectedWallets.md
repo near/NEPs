@@ -40,7 +40,7 @@ Almost every wallet implementation in NEAR used a single account model until we 
 Injected wallets are typically browser extensions that implement the `Wallet` API (see below).  References to the currently available wallets are tracked on the `window` object. To avoid namespace collisions and easily detect when they're available, wallets must mount under their own key of the object `window.near` (e.g. `window.near.sender`).
 **NOTE: Do not replace the entire `window.near` object with your wallet implementation, or add any objects as properties of the `window.near` object that do not conform to the Injected Wallet Standard**
 
-At the core of a wallet are [`signTransaction`](#signtransaction) and [`signTransactions`](#signtransactions). These methods, when given a [`Transaction`](https://nomicon.io/RuntimeSpec/Transactions) instance from [`near-api-js`](https://github.com/near/near-api-js), will prompt the user to sign with a key pair previously imported (with the assumption it has [`FullAccess`](https://nomicon.io/DataStructures/AccessKey) permission).
+At the core of a wallet are [`signTransaction`](#signtransaction) and [`signTransactions`](#signtransactions). These methods, when given a [`TransactionOptions`](#Wallet-API) instance, will prompt the user to sign with a key pair previously imported (with the assumption it has [`FullAccess`](https://nomicon.io/DataStructures/AccessKey) permission).
 
 In most cases, a dApp will need a reference to an account and associated public key to construct a [`Transaction`](https://nomicon.io/RuntimeSpec/Transactions). The [`connect`](#connect) method helps solve this issue by prompting the user to select one or more accounts they would like to make visible to the dApp. When at least one account is visible, the wallet considers the dApp [`connected`](#connected) and they can access a list of [`accounts`](#accounts) containing an `accountId` and `publicKey`.
 
@@ -179,7 +179,6 @@ Sign a transaction. This request should require explicit approval from the user.
 
 ```ts
 import { transactions, providers, utils } from "near-api-js";
-import { AccessKeyView } from "near-api-js/lib/providers/provider";
 
 // Retrieve accounts (assuming already connected) and current network.
 const { network, accounts } = window.near.wallet;
@@ -187,32 +186,18 @@ const { network, accounts } = window.near.wallet;
 // Setup RPC to retrieve transaction-related prerequisites.
 const provider = new providers.JsonRpcProvider({ url: network.nodeUrl });
 
-const [block, accessKey] = await Promise.all([
-  provider.block({ finality: "final" }),
-  provider.query<AccessKeyView>({
-    request_type: "view_access_key",
-    finality: "final",
-    account_id: accounts[0].accountId,
-    public_key: accounts[0].publicKey.toString(),
-  }),
-]);
-
 const signedTx = await window.near.wallet.signTransaction({
-  transaction: transactions.createTransaction(
-    accounts[0].accountId,
-    accounts[0].publicKey,
-    "guest-book.testnet",
-    accessKey.nonce + 1,
-    [transactions.functionCall(
+  transaction: {
+    signerId: accounts[0].accountId,
+    receiverId: "guest-book.testnet",
+    actions: [transactions.functionCall(
       "addMessage",
       { text: "Hello World!" },
       utils.format.parseNearAmount("0.00000000003"),
       utils.format.parseNearAmount("0.01")
-    )],
-    utils.serialize.base_decode(block.header.hash)
-  ),
+    )]
+  }
 });
-
 // Send the transaction to the blockchain.
 await provider.sendTransaction(signedTx);
 ```
@@ -223,7 +208,6 @@ Sign a list of transactions. This request should require explicit approval from 
 
 ```ts
 import { transactions, providers, utils } from "near-api-js";
-import { AccessKeyView } from "near-api-js/lib/providers/provider";
 
 // Retrieve accounts (assuming already connected) and current network.
 const { network, accounts } = window.near.wallet;
@@ -231,46 +215,30 @@ const { network, accounts } = window.near.wallet;
 // Setup RPC to retrieve transaction-related prerequisites.
 const provider = new providers.JsonRpcProvider({ url: network.nodeUrl });
 
-const [block, accessKey] = await Promise.all([
-  provider.block({ finality: "final" }),
-  provider.query<AccessKeyView>({
-    request_type: "view_access_key",
-    finality: "final",
-    account_id: accounts[0].accountId,
-    public_key: accounts[0].publicKey.toString(),
-  }),
-]);
-
 const signedTxs = await window.near.wallet.signTransactions({
   transactions: [
-    transactions.createTransaction(
-      accounts[0].accountId,
-      accounts[0].publicKey,
-      "guest-book.testnet",
-      accessKey.nonce + 1,
-      [transactions.functionCall(
-        "addMessage",
-        { text: "Hello World! (1/2)" },
-        utils.format.parseNearAmount("0.00000000003"),
-        utils.format.parseNearAmount("0.01")
-      )],
-      utils.serialize.base_decode(block.header.hash)
-    ),
-    transactions.createTransaction(
-      accounts[0].accountId,
-      accounts[0].publicKey,
-      "guest-book.testnet",
-      accessKey.nonce + 2,
-      [transactions.functionCall(
-        "addMessage",
-        { text: "Hello World! (2/2)" },
-        utils.format.parseNearAmount("0.00000000003"),
-        utils.format.parseNearAmount("0.01")
-      )],
-      utils.serialize.base_decode(block.header.hash)
-    )
+    {
+        signerId: accounts[0].accountId,
+        receiverId: "guest-book.testnet",
+        actions: [transactions.functionCall(
+            "addMessage",
+            { text: "Hello World! (1/2)" },
+            utils.format.parseNearAmount("0.00000000003"),
+            utils.format.parseNearAmount("0.01")
+        )]
+    },
+    {
+        signerId: accounts[0].accountId,
+        receiverId: "guest-book.testnet",
+        actions: [transactions.functionCall(
+            "addMessage",
+            { text: "Hello World! (2/2)" },
+            utils.format.parseNearAmount("0.00000000003"),
+            utils.format.parseNearAmount("0.01")
+        )]
+    }
   ]
-});
+}); 
 
 for (let i = 0; i < signedTxs.length; i += 1) {
   const signedTx = signedTxs[i];
