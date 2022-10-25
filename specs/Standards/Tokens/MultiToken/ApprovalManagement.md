@@ -59,7 +59,7 @@ Alice approves Bob to transfer her tokens.
 
 **Technical calls**
 
-1. Alice calls `mt::mt_approve({ "token_ids": ["1","2"], amounts:["1","100"], "account_id": "bob" })`. She attaches 1 yoctoⓃ, (.000000000000000000000001Ⓝ). Using [NEAR CLI](https://docs.near.org/docs/tools/near-cli) to make this call, the command would be:
+1. Alice calls `mt::mt_approve({ "token_ids": ["1","2"], amounts:["1","100"], "account_id": "bob" })`. She attaches 1 yoctoⓃ, (.000000000000000000000001Ⓝ). Using [NEAR CLI](https://docs.near.org/tools/near-cli) to make this call, the command would be:
 
        near call mt mt_approve \
          '{ "token_ids": ["1","2"], amounts: ["1","100"], "account_id": "bob" }' \
@@ -98,7 +98,7 @@ Alice approves Market to transfer some of her tokens and passes `msg` so that MT
          "msg": "{\"action\": \"list\", \"price\": [\"100\",\"50\"],\"token\": \"nDAI\" }"
        }' --accountId alice --amount .000000000000000000000001
 
-   At this point, near-cli will hang until the cross-contract call chain fully resolves, which would also be true if Alice used a Market frontend using [near-api-js](https://docs.near.org/docs/develop/front-end/near-api-js). Alice's part is done, though. The rest happens behind the scenes.
+   At this point, near-cli will hang until the cross-contract call chain fully resolves, which would also be true if Alice used a Market frontend using [near-api-js](https://docs.near.org/tools/near-api-js/quick-reference). Alice's part is done, though. The rest happens behind the scenes.
 
 2. `mt` schedules a call to `mt_on_approve` on `market`. Using near-cli notation for easy cross-reference with the above, this would look like:
 
