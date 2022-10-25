@@ -26,7 +26,7 @@ These tools will usually check the first transaction. In case of NEAR Wallet it 
 // Smart contract can do additional check or validation about who can call this
 // function or under what circumstances.
 // Requirements:
-// * Caller of the method must attach a deposit of 1 yoctoⓃ for security purposes
+// * Caller of the method MUST attach a deposit of 1 yoctoⓃ for security purposes
 //
 // Arguments:
 // * `receiver_id`: the valid NEAR account receiving the fungible tokens.
