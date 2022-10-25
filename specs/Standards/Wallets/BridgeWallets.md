@@ -123,9 +123,9 @@ Signs the message and verifies the owner. Message is not sent to blockchain.
 interface VerifyOwnerParams {
   // The message requested sign. Defaults to `verify owner` string.
   message?: string; 
-   //Account ID used to sign the message. Defaults to the first account
+  // Account ID used to sign the message. Defaults to the first account
   signerId?: string;
-  //Public key used to sign the message. Defaults to the public key of the signed in account.
+  // Public key used to sign the message. Defaults to the public key of the signed in account.
   publicKey?: PublicKey; 
   // Applicable to browser wallets (e.g. MyNearWallet). This is the callback url once the signing is approved. Defaults to `window.location.href`.
   callbackUrl?: string; 
@@ -134,7 +134,6 @@ interface VerifyOwnerParams {
 }
 
 type VerifyOwnerResponse = Promise<void | utils.key_pair.Signature>;
-
 // Browser wallets won't return the signing outcome as they may need to redirect for signing. For MyNearWallet the outcome is passed to the callback url.
 ```
 
