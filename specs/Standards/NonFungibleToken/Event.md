@@ -5,7 +5,7 @@ Version `1.0.0`
 ## Summary
 
 Standard interface for NFT contract actions.
-Extension of [NEP-297](../../EventsFormat.md)
+Extension of [NEP-297](../EventsFormat.md)
 
 ## Motivation
 

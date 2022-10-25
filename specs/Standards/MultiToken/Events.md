@@ -9,7 +9,7 @@ Version `1.0.0`
 ## Summary
 
 Standard interfaces for Multi Token Contract actions.
-Extension of [NEP-297](../../EventsFormat.md)
+Extension of [NEP-297](../EventsFormat.md)
 
 ## Motivation
 
