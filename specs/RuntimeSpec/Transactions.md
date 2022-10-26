@@ -149,7 +149,6 @@ error is returned.
 * `InvalidAccessKeyError::RequiresFullAccess` if the transaction contains more than one action or if the only action it
 contains is not a `FunctionCall` action.
 * `InvalidAccessKeyError::DepositWithFunctionCall` if the function call action has nonzero `deposit`.
-*
 ```rust
 /// Transaction `receiver_id` doesn't match the access key receiver_id
 InvalidAccessKeyError::ReceiverMismatch { tx_receiver: AccountId, ak_receiver: AccountId },
