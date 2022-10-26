@@ -115,6 +115,7 @@ interface GetAccountsParams {}
 
 type GetAccountsResponse = Array<Account>;
 ```
+
 ## Flows
 
 **Connect**
