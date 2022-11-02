@@ -9,21 +9,21 @@ Extension of [NEP-297](../../EventsFormat.md)
 
 ## Motivation
 
-NEAR and third-party applications need to track `mint`, `transfer`, `burn` events for all NFT-driven apps consistently.
+NEAR and third-party applications need to track `mint`, `transfer`, `burn` and `contract_metadata_update` events for all NFT-driven apps consistently.
 This extension addresses that.
 
 Keep in mind that applications, including NEAR Wallet, could require implementing additional methods to display the NFTs correctly, such as [`nft_metadata`](Metadata.md) and [`nft_tokens_for_owner`](Enumeration.md).
 
 ## Interface
 
-Non-Fungible Token Events MUST have `standard` set to `"nep171"`, standard version set to `"1.0.0"`, `event` value is one of `nft_mint`, `nft_burn`, `nft_transfer`, and `data` must be of one of the following relavant types: `NftMintLog[] | NftTransferLog[] | NftBurnLog[]`:
+Non-Fungible Token Events MUST have `standard` set to `"nep171"`, standard version set to `"1.0.0"`, `event` value is one of `nft_mint`, `nft_burn`, `nft_transfer`, `contract_metadata_update`, and `data` must be of one of the following relavant types: `NftMintLog[] | NftTransferLog[] | NftBurnLog[] | NftContractMetadataUpdateLog[]`:
 
 ```ts
 interface NftEventLogData {
     standard: "nep171",
     version: "1.0.0",
     event: "nft_mint" | "nft_burn" | "nft_transfer",
-    data: NftMintLog[] | NftTransferLog[] | NftBurnLog[],
+    data: NftMintLog[] | NftTransferLog[] | NftBurnLog[] | NftContractMetadataUpdateLog[],
 }
 ```
 
@@ -65,6 +65,15 @@ interface NftTransferLog {
     new_owner_id: string,
     token_ids: string[],
     memo?: string
+}
+
+// An event log to capture contract metdata updates
+// Arguments
+// * `owner_id`: "account.near"
+// * `token_ids`: ["1", "abc"]
+// * `memo`: optional message
+interface NftMintLog {
+    metadata: NFTContractMetadata
 }
 ```
 
@@ -134,12 +143,25 @@ EVENT_JSON:{
 }
 ```
 
+Contract metadata update:
+
+```js
+EVENT_JSON:{
+  "standard": "nep171",
+  "version": "1.1.0",
+  "event": "contract_metadata_update",
+  "data": [
+    { "metadata": { "base_uri": "..." } }
+  ]
+}
+```
+
 ## Further methods
 
 Note that the example events covered above cover two different kinds of events:
-1. Events that are not specified in the NFT Standard (`nft_mint`, `nft_burn`)
+1. Events that are not specified in the NFT Standard (`nft_mint`, `nft_burn`, `contract_metadata_update`)
 2. An event that is covered in the [NFT Core Standard](Core.md). (`nft_transfer`)
 
-This event standard also applies beyond the three events highlighted here, where future events follow the same convention of as the second type. For instance, if an NFT contract uses the [approval management standard](ApprovalManagement.md), it may emit an event for `nft_approve` if that's deemed as important by the developer community.
+This event standard also applies beyond the four events highlighted here, where future events follow the same convention of as the second type. For instance, if an NFT contract uses the [approval management standard](ApprovalManagement.md), it may emit an event for `nft_approve` if that's deemed as important by the developer community.
  
 Please feel free to open pull requests for extending the events standard detailed here as needs arise.
