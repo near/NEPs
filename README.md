@@ -25,7 +25,7 @@ Changes to the protocol specification and standards are called NEAR Enhancement 
 |[0245](https://github.com/near/NEPs/blob/master/neps/nep-0245.md)   | Multi Token Standard | @zcstarr @riqi @jriemann @marcos.sun | Review |
 |[0297](https://github.com/near/NEPs/blob/master/neps/nep-0297.md)   | Events Standard | @telezhnaya | Final |
 |[0330](https://github.com/near/NEPs/blob/master/neps/nep-0330.md)   | Source Metadata | @BenKurrek | Review |
-|[0366](https://github.com/near/NEPs/blob/master/neps/nep-0000.md) | Meta Transactions | @ilblackdragon | Draft |
+|[0366](https://github.com/near/NEPs/blob/master/neps/nep-0366.md)   | Meta Transactions | @ilblackdragon @e-uleyskiy @fadeevab | Draft |
 
 
 
@@ -69,7 +69,7 @@ Spec changes are ultimately done via pull requests to this repository (formalize
     ```
 
    * Once complete, submit the pull request for editor review.
-  
+
    * The formalization dance begins:
      * NEP Editors, who are unopinionated shepherds of the process, check document formatting, completeness and adherence to [NEP-0001](neps/nep-0001.md) and approve the pull request.
      * Once ready, the author updates the NEP status to `Review` allowing further community participation, to address any gaps or clarifications, normally part of the Review PR.
