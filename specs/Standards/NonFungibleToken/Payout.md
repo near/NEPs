@@ -5,7 +5,7 @@
 Version `2.0.0`.
 
 This standard assumes the NFT contract has implemented
-[NEP-171](https://github.com/near/NEPs/blob/master/specs/Standards/Tokens/NonFungibleToken/Core.md) (Core) and [NEP-178](https://github.com/near/NEPs/blob/master/specs/Standards/Tokens/NonFungibleToken/ApprovalManagement.md) (Approval Management).
+[NEP-171](https://github.com/near/NEPs/blob/master/specs/Standards/NonFungibleToken/Core.md) (Core) and [NEP-178](https://github.com/near/NEPs/blob/master/specs/Standards/NonFungibleToken/ApprovalManagement.md) (Approval Management).
 
 ## Summary
 An interface allowing non-fungible token contracts to request that financial contracts pay-out multiple receivers, enabling flexible royalty implementations.
