@@ -64,7 +64,7 @@ interface Network {
 }
 
 interface SignInParams {
-  permission: transactions.FunctionCallPermission;
+  permissions?: Array<transactions.FunctionCallPermission>;
   accounts: Array<Account>;
 }
 
@@ -269,10 +269,10 @@ const { accounts } = window.near.wallet;
 
 // Request FunctionCall access to the 'guest-book.testnet' smart contract for each account.
 await window.near.wallet.signIn({
-  permission: {
+  permissions: [{
     receiverId: "guest-book.testnet",
     methodNames: [],
-  },
+  }],
   accounts: accounts.map(({ accountId }) => {
     const keyPair = utils.KeyPair.fromRandom("ed25519");
 
