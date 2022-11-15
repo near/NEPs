@@ -21,7 +21,7 @@ Non-Fungible Token Events MUST have `standard` set to `"nep171"`, standard versi
 ```ts
 interface NftEventLogData {
     standard: "nep171",
-    version: "1.0.0",
+    version: "1.1.0",
     event: "nft_mint" | "nft_burn" | "nft_transfer",
     data: NftMintLog[] | NftTransferLog[] | NftBurnLog[] | NftContractMetadataUpdateLog[],
 }
@@ -67,13 +67,11 @@ interface NftTransferLog {
     memo?: string
 }
 
-// An event log to capture contract metdata updates
+// An event log to capture contract metadata updates. Note that the updated contract metadata is not included in the log, as it could easily exceed the 16KB log size limit. Listeners can query `nft_metadata` to get the updated contract metadata.
 // Arguments
-// * `owner_id`: "account.near"
-// * `token_ids`: ["1", "abc"]
 // * `memo`: optional message
-interface NftMintLog {
-    metadata: NFTContractMetadata
+interface NftContractMetadataUpdateLog {
+    memo?: string
 }
 ```
 
@@ -84,7 +82,7 @@ Single owner batch minting (pretty-formatted for readability purposes):
 ```js
 EVENT_JSON:{
   "standard": "nep171",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "event": "nft_mint",
   "data": [
     {"owner_id": "foundation.near", "token_ids": ["aurora", "proximitylabs"]}
@@ -97,7 +95,7 @@ Different owners batch minting:
 ```js
 EVENT_JSON:{
   "standard": "nep171",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "event": "nft_mint",
   "data": [
     {"owner_id": "foundation.near", "token_ids": ["aurora", "proximitylabs"]},
@@ -111,7 +109,7 @@ Different events (separate log entries):
 ```js
 EVENT_JSON:{
   "standard": "nep171",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "event": "nft_burn",
   "data": [
     {"owner_id": "foundation.near", "token_ids": ["aurora", "proximitylabs"]},
@@ -122,7 +120,7 @@ EVENT_JSON:{
 ```js
 EVENT_JSON:{
   "standard": "nep171",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "event": "nft_transfer",
   "data": [
     {"old_owner_id": "user1.near", "new_owner_id": "user2.near", "token_ids": ["meme"], "memo": "have fun!"}
@@ -135,7 +133,7 @@ Authorized id:
 ```js
 EVENT_JSON:{
   "standard": "nep171",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "event": "nft_burn",
   "data": [
     {"owner_id": "owner.near", "token_ids": ["goodbye", "aurevoir"], "authorized_id": "thirdparty.near"}
@@ -150,9 +148,7 @@ EVENT_JSON:{
   "standard": "nep171",
   "version": "1.1.0",
   "event": "contract_metadata_update",
-  "data": [
-    { "metadata": { "base_uri": "..." } }
-  ]
+  "data": []
 }
 ```
 
