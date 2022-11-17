@@ -83,6 +83,7 @@ pub trait Payouts {
   /// Given a `token_id` and NEAR-denominated balance, transfer the token
   /// and return the `Payout` struct for the given token. Panic if the
   /// length of the payout exceeds `max_len_payout.`
+  #[payable]
   fn nft_transfer_payout(
     &mut self,
     receiver_id: AccountId,
