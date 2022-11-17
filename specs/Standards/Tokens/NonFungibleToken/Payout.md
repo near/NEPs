@@ -1,14 +1,11 @@
----
-NEP: 199
-Title: Non Fungible Token Royalties and Payouts
-Author: Thor <@thor314>, Matt Lockyer <@mattlockyer>
-DiscussionsTo: https://github.com/near/NEPs/discussions/199
-Status: Final
-Type: Standards Track
-Category: Contract
-Created: 03-Mar-2022
-Requires: 171, 178
----
+# Royalties and Payouts
+
+## [NEP-199](https://github.com/near/NEPs/blob/master/neps/nep-0199.md)
+
+Version `2.0.0`.
+
+This standard assumes the NFT contract has implemented
+[NEP-171](https://github.com/near/NEPs/blob/master/specs/Standards/Tokens/NonFungibleToken/Core.md) (Core) and [NEP-178](https://github.com/near/NEPs/blob/master/specs/Standards/Tokens/NonFungibleToken/ApprovalManagement.md) (Approval Management).
 
 ## Summary
 
