@@ -1,0 +1,10 @@
+{
+  "position": 6,
+  "label": "Runtime fees",
+  "collapsible": true,
+  "collapsed": true,
+  "link": {
+    "type": "generated-index",
+    "title": "Runtime fees"
+  }
+}

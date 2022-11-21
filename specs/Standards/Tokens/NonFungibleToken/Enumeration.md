@@ -1,6 +1,6 @@
-# Non-Fungible Token Enumeration
+# Enumeration
 
-## [NEP-181](https://github.com/near/NEPs/discussions/181)
+## [NEP-181](https://github.com/near/NEPs/blob/master/neps/nep-0181.md)
 
 Version `1.0.0`
 
@@ -73,4 +73,4 @@ function nft_tokens_for_owner(
 At the time of this writing, the specialized collections in the `near-sdk` Rust crate are iterable, but not all of them have implemented an `iter_from` solution. There may be efficiency gains for large collections and contract developers are encouraged to test their data structures with a large amount of entries. 
 
   [ERC-721]: https://eips.ethereum.org/EIPS/eip-721
-  [storage]: https://docs.near.org/docs/concepts/storage-staking
+  [storage]: https://docs.near.org/concepts/storage/storage-staking

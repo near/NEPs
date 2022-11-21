@@ -1,8 +1,8 @@
-# Non-Fungible Token Metadata
+# Metadata
 
-## [NEP-177](https://github.com/near/NEPs/discussions/177)
+## [NEP-177](https://github.com/near/NEPs/blob/master/neps/nep-0177.md)
 
-Version `2.0.0`
+Version `2.1.0`
 
 ## Summary
 
@@ -12,7 +12,7 @@ An interface for a non-fungible token's metadata. The goal is to keep the metada
 
 The primary value of non-fungible tokens comes from their metadata. While the [core standard](Core.md) provides the minimum interface that can be considered a non-fungible token, most artists, developers, and dApps will want to associate more data with each NFT, and will want a predictable way to interact with any NFT's metadata.
 
-NEAR's unique [storage staking](https://docs.near.org/docs/concepts/storage-staking) approach makes it feasible to store more data on-chain than other blockchains. This standard leverages this strength for common metadata attributes, and provides a standard way to link to additional offchain data to support rapid community experimentation.
+NEAR's unique [storage staking](https://docs.near.org/concepts/storage/storage-staking) approach makes it feasible to store more data on-chain than other blockchains. This standard leverages this strength for common metadata attributes, and provides a standard way to link to additional offchain data to support rapid community experimentation.
 
 This standard also provides a `spec` version. This makes it easy for consumers of NFTs, such as marketplaces, to know if they support all the features of a given token.
 
@@ -27,7 +27,7 @@ Metadata applies at both the contract level (`NFTContractMetadata`) and the toke
 
 ```ts
 type NFTContractMetadata = {
-  spec: string, // required, essentially a version like "nft-1.0.0"
+  spec: string, // required, essentially a version like "nft-2.0.0", replacing "2.0.0" with the implemented version of NEP-177
   name: string, // required, ex. "Mochi Rising — Digital Edition" or "Metaverse 3"
   symbol: string, // required, ex. "MOCHI"
   icon: string|null, // Data URL
@@ -62,7 +62,7 @@ A new attribute MUST be added to each `Token` struct:
 
 ```diff
  type Token = {
-   id: string,
+   token_id: string,
    owner_id: string,
 +  metadata: TokenMetadata,
  }
@@ -70,7 +70,7 @@ A new attribute MUST be added to each `Token` struct:
 
 ### An implementing contract MUST include the following fields on-chain
 
-- `spec`: a string that MUST be formatted `nft-1.0.0` to indicate that a Non-Fungible Token contract adheres to the current versions of this Metadata spec. This will allow consumers of the Non-Fungible Token to know if they support the features of a given contract.
+- `spec`: a string that MUST be formatted `nft-n.n.n` where "n.n.n" is replaced with the implemented version of this Metadata spec: for instance, "nft-2.0.0" to indicate NEP-177 version 2.0.0.  This will allow consumers of the Non-Fungible Token to know which set of metadata features the contract supports.
 - `name`: the human-readable name of the contract.
 - `symbol`: the abbreviated symbol of the contract, like MOCHI or MV3
 - `base_uri`: Centralized gateway known to have reliable access to decentralized storage assets referenced by `reference` or `media` URLs. Can be used by other frontends for initial retrieval of assets, even if these frontends then replicate the data to their own decentralized nodes, which they are encouraged to do.
@@ -79,13 +79,13 @@ A new attribute MUST be added to each `Token` struct:
 
 For `NFTContractMetadata`:
 
-- `icon`: a small image associated with this contract. Encouraged to be a [data URL](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/Data_URIs), to help consumers display it quickly while protecting user data. Recommendation: use [optimized SVG](https://codepen.io/tigt/post/optimizing-svgs-in-data-uris), which can result in high-resolution images with only 100s of bytes of [storage cost](https://docs.near.org/docs/concepts/storage-staking). (Note that these storage costs are incurred to the contract deployer, but that querying these icons is a very cheap & cacheable read operation for all consumers of the contract and the RPC nodes that serve the data.) Recommendation: create icons that will work well with both light-mode and dark-mode websites by either using middle-tone color schemes, or by [embedding `media` queries in the SVG](https://timkadlec.com/2013/04/media-queries-within-svg/).
-- `reference`: a link to a valid JSON file containing various keys offering supplementary details on the token. Example: "/ipfs/QmdmQXB2mzChmMeKY47C43LxUdg1NDJ5MWcKMKxDu7RgQm", "https://example.com/token.json", etc. If the information given in this document conflicts with the on-chain attributes, the values in `reference` shall be considered the source of truth.
+- `icon`: a small image associated with this contract. Encouraged to be a [data URL](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/Data_URIs), to help consumers display it quickly while protecting user data. Recommendation: use [optimized SVG](https://codepen.io/tigt/post/optimizing-svgs-in-data-uris), which can result in high-resolution images with only 100s of bytes of [storage cost](https://docs.near.org/concepts/storage/storage-staking). (Note that these storage costs are incurred to the contract deployer, but that querying these icons is a very cheap & cacheable read operation for all consumers of the contract and the RPC nodes that serve the data.) Recommendation: create icons that will work well with both light-mode and dark-mode websites by either using middle-tone color schemes, or by [embedding `media` queries in the SVG](https://timkadlec.com/2013/04/media-queries-within-svg/).
+- `reference`: a link to a valid JSON file containing various keys offering supplementary details on the token. Example: `/ipfs/QmdmQXB2mzChmMeKY47C43LxUdg1NDJ5MWcKMKxDu7RgQm`, `https://example.com/token.json`, etc. If the information given in this document conflicts with the on-chain attributes, the values in `reference` shall be considered the source of truth.
 - `reference_hash`: the base64-encoded sha256 hash of the JSON file contained in the `reference` field. This is to guard against off-chain tampering.
 
 For `TokenMetadata`:
 
-- `name`:  The name of this specific token.
+- `title`:  The name of this specific token.
 - `description`: A longer description of the token.
 - `media`: URL to associated media. Preferably to decentralized, content-addressed storage.
 - `media_hash`: the base64-encoded sha256 hash of content referenced by the `media` field. This is to guard against off-chain tampering.
@@ -114,6 +114,8 @@ Contracts should be implemented in a way to avoid extra gas fees for serializati
 - A fleshed out schema for what the `reference` object should contain.
 
 ## Errata
+
+* **2022-02-03**: updated `Token` struct field names. `id` was changed to `token_id`. This is to be consistent with current implementations of the standard and the rust SDK docs.
 
 The first version (`1.0.0`) had confusing language regarding the fields:
 - `issued_at`

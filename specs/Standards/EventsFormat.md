@@ -1,6 +1,6 @@
 # Events Format
 
-## [NEP-297](https://github.com/near/NEPs/issues/297)
+## [NEP-297](https://github.com/near/NEPs/blob/master/neps/nep-0297.md)
 
 Version `1.0.0`
 
