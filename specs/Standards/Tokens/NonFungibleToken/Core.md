@@ -21,7 +21,7 @@ Given these attributes, this NFT standard can accomplish with one user interacti
 
 * An [Exquisite Corpse](https://en.wikipedia.org/wiki/Exquisite_corpse) contract allows three drawings to be submitted, one for each section of a final composition, to be minted as its own NFT and sold on a marketplace, splitting royalties amongst the original artists.
 * Alice draws the top third and submits it, Bob the middle third, and Carol follows up with the bottom third. Since they each use `nft_transfer_call` to both transfer their NFT to the Exquisite Corpse contract as well as call a `submit` method on it, the call from Carol can automatically kick off minting a composite NFT from the three submissions, as well as listing this composite NFT in a marketplace.
-* When Dan attempts to also call `nft_transfer_call` to submit an unneeded top third of the drawing, the Exquisite Corpse contract can throw an error, and the transfer will be rolled back so that Bob maintains ownership of his NFT.
+* When Dan attempts to also call `nft_transfer_call` to submit an unneeded top third of the drawing, the Exquisite Corpse contract can throw an error, and the transfer will be rolled back so that Dan maintains ownership of his NFT.
 
 While this is already flexible and powerful enough to handle all sorts of existing and new use-cases, apps such as marketplaces may still benefit from the [Approval Management] extension.
 
