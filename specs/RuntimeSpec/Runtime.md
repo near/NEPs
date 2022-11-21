@@ -29,7 +29,7 @@ The utility crates are:
   integration testing of L2 projects;
 - `runtime-params-estimator` -- benchmarks the runtime and generates the config with the fees.
 
-Separately, from the components we describe [the Bindings Specification](BindingsSpec/BindingsSpec.md) which is an
+Separately, from the components we describe [the Bindings Specification](Components/BindingsSpec/BindingsSpec.md) which is an
 important part of the runtime that specifies the functions that the smart contract can call from its host -- the runtime.
 The specification is defined in `near-vm-logic`, but it is exposed to the smart contract in `near-vm-runner`.
 

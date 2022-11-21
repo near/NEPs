@@ -46,18 +46,19 @@ The protocol sets a ceiling for the maximum issuance of tokens, and dynamically 
 
 | Name | Description |
 | - | - |
-| `reward[t]` | `totalSupply[t]` * ((`1 + REWARD_PCT_PER_YEAR`) ** (`1/EPOCHS_A_YEAR`) - `1`) |
+| `reward[t]` | `totalSupply[t]` * `REWARD_PCT_PER_YEAR` * `epochTime[t]` / `NUM_SECONDS_IN_A_YEAR` |
 | `epochFee[t]` | `sum([(1 - DEVELOPER_PCT_PER_YEAR) * block.txFee + block.stateFee for block in epoch[t]])` |
 | `issuance[t]` | The amount of token issued at a certain epoch[t], `issuance[t] = reward[t] - epochFee[t]` |
 
-Where `totalSupply[t]` is the total number of tokens in the system at a given time *t*.
+Where `totalSupply[t]` is the total number of tokens in the system at a given time *t* and `epochTime[t]` is the
+duration of the epoch in seconds.
 If `epochFee[t] > reward[t]` the issuance is negative, thus the `totalSupply[t]` decreases in given epoch.
 
 ## Transaction Fees
 
 Each transaction before inclusion must buy gas enough to cover the cost of bandwidth and execution.
 
-Gas unifies execution and bytes of bandwidth usage of blockchain. Each WASM instruction or pre-compiled function gets assigned an amount of gas based on measurements on common-denominator computer. Same goes for weighting the used bandwidth based on general unified costs. For specific gas mapping numbers see [???]().
+Gas unifies execution and bytes of bandwidth usage of blockchain. Each WASM instruction or pre-compiled function gets assigned an amount of gas based on measurements on common-denominator computer. Same goes for weighting the used bandwidth based on general unified costs. For specific gas mapping numbers see [???](#).
 
 Gas is priced dynamically in `NEAR` tokens. At each block `t`, we update `gasPrice[t] = gasPrice[t - 1] * (gasUsed[t - 1] / gasLimit[t - 1] - 0.5) * ADJ_FEE`.
 
@@ -128,7 +129,7 @@ At the end of every epoch `T`, next algorithm gets executed to determine validat
 3. Collect chunk-only and block producer `proposals`, if validator was also a validator in `epoch[T]`, considered stake of the proposal is `0 if proposal.stake == 0 else proposal.stake + reward[proposal.account_id]`.
 4. Use the chunk/block producer selection algorithms outlined in [Selecting Chunk and Block Producers](ChainSpec/SelectingBlockProducers.md).
 
-### Rewards Calculation
+### Validator Rewards Calculation
 
 Note: all calculations are done in Rational numbers.
 
@@ -214,3 +215,12 @@ def end_of_epoch(..., reward):
     # ...
     accounts[TREASURY_ACCOUNT_ID].amount = treasury_reward[t]
 ```
+
+## Contract Rewards
+
+Contract account is rewarded with 30% of gas burnt during the execution of its functions.
+The reward is credited to the contract account after applying the corresponding receipt with [`FunctionCallAction`](../RuntimeSpec/Actions.md#functioncallaction), gas is converted to tokens using gas price of the current block.
+
+You can read more about:
+- [receipts execution](../RuntimeSpec/Receipts.md);
+- [runtime fees](../RuntimeSpec/Fees/Fees.md) with description [how gas is charged](../RuntimeSpec/Fees/Fees.md#gas-tracking).
