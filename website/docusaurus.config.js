@@ -168,7 +168,7 @@ const config = {
         theme: lightCodeTheme,
         darkTheme: darkCodeTheme,
         "additionalLanguages": [
-          "rust",
+          "rust", "java", "python", "ruby", "go", "toml"
         ]
       },
     }),
