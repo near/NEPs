@@ -18,7 +18,7 @@ Transactions within a group are not ordered.
 The valid order of the transactions in a chunk is the following:
 
 - transactions are ordered in batches.
-- within a batch all transactions keys should have different.
+- within a batch all transactions keys should be different.
 - a set of transaction keys in each subsequent batch should be a sub-set of keys from the previous batch.
 - transactions with the same key should be ordered in strictly increasing order of their corresponding nonces.
 
