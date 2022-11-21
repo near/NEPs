@@ -31,15 +31,15 @@ There are several desiderata for these algorithms:
 * All participants selected as chunk/block producers should be selected to produce at least one
   chunk/block during the epoch
 * It should be possible to determine which chunk/block producer is supposed to produce the
-  chunk/block at height \\( h \\), for any \\( h \\) within the epoch, in constant time
-* The block producer chosen at height \\( h \\) should have been a chunk producer for some shard at
-  height \\( h - 1 \\), this minimizes network communication between chunk producers and block
+  chunk/block at height $h$, for any $h$ within the epoch, in constant time
+* The block producer chosen at height $h$ should have been a chunk producer for some shard at
+  height $h - 1$, this minimizes network communication between chunk producers and block
   producers
 * The number of distinct chunk-only/block producers should be as large as is allowed by the
   scalability in the consensus algorithm (too large and the system would be too slow, too small and
-  the system would be too centralized)\\( ^{\dagger} \\)
+  the system would be too centralized) $^{\dagger}$
 
-> \\( \dagger \\) Note: By "distinct block producers" we mean the number of different signing keys.
+> $\dagger$ Note: By "distinct block producers" we mean the number of different signing keys.
 > We recognize it is possible for a single "logical entity" to split their stake into two or more
 > proposals (Sybil attack), however steps to prevent this kind of attack against centralization are
 > out of scope for this document.
@@ -61,11 +61,11 @@ There are several desiderata for these algorithms:
   be selected to produce a chunk/block during the epoch. We will additionally assume the chunk/block
   producer assigned to make each chunk/block is chosen independently, and in proportion to the
   participant's stake. Therefore, the probability that the block producer with least stake is never
-  chosen is given by the expression \\( (1 - (s_\text{min} / S))^\text{epoch_length} \\), where
-  \\(s_\text{min} \\) is the least stake of any block producer and \\( S \\) is the total relevant
+  chosen is given by the expression $(1 - (s_\text{min} / S))^\text{epoch\_length}$, where
+  $s_\text{min}$ is the least stake of any block producer and $S$ is the total relevant
   stake (what stake is "relevant" depends on whether the validator is a chunk-only producer or a
-  block producer; more details below). Hence, the algorithm will enforce the condition \\( (1 -
-  (s_\text{min} / S))^\text{epoch_length} < \text{PROBABILITY_NEVER_SELECTED} \\).
+  block producer; more details below). Hence, the algorithm will enforce the condition $(1 -
+  (s_\text{min} / S))^\text{epoch\_length} < \text{PROBABILITY\_NEVER\_SELECTED}$.
 
 ## Algorithm for selecting block producers
 
@@ -85,7 +85,7 @@ There are several desiderata for these algorithms:
 
 * `block_producers: Vec<ValidatorStake>` (chosen block producers for the next epoch)
 * `block_producer_sampler: WeightedIndex`
-  - Data structure to allow \\( O(1) \\) sampling from the block producers with probability
+  - Data structure to allow $O(1)$ sampling from the block producers with probability
     proportional to their stake
   - This structure will be based on the
     [WeightedIndex](https://rust-random.github.io/rand/rand/distributions/weighted/alias_method/struct.WeightedIndex.html)
@@ -132,7 +132,7 @@ Note: no algorithm for assigning block producers to shards is needed because we 
 ### Output
 
 * `validator_shard_assignments: Vec<Vec<ValidatorStake>>`
-  - \\( i \\)-th element gives the validators assigned to shard \\( i \\)
+  - $i$-th element gives the validators assigned to shard $i$
 
 ### Steps
 
@@ -177,7 +177,7 @@ variables referencing "block producers" to reference "chunk producers" instead.
 
 * `chunk_producers: Vec<ValidatorStake>` (chosen chunk producers for the next epoch)
 * `validator_shard_assignments: Vec<Vec<ValidatorStake>>`
-  - \\( i \\)-th element gives the validators assigned to shard \\( i \\)
+  - $i$-th element gives the validators assigned to shard $i$
 * `chunk_producer_sampler: Vec<WeightedIndex>`
 
 ### Steps
@@ -257,7 +257,7 @@ index = uniform_index \
 return validators[index]
 ```
 
-## Algorithm for selecting producer of block at height \\( h \\)
+## Algorithm for selecting producer of block at height $h$
 
 ### Input
 
@@ -285,7 +285,7 @@ block_seed = combine(epoch_rng_seed, h)
 return select_validator(rng_seed=block_seed, validators=block_producers, sampler=block_producer_sampler)
 ```
 
-## Algorithm for selection of chunk producer at height \\( h \\) for all shards
+## Algorithm for selection of chunk producer at height $h$ for all shards
 
 ### Input
 
