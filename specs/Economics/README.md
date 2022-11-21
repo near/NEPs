@@ -120,14 +120,14 @@ struct Proposal {
 ```
 
 During the epoch, outcome of staking transactions produce `proposals`, which are collected, in the form of `Proposal`s.
-There are separate proposals for block producers and chunk-only producers, see [Selecting Chunk and Block Producers](ChainSpec/SelectingBlockProducers.md).
+There are separate proposals for block producers and chunk-only producers, see [Selecting Chunk and Block Producers](../ChainSpec/SelectingBlockProducers.md).
 for more information.
 At the end of every epoch `T`, next algorithm gets executed to determine validators for epoch `T + 2`:
 
 1. For every chunk/block producer in `epoch[T]` determine `num_blocks_produced`, `num_chunks_produced` based on what they produced during the epoch.
 2. Remove validators, for whom `num_blocks_produced < num_blocks_expected * BLOCK_PRODUCER_KICKOUT_THRESHOLD` or `num_chunks_produced < num_chunks_expected * CHUNK_PRODUCER_KICKOUT_THRESHOLD`.
 3. Collect chunk-only and block producer `proposals`, if validator was also a validator in `epoch[T]`, considered stake of the proposal is `0 if proposal.stake == 0 else proposal.stake + reward[proposal.account_id]`.
-4. Use the chunk/block producer selection algorithms outlined in [Selecting Chunk and Block Producers](ChainSpec/SelectingBlockProducers.md).
+4. Use the chunk/block producer selection algorithms outlined in [Selecting Chunk and Block Producers](../ChainSpec/SelectingBlockProducers.md).
 
 ### Validator Rewards Calculation
 
