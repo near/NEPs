@@ -193,4 +193,6 @@ interface SBT {
 
 ## Copyright
 
-Copyright and related rights waived via [CC0](https://creativecommons.org/publicdomain/zero/1.0/).
+## Copyright
+
+[Creative Commons Attribution 4.0 International Public License (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/)
