@@ -4,7 +4,7 @@
 
 NEP: 393
 Title: Soulbound Token
-Author: Robert Zaremba <@robert-zaremba>, Noak Lindqvist <@KazanderDad>
+Authors: Robert Zaremba <@robert-zaremba>, Noak Lindqvist <@KazanderDad>
 DiscussionsTo:
 Status: Draft
 Type: Standards Track
@@ -66,13 +66,13 @@ trait SBT {
     fn sbt_total_supply(&self) -> U64;
 
     // returns total supply of SBTs for a given owner
-    fn sbt_supply_by_owner(&self, account: AccountId);
+    fn sbt_supply_for_owner(&self, account: AccountId);
 
     // Query for sbt tokens
     fn sbt_tokens(&self, from_index: Option<U64>, limit: Option<u32>) -> Vec<Token>;
 
     // Query sbt tokens by owner
-    fn sbt_tokens_by_owner(
+    fn sbt_tokens_for_owner(
         &self,
         account: AccountId,
         from_index: Option<U64>,
