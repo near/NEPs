@@ -2,7 +2,7 @@
 
 ---
 
-NEP: TODO
+NEP: 393
 Title: Soulbound Token
 Author: Robert Zaremba <@robert-zaremba>, Noak Lindqvist <@KazanderDad>
 DiscussionsTo:
