@@ -55,23 +55,23 @@ pub struct TokenMetadata {
 
 
 trait SBT {
-    // ************
-    //   QUERIES
+    /**********
+    * QUERIES
+    **********/
 
-
-    // get the information about specific token ID
+    /// get the information about specific token ID
     fn sbt(&self, token_id: TokenId) -> Option<Token>;
 
-    // returns total amount of tokens minted by this contract
+    /// returns total amount of tokens minted by this contract
     fn sbt_total_supply(&self) -> U64;
 
-    // returns total supply of SBTs for a given owner
+    /// returns total supply of SBTs for a given owner
     fn sbt_supply_for_owner(&self, account: AccountId);
 
-    // Query for sbt tokens
+    /// Query for sbt tokens
     fn sbt_tokens(&self, from_index: Option<U64>, limit: Option<u32>) -> Vec<Token>;
 
-    // Query sbt tokens by owner
+    /// Query sbt tokens by owner
     fn sbt_tokens_for_owner(
         &self,
         account: AccountId,
@@ -81,7 +81,7 @@ trait SBT {
 
 
     /**********
-    * Transactions
+    * TRANSACTIONS
     **********/
 
     /// creates a new, unique token and assigns it to the `receiver`.
@@ -173,16 +173,12 @@ Although the funcitons below are not part of the standard (depending on a use ca
 
 interface SBT {
 
-
-    // Function for recovery committee, which can be either
-    // the issuer, DAO, or an operator smart contract, authorized for the
-    // recovery process.
-    // Emits `SbtRecoverLog` when the recover process succeeds.
-    // Returns an error if the recovery process failed.
+    /// Function for recovery committee, which can be either
+    /// the issuer, DAO, or an operator smart contract, authorized for the
+    /// recovery process.
+    /// Emits `SbtRecoverLog` when the recover process succeeds.
+    /// Returns an error if the recovery process failed.
     recover(token_id: uint64, old_address: string, new_address: string): error | undefined;
-
-
-
 }
 
 ```
@@ -196,7 +192,5 @@ interface SBT {
 ## Future possibilities
 
 ## Copyright
-
-[copyright]: #copyright
 
 Copyright and related rights waived via [CC0](https://creativecommons.org/publicdomain/zero/1.0/).
