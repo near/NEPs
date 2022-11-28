@@ -79,6 +79,10 @@ trait SBT {
         limit: Option<u32>,
     ) -> Vec<Token>;
 
+    /// Optional. If the SBT implementaiton assures that one account can have maximum one SBT
+    /// the the following function should be implemented.
+    /// Returns Some(Token) if an `account` owns an SBT, otherwise returns None.
+    fn sbt_token_for_owner(&self, account: AccountId) -> Option<Token> {}
 
     /**********
     * TRANSACTIONS
