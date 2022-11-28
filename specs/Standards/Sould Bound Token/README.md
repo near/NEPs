@@ -16,17 +16,17 @@ Requires: --
 
 ## Summary
 
-Soulbound Tokens (SBT) are non transferrable NFTs. Even though tranferability is not available, we define a recoverability mechanism.
+Soulbound Tokens (SBT) are non transferable NFTs. Even though tranferability is not available, we define a recoverability mechanism.
 
-SBTs are well suited of carrying proof-of-attendence NFTs, proof-of-unique-human "stamps" and other similar credibility-carriers.
+SBTs are well suited of carrying proof-of-attendance NFTs, proof-of-unique-human "stamps" and other similar credibility-carriers.
 
 ## Motivation
 
-Many operations are currently impossible or very hard to achieve on-chain without a way to query for proof-of-human (or even proof-of-unique-human). Examples include one-person-one-vote, fair airdrops & ICOs, universal basic income and other any other scenarios prone to sybil attacks.
+Many operations are currently impossible or very hard to achieve on-chain without a way to query for proof-of-human (or even proof-of-unique-human). Examples include one-person-one-vote, fair airdrops & ICOs, universal basic income and other any other scenarios prone to Sybil attacks.
 
 Soulbound tokens need to be recoverable in case a user's private key is compromised (due to extortion, loss, etc). This becomes especially important for proof-of-human stamps and other NFTs that can only be issued once per user.
 
-Two safeguards against misuse of recovery are contemplated. 1) Users cannot reover an SBT by themselves. The issuer, a DAO or a smart contract dedicated to manage the recovery should be assigned. 2) Whenever a recovery is triggered then the wallet from which the NFT was recovered gets blacklisted (burned). Recovering one NFT triggers a blacklist that applies across all NFTs that share the same address.
+Two safeguards against misuse of recovery are contemplated. 1) Users cannot recover an SBT by themselves. The issuer, a DAO or a smart contract dedicated to manage the recovery should be assigned. 2) Whenever a recovery is triggered then the wallet from which the NFT was recovered gets blacklisted (burned). Recovering one NFT triggers a blacklist that applies across all NFTs that share the same address.
 
 Soulbound tokens should also have an option to be renewable. Examples include mandatory renewal with some frequency to check that the owner is still alive, or renew membership to a DAO that uses SBTs as membership gating.
 
@@ -171,7 +171,7 @@ class SbtBurnedAccounts {
 
 ### Recommended functions
 
-Although the funcitons below are not part of the standard (depending on a use case, they may need different parameters), we recommend them as a part of every implementation and we also provide them in the reference implementation.
+Although the functions below are not part of the standard (depending on a use case, they may need different parameters), we recommend them as a part of every implementation and we also provide them in the reference implementation.
 
 ```typescript=
 
@@ -194,8 +194,6 @@ interface SBT {
 ## Example Flow
 
 ## Future possibilities
-
-## Copyright
 
 ## Copyright
 
