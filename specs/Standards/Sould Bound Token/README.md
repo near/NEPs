@@ -105,8 +105,6 @@ trait SBT {
     #[payable]
     pub fn sbt_renew(&mut self, tokens: Vec<TokenId>, expires_at: u64, memo: Option<String>);
 
-
-
 }
 ```
 
@@ -184,7 +182,6 @@ interface SBT {
     /// Returns an error if the recovery process failed.
     recover(token_id: uint64, old_address: string, new_address: string): error | undefined;
 }
-
 ```
 
 ## Reference Implementation
@@ -193,7 +190,25 @@ interface SBT {
 
 ## Example Flow
 
-## Future possibilities
+## Consequences
+
+### Positive
+
+- Template and set of guidelines for creating SBT tokens.
+- Ability to create SBT aggregators.
+- Ability to use SBT as a primitive to model non KYC identity, badges, certificates etc...
+- SBT can be further used for "lego" protocols, like: Proof of Humanity (dicussed for NDC Governance), undercollateralized lending, role based authentication sytems, innovative economic and social applications...
+- Stanarized recoverability mechanism.
+- SBT are considered as a basic primitive for Decentralized Societies.
+
+### Netural
+
+- API follows the NEP-181 (NFT) standard.
+  NOTE: we can decide to use `nft_` prefix whenever possible.
+
+### Negative
+
+- new set of events to be handled by the indexer. However this is not an issue if we decide to use subset of events used by the NEP-181 (NFT).
 
 ## Copyright
 
