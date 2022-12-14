@@ -181,7 +181,8 @@ class SbtBurnedAccounts {
 
 ### Recommended functions
 
-Although the functions below are not part of the standard (depending on a use case, they may need different parameters), we recommend them as a part of every implementation and we also provide them in the reference implementation.
+Although the functions below are not part of the standard (depending on a use case, they may need different parameters), we recommend them as a part of implementation and we also provide them in the reference implementation.
+These functions should emit appropriate events.
 
 ```typescript=
 
