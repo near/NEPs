@@ -82,8 +82,6 @@ function nft_transfer(
   memo: string|null,
 ) {}
 
-// Returns `true` if the token was transferred from the sender's account.
-
 // Transfer token and call a method on a receiver contract. A successful
 // workflow will end in a success execution outcome to the callback on the NFT
 // contract at the method `nft_resolve_transfer`.
@@ -155,7 +153,7 @@ The following behavior is required, but contract authors may name this function 
 //   `owner_id`
 //
 // Arguments:
-// * `owner_id`: the original owner of the NFT.
+// * `previous_owner_id`: the original owner of the NFT.
 // * `receiver_id`: the `receiver_id` argument given to `nft_transfer_call`
 // * `token_id`: the `token_id` argument given to `nft_transfer_call`
 // * `approved_account_ids` (optional): if using Approval Management, contract MUST provide
@@ -164,7 +162,7 @@ The following behavior is required, but contract authors may name this function 
 //
 // Returns true if token was successfully transferred to `receiver_id`.
 function nft_resolve_transfer(
-  owner_id: string,
+  previous_owner_id: string,
   receiver_id: string,
   token_id: string,
   approved_account_ids: null|Record<string, number>,
