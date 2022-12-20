@@ -3,11 +3,11 @@
 A client creates a transaction, computes the transaction hash and signs this hash to get a signed transaction.
 Now this signed transaction can be sent to a node.
 
-When a node receives a new signed transaction, it validates the transaction (if the node tracks the shard) and gossips it to the peers. Eventually, the valid transaction is added to a transaction pool.
+When a node receives a new signed transaction, it validates the transaction (if the node tracks the shard) and gossips about it to all its peers. Eventually, the valid transaction is added to a transaction pool.
 
-Every validating node has its own transaction pool. The transaction pool maintains transactions that were not yet discarded and not yet included into the chain.
+Every validating node has its own transaction pool. The transaction pool maintains transactions that were either not yet discarded, or not yet included onto the chain.
 
-Before producing a chunk transactions are ordered and validated again. This is done to produce chunks with only valid transactions.
+Before producing a chunk, transactions are ordered and validated again. This is done to produce chunks with only valid transactions.
 
 ## Transaction ordering
 
@@ -24,13 +24,13 @@ The valid order of the transactions in a chunk is the following:
 
 Note:
 
-- the order within a batch is undefined. Each node should use a unique secret seed for that ordering to users from finding the lowest keys to get advantage of every node.
+- the order within a batch is undefined. Each node should use a unique secret seed for that ordering to prevent users from finding the lowest keys, and then using that information to take advantage of every node.
 
-Transaction pool provides a draining structure that allows to pull transactions in a proper order.
+Transaction pool provides a draining structure that allows it to pull transactions in a proper order.
 
 ## Transaction validation
 
-The transaction validation happens twice, once before adding to the transaction pool, next before adding to a chunk.
+The transaction validation happens twice, once before adding it to the transaction pool, then before adding it to a chunk.
 
 ### Before adding to a transaction pool
 
@@ -38,13 +38,14 @@ This is done to quickly filter out transactions that have an invalid signature o
 
 ### Before adding to a chunk
 
-A chunk producer has to create a chunk with valid and ordered transactions up to some limits.
-One limit is the maximum number of transactions, another is the total gas burnt for transactions.
+A chunk producer has to create a chunk with valid and ordered transactions limited by two criteria:
+ - the maximum number of transactions for a chunk. 
+ - the total gas burnt for transactions within a chunk.
 
-To order and filter transactions, chunk producer gets a pool iterator and passes it to the runtime adapter.
+To order and filter transactions, the chunk producer gets a pool iterator and passes it to the runtime adapter.
 The runtime adapter pulls transactions one by one.
-The valid transactions are added to the result, invalid transactions are discarded.
-Once the limit is reached, all the remaining transactions from the iterator are returned back to the pool.
+The valid transactions are added to the result; invalid transactions are discarded.
+Once one of the chunk limits is reached, all the remaining transactions from the iterator are returned back to the pool.
 
 ## Pool iterator
 
@@ -122,9 +123,9 @@ sorted_groups: [],
 The first group to be selected is for key `("A", "a")`, the pool iterator sorts transactions by nonces and returns the mutable references to the group. Sorted nonces are:
 `[1, 1, 2, 2, 3]`. Runtime adapter pulls `1`, then `1`, and then `2`. Both transactions with nonce `1` are invalid because of odd nonce.
 
-Transaction with nonce `2` is added to the list of valid transactions.
+Transaction with nonce `2` is even, and since we don't know of any previous nonces, it is valid, and therefore added to the list of valid transactions.
 
-The transaction group is dropped and the pool iterator wrapper becomes the following:
+Since the runtime adapter found a valid transaction, the transaction group is dropped, and the pool iterator wrapper becomes the following:
 
 ```
 pool: {
@@ -141,7 +142,7 @@ sorted_groups: [
 
 ##### Transaction #2
 
-The next group is for key `("B", "b")`, the pool iterator sorts transactions by nonces and returns the mutable references to the group. Sorted nonces are:
+The next group is for key `("B", "b")`, the pool iterator sorts transactions by nonce and returns the mutable references to the group. Sorted nonces are:
 `[13, 14]`. Runtime adapter pulls `13`, then `14`. The transaction with nonce `13` is invalid because of odd nonce.
 
 Transaction with nonce `14` is added to the list of valid transactions.
@@ -185,7 +186,7 @@ The next group is for key `("A", "c")`, the pool iterator sorts transactions by 
 
 It's a valid transaction, so it's added to the list of valid transactions.
 
-The transaction group is dropped, so the pool iterator drops it completely:
+Again, the transaction group is dropped, it's empty, so the pool iterator drops it completely:
 
 ```
 pool: {
@@ -208,7 +209,7 @@ The new nonce has to be larger than the previous nonce, so this transaction is i
 
 The transaction with nonce `3` is invalid because of odd nonce.
 
-No valid transactions is added for this group.
+No valid transactions are added for this group.
 
 The transaction group is dropped, it's empty, so the pool iterator drops it completely:
 
@@ -239,7 +240,7 @@ When runtime adapter tries to pull the next group, the pool iterator returns `No
 
 ##### Dropping iterator
 
-If the iterator was not fully drained, but some transactions still remained. They would be reinserted back into the pool.
+If the iterator was not fully drained, but some transactions still remained, they would be reinserted back into the pool.
 
 ##### Chunk Transactions
 
@@ -270,12 +271,12 @@ The valid transactions are:
 ("A", "c", 2),
 ```
 
-In total there were only 3 valid transactions, that resulted in one batch.
+In total there were only 3 valid transactions that resulted in one batch.
 
 ### Order validation
 
 Other validators need to check the order of transactions in the produced chunk.
-It can be done in linear time, using a greedy algorithm.
+It can be done in linear time using a greedy algorithm.
 
 To select a first batch we need to iterate over transactions one by one until we see a transaction
 with the key that we've already included in the first batch.
