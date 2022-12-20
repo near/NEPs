@@ -103,6 +103,7 @@ interface Wallet {
   accounts: Array<Account>;
 
   supportsNetwork(networkId: string): Promise<boolean>;
+  changeNetwork(networkId: string): Promise<void>;
   connect(params: ConnectParams): Promise<Array<Account>>;
   signIn(params: SignInParams): Promise<void>;
   signOut(params: SignOutParams): Promise<void>;
@@ -163,6 +164,26 @@ console.log(accounts) // [{ accountId: "test.testnet", publicKey: PublicKey }]
 ```
 
 #### Methods
+
+##### `supportsNetwork`
+
+Checks if wallet has support for specific network.
+
+```ts
+if (await window.near.wallet.supportsNetwork("testnet")) {
+  // wallet supports testnet network
+}
+```
+
+##### `changeNetwork`
+
+Changes wallets active network.
+
+> Note: This is used when a dApp has support for multiple networks. Active wallet network also needs to change when the dApp changes its network.
+
+```ts
+await window.near.wallet.changeNetwork("testnet");
+```
 
 ##### `connect`
 
@@ -280,7 +301,7 @@ await window.near.wallet.signIn({
       accountId,
       publicKey: keyPair.getPublicKey()
     };
-  }),
+  })
 });
 ```
 
