@@ -68,7 +68,7 @@ There are several desiderata for these algorithms:
   (s_\text{min} / S))^\text{epoch\_length} < \text{PROBABILITY\_NEVER\_SELECTED}$.
   
 In mainnet and testnet, `epoch_length` is set to `43200`. Let $\text{PROBABILITY\_NEVER\_SELECTED}=0.001$, 
-we obtain, $s_\text{min} / S = 160/1000_000$.
+we obtain, $s_\text{min} / S = 160/1000,000$.
 
 ## Algorithm for selecting block and chunk producers
 A potential validator cannot specify whether they want to become a block producer or a chunk-only producer. 
@@ -79,7 +79,7 @@ but not block producers are chunk-only producers.
 
 ### select_validators
 ### Input
-* `num_validators: u16`
+* `max_num_validators: u16` max number of validators to be selected
 * `min_stake_fraction: Ratio<u128>` minimum stake ratio for selected validator
 * `validator_proposals: Vec<ValidatorStake>` (proposed stakes for the next epoch from nodes sending
   staking transactions)
@@ -97,7 +97,7 @@ sorted_proposals =
 total_stake = 0
 
 validators = []
-for v in sorted_proposals[0:MAX_NUM_BP]:
+for v in sorted_proposals[0:max_num_validators]:
     total_stake += v.stake
     if (v.stake / total_stake) > min_stake_fraction:
         validators.append(v)
