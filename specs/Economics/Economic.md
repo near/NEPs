@@ -147,9 +147,6 @@ treasury_reward[t] = floor(reward[t] * protocol_reward_rate)
 validator_reward[t] = total_reward[t] - treasury_reward[t]
 ```
 
-The validator reward is split between block producers and chunk only producers. A fraction `f` is given to block producers,
-while the remainder is given to chunk-only producers (i.e. validators who were not block producers).
-
 Validators that didn't meet the threshold for either blocks or chunks get kicked out and don't get any reward, otherwise uptime
 of a validator is computed:
 
@@ -166,8 +163,7 @@ Where `expected_produced_blocks` and `expected_produced_chunks` is the number of
 The specific `validator[t][j]` reward for epoch `t` is then proportional to the fraction of stake of this validator from total stake:
 
 ```python
-blockProducerReward[t][j] = floor(uptime[t][j] * stake[t][j] * f * validator_reward[t] / total_stake[t])
-chunkOnlyProducerReward[t][j] = floor(uptime[t][j] * stake[t][j] * (1 - f) * validator_reward[t] / total_stake[t])
+validatorReward[t][j] = floor(uptime[t][j] * stake[t][j] * validator_reward[t] / total_stake[t])
 ```
 
 ### Slashing
