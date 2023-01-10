@@ -25,7 +25,7 @@
 | `TREASURY_ACCOUNT_ID` | `treasury` |
 | `CONTRACT_PCT` | `0.3` |
 | `INVALID_STATE_SLASH_PCT` | `0.05` |
-| `ADJ_FEE` | `0.001` |
+| `ADJ_FEE` | `0.01` |
 | `TOTAL_SEATS` | `100` |
 | `ONLINE_THRESHOLD_MIN` | `0.9` |
 | `ONLINE_THRESHOLD_MAX` | `0.99` |
@@ -60,7 +60,7 @@ Each transaction before inclusion must buy gas enough to cover the cost of bandw
 
 Gas unifies execution and bytes of bandwidth usage of blockchain. Each WASM instruction or pre-compiled function gets assigned an amount of gas based on measurements on common-denominator computer. Same goes for weighting the used bandwidth based on general unified costs. For specific gas mapping numbers see [???](#).
 
-Gas is priced dynamically in `NEAR` tokens. At each block `t`, we update `gasPrice[t] = gasPrice[t - 1] * (gasUsed[t - 1] / gasLimit[t - 1] - 0.5) * ADJ_FEE`.
+Gas is priced dynamically in `NEAR` tokens. At each block `t`, we update `gasPrice[t] = gasPrice[t - 1] * (1 + (gasUsed[t - 1] / gasLimit[t - 1] - 0.5) * ADJ_FEE)`.
 
 Where `gasUsed[t] = sum([sum([gas(tx) for tx in chunk]) for chunk in block[t]])`.
 `gasLimit[t]` is defined as `gasLimit[t] = gasLimit[t - 1] + validatorGasDiff[t - 1]`, where `validatorGasDiff` is parameter with which each chunk producer can either increase or decrease gas limit based on how long it to execute the previous chunk. `validatorGasDiff[t]` can be only within `±0.1%` of `gasLimit[t]` and only if `gasUsed[t - 1] > 0.9 * gasLimit[t - 1]`.
