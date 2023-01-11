@@ -66,50 +66,41 @@ There are several desiderata for these algorithms:
   stake (what stake is "relevant" depends on whether the validator is a chunk-only producer or a
   block producer; more details below). Hence, the algorithm will enforce the condition $(1 -
   (s_\text{min} / S))^\text{epoch\_length} < \text{PROBABILITY\_NEVER\_SELECTED}$.
+  
+In mainnet and testnet, `epoch_length` is set to `43200`. Let $\text{PROBABILITY\_NEVER\_SELECTED}=0.001$, 
+we obtain, $s_\text{min} / S = 160/1000,000$.
 
-## Algorithm for selecting block producers
+## Algorithm for selecting block and chunk producers
+A potential validator cannot specify whether they want to become a block producer or a chunk-only producer. 
+There is only one type of proposal. The same algorithm is used for selecting block producers and chunk producers, 
+but with different thresholds. The threshold for becoming block producers is higher, so if a node is selected as a block 
+producer, it will also be a chunk producer, but not the other way around. Validators who are selected as chunk producers
+but not block producers are chunk-only producers.
 
+### select_validators
 ### Input
-
-* `MAX_NUM_BP: u16` (see Assumptions above for definition)
-* `epoch_length: u64`
-* `PROBABILITY_NEVER_SELECTED: Ratio<u128>`
-  - `Ratio<u128>` means a fraction where the numerator and denominator are represented by unsigned
-    128-bit numbers
-* `block_producer_proposals: Vec<ValidatorStake>` (proposed stakes for the next epoch from nodes sending
+* `max_num_validators: u16` max number of validators to be selected
+* `min_stake_fraction: Ratio<u128>` minimum stake ratio for selected validator
+* `validator_proposals: Vec<ValidatorStake>` (proposed stakes for the next epoch from nodes sending
   staking transactions)
-  - Note: there are separate actions to propose to be a chunk-only producer or a block producer.
-    Here only block producer proposals are considered.
 
 ### Output
 
-* `block_producers: Vec<ValidatorStake>` (chosen block producers for the next epoch)
-* `block_producer_sampler: WeightedIndex`
-  - Data structure to allow $O(1)$ sampling from the block producers with probability
-    proportional to their stake
-  - This structure will be based on the
-    [WeightedIndex](https://rust-random.github.io/rand/rand/distributions/weighted/alias_method/struct.WeightedIndex.html)
-    implementation (see a description of [Vose's Alias
-    Method](https://en.wikipedia.org/wiki/Alias_method) for details)
+* `validators: Vec<ValidatorStake>`
 
 ### Steps
 
 ```python
 sorted_proposals =
-    sorted_descending(block_producer_proposals, key=lambda v: (v.stake, v.account_id))
-
-# smallest value of s_min / S such that
-# (1 - (s_min / S))^epoch_length < PROBABILITY_NEVER_SELECTED
-min_stake_fraction =
-    1 - PROBABILITY_NEVER_SELECTED^(1/epoch_length)
+    sorted_descending(validator_proposals, key=lambda v: (v.stake, v.account_id))
 
 total_stake = 0
 
-block_producers = []
-for v in sorted_proposals[0:MAX_NUM_BP]:
+validators = []
+for v in sorted_proposals[0:max_num_validators]:
     total_stake += v.stake
     if (v.stake / total_stake) > min_stake_fraction:
-        block_producers.append(v)
+        validators.append(v)
     else:
         break
 
@@ -118,10 +109,39 @@ block_producer_sampler = WeightedIndex([v.stake for v in block_producers])
 return (block_producers, block_producer_sampler)
 ```
 
-## Algorithm for assigning chunk producers to shards
+### Algorithm for selecting block producers
+### Input
+* `MAX_NUM_BP: u16` Max number of block producers, see Assumptions
+* `min_stake_fraction: Ratio<u128>` $s_\text{min} / S$, see Assumptions
+* `validator_proposals: Vec<ValidatorStake>` (proposed stakes for the next epoch from nodes sending
+  staking transactions)
 
-Note: no algorithm for assigning block producers to shards is needed because we are working within
-"Simple Nightshade" where block producers track all shards.
+```python
+select_validators(MAX_NUM_BP, min_stake_fraction, validator_proposals)
+```
+
+### Algorithm for selecting chunk producers
+### Input
+* `MAX_NUM_CP: u16` max number of chunk producers, see Assumptions`
+* `min_stake_fraction: Ratio<u128>` $s_\text{min} / S$, see Assumptions
+* `num_shards: u64` number of shards
+* `validator_proposals: Vec<ValidatorStake>` (proposed stakes for the next epoch from nodes sending
+  staking transactions)
+
+```python
+select_validators(MAX_NUM_CP, min_stake_fraction/num_shards, validator_proposals)
+```
+The reasoning for using `min_stake_fraction/num_shards` as the threshold here is that 
+we will assign chunk producers to shards later and the algorithm (described below) will try to assign 
+them in a way that the total stake in each shard is distributed as evenly as possible.
+So the total stake in each shard will be roughly be `total_stake_all_chunk_producers / num_shards`.
+
+## Algorithm for assigning chunk producers to shards
+Note that block producers are a subset of chunk producers, so this algorithm will also assign block producers
+to shards. This also means that a block producer may only be assigned to a subset of shards. For the security of 
+the protocol, all block producers must track all shards, even if they are not assigned to produce chunks for all shards. 
+We enforce that in the implementation level, not the protocol level. A validator node will panic if it doesn't track all 
+shards. 
 
 ### Input
 
@@ -160,67 +180,14 @@ the change to Simple Nightshade, so it assumes we are assigning block producers 
 the same algorithm works to assign chunk producers to shards; it is only a matter of renaming
 variables referencing "block producers" to reference "chunk producers" instead.
 
-## Algorithm for selecting chunk producers
-
-### Input
-
-* `MAX_NUM_BP: u16`
-* `MAX_NUM_CP: u16`
-* `epoch_length: u64`
-* `PROBABILITY_NEVER_SELECTED: Ratio<u128>`
-* `num_shards: usize`
-* `min_validators_per_shard: usize`
-* `block_producers_proposals: Vec<ValidatorStake>`
-* `chunk_only_producer_proposals: Vec<ValidatorStake>`
-
-### Output
-
-* `chunk_producers: Vec<ValidatorStake>` (chosen chunk producers for the next epoch)
-* `validator_shard_assignments: Vec<Vec<ValidatorStake>>`
-  - $i$-th element gives the validators assigned to shard $i$
-* `chunk_producer_sampler: Vec<WeightedIndex>`
-
-### Steps
-
-```python
-# Group both sets of proposals together since all block producers
-# can also serve as chunk producers.
-validator_proposals = block_producers_proposals + chunk_only_producer_proposals
-sorted_proposals =
-    sorted_descending(validator_proposals, key=lambda v: (v.stake, v.account_id))
-
-# smallest value of s_min / S such that
-# (1 - (s_min / S))^epoch_length < PROBABILITY_NEVER_SELECTED
-min_stake_fraction =
-    1 - PROBABILITY_NEVER_SELECTED^(1/epoch_length)
-
-# we assume the stake from chunk producers will be roughly
-# evenly distributed among all the shards, so the stake fraction
-# we care about is really smaller than the quantity above.
-min_stake_fraction /= num_shards
-
-chunk_producers = []
-total_stake = 0
-for v in sorted_proposals[0:(MAX_NUM_BP + MAX_NUM_CP)]:
-    total_stake += v.stake
-    if (v.stake / total_stake) > min_stake_fraction:
-        chunk_producers.append(v)
-    else:
-        break
-
-chunk_producers.sort_descending(key=lambda v: (v.stake, v.account_id))
-# using the algorithm above to assign shards
-validator_shard_assignments =
-    assign_chunk_producers(chunk_producers, num_shards, min_validators_per_shard)
-
-chunk_producer_sampler = [
-    WeightedIndex([v.stake for v in shard_cps]) for shard_cps in validator_shard_assignments
-]
-
-return (chunk_producers, validator_shard_assignments, chunk_producer_sampler)
-```
-
 ## Algorithm for sampling validators proportional to stake
+We sample validators with probability proportional to their stake using the following data structure.
+* `weighted_sampler: WeightedIndex`
+  - Allow $O(1)$ sampling
+  - This structure will be based on the
+    [WeightedIndex](https://rust-random.github.io/rand/rand/distributions/weighted/alias_method/struct.WeightedIndex.html)
+    implementation (see a description of [Vose's Alias
+    Method](https://en.wikipedia.org/wiki/Alias_method) for details)
 
 This algorithm is applied using both chunk-only producers and block producers in the subsequent
 algorithms for selecting a specific block producer and chunk producer at each height.
