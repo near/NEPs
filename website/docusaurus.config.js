@@ -18,7 +18,7 @@ const config = {
   favicon: 'img/favicon.ico',
   organizationName: 'near', // Usually your GitHub org/user name.
   projectName: 'NEPs', // Usually your repo name.
-  plugins: [require.resolve('docusaurus-lunr-search')],
+  plugins: [],
   stylesheets: [
     {
       href: 'https://cdn.jsdelivr.net/npm/katex@0.13.24/dist/katex.min.css',
@@ -57,7 +57,6 @@ const config = {
       }),
     ],
   ],
-
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
@@ -146,6 +145,24 @@ const config = {
           },
         ],
         copyright: `Copyright © ${new Date().getFullYear()} <a href="https://near.org">NEAR Protocol</a> | All rights reserved | hello@near.org`,
+      },
+      algolia: {
+        // The application ID provided by Algolia
+        appId: "Q3YLAPF2JG",
+        // Public API key: it is safe to commit it
+        apiKey: "85c789900f6274dc604e76c92c565e5f",
+        indexName: "nomicon",
+        // Optional: see doc section below
+        contextualSearch: false,
+        // Optional: Algolia search parameters
+        searchParameters: {
+          clickAnalytics: true,
+          analytics: true,
+          enableReRanking: true,
+          hitsPerPage: 30,
+        },
+        //... other Algolia params
+        placeholder: "Search the Docs...",
       },
       prism: {
         theme: lightCodeTheme,

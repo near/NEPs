@@ -1,6 +1,7 @@
 # Receipt
 
 All cross-contract (we assume that each account lives in its own shard) communication in Near happens through Receipts.
+
 Receipts are stateful in a sense that they serve not only as messages between accounts but also can be stored in the account storage to await DataReceipts.
 
 Each receipt has a [`predecessor_id`](#predecessor_id) (who sent it) and [`receiver_id`](#receiver_id) the current account.

@@ -25,7 +25,7 @@
 | `TREASURY_ACCOUNT_ID` | `treasury` |
 | `CONTRACT_PCT` | `0.3` |
 | `INVALID_STATE_SLASH_PCT` | `0.05` |
-| `ADJ_FEE` | `0.001` |
+| `ADJ_FEE` | `0.01` |
 | `TOTAL_SEATS` | `100` |
 | `ONLINE_THRESHOLD_MIN` | `0.9` |
 | `ONLINE_THRESHOLD_MAX` | `0.99` |
@@ -46,11 +46,12 @@ The protocol sets a ceiling for the maximum issuance of tokens, and dynamically 
 
 | Name | Description |
 | - | - |
-| `reward[t]` | `totalSupply[t]` * ((`1 + REWARD_PCT_PER_YEAR`) ** (`1/EPOCHS_A_YEAR`) - `1`) |
+| `reward[t]` | `totalSupply[t]` * `REWARD_PCT_PER_YEAR` * `epochTime[t]` / `NUM_SECONDS_IN_A_YEAR` |
 | `epochFee[t]` | `sum([(1 - DEVELOPER_PCT_PER_YEAR) * block.txFee + block.stateFee for block in epoch[t]])` |
 | `issuance[t]` | The amount of token issued at a certain epoch[t], `issuance[t] = reward[t] - epochFee[t]` |
 
-Where `totalSupply[t]` is the total number of tokens in the system at a given time *t*.
+Where `totalSupply[t]` is the total number of tokens in the system at a given time *t* and `epochTime[t]` is the
+duration of the epoch in seconds.
 If `epochFee[t] > reward[t]` the issuance is negative, thus the `totalSupply[t]` decreases in given epoch.
 
 ## Transaction Fees
@@ -59,7 +60,7 @@ Each transaction before inclusion must buy gas enough to cover the cost of bandw
 
 Gas unifies execution and bytes of bandwidth usage of blockchain. Each WASM instruction or pre-compiled function gets assigned an amount of gas based on measurements on common-denominator computer. Same goes for weighting the used bandwidth based on general unified costs. For specific gas mapping numbers see [???](#).
 
-Gas is priced dynamically in `NEAR` tokens. At each block `t`, we update `gasPrice[t] = gasPrice[t - 1] * (gasUsed[t - 1] / gasLimit[t - 1] - 0.5) * ADJ_FEE`.
+Gas is priced dynamically in `NEAR` tokens. At each block `t`, we update `gasPrice[t] = gasPrice[t - 1] * (1 + (gasUsed[t - 1] / gasLimit[t - 1] - 0.5) * ADJ_FEE)`.
 
 Where `gasUsed[t] = sum([sum([gas(tx) for tx in chunk]) for chunk in block[t]])`.
 `gasLimit[t]` is defined as `gasLimit[t] = gasLimit[t - 1] + validatorGasDiff[t - 1]`, where `validatorGasDiff` is parameter with which each chunk producer can either increase or decrease gas limit based on how long it to execute the previous chunk. `validatorGasDiff[t]` can be only within `±0.1%` of `gasLimit[t]` and only if `gasUsed[t - 1] > 0.9 * gasLimit[t - 1]`.
@@ -110,17 +111,6 @@ NEAR validators provide their resources in exchange for a reward `epochReward[t]
 
 ### Validator Selection
 
-| Name | Description |
-| - | - |
-| `proposals: Proposal[]` | The array of all new staking transactions that have happened during the epoch (if one account has multiple only last one is used) |
-| `current_validators` | The array of all existing validators during the epoch |
-| `epoch[T]` | The epoch when validator[v] is selected from the `proposals` auction array |
-| `seat_price` | The minimum stake needed to become validator in epoch[T] |
-| `stake[v]` | The amount in NEAR tokens staked by validator[v] during the auction at the end of epoch[T-2], minus `INCLUSION_FEE` |
-| `shard[v]` | The shard is randomly assigned to validator[v] at epoch[T-1], such that its node can download and sync with its state |
-| `num_allocated_seats[v]` | Number of seats assigned to validator[v], calculated from stake[v]/seatPrice |
-| `validatorAssignments` | The resulting ordered array of all `proposals` with a stake higher than `seatPrice` |
-
 ```rust
 struct Proposal {
     account_id: AccountId,
@@ -130,40 +120,14 @@ struct Proposal {
 ```
 
 During the epoch, outcome of staking transactions produce `proposals`, which are collected, in the form of `Proposal`s.
+There are separate proposals for block producers and chunk-only producers, see [Selecting Chunk and Block Producers](../ChainSpec/SelectingBlockProducers.md).
+for more information.
 At the end of every epoch `T`, next algorithm gets executed to determine validators for epoch `T + 2`:
 
-1. For every validator in `current_validators` determine `num_blocks_produced`, `num_chunks_produced` based on what they produced during the epoch.
+1. For every chunk/block producer in `epoch[T]` determine `num_blocks_produced`, `num_chunks_produced` based on what they produced during the epoch.
 2. Remove validators, for whom `num_blocks_produced < num_blocks_expected * BLOCK_PRODUCER_KICKOUT_THRESHOLD` or `num_chunks_produced < num_chunks_expected * CHUNK_PRODUCER_KICKOUT_THRESHOLD`.
-3. Add validators from `proposals`, if validator is also in `current_validators`, considered stake of the proposal is `0 if proposal.stake == 0 else proposal.stake + reward[proposal.account_id]`.
-4. Find seat price `seat_price = findSeatPrice(current_validators - kickedout_validators + proposals, num_seats)`, where each validator gets `floor(stake[v] / seat_price)` seats and `seat_price` is highest integer number such that total number of seats is at least `num_seats`.
-5. Filter validators and proposals to only those with stake greater or equal than seat price.
-6. For every validator, replicate them by number of seats they get `floor(stake[v] / seat_price)`.
-7. Randomly shuffle (TODO: define random number sampler) with seed from randomness generated on the last block of current epoch (via `VRF(block_producer.private_key, block_hash)`).
-8. Cut off all seats which are over the `num_seats` needed.
-9. Use this set for block producers and shifting window over it as chunk producers.
-
-```python
-def findSeatPrice(stakes, num_seats):
-    """Find seat price given set of stakes and number of seats required.
-
-    Seat price is highest integer number such that if you sum `floor(stakes[i] / seat_price)` it is at least `num_seats`.
-    """
-    stakes = sorted(stakes)
-    total_stakes = sum(stakes)
-    assert total_stakes >= num_seats, "Total stakes should be above number of seats"
-    left, right = 1, total_stakes + 1
-    while True:
-        if left == right - 1:
-            return left
-        mid = (left + right) // 2
-        sum = 0
-        for stake in stakes:
-            sum += stake // mid
-            if sum >= num_seats:
-                left = mid
-                break
-        right = mid
-```
+3. Collect chunk-only and block producer `proposals`, if validator was also a validator in `epoch[T]`, considered stake of the proposal is `0 if proposal.stake == 0 else proposal.stake + reward[proposal.account_id]`.
+4. Use the chunk/block producer selection algorithms outlined in [Selecting Chunk and Block Producers](../ChainSpec/SelectingBlockProducers.md).
 
 ### Validator Rewards Calculation
 
