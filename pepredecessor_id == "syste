@@ -1,3 +1,6 @@
+
+
+
 # Refunds
 
 When execution of a receipt fails or there are left some unused amount of prepaid gas after a function call, the Runtime generates refund receipts.
