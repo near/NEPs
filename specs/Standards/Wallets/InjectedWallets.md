@@ -64,6 +64,11 @@ interface Network {
 }
 
 interface SignInParams {
+  permission?: transactions.FunctionCallPermission;
+  accounts: Array<Account>;
+}
+
+interface SignInMultiParams {
   permissions?: Array<transactions.FunctionCallPermission>;
   accounts: Array<Account>;
 }
@@ -259,7 +264,7 @@ await window.near.wallet.disconnect();
 
 ##### `signIn`
 
-Add `FunctionCall` access key(s) for one or more accounts. This request should require explicit approval from the user.
+Add one `FunctionCall` access key for one or more accounts. This request should require explicit approval from the user.
 
 ```ts
 import { utils } from "near-api-js";
@@ -269,10 +274,43 @@ const { accounts } = window.near.wallet;
 
 // Request FunctionCall access to the 'guest-book.testnet' smart contract for each account.
 await window.near.wallet.signIn({
-  permissions: [{
+  permission: {
     receiverId: "guest-book.testnet",
     methodNames: [],
-  }],
+  },
+  accounts: accounts.map(({ accountId }) => {
+    const keyPair = utils.KeyPair.fromRandom("ed25519");
+
+    return {
+      accountId,
+      publicKey: keyPair.getPublicKey()
+    };
+  }),
+});
+```
+
+##### `signInMulti`
+
+Add multiple `FunctionCall` access keys for one or more accounts. This request should require explicit approval from the user.
+
+```ts
+import { utils } from "near-api-js";
+
+// Retrieve the list of accounts we have visibility of.
+const { accounts } = window.near.wallet;
+
+// Request FunctionCall access to the 'guest-book.testnet' and 'guest-book2.testnet' smart contract for each account.
+await window.near.wallet.signInMulti({
+  permissions: [
+    {
+      receiverId: "guest-book.testnet",
+      methodNames: [],
+    },
+    {
+      receiverId: "guest-book2.testnet",
+      methodNames: [],
+    }
+  ],
   accounts: accounts.map(({ accountId }) => {
     const keyPair = utils.KeyPair.fromRandom("ed25519");
 
