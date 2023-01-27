@@ -71,7 +71,7 @@ Alice approves Bob to transfer her tokens.
 2. Alice calls view method `mt_is_approved`:
 
        near view mt mt_is_approved \
-         '{ "owner_id": "alice", token_ids": ["1", "2"], amounts:["1","100"], "approved_account_id": "bob" }'
+         '{ "token_ids": ["1", "2"], amounts:["1","100"], "approved_account_id": "bob" }'
 
    The response:
 
@@ -151,7 +151,7 @@ Not to worry, though, she checks `mt_is_approved` and sees that she did successf
 4. Alice checks if the approval itself worked, despite the error on the cross-contract call:
 
        near view mt mt_is_approved \
-         '{ "owner_id": "alice", token_ids": ["1","2"], "amounts":["1","100"], "approved_account_id": "bazaar" }'
+         '{ "token_ids": ["1","2"], "amounts":["1","100"], "approved_account_id": "bazaar" }'
 
    The response:
 
@@ -396,7 +396,6 @@ function mt_revoke_all(token_ids: [string]) {}
 //   `approval_ids` is not equal to `token_ids`
 //
 // Arguments:
-// * `owner_id`: the account that owns the tokens and has approved them
 // * `token_ids`: the tokens for which to check an approval
 // * `approved_account_id`: the account to check the existence of in `approved_account_ids`
 // * `amounts`: specify the positionally corresponding amount for the `token_id`
@@ -412,7 +411,6 @@ function mt_revoke_all(token_ids: [string]) {}
 // is in list of approved accounts and has at least the amount specified approved
 // finally it returns false for all other states
 function mt_is_approved(
-  owner_id: string,
   token_ids: [string],
   approved_account_id: string,
   amounts: [string],
