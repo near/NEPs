@@ -283,6 +283,15 @@ Example token data:
 }
 ```
 
+In Rust, the standard library `HashMap` is the recommended type for the `approvals` field, though any `map` may be used.
+```diff
+ pub struct Token = {
+   pub id: String,
+   pub owner_id: String,
++  pub approvals: std::collections::HashMap<String, u64>,
+ }
+```
+
 ### What is an "approval ID"?
 
 This is a unique number given to each approval that allows well-intentioned marketplaces or other 3rd-party NFT resellers to avoid a race condition. The race condition occurs when:

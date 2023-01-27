@@ -148,5 +148,5 @@ Protocol treasury account
 
 ## protocol economics
 
-> For the specific economic specs, refer to [Economics Section](../Economics/README.md).
+> For the specific economic specs, refer to [Economics Section](../Economics/Economic.md).
 

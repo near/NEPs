@@ -2,11 +2,7 @@
 
 ## [NEP-330](https://github.com/near/NEPs/blob/master/neps/nep-0330.md)
 
-:::caution
-This is part of proposed spec [NEP-330](https://github.com/near/NEPs/blob/master/neps/nep-0330.md) and subject to change.
-:::
-
-Version `1.0.0`
+Version `1.1.0`
 
 ## Summary
 
@@ -15,6 +11,8 @@ The contract source metadata is a standard interface that allows auditing and vi
 ## Motivation
 
 There is no trivial way of finding the source code or author of a deployed smart contract. Having a standard that outlines how to view the source code of an arbitrary smart contract creates an environment of openness and collaboration.
+
+Additionally, we would like for wallets and dApps to be able to parse this information and determine which methods they are able to call and render UIs that provide that functionality.
 
 The initial discussion can be found [here](https://github.com/near/NEPs/discussions/329).
 
@@ -29,11 +27,18 @@ Successful implementations of this standard will introduce a new  (`ContractSour
 The metadata will include two optional fields:
 - `version`: a string that references the specific commit hash or version of the code that is currently deployed on-chain. This can be included regardless of whether or not the contract is open-sourced and can also be used for organizational purposes.
 - `link`: a string that references the link to the open-source code. This can be anything such as Github or a CID to somewhere on IPFS.
+- `standards`: a list of objects (see type definition below) that enumerates the NEPs supported by the contract. If this extension is supported, it is advised to also include NEP-330 version 1.1.0 in the list (`{standard: "nep330", version: "1.1.0"}`).
 
 ```ts
 type ContractSourceMetadata = {
   version: string|null, // optional, commit hash being used for the currently deployed wasm. If the contract is not open-sourced, this could also be a numbering system for internal organization / tracking such as "1.0.0" and "2.1.0".
-  link: string|null, //optional,  link to open source code such as a Github repository or a CID to somewhere on IPFS.
+  link: string|null, // optional, link to open source code such as a Github repository or a CID to somewhere on IPFS.
+  standards: Standard[]|null, // optional, standards and extensions implemented in the currently deployed wasm e.g. [{standard: "nep330", version: "1.1.0"},{standard: "nep141", version: "1.0.0"}].
+}
+
+type Standard {
+    standard: string, // standard name e.g. "nep141"
+    version: string, // semantic version number of the Standard e.g. "1.0.0"
 }
 ```
 
@@ -50,7 +55,21 @@ As an example, say there was an NFT contract deployed on-chain which was current
 ```ts
 type ContractSourceMetadata = {
   version: "39f2d2646f2f60e18ab53337501370dc02a5661c"
-  link: "https://github.com/near-examples/nft-tutorial"
+  link: "https://github.com/near-examples/nft-tutorial",
+  standards: [
+    {
+        standard: "nep330", 
+        version: "1.1.0"
+    },
+    {
+        standard: "nep171", 
+        version: "1.0.0"
+    },
+    {
+        standard: "nep177", 
+        version: "2.0.0"
+    }
+  ]
 }
 ```
 
@@ -59,7 +78,21 @@ If someone were to call the view function `contract_metadata`, the contract woul
 ```bash
 {
     version: "39f2d2646f2f60e18ab53337501370dc02a5661c"
-    link: "https://github.com/near-examples/nft-tutorial"
+    link: "https://github.com/near-examples/nft-tutorial",
+    standards: [
+        {
+            standard: "nep330", 
+            version: "1.1.0"
+        },
+        {
+            standard: "nep171", 
+            version: "1.0.0"
+        },
+        {
+            standard: "nep177", 
+            version: "2.0.0"
+        }
+    ]
 }
 ```
 
@@ -72,10 +105,17 @@ pub struct Contract {
     pub contract_metadata: ContractSourceMetadata
 }
 
+// Standard structure
+type Standard {
+    standard: string, // standard name e.g. "nep141"
+    version: string // semantic version number of the Standard e.g. "1.0.0"
+}
+
 /// Contract metadata structure
 pub struct ContractSourceMetadata {
     pub version: String,
     pub link: String,
+    pub standards: Vec<Standard>
 }
 
 /// Minimum Viable Interface
