@@ -29,10 +29,10 @@ Explain the proposal as if it was already implemented and you were teaching it t
 
 - Introducing new named concepts.
 - Explaining the feature largely in terms of examples.
-- If feature introduces new abstractions, explaining how users and/or developers should *think* about it;
+- If the feature introduces new abstractions, explaining how users and/or developers should _think_ about it;
 - If applicable, describe the differences between the existing functionality.
 
-For user-facing NEPs this section should focus on user stories.
+For user-facing NEPs, this section should focus on user stories.
 
 ## Reference Implementation (Required for Protocol Working Group proposals, optional for other categories)
 
@@ -47,11 +47,11 @@ The section should return to the examples given in the previous section, and exp
 
 ## Security Implications (Optional)
 
-If there are security concerns in relation to the NEP, those concerns should be explicitly written out to make sure reviewers of the NEP are aware of them.
+If there are security concerns concerning the NEP, those concerns should be explicitly written out to make sure reviewers of the NEP are aware of them.
 
 ## Drawbacks (Optional)
 
-Why should we *not* do this?
+Why should we **not** do this?
 
 ## Unresolved Issues (Optional)
 
@@ -65,10 +65,10 @@ Think about what the natural extension and evolution of your proposal would
 be and how it would affect the project as a whole in a holistic
 way. Try to use this section as a tool to more fully consider all possible
 interactions with the project in your proposal.
-Also consider how the this all fits into the roadmap for the project
+Also, consider how all fits into the roadmap for the project
 and of the relevant sub-team.
 
-This is also a good place to "dump ideas", if they are out of scope for the
+This is also a good place to "dump ideas"; if they are out of scope for the
 NEP you are writing but otherwise related.
 
 If you have tried and cannot think of any future possibilities,
@@ -80,6 +80,7 @@ in the section on motivation or rationale in this or subsequent NEPs.
 The section merely provides additional information.
 
 ## Copyright
+
 [copyright]: #copyright
 
 Copyright and related rights waived via [CC0](https://creativecommons.org/publicdomain/zero/1.0/).
