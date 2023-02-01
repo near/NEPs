@@ -86,7 +86,7 @@ but not block producers are chunk-only producers.
 
 ### Output
 
-* `validators: Vec<ValidatorStake>`
+* `(validators: Vec<ValidatorStake>, sampler: WeightedIndex)`
 
 ### Steps
 
@@ -104,9 +104,9 @@ for v in sorted_proposals[0:max_num_validators]:
     else:
         break
 
-block_producer_sampler = WeightedIndex([v.stake for v in block_producers])
+validator_sampler = WeightedIndex([v.stake for v in validators])
 
-return (block_producers, block_producer_sampler)
+return (validators, validator_sampler)
 ```
 
 ### Algorithm for selecting block producers
