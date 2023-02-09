@@ -26,6 +26,7 @@ Changes to the protocol specification and standards are called NEAR Enhancement 
 |[0297](https://github.com/near/NEPs/blob/master/neps/nep-0297.md)   | Events Standard | @telezhnaya | Final |
 |[0330](https://github.com/near/NEPs/blob/master/neps/nep-0330.md)   | Source Metadata | @BenKurrek | Review |
 |[0366](https://github.com/near/NEPs/blob/master/neps/nep-0366.md)   | Meta Transactions | @ilblackdragon @e-uleyskiy @fadeevab | Draft |
+|[0000](https://github.com/near/NEPs/blob/master/neps/nep-0000.md)   | Zero Gas Limit | @pugachag @Longarithm | Draft |
 
 
 
