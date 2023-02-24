@@ -73,7 +73,7 @@ the following way:
   then its reward for epoch `T` is automatically added to the proposal.
 
 The adjusted set of proposals is used to compute the seat price, and determine `validators`,`block_producers_settlement`,
-`chunk_producers_settlement`sets. This algorithm is described in [Economics](../../Economics/README.md#validator-selection).
+`chunk_producers_settlement`sets. This algorithm is described in [Economics](../../Economics/Economic.md#validator-selection).
 
 ### Validator reward
-Rewards calculation is described in the [Economics](../../Economics/README.md#rewards-calculation) section.
+Rewards calculation is described in the [Economics](../../Economics/Economic.md#rewards-calculation) section.

@@ -44,7 +44,7 @@ To achieve this, NEP introduces a new message `Action` that represents one of at
 - `action` is the list of actions to perform.
 
 An `Action` can be of the following:
-- `CreateAccount` creates a new account with the `receiver_id` account ID. The action fails if the account already exists. `CreateAccount` also grants permission for all subsequent batched action for the newly created account. For example, permission gto deploy code on the new account. Permission details are described in the reference section below. 
+- `CreateAccount` creates a new account with the `receiver_id` account ID. The action fails if the account already exists. `CreateAccount` also grants permission for all subsequent batched action for the newly created account. For example, permission to deploy code on the new account. Permission details are described in the reference section below. 
 - `DeployContract` deploys given binary wasm code on the account. Either the `receiver_id` equals to the `signer_id`, or the batch of actions has started with `CreateAccount`, which granted that permission.
 - `FunctionCall` executes a function call on the last deployed contract. The action fails if the account or the code doesn't exist. E.g. if the previous action was `DeployContract`, then the code to execute will be the new deployed contract. `FunctionCall` has `method_name` and `args` to identify method with arguments to call. It also has `gas` and the `deposit`. `gas` is a prepaid amount of gas for this call (the price of gas is determined when a signed transaction is converted to a receipt. `deposit` is the attached deposit balance of NEAR tokens that the contract can spend, e.g. 10 tokens to pay for a crypto-corgi.
 - `Transfer` transfers the given `deposit` balance of tokens from the predecessor to the receiver.
@@ -167,7 +167,7 @@ To create a new account we can create a new `Transaction`:
 This transaction is sent from `vasya.near` signed with a `public_key`.
 The receiver is `vitalik.vasya.near`, which is a new account id.
 The transaction contains a batch of actions.
-First we create the account, then we transaction a few tokens on the new account, then we deploy code on the new account, add a new access key with some given public key, and as a final action initializing the deployed code by calling a method `init` with some arguments.
+First we create the account, then we transfer a few tokens to the newly created account, then we deploy code on the new account, add a new access key with some given public key, and as a final action initializing the deployed code by calling a method `init` with some arguments.
 
 For this transaction to work `vasya.near` needs to have enough balance on the account cover gas and deposits for all actions at once.
 Every action has some associated action gas fee with it. While `transfer` and `function_call` actions need additional balance for deposits and gas (for executions and promises).

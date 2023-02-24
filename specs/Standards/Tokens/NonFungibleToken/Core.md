@@ -21,7 +21,7 @@ Given these attributes, this NFT standard can accomplish with one user interacti
 
 * An [Exquisite Corpse](https://en.wikipedia.org/wiki/Exquisite_corpse) contract allows three drawings to be submitted, one for each section of a final composition, to be minted as its own NFT and sold on a marketplace, splitting royalties amongst the original artists.
 * Alice draws the top third and submits it, Bob the middle third, and Carol follows up with the bottom third. Since they each use `nft_transfer_call` to both transfer their NFT to the Exquisite Corpse contract as well as call a `submit` method on it, the call from Carol can automatically kick off minting a composite NFT from the three submissions, as well as listing this composite NFT in a marketplace.
-* When Dan attempts to also call `nft_transfer_call` to submit an unneeded top third of the drawing, the Exquisite Corpse contract can throw an error, and the transfer will be rolled back so that Bob maintains ownership of his NFT.
+* When Dan attempts to also call `nft_transfer_call` to submit an unneeded top third of the drawing, the Exquisite Corpse contract can throw an error, and the transfer will be rolled back so that Dan maintains ownership of his NFT.
 
 While this is already flexible and powerful enough to handle all sorts of existing and new use-cases, apps such as marketplaces may still benefit from the [Approval Management] extension.
 
@@ -70,7 +70,7 @@ type Token = {
 // Arguments:
 // * `receiver_id`: the valid NEAR account receiving the token
 // * `token_id`: the token to transfer
-// * `approval_id`: expected approval ID. A number smaller than
+// * `approval_id` (optional): expected approval ID. A number smaller than
 //    2^53, and therefore representable as JSON. See Approval Management
 //    standard for full explanation.
 // * `memo` (optional): for use cases that may benefit from indexing or
@@ -81,8 +81,6 @@ function nft_transfer(
   approval_id: number|null,
   memo: string|null,
 ) {}
-
-// Returns `true` if the token was transferred from the sender's account.
 
 // Transfer token and call a method on a receiver contract. A successful
 // workflow will end in a success execution outcome to the callback on the NFT
@@ -109,7 +107,7 @@ function nft_transfer(
 // Arguments:
 // * `receiver_id`: the valid NEAR account receiving the token.
 // * `token_id`: the token to send.
-// * `approval_id`: expected approval ID. A number smaller than
+// * `approval_id` (optional): expected approval ID. A number smaller than
 //    2^53, and therefore representable as JSON. See Approval Management
 //    standard for full explanation.
 // * `memo` (optional): for use cases that may benefit from indexing or
@@ -120,9 +118,9 @@ function nft_transfer(
 function nft_transfer_call(
   receiver_id: string,
   token_id: string,
+  msg: string,
   approval_id: number|null,
   memo: string|null,
-  msg: string,
 ): Promise {}
 
 
@@ -155,16 +153,16 @@ The following behavior is required, but contract authors may name this function 
 //   `owner_id`
 //
 // Arguments:
-// * `owner_id`: the original owner of the NFT.
+// * `previous_owner_id`: the original owner of the NFT.
 // * `receiver_id`: the `receiver_id` argument given to `nft_transfer_call`
 // * `token_id`: the `token_id` argument given to `nft_transfer_call`
-// * `approved_account_ids `: if using Approval Management, contract MUST provide
+// * `approved_account_ids` (optional): if using Approval Management, contract MUST provide
 //   record of original approved accounts in this argument, and restore these
 //   approved accounts and their approval IDs in case of revert.
 //
 // Returns true if token was successfully transferred to `receiver_id`.
 function nft_resolve_transfer(
-  owner_id: string,
+  previous_owner_id: string,
   receiver_id: string,
   token_id: string,
   approved_account_ids: null|Record<string, number>,
@@ -202,6 +200,7 @@ function nft_on_transfer(
 
 ## Errata
 
+* **2022-11-21**: Mark `approval_id` parameter as optional in function description as well.
 * **2022-02-03**: updated `Token` struct field names. `id` was changed to `token_id`. This is to be consistent with current implementations of the standard and the rust SDK docs.
 
 * **2021-12-20**: updated `nft_resolve_transfer` argument `approved_account_ids` to be type `null|Record<string, number>` instead of `null|string[]`. This gives contracts a way to restore the original approved accounts and their approval IDs. More information can be found in [this](https://github.com/near/NEPs/issues/301) discussion.

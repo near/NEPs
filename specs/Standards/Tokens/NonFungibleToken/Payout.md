@@ -8,14 +8,17 @@ This standard assumes the NFT contract has implemented
 [NEP-171](https://github.com/near/NEPs/blob/master/specs/Standards/Tokens/NonFungibleToken/Core.md) (Core) and [NEP-178](https://github.com/near/NEPs/blob/master/specs/Standards/Tokens/NonFungibleToken/ApprovalManagement.md) (Approval Management).
 
 ## Summary
+
 An interface allowing non-fungible token contracts to request that financial contracts pay-out multiple receivers, enabling flexible royalty implementations.
 
 ## Motivation
-Currently, NFTs on NEAR support the field `owner_id`, but lack flexibility for ownership and payout mechanics with more complexity, including but not limited to royalties. Financial contracts, such as marketplaces, auction houses, and NFT Loan contracts would benefit from a standard interface on NFT producer contracts for querying whom to pay out, and how much to pay.
+
+Currently, NFTs on NEAR support the field `owner_id`, but lack flexibility for ownership and payout mechanics with more complexity, including but not limited to royalties. Financial contracts, such as marketplaces, auction houses, and NFT loan contracts would benefit from a standard interface on NFT producer contracts for querying whom to pay out, and how much to pay.
 
 Therefore, the core goal of this standard is to define a set of methods for financial contracts to call, without specifying how NFT contracts define the divide of payout mechanics, and a standard `Payout` response structure.
 
-## Guide-level explanation
+
+## Specification
 
 This Payout extension standard adds two methods to NFT contracts:
 - a view method: `nft_payout`, accepting a `token_id` and some `balance`, returning the `Payout` mapping for the given token.
@@ -56,7 +59,8 @@ Financial contracts MAY take a cut of the NFT sale price as commission, subtract
  └───────────────────────────────────────────────┘
 ```
 
-## Reference-level explanation
+## Reference Implementation
+
 ```rust
 /// A mapping of NEAR accounts to the amount each should be paid out, in
 /// the event of a token-sale. The payout mapping MUST be shorter than the
@@ -69,11 +73,11 @@ pub struct Payout {
   pub payout: HashMap<AccountId, U128>,
 }
 
-pub trait Payouts{
+pub trait Payouts {
   /// Given a `token_id` and NEAR-denominated balance, return the `Payout`.
   /// struct for the given token. Panic if the length of the payout exceeds
   /// `max_len_payout.`
-  fn nft_payout(&self, token_id: String, balance: U128, max_len_payout: u32) -> Payout;
+  fn nft_payout(&self, token_id: String, balance: U128, max_len_payout: Option<u32>) -> Payout;
   /// Given a `token_id` and NEAR-denominated balance, transfer the token
   /// and return the `Payout` struct for the given token. Panic if the
   /// length of the payout exceeds `max_len_payout.`
@@ -82,23 +86,32 @@ pub trait Payouts{
     &mut self,
     receiver_id: AccountId,
     token_id: String,
-    approval_id: u64,
+    approval_id: Option<u64>,
+    memo: Option<String>,
     balance: U128,
-    max_len_payout: u32,
-  ) -> Payout{
+    max_len_payout: Option<u32>,
+  ) -> Payout {
     assert_one_yocto();
     let payout = self.nft_payout(token_id, balance);
-    self.nft_transfer(receiver_id, token_id, approval_id);
+    self.nft_transfer(receiver_id, token_id, approval_id, memo);
     payout
   }
 }
 ```
 
-Note that NFT and financial contracts will vary in implementation. This means that some extra CPU cycles may occur in one NFT contract and not another. Furthermore, a financial contract may accept fungible tokens, native NEAR, or another entity as payment. Transferring native NEAR tokens is less expensive in gas than sending fungible tokens. For these reasons, the maximum length of payouts may vary according to the customization of the smart contracts.
+## Fallback on error
+
+In the case where either the `max_len_payout` causes a panic, or a malformed `Payout` is returned, the caller contract should transfer all funds to the original token owner selling the token.
+
+## Potential pitfalls
+
+The payout must include all accounts that should receive funds. Thus it is a mistake to assume that the original token owner will receive funds if they are not included in the payout.
+
+NFT and financial contracts vary in implementation. This means that some extra CPU cycles may occur in one NFT contract and not another. Furthermore, a financial contract may accept fungible tokens, native NEAR, or another entity as payment. Transferring native NEAR tokens is less expensive in gas than sending fungible tokens. For these reasons, the maximum length of payouts may vary according to the customization of the smart contracts.
 
 ## Drawbacks
 
-There is an introduction of trust that the contract calling `nft_transfer_payout` will indeed pay out all intended parties. However, since the calling contract will typically be something like a marketplace used by end users, malicious actors might be found out more easily and might have less incentive.  
+There is an introduction of trust that the contract calling `nft_transfer_payout` will indeed pay out to all intended parties. However, since the calling contract will typically be something like a marketplace used by end users, malicious actors might be found out more easily and might have less incentive.  
 There is an assumption that NFT contracts will understand the limits of gas and not allow for a number of payouts that cannot be achieved.
 
 ## Future possibilities
@@ -107,4 +120,10 @@ In the future, the NFT contract itself may be able to place an NFT transfer is a
 
 ## Errata
 
-Version `2.0.0` contains the intended `approval_id` of `u64` instead of the stringified `U64` version. This was an oversight, but since the standard was live for a few months before noticing, the team thought it best to bump the major version.
+- Version `2.1.0` adds a memo parameter to `nft_transfer_payout`, which previously forced implementers of `2.0.0` to pass `None` to the inner `nft_transfer`. Also refactors `max_len_payout` to be an option type.
+- Version `2.0.0` contains the intended `approval_id` of `u64` instead of the stringified `U64` version. This was an oversight, but since the standard was live for a few months before noticing, the team thought it best to bump the major version.
+
+## Copyright
+[copyright]: #copyright
+
+Copyright and related rights waived via [CC0](https://creativecommons.org/publicdomain/zero/1.0/).
