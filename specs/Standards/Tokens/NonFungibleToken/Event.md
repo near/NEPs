@@ -22,7 +22,7 @@ Non-Fungible Token Events MUST have `standard` set to `"nep171"`, standard versi
 interface NftEventLogData {
     standard: "nep171",
     version: "1.1.0",
-    event: "nft_mint" | "nft_burn" | "nft_transfer",
+    event: "nft_mint" | "nft_burn" | "nft_transfer" | "contract_metadata_update",
     data: NftMintLog[] | NftTransferLog[] | NftBurnLog[] | NftContractMetadataUpdateLog[],
 }
 ```
