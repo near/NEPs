@@ -1,11 +1,10 @@
 # Events
 
-Version `1.0.0`
+Version `1.1.0`
 
 ## Summary
 
-Standard interface for NFT contract actions.
-Extension of [NEP-297](../../EventsFormat.md)
+Standard interface for NFT contract actions based on [NEP-297](../../EventsFormat.md).
 
 ## Motivation
 
@@ -16,7 +15,7 @@ Keep in mind that applications, including NEAR Wallet, could require implementin
 
 ## Interface
 
-Non-Fungible Token Events MUST have `standard` set to `"nep171"`, standard version set to `"1.0.0"`, `event` value is one of `nft_mint`, `nft_burn`, `nft_transfer`, `contract_metadata_update`, and `data` must be of one of the following relavant types: `NftMintLog[] | NftTransferLog[] | NftBurnLog[] | NftContractMetadataUpdateLog[]`:
+Non-Fungible Token Events MUST have `standard` set to `"nep171"`, standard version set to `"1.1.0"`, `event` value is one of `nft_mint`, `nft_burn`, `nft_transfer`, `contract_metadata_update`, and `data` must be of one of the following relavant types: `NftMintLog[] | NftTransferLog[] | NftBurnLog[] | NftContractMetadataUpdateLog[]`:
 
 ```ts
 interface NftEventLogData {
@@ -152,12 +151,12 @@ EVENT_JSON:{
 }
 ```
 
-## Further methods
+## Events for Other NFT Methods
 
-Note that the example events covered above cover two different kinds of events:
-1. Events that are not specified in the NFT Standard (`nft_mint`, `nft_burn`, `contract_metadata_update`)
-2. An event that is covered in the [NFT Core Standard](Core.md). (`nft_transfer`)
+Note that the example events above cover two different kinds of events:
+1. Events that do not have a dedicated trigger function in the NFT Standard (`nft_mint`, `nft_burn`, `contract_metadata_update`)
+2. An event that has a relevant trigger function [NFT Core Standard](Core.md#nft-interface) (`nft_transfer`)
 
-This event standard also applies beyond the four events highlighted here, where future events follow the same convention of as the second type. For instance, if an NFT contract uses the [approval management standard](ApprovalManagement.md), it may emit an event for `nft_approve` if that's deemed as important by the developer community.
+This event standard also applies beyond the events highlighted here, where future events follow the same convention of as the second type. For instance, if an NFT contract uses the [approval management standard](ApprovalManagement.md), it may emit an event for `nft_approve` if that's deemed as important by the developer community.
  
 Please feel free to open pull requests for extending the events standard detailed here as needs arise.
