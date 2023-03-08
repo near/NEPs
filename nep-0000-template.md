@@ -7,7 +7,7 @@ DiscussionsTo: https://github.com/nearprotocol/neps/pull/0000
 Type: Developer Tools
 Version: 1.1.0
 Created: 2022-03-03
-Last Updated: 2023-03-07
+LastUpdated: 2023-03-07
 ---
 
 [This is a NEP (NEAR Enhancement Proposal) template, as described in [NEP-0001](https://github.com/near/NEPs/blob/master/neps/nep-0001.md). Use this when creating a new NEP. The author should delete or replace all the comments or commented brackets when merging their NEP.]
@@ -40,7 +40,7 @@ Created: The Created header records the date that the NEP was assigned a number,
 
 LastUpdated: The Created header records the date that the NEP was assigned a number, should be in ISO 8601 yyyy-mm-dd format, e.g. 2022-12-31.
 
-See example below -->
+See example above -->
 
 
 
