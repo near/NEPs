@@ -10,22 +10,23 @@ Changes to the protocol specification and standards are called NEAR Enhancement 
 
 ## NEPs
 
-|NEP #   | Title  | Author  | Status  |
-|---|---|---|---|
-|[0001](https://github.com/near/NEPs/blob/master/neps/nep-0001.md)   | NEP Purpose and Guidelines  | @jlogelin  | Living  |
-|[0021](https://github.com/near/NEPs/blob/master/neps/nep-0021.md)   | Fungible Token Standard (Deprecated) | @evgenykuzyakov | Final |
-|[0141](https://github.com/near/NEPs/blob/master/neps/nep-0141.md)   | Fungible Token Standard | @evgenykuzyakov @oysterpack | Final |
-|[0145](https://github.com/near/NEPs/blob/master/neps/nep-0145.md)   | Storage Management | @evgenykuzyakov | Final |
-|[0148](https://github.com/near/NEPs/blob/master/neps/nep-0148.md)   | Fungible Token Metadata | @robert-zaremba @evgenykuzyakov @oysterpack | Final |
-|[0171](https://github.com/near/NEPs/blob/master/neps/nep-0171.md)   | Non Fungible Token Standard | @mikedotexe @evgenykuzyakov @oysterpack | Final |
-|[0177](https://github.com/near/NEPs/blob/master/neps/nep-0177.md)   | Non Fungible Token Metadata | @chadoh @mikedotexe | Final |
-|[0178](https://github.com/near/NEPs/blob/master/neps/nep-0178.md)   | Non Fungible Token Approval Management | @chadoh @thor314 | Final |
-|[0181](https://github.com/near/NEPs/blob/master/neps/nep-0181.md)   | Non Fungible Token Enumeration | @chadoh @thor314 | Final |
-|[0199](https://github.com/near/NEPs/blob/master/neps/nep-0199.md)   | Non Fungible Token Royalties and Payouts | @thor314 @mattlockyer | Final |
-|[0245](https://github.com/near/NEPs/blob/master/neps/nep-0245.md)   | Multi Token Standard | @zcstarr @riqi @jriemann @marcos.sun | Review |
-|[0297](https://github.com/near/NEPs/blob/master/neps/nep-0297.md)   | Events Standard | @telezhnaya | Final |
-|[0330](https://github.com/near/NEPs/blob/master/neps/nep-0330.md)   | Source Metadata | @BenKurrek | Review |
-|[0366](https://github.com/near/NEPs/blob/master/neps/nep-0366.md)   | Meta Transactions | @ilblackdragon @e-uleyskiy @fadeevab | Draft |
+|NEP #   | Title  | Author                                      | Status |
+|---|---|---------------------------------------------|--------|
+|[0001](https://github.com/near/NEPs/blob/master/neps/nep-0001.md)   | NEP Purpose and Guidelines  | @jlogelin                                   | Living |
+|[0021](https://github.com/near/NEPs/blob/master/neps/nep-0021.md)   | Fungible Token Standard (Deprecated) | @evgenykuzyakov                             | Final  |
+|[0141](https://github.com/near/NEPs/blob/master/neps/nep-0141.md)   | Fungible Token Standard | @evgenykuzyakov @oysterpack                 | Final  |
+|[0145](https://github.com/near/NEPs/blob/master/neps/nep-0145.md)   | Storage Management | @evgenykuzyakov                             | Final  |
+|[0148](https://github.com/near/NEPs/blob/master/neps/nep-0148.md)   | Fungible Token Metadata | @robert-zaremba @evgenykuzyakov @oysterpack | Final  |
+|[0171](https://github.com/near/NEPs/blob/master/neps/nep-0171.md)   | Non Fungible Token Standard | @mikedotexe @evgenykuzyakov @oysterpack     | Final  |
+|[0177](https://github.com/near/NEPs/blob/master/neps/nep-0177.md)   | Non Fungible Token Metadata | @chadoh @mikedotexe                         | Final  |
+|[0178](https://github.com/near/NEPs/blob/master/neps/nep-0178.md)   | Non Fungible Token Approval Management | @chadoh @thor314                            | Final  |
+|[0181](https://github.com/near/NEPs/blob/master/neps/nep-0181.md)   | Non Fungible Token Enumeration | @chadoh @thor314                            | Final  |
+|[0199](https://github.com/near/NEPs/blob/master/neps/nep-0199.md)   | Non Fungible Token Royalties and Payouts | @thor314 @mattlockyer                       | Final  |
+|[0245](https://github.com/near/NEPs/blob/master/neps/nep-0245.md)   | Multi Token Standard | @zcstarr @riqi @jriemann @marcos.sun        | Review |
+|[0297](https://github.com/near/NEPs/blob/master/neps/nep-0297.md)   | Events Standard | @telezhnaya                                 | Final  |
+|[0330](https://github.com/near/NEPs/blob/master/neps/nep-0330.md)   | Source Metadata | @BenKurrek                                  | Review |
+|[0366](https://github.com/near/NEPs/blob/master/neps/nep-0366.md)   | Meta Transactions | @ilblackdragon @e-uleyskiy @fadeevab        | Draft  |
+|[0399](https://github.com/near/NEPs/blob/master/neps/nep-0399.md)   | Flat Storage | @Longarithm @mzhangmzz                      | Review |
 
 
 
