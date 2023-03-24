@@ -1,0 +1,57 @@
+name: Lint
+
+on:
+  push:
+    branches-ignore: [master, main]
+    # Remove the line above to run when pushing to master
+  pull_request:
+    branches: [master, main]
+  merge_group:
+
+concurrency:
+  group: ci-${{ github.ref }}-${{ github.workflow }}
+  cancel-in-progress: true
+
+jobs:
+  write_good:
+    name: write good Markdown files
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v2
+      - name: write-good action step
+        id: write-good
+        uses: tomwhross/write-good-action@v1.6
+        # with:
+        #   directory: "manuscript" # Optional, uncomment to specify a directory to scan
+      - name: Get the write-good output
+        run: echo "${{ steps.write-good.outputs.result }}"
+      - name: Post comment
+        uses: mshick/add-pr-comment@v1
+        if: ${{ steps.write-good.outputs.result }}
+        with:
+          message: |
+            ${{ steps.write-good.outputs.result }}
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          repo-token-user-login: "github-actions[bot]" # The user.login for temporary GitHub tokens
+          allow-repeats: false # This is the default
+
+  markdown-lint:
+    name: lint Markdown files
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      # lint only changed files
+      - uses: tj-actions/changed-files@v35
+        id: changed-files
+        with:
+          files: "**/*.md"
+          separator: ","
+      - uses: DavidAnson/markdownlint-cli2-action@v9
+        if: steps.changed-files.outputs.any_changed == 'true'
+        with:
+          globs: ${{ steps.changed-files.outputs.all_changed_files }}
+          separator: ","
