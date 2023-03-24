@@ -17,11 +17,10 @@ jobs:
       pull-requests: write
     steps:
       - uses: actions/checkout@v2
-      - name: write-good action step
+      - uses: roboticcheese/github-action-write-good@v1
         id: write-good
-        uses: tomwhross/write-good-action@v1.6
         with:
-          directory: "neps"
+          path: "neps/**/*.md"
       - name: Get the write-good output
         run: echo "${{ steps.write-good.outputs.result }}"
       - name: Post comment
