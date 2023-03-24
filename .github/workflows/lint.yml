@@ -11,7 +11,7 @@ concurrency:
 
 jobs:
   markdown-lint:
-    name: lint Markdown files
+    name: markdown-lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
