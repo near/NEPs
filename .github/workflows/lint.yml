@@ -10,29 +10,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  write_good:
-    name: write good Markdown files
-    runs-on: ubuntu-latest
-    permissions:
-      pull-requests: write
-    steps:
-      - uses: actions/checkout@v2
-      - uses: roboticcheese/github-action-write-good@v1
-        id: write-good
-        with:
-          path: "neps/**/*.md"
-      - name: Get the write-good output
-        run: echo "${{ steps.write-good.outputs.result }}"
-      - name: Post comment
-        uses: mshick/add-pr-comment@v1
-        if: ${{ steps.write-good.outputs.result }}
-        with:
-          message: |
-            ${{ steps.write-good.outputs.result }}
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          repo-token-user-login: "github-actions[bot]" # The user.login for temporary GitHub tokens
-          allow-repeats: false # default
-
   markdown-lint:
     name: lint Markdown files
     runs-on: ubuntu-latest
