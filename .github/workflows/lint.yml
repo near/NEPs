@@ -1,9 +1,6 @@
 name: Lint
 
 on:
-  push:
-    branches-ignore: [master, main]
-    # Remove the line above to run when pushing to master
   pull_request:
     branches: [master, main]
   merge_group:
