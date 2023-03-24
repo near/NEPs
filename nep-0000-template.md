@@ -22,7 +22,7 @@ Title: NEP title
 
 Author: List of author name(s) and optional contact info. Examples FirstName LastName <satoshi@fakenews.org>, FirstName LastName (@GitHubUserName)>
 
-Status: The NEP status -- New | Approved | Deprecated. 
+Status: The NEP status -- New | Approved | Deprecated.
 
 DiscussionsTo (Optional): URL of current canonical discussion thread, e.g. GitHub Pull Request link.
 
@@ -42,8 +42,6 @@ LastUpdated: The Created header records the date that the NEP was assigned a num
 
 See example above -->
 
-
-
 ## Summary
 
 [Provide a short human-readable (~200 words) description of the proposal. A reader should get from this section a high-level understanding about the issue this NEP is addressing.]
@@ -51,10 +49,6 @@ See example above -->
 ## Motivation
 
 [Explain why this proposal is necessary, how it will benefit the NEAR protocol or community, and what problems it solves. Also describe why the existing protocol specification is inadequate to address the problem that this NEP solves, and what potential use cases or outcomes.]
-
-## Rationale and alternatives
-
-[Justify the design decision for the proposed solution. And explain any alternative designs that were considered and the rationale for not choosing them.]
 
 ## Specification
 
@@ -64,11 +58,11 @@ See example above -->
 
 [This technical section is required for Protocol proposals but optional for other categories. A draft implementation should demonstrate a minimal implementation that assists in understanding or implementing this proposal. Explain the design in sufficient detail that:
 
-* Its interaction with other features is clear.
-* Where possible, include a Minimum Viable Interface subsection expressing the required behavior and types in a target programming language. (ie. traits and structs for rust, interfaces and classes for javascript, function signatures and structs for c, etc.)
-* It is reasonably clear how the feature would be implemented.
-* Corner cases are dissected by example.
-* For protocol changes: A link to a draft PR on nearcore that shows how it can be integrated in the current code. It should at least solve the key technical challenges.
+- Its interaction with other features is clear.
+- Where possible, include a Minimum Viable Interface subsection expressing the required behavior and types in a target programming language. (ie. traits and structs for rust, interfaces and classes for javascript, function signatures and structs for c, etc.)
+- It is reasonably clear how the feature would be implemented.
+- Corner cases are dissected by example.
+- For protocol changes: A link to a draft PR on nearcore that shows how it can be integrated in the current code. It should at least solve the key technical challenges.
 
 The section should return to the examples given in the previous section, and explain more fully how the detailed proposal makes those examples work.]
 
@@ -84,9 +78,13 @@ The section should return to the examples given in the previous section, and exp
 
 [Explain any issues that warrant further discussion. Considerations:
 
-* What parts of the design do you expect to resolve through the NEP process before this gets merged? 
-* What parts of the design do you expect to resolve through the implementation of this feature before stabilization? 
-* What related issues do you consider out of scope for this NEP that could be addressed in the future independently of the solution that comes out of this NEP?]
+- What parts of the design do you expect to resolve through the NEP process before this gets merged?
+- What parts of the design do you expect to resolve through the implementation of this feature before stabilization?
+- What related issues do you consider out of scope for this NEP that could be addressed in the future independently of the solution that comes out of this NEP?]
+
+## Alternatives
+
+[Explain any alternative designs that were considered and the rationale for not choosing them. Why your design is superior?]
 
 ## Future possibilities
 
@@ -103,16 +101,17 @@ The section should return to the examples given in the previous section, and exp
 #### Benefits
 
 [Placeholder for Subject Matter Experts review for this version:]
-* Benefit 1
-* Benefit 2
+
+- Benefit 1
+- Benefit 2
 
 #### Concerns
 
 [Template for Subject Matter Experts review for this version:]
 | # | Concern | Resolution | Status |
-| - | - | - | - |   
-| 1 |   |   |   |
-| 2 |   |   |   |
+| - | - | - | - |  
+| 1 | | | |
+| 2 | | | |
 
 ## Copyright
 
