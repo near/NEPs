@@ -30,18 +30,19 @@ _Verifiable Credentials_ (VC) could be seen as subset of SBT. However there is a
 
 ## Specification
 
-Main requirement for Soulbound tokens is to make it bound to a human:
+Main requirement for Soulbound tokens is to make it bound to a human. Moving tokens from one account to another should be strictly limited to case of **recoverability** (eg in case a user's private key is compromised due to extortion, loss, etc) or user account merge (**soul transfer**). This becomes especially important for proof-of-human stamps that can only be issued once per user.
 
-- moving tokens from one account to another should be strictly limited to case of _recoverability_ (eg in case a user's private key is compromised due to extortion, loss, etc) or user account merge (_soul transfer_).
-  This becomes especially important for proof-of-human stamps that can only be issued once per user.
-- there should be an inherit cost when a token is moved. We propose an SBT registry, which will assure that a true _soul transfer_ is performed, and the source account will be blocked to house any new soul.
+Two safeguards against misuse of recovery are contemplated.
 
-Atomicity of `soul_transfer` in current NEAR runtime is not possible if the token balance is kept separately in each SBT smart contract. To provide atomic transfer of all user tokens, we need additional contract: the `SBT Registry`.
-// TODO: add more details about the registry.
+1. Users cannot recover an SBT by themselves. The issuer, a DAO or a smart contract (eg: multisig) dedicated to manage the recovery should be assigned.
+2. Whenever a _soul transfer_ is triggered then the SBT registry emits `Kill` event. It creates an inherit cost for such action: the account identity is burned and can't receive any SBT in the future.
 
-Two safeguards against misuse of recovery are contemplated. 1) Users cannot recover an SBT by themselves. The issuer, a DAO or a smart contract (eg: multisig) dedicated to manage the recovery should be assigned. 2) Whenever a recovery is triggered then the Soul registry emits _SoulKill_ event (indicator that the account identity is burned). Recovering one SBT triggers registry blocklist that should apply for SBTs that share the same address.
+SBT recover MUST not trigger `SoulTransfer` nor `Kill`: malicious issuer could compromise the system by faking the token recovery and take over all other SBTs from a user.
+Only the owner of the account can call `soul_transfer` and merge 2 accounts he owns.
 
-Soulbound tokens can have an expire date. This is useful for tokens which are related to real world certificates with expire time, or social mechanisms (eg, community membership). Such tokens SHOULD have an option to be renewable. Examples include mandatory renewal with some frequency to check that the owner is still alive, or renew membership to a DAO that uses SBTs as membership gating.
+Soulbound tokens can have an _expire date_. This is useful for tokens which are related to real world certificates with expire time, or social mechanisms (eg, community membership). Such tokens SHOULD have an option to be renewable. Examples include mandatory renewal with a frequency to check that the owner is still alive, or renew membership to a DAO that uses SBTs as membership gating.
+
+An issuer can provide a _sbt revocation_ in his contract (eg, when a related certificate or membership should be revoked). When doing so, the SBT registry MUST be updated and `Revoke` event must be emitted. It's up to the registry to define revocation handling (either by burning a token, or changing expire date of it's metadata).
 
 ### Token Kind
 
@@ -164,46 +165,65 @@ trait SBTNFT {
 
 ### Events
 
+CALL FOR ACTION: Shall the events be issued by the registry or by the issuing contract?
+
+- registry: we query registry, so it makes sense to use registry. If we emit the event by the registry, we need to add smart contract argument as a field of the events.
+- issuing contract: all actions, except soul transfer, are initiated through the issuing contract. So maybe only `SoulTransfer` event should be emitted by a registry.
+- maybe we should reduce amount of tokens: merge {mint, renew}?
+- maybe we can remove Kill event -- currently it's implicit by the SoulTransfer event... but maybe future use cases will require it?
+- Should we use NEP-171 Mint and NEP-171 Burn (instead of revoke) events? If the events will be emitted by registry, then we need new events to include the contract address.
+
 ```typescript
-struct SbtEventKind {
+type SbtEventKind {
   standard: "nep393";
   version: "1.0.0";
-  event: "mint" | "recover" | "renew";
-  data: Recover | Renew | SoulTransfer;
+  event: "mint" | "recover" | "renew" | "revoke" | "kill";
+  data: Mint | Recover | Renew | Revoke | SoulTransfer | Kill;
 }
 
 // Note: for token minting, NEP-171 compatible Mint event is used.
+type Mint = NftMint
 
-/// An event emitted when a recovery process succeeded to reassign SBT due to account access
-/// loss. This action is usually requested by the owner, but executed by an issuer, and doesn't
-/// trigger Soul Transfer.
-/// Arguments
-/// * `old_owner`: current holder of the SBT, whose account was compromised or lost.
-/// * `new_owner`: destination account.
-/// * `token_ids`: list of token ids.
-/// * `memo`: optional message
-struct Recover {
-  old_owner: AccountId;
-  new_owner: AccountId;
-  tokens: []u64;
-  memo: Option<string>;
+
+/// An event emitted when a recovery process succeeded to reassign SBT, usually due to account
+/// access loss. This action is usually requested by the owner, but executed by an issuer,
+/// and doesn't trigger Soul Transfer.
+type Recover {
+  old_owner: AccountId;  // current holder of the SBT
+  new_owner: AccountId;  // destination account.
+  tokens: []u64;  // list of token ids.
+  memo?: string;  // optional message
 }
 
 /// An event emitted when a existing tokens are renewed.
-/// Arguments
-/// * `tokens`: list of token ids.
-/// * `memo`: optional message
-struct Renew {
-  tokens: []u64;
-  memo: string;
+type Renew {
+  tokens: []u64;  // list of token ids.
+  memo?: string;  // optional message
 }
 
-/// An evenet emitted when soul transfer is happening: all SBTs owned by `from` are transferred
-/// to `to`, and the `from` account is _killed_ (can't receive any new SBT).
-struct SoulTransfer {
+/// An event emitted when a existing tokens are revoked.
+/// Revoked tokens should not be listed in a wallet.
+type Revoke {
+  tokens: []u64;  // list of token ids.
+  memo?: string;  // optional message
+}
+
+/// An event emitted when soul transfer is happening: all SBTs owned by `from` are transferred
+/// to `to`, and the `from` account is killed (can't receive any new SBT).
+/// Registry MUST emit `Kill` whenever the soul transfer happens.
+type SoulTransfer {
   from: AccountId;
   to: AccountId;
-  memo: Option<string>;
+  memo?: string;   // optional message
+}
+
+/// An event emitted when the `account` is killed within the emitting registry.
+/// Must be emitted by an SBT registry.
+/// Registry must add the `account` to a blocklist and prohibit issuing SBTs to this account
+/// in the future
+type Kill {
+  account: AccountId;
+  memo?: string;   // optional message
 }
 ```
 
@@ -219,7 +239,7 @@ These functions should emit appropriate events.
 trait SBTTxs {
 
     /// Creates a new, unique token and assigns it to the `receiver`.
-    /// Must emit NEP-171 compatible Mint event.
+    /// Must emit NEP-171 compatible `Mint` event.
     /// Must provide enough NEAR to cover registry storage cost.
     /// The arguments to this function can vary, depending on the use-case.
     /// `kind` is provided as an explicit argument and it must overwrite `metadata.kind`.
@@ -228,7 +248,7 @@ trait SBTTxs {
 
     /// sbt_recover reassigns all tokens from the old owner to a new owner,
     /// and registers `old_owner` to a burned addresses registry.
-    /// Must emit SbtRecover event.
+    /// Must emit `Recover` event.
     /// Must be called by an operator.
     /// Must provide enough NEAR to cover registry storage cost.
     #[payable]
@@ -236,11 +256,11 @@ trait SBTTxs {
 
     /// sbt_renew will update the expire time of provided tokens.
     /// `expires_at` is a unix timestamp (in seconds).
-    /// Must emit SbtRenew event.
+    /// Must emit `Renew` event.
     pub fn sbt_renew(&mut self, tokens: Vec<TokenId>, expires_at: u64, memo: Option<String>);
 
     /// Revokes and burn SBT.
-    /// Must emit NEP-171 compatible Burn event.
+    /// Must emit `Revoke` event.
     /// Returns true if a token_id is a valid, active SBT. Otherwise returns false.
     pub fn sbt_revoke(token_id: uint64): bool;
 }
