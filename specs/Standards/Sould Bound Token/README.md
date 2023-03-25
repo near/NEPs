@@ -36,6 +36,7 @@ Two safeguards against misuse of recovery are contemplated.
 
 1. Users cannot recover an SBT by themselves. The issuer, a DAO or a smart contract (eg: multisig) dedicated to manage the recovery should be assigned.
 2. Whenever a _soul transfer_ is triggered then the SBT registry emits `Kill` event. It creates an inherit cost for such action: the account identity is burned and can't receive any SBT in the future.
+3. The recovery function is additional economical risk preventing account trading: user should always be able to recover his SBT, and move to another, not killed account.
 
 SBT recover MUST not trigger `SoulTransfer` nor `Kill`: malicious issuer could compromise the system by faking the token recovery and take over all other SBTs from a user.
 Only the owner of the account can call `soul_transfer` and merge 2 accounts he owns.
@@ -62,6 +63,21 @@ We propose that the SBT Standard will support the multi-token idea from the get 
 It's up to the smart contract design how the token kinds is managed. A smart contract can expose an admin function (example: `sbt_new_kind() -> KindId`) or hard code the pre-registered kinds.
 
 Finally, we require that each token ID is unique within the smart contract. This will allow us to query token only by token ID, without knowing it's kind.
+
+### SBT Registry
+
+Atomicity of _soul transfer_ in current NEAR runtime is not possible if the token balance is kept separately for each SBT smart contract. We need an additional contract: the `SBT Registry`, to provide atomic transfer of all user tokens and efficient way to block accounts in relation to a Kill event. The registry will provide a balance book for all associated SBT tokens.
+
+An SBT smart contract, SHOULD opt-in to a registry using `opt_in` function. One SBT smart contract can opt-in to:
+
+- many registries: it MUST relay all state change functions to all registries.
+- or to no registry: it MUST issue the SBT state change emits by itself.
+
+Moreover, a registry will provide an efficient way to query multiple tokens for a single user. This will allow implementation of use cases such us:
+
+- SBT based identities (main use case of the `i-am-human` protocol)
+- decentralized societies
+- SBT classes.
 
 ### Smart contract interface
 
@@ -110,46 +126,91 @@ pub struct TokenMetadata {
 }
 
 
-trait SBT {
+trait SBTRegistry {
     /**********
     * QUERIES
     **********/
 
     /// get the information about specific token ID
-    fn sbt(&self, token_id: TokenId) -> Option<Token>;
+    fn sbt(&self, ctr: AccountId, token_id: TokenId) -> Option<Token>;
 
     /// returns total amount of tokens minted by this contract
-    fn sbt_total_supply(&self) -> u64;
+    fn sbt_total_supply(&self, ctr: AccountId) -> u64;
 
     /// returns total amount of tokens of given kind minted by this contract
-    fn sbt_total_supply_by_kind(&self, kind: KindId) -> u64;
-
+    fn sbt_total_supply_by_kind(&self, ctr: AccountId, kind: KindId) -> u64;
 
     /// returns total supply of SBTs for a given owner
-    fn sbt_supply_by_owner(&self, account: AccountId) -> u64;
+    fn sbt_supply_by_owner(&self, ctr: AccountId, account: AccountId) -> u64;
 
     /// returns true if the `account` has a token of a given `kind`.
-    fn sbt_supply_by_kind(&self, account: AccountId, kind: KindId) -> bool;
+    fn sbt_supply_by_kind(&self, ctr: AccountId, account: AccountId, kind: KindId) -> bool;
 
-    /// Query for sbt tokens
-    /// If `from_index` is not specified, then `from_index` should be assumed to be the first
-    /// valid token id.
-    fn sbt_tokens(&self, from_index: Option<u64>, limit: Option<u32>) -> Vec<Token>;
+    /// Query sbt tokens. If `from_index` is not specified, then `from_index` should be assumed
+    /// to be the first valid token id.
+    fn sbt_tokens(
+        &self,
+        ctr: AccountId,
+        from_index: Option<u64>,
+        limit: Option<u32>,
+    ) -> Vec<TokenId>;
 
     /// Query sbt tokens by owner
     /// If `from_kind` is not specified, then `from_kind` should be assumed to be the first
     /// valid kind id.
     fn sbt_tokens_by_owner(
         &self,
+        ctr: AccountId,
         account: AccountId,
-        from_kind: Option<U64>,
+        from_kind: Option<u64>,
         limit: Option<u32>,
-    ) -> Vec<Token>;
+    ) -> Vec<TokenId>;
 
-    /*
-    * Transactions are not part of the standard. Instead, in the section below, we provide
-    * recommended interfaces for the functions which are related to the SBT Standard Events.
-    **/
+    /*************
+     * Transactions
+     *************/
+
+    /// Creates a new, unique token and assigns it to the `receiver`.
+    /// Must be called by an SBT contract.
+    /// Must emit NEP-171 compatible `Mint` event.
+    /// Must provide enough NEAR to cover registry storage cost.
+    /// The arguments to this function can vary, depending on the use-case.
+    /// `kind` is provided as an explicit argument and it must overwrite `metadata.kind`.
+    /// Requires attaching enough tokens to cover the storage growth.
+    // #[payable]
+    fn sbt_mint(
+        &mut self,
+        account: AccountId,
+        kind: Option<u64>,
+        metadata: TokenMetadata,
+    ) -> TokenId;
+
+    /// sbt_recover reassigns all tokens from the old owner to a new owner,
+    /// and registers `old_owner` to a burned addresses registry.
+    /// Must be called by an SBT contract.
+    /// Must emit `Recover` event.
+    /// Must be called by an operator.
+    /// Must provide enough NEAR to cover registry storage cost.
+    /// Requires attaching enough tokens to cover the storage growth.
+    // #[payable]
+    fn sbt_recover(&mut self, from: AccountId, to: AccountId);
+
+    /// sbt_renew will update the expire time of provided tokens.
+    /// `expires_at` is a unix timestamp (in seconds).
+    /// Must be called by an SBT contract.
+    /// Must emit `Renew` event.
+    fn sbt_renew(&mut self, tokens: Vec<TokenId>, expires_at: u64, memo: Option<String>);
+
+    /// Revokes SBT, could potentailly burn it or update the expire time.
+    /// Must be called by an SBT contract.
+    /// Must emit `Revoke` event.
+    /// Returns true if a token_id is a valid, active SBT. Otherwise returns false.
+    fn sbt_revoke(&mut self, token_id: u64) -> bool;
+
+    /// Transfers atomically all SBT tokens from one account to another account.
+    /// Must be an SBT holder.
+    // #[payable]
+    fn sbt_soul_transfer(&mut self, to: AccountId) -> bool;
 }
 ```
 
@@ -164,14 +225,6 @@ trait SBTNFT {
 ```
 
 ### Events
-
-CALL FOR ACTION: Shall the events be issued by the registry or by the issuing contract?
-
-- registry: we query registry, so it makes sense to use registry. If we emit the event by the registry, we need to add smart contract argument as a field of the events.
-- issuing contract: all actions, except soul transfer, are initiated through the issuing contract. So maybe only `SoulTransfer` event should be emitted by a registry.
-- maybe we should reduce amount of tokens: merge {mint, renew}?
-- maybe we can remove Kill event -- currently it's implicit by the SoulTransfer event... but maybe future use cases will require it?
-- Should we use NEP-171 Mint and NEP-171 Burn (instead of revoke) events? If the events will be emitted by registry, then we need new events to include the contract address.
 
 ```typescript
 type SbtEventKind {
@@ -188,7 +241,9 @@ type Mint = NftMint
 /// An event emitted when a recovery process succeeded to reassign SBT, usually due to account
 /// access loss. This action is usually requested by the owner, but executed by an issuer,
 /// and doesn't trigger Soul Transfer.
+/// Must be emitted by an SBT registry.
 type Recover {
+  ctr: AccountId         // SBT Contract recovering the tokens
   old_owner: AccountId;  // current holder of the SBT
   new_owner: AccountId;  // destination account.
   tokens: []u64;  // list of token ids.
@@ -196,20 +251,25 @@ type Recover {
 }
 
 /// An event emitted when a existing tokens are renewed.
+/// Must be emitted by an SBT registry.
 type Renew {
+  ctr: AccountId  // SBT Contract renewing the tokens
   tokens: []u64;  // list of token ids.
   memo?: string;  // optional message
 }
 
 /// An event emitted when a existing tokens are revoked.
 /// Revoked tokens should not be listed in a wallet.
+/// Must be emitted by an SBT registry.
 type Revoke {
+  ctr: AccountId  // SBT Contract revoking the tokens
   tokens: []u64;  // list of token ids.
   memo?: string;  // optional message
 }
 
 /// An event emitted when soul transfer is happening: all SBTs owned by `from` are transferred
 /// to `to`, and the `from` account is killed (can't receive any new SBT).
+/// Must be emitted by an SBT registry.
 /// Registry MUST emit `Kill` whenever the soul transfer happens.
 type SoulTransfer {
   from: AccountId;
@@ -221,6 +281,7 @@ type SoulTransfer {
 /// Must be emitted by an SBT registry.
 /// Registry must add the `account` to a blocklist and prohibit issuing SBTs to this account
 /// in the future
+/// Must be emitted by an SBT registry.
 type Kill {
   account: AccountId;
   memo?: string;   // optional message
@@ -231,38 +292,26 @@ Whenever a recovery is made in a way that an existing SBT is burned, the `NftBur
 
 ### Recommended functions
 
-Although the transaction functions below are not part of the standard (depending on a use case, they may need different parameters), we recommend them as a part of implementation and we also provide them in the reference implementation.
-These functions should emit appropriate events.
+Although the transaction functions below are not part of the SBT smart contract standard (depending on a use case, they may have different parameters), we recommend them as a part of implementation and we also provide them in the reference implementation.
+These functions should emit appropriate events and relay calls to a SBT registry.
 
 ```rust
 
-trait SBTTxs {
+trait SBT {
+    // #[payable]
+    fn sbt_mint(
+        &mut self,
+        account: AccountId,
+        kind: Option<u64>,
+        metadata: TokenMetadata,
+    ) -> Vec<TokenId>;
 
-    /// Creates a new, unique token and assigns it to the `receiver`.
-    /// Must emit NEP-171 compatible `Mint` event.
-    /// Must provide enough NEAR to cover registry storage cost.
-    /// The arguments to this function can vary, depending on the use-case.
-    /// `kind` is provided as an explicit argument and it must overwrite `metadata.kind`.
-    #[payable]
-    fn sbt_mint(&mut self, kind: KindId, metadata: TokenMetadata, receiver: AccountId);
-
-    /// sbt_recover reassigns all tokens from the old owner to a new owner,
-    /// and registers `old_owner` to a burned addresses registry.
-    /// Must emit `Recover` event.
-    /// Must be called by an operator.
-    /// Must provide enough NEAR to cover registry storage cost.
-    #[payable]
+    // #[payable]
     fn sbt_recover(&mut self, from: AccountId, to: AccountId);
 
-    /// sbt_renew will update the expire time of provided tokens.
-    /// `expires_at` is a unix timestamp (in seconds).
-    /// Must emit `Renew` event.
-    pub fn sbt_renew(&mut self, tokens: Vec<TokenId>, expires_at: u64, memo: Option<String>);
+    fn sbt_renew(&mut self, tokens: Vec<TokenId>, expires_at: u64, memo: Option<String>);
 
-    /// Revokes and burn SBT.
-    /// Must emit `Revoke` event.
-    /// Returns true if a token_id is a valid, active SBT. Otherwise returns false.
-    pub fn sbt_revoke(token_id: uint64): bool;
+    fn sbt_revoke(token_id: u64) -> bool;
 }
 ```
 
@@ -301,6 +350,15 @@ Being fully compatible with NFT standard is a desirable. However, given the requ
 
 Give that our requirements are much striker, we need to reconsider the level of compatibility with NEP-171 NFT.
 There are so many examples where NFT standards are poorly or improperly implemented, adding another standard with differing functionality but equal naming in there will cause lots of misclassifications between NFTs/SBTs, and then recover methods called on NFT contracts, SBTs attempted to be listed on NFT marketplaces and so on.
+
+CALL FOR ACTION: Shall the events be issued by the registry or by the issuing contract?
+
+- registry: we query registry, so it makes sense to use registry. If we emit the event by the registry, we need to add smart contract argument as a field of the events.
+- issuing contract: all actions, except soul transfer, are initiated through the issuing contract. So maybe only `SoulTransfer` event should be emitted by a registry.
+- maybe we should reduce amount of tokens: merge {mint, renew}?
+- maybe we can remove Kill event -- currently it's implicit by the SoulTransfer event... but maybe future use cases will require it?
+- Should we use NEP-171 Mint and NEP-171 Burn (instead of revoke) events? If the events will be emitted by registry, then we need new events to include the contract address.
+- Decide if we need to keep memo in the events.
 
 ## Copyright
 
