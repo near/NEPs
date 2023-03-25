@@ -40,7 +40,7 @@ Fees are either a base fee or a fee per byte of some data within the action.
 Here is the list of actions and their corresponding fees:
 - [CreateAccount](/RuntimeSpec/Actions.md#createaccountaction) uses
     - the base fee [`create_account_cost`](/GenesisConfig/RuntimeFeeConfig/ActionCreationConfig.md#create_account_cost)
-- [DeployContract](/RuntimeSpec/Actions.html#deploycontractaction) uses the sum of the following fees:
+- [DeployContract](/RuntimeSpec/Actions.md#deploycontractaction) uses the sum of the following fees:
     - the base fee [`deploy_contract_cost`](/GenesisConfig/RuntimeFeeConfig/ActionCreationConfig.md#deploy_contract_cost)
     - the fee per byte of the contract code to be deployed with the fee [`deploy_contract_cost_per_byte`](/GenesisConfig/RuntimeFeeConfig/ActionCreationConfig.md#deploy_contract_cost_per_byte)
     To compute the number of bytes for a deploy contract action `deploy_contract_action` use `deploy_contract_action.code.len()`
@@ -52,17 +52,17 @@ Here is the list of actions and their corresponding fees:
     - if the `receiver_id` is an [Implicit Account ID](/DataStructures/Account.md#implicit-account-ids), then a sum of base fees is used:
         - the create account base fee [`create_account_cost`](/GenesisConfig/RuntimeFeeConfig/ActionCreationConfig.md#create_account_cost)
         - the transfer base fee [`transfer_cost`](/GenesisConfig/RuntimeFeeConfig/ActionCreationConfig.md#transfer_cost)
-        - the add full access key base fee [`add_key_cost.full_access_cost`](/GenesisConfig/RuntimeFeeConfig/AccessKeyCreationConfig.html#full_access_cost)
+        - the add full access key base fee [`add_key_cost.full_access_cost`](/GenesisConfig/RuntimeFeeConfig/AccessKeyCreationConfig.md#full_access_cost)
     - if the `receiver_id` is NOT an [Implicit Account ID](/DataStructures/Account.md#implicit-account-ids), then only the base fee is used:
         - the transfer base fee [`transfer_cost`](/GenesisConfig/RuntimeFeeConfig/ActionCreationConfig.md#transfer_cost)
 - [Stake](/RuntimeSpec/Actions.md#stakeaction) uses
     - the base fee [`stake_cost`](/GenesisConfig/RuntimeFeeConfig/ActionCreationConfig.md#stake_cost)
 - [AddKey](/RuntimeSpec/Actions.md#addkeyaction) uses one of the following fees:
     - if the access key is [`AccessKeyPermission::FullAccess`](/DataStructures/AccessKey.md#access-keys) the base fee is used
-        - the add full access key base fee [`add_key_cost.full_access_cost`](/GenesisConfig/RuntimeFeeConfig/AccessKeyCreationConfig.html#full_access_cost)
+        - the add full access key base fee [`add_key_cost.full_access_cost`](/GenesisConfig/RuntimeFeeConfig/AccessKeyCreationConfig.md#full_access_cost)
     - if the access key is [`AccessKeyPermission::FunctionCall`](/DataStructures/AccessKey.md#accesskeypermissionfunctioncall) the sum of the fees is used
-        - the add function call permission access key base fee [`add_key_cost.function_call_cost`](/GenesisConfig/RuntimeFeeConfig/AccessKeyCreationConfig.html#full_access_cost)
-        - the fee per byte of method names with extra byte for every method with the fee [`add_key_cost.function_call_cost_per_byte`](/GenesisConfig/RuntimeFeeConfig/AccessKeyCreationConfig.html#function_call_cost_per_byte)
+        - the add function call permission access key base fee [`add_key_cost.function_call_cost`](/GenesisConfig/RuntimeFeeConfig/AccessKeyCreationConfig.md#full_access_cost)
+        - the fee per byte of method names with extra byte for every method with the fee [`add_key_cost.function_call_cost_per_byte`](/GenesisConfig/RuntimeFeeConfig/AccessKeyCreationConfig.md#function_call_cost_per_byte)
         To compute the number of bytes for `function_call_permission` use `function_call_permission.method_names.iter().map(|name| name.as_bytes().len() as u64 + 1).sum::<u64>()`
 - [DeleteKey](/RuntimeSpec/Actions.md#deletekeyaction) uses
     - the base fee [`delete_key_cost`](/GenesisConfig/RuntimeFeeConfig/ActionCreationConfig.md#delete_key_cost)

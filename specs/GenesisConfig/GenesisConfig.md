@@ -12,6 +12,13 @@ _type: DateTime_
 
 Official time of blockchain start.
 
+## genesis_height
+
+_type: u64_
+
+Height of the genesis block. Note that genesis height is not necessarily 0. 
+For example, mainnet genesis height is `9820210`.
+
 ## chain_id
 
 _type: String_
@@ -141,5 +148,5 @@ Protocol treasury account
 
 ## protocol economics
 
-> For the specific economic specs, refer to [Economics Section](../Economics/README.md).
+> For the specific economic specs, refer to [Economics Section](../Economics/Economic.md).
 
