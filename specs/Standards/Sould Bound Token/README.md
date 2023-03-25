@@ -320,7 +320,24 @@ trait SBT {
 - Common [type definitions](https://github.com/alpha-fi/i-am-human/tree/master/contracts/sbt) (events, traits).
 - https://github.com/alpha-fi/i-am-human/tree/master/contracts/soulbound
 
-## Example Flow
+## Example Flows
+
+```mermaid
+sequenceDiagram
+    actor Alice
+    actor Issuer1 as SBT_1 Issuer
+    participant SBT1 as SBT_1 Contract
+    participant SBT_Registry
+
+    Issuer1->>SBT_1_Contract: sbt_mint(alice, 1, metadata)
+    SBT1-)SBT_Registry: sbt_mint(alice, 1, metadata)
+    SBT_Registry-)SBT1: token_id: 238
+
+    Note over Issuer1,SBT1,SBT_Registry: now Alice can query registry to check her SBT
+
+    Alice-->SBT_Registry: sbt(SBT_1_Contract, 238)
+    SBT_Registry-->Alice: {token_id: 238, owner_id: alice, metadata}
+```
 
 ## Consequences
 
