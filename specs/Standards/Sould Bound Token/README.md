@@ -30,7 +30,7 @@ _Verifiable Credentials_ (VC) could be seen as subset of SBT. However there is a
 
 ## Specification
 
-Main requirement for Soubound tokens is to make it bound to a human:
+Main requirement for Soulbound tokens is to make it bound to a human:
 
 - moving tokens from one account to another should be strictly limited to case of _recoverability_ (eg in case a user's private key is compromised due to extortion, loss, etc) or user account merge (_soul transfer_).
   This becomes especially important for proof-of-human stamps that can only be issued once per user.
@@ -39,23 +39,51 @@ Main requirement for Soubound tokens is to make it bound to a human:
 Atomicity of `soul_transfer` in current NEAR runtime is not possible if the token balance is kept separately in each SBT smart contract. To provide atomic transfer of all user tokens, we need additional contract: the `SBT Registry`.
 // TODO: add more details about the registry.
 
-Two safeguards against misuse of recovery are contemplated. 1) Users cannot recover an SBT by themselves. The issuer, a DAO or a smart contract (eg: multisig) dedicated to manage the recovery should be assigned. 2) Whenever a recovery is triggered then the Sould registry emits _SoulKill_ event (indicator that the account identity is burned). Recovering one SBT triggers registry blocklist that should apply for SBTs that share the same address.
+Two safeguards against misuse of recovery are contemplated. 1) Users cannot recover an SBT by themselves. The issuer, a DAO or a smart contract (eg: multisig) dedicated to manage the recovery should be assigned. 2) Whenever a recovery is triggered then the Soul registry emits _SoulKill_ event (indicator that the account identity is burned). Recovering one SBT triggers registry blocklist that should apply for SBTs that share the same address.
 
 Soulbound tokens can have an expire date. This is useful for tokens which are related to real world certificates with expire time, or social mechanisms (eg, community membership). Such tokens SHOULD have an option to be renewable. Examples include mandatory renewal with some frequency to check that the owner is still alive, or renew membership to a DAO that uses SBTs as membership gating.
+
+### Token Kind
+
+SBT tokens can't be fractionized. Also, by definition there should be only one of a token per token kind per user. Examples: user should not be able to receive few badges of the same kind, or few proof of attendance to the same event.
+However we identify a need for having few token kinds in a single contract:
+
+- badges: one contract with multiple badge kind (community lead, OG...);
+- certificates: one issuer can create certificates of a different kind (eg school department can create diplomas for each major and each graduation year).
+
+We also see a trend in the NFT community and demand for market places to support multi token contracts.
+
+- In Ethereum community many projects are using [ERC-1155 Multi Token Standard](https://eips.ethereum.org/EIPS/eip-1155). NFT projects are using it for fraction ownership: each token id can have many fungible fractions.
+- NEAR [NEP-246](https://github.com/near/NEPs/blob/master/neps/nep-0245.md) has elaborated similar interface for both bridge compatibility with EVM chains as well as flexibility to define different token types with different behavior in a single contract.
+- [NEP-454](https://github.com/near/NEPs/pull/454) proposes royalties support for multi token contracts.
+
+We propose that the SBT Standard will support the multi-token idea from the get go. This won't increase the complexity of the contract (in a traditional case, where one contract will only issue tokens of the single kind, the `kind` argument is simply ignored in the state, and in the functions it's required to be of a constant value, eg `1`) but will unify the interface.
+It's up to the smart contract design how the token kinds is managed. A smart contract can expose an admin function (example: `sbt_new_kind() -> KindId`) or hard code the pre-registered kinds.
+
+Finally, we require that each token ID is unique within the smart contract. This will allow us to query token only by token ID, without knowing it's kind.
 
 ### Smart contract interface
 
 For the Token ID type we propose `u64` rather than `U128`. `u64` capacity is more than 1e19. If we will mint 10'000 SBTs per second, than it will take us 58'494'241 years to get into the capacity.
-Today, the JS integer limit is `2^53-1 ~ 9e15`. It will take us 28561 years to fill that when minting 10'000 SBTs per second. So, we don't need to u128 nor a String type. However, if for some reason, we will need to get u64 support for JS, then we can always add another set of methods which will return String, so making it compatible with NFT standar (which is using `U128`, which is a string).
+Today, the JS integer limit is `2^53-1 ~ 9e15`. It will take us 28561 years to fill that when minting 10'000 SBTs per second. So, we don't need to u128 nor a String type. However, if for some reason, we will need to get u64 support for JS, then we can always add another set of methods which will return String, so making it compatible with NFT standard (which is using `U128`, which is a string).
 
 ```rust
+// TokenId and Kind Id must be positive (0 is not a valid id)
 pub type TokenId = u64;
+pub type KindId = u64;
+
+pub struct Token {
+    pub token_id: TokenId,
+    pub owner_id: AccountId,
+    pub metadata: TokenMetadata,
+}
 ```
 
 The Soulbound Token follows the NFT [NEP-171](https://github.com/near/NEPs/blob/master/neps/nep-0171.md) interface, with few differences:
 
 - token ID is `u64` (as discussed above).
-- `TokenMetadata` doesn't have `title`, `description`, `media`, `media_hash`, `copies`, `extra`, `starts_at` nor `updated_at`. All that attributes except the `updated_at` can be part of the document stored at `reference`. `updated_at` can be tracked on blockchain.
+- token kind is `u64`, it's required when minting and it's part of the token metadata.
+- `TokenMetadata` doesn't have `title`, `description`, `media`, `media_hash`, `copies`, `extra`, `starts_at` nor `updated_at`. All that attributes except the `updated_at` can be part of the document stored at `reference`. `updated_at` can be tracked easily by indexers.
 - only NEP-171 Mint and Burn events are reused. Since we don't have normal transferability, we propose to use more targeted events, to better reflect the event nature.
   - TODO: since the native token ID is different in SBT and NFT, maybe we should use SBT special events for mint and revoke (burn)?
 
@@ -73,6 +101,7 @@ pub struct ContractMetadata {
 
 /// TokenMetadata defines attributes for each SBT token.
 pub struct TokenMetadata {
+    pub kind: KindId, // Kind of a token
     pub issued_at: Option<u64>, // When token was issued or minted, Unix epoch in milliseconds
     pub expires_at: Option<u64>, // When token expires, Unix epoch in milliseconds
     pub reference: Option<String>, // URL to an off-chain JSON file with more info.
@@ -91,30 +120,35 @@ trait SBT {
     /// returns total amount of tokens minted by this contract
     fn sbt_total_supply(&self) -> u64;
 
+    /// returns total amount of tokens of given kind minted by this contract
+    fn sbt_total_supply_by_kind(&self, kind: KindId) -> u64;
+
+
     /// returns total supply of SBTs for a given owner
-    fn sbt_supply_for_owner(&self, account: AccountId) -> u64;
+    fn sbt_supply_by_owner(&self, account: AccountId) -> u64;
+
+    /// returns true if the `account` has a token of a given `kind`.
+    fn sbt_supply_by_kind(&self, account: AccountId, kind: KindId) -> bool;
 
     /// Query for sbt tokens
+    /// If `from_index` is not specified, then `from_index` should be assumed to be the first
+    /// valid token id.
     fn sbt_tokens(&self, from_index: Option<u64>, limit: Option<u32>) -> Vec<Token>;
 
     /// Query sbt tokens by owner
-    fn sbt_tokens_for_owner(
+    /// If `from_kind` is not specified, then `from_kind` should be assumed to be the first
+    /// valid kind id.
+    fn sbt_tokens_by_owner(
         &self,
         account: AccountId,
-        from_index: Option<U64>,
+        from_kind: Option<U64>,
         limit: Option<u32>,
     ) -> Vec<Token>;
-
-    /// Optional. If the SBT implementaiton assures that one account can have maximum one SBT
-    /// the the following function should be implemented.
-    /// Returns Some(Token) if an `account` owns an SBT, otherwise returns None.
-    fn sbt_token_for_owner(&self, account: AccountId) -> Option<Token> {}
 
     /*
     * Transactions are not part of the standard. Instead, in the section below, we provide
     * recommended interfaces for the functions which are related to the SBT Standard Events.
     **/
-
 }
 ```
 
@@ -123,11 +157,12 @@ SBT smart contracts can implement NFT query interface to make it compatible with
 ```rust
 trait SBTNFT {
   fn nft_total_supply(&self) -> U64
+  // here we index by token id instead of by kind id (as done in `sbt_tokens_by_owner`)
   fn nft_tokens_for_owner(&self, account_id: AccountId, from_index: Option<U64>, limit: Option<u64>) -> Vec<Token>
   fn nft_supply_for_owner(&self, account_id: AccountId) -> U64
 ```
 
-### Logs
+### Events
 
 ```typescript
 struct SbtEventKind {
@@ -187,8 +222,9 @@ trait SBTTxs {
     /// Must emit NEP-171 compatible Mint event.
     /// Must provide enough NEAR to cover registry storage cost.
     /// The arguments to this function can vary, depending on the use-case.
+    /// `kind` is provided as an explicit argument and it must overwrite `metadata.kind`.
     #[payable]
-    fn sbt_mint(&mut self, metadata: TokenMetadata, receiver: AccountId);
+    fn sbt_mint(&mut self, kind: KindId, metadata: TokenMetadata, receiver: AccountId);
 
     /// sbt_recover reassigns all tokens from the old owner to a new owner,
     /// and registers `old_owner` to a burned addresses registry.
@@ -212,6 +248,7 @@ trait SBTTxs {
 
 ## Reference Implementation
 
+- Common [type definitions](https://github.com/alpha-fi/i-am-human/tree/master/contracts/sbt) (events, traits).
 - https://github.com/alpha-fi/i-am-human/tree/master/contracts/soulbound
 
 ## Example Flow
@@ -228,7 +265,7 @@ trait SBTTxs {
 - SBT are considered as a basic primitive for Decentralized Societies.
 - new way to implement Sybil attack resistance.
 
-### Netural
+### Neutral
 
 - The API partially follows the NEP-171 (NFT) standard. The proposed design is to have native SBT API and also support NFT based queries.
   NOTE: we can decide to use `nft_` prefix whenever possible.
