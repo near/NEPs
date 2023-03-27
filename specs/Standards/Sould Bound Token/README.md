@@ -1,7 +1,4 @@
-# NEP: Soulbound Token
-
 ---
-
 NEP: 393
 Title: Soulbound Token
 Authors: Robert Zaremba <@robert-zaremba>
@@ -10,9 +7,10 @@ Status: Draft
 Type: Standards Track
 Category: Contract
 Created: 12-Sep-2022
-Requires: --
-
+Requires:
 ---
+
+# NEP: Soulbound Token
 
 ## Summary
 
@@ -194,7 +192,7 @@ trait SBTRegistry {
 
     /// Creates a new, unique token and assigns it to the `receiver`.
     /// `token_spec` is a vector of pairs: owner AccountId and TokenMetadata.
-    /// each TokenMetadata must have non zero kind.
+    /// each TokenMetadata must have non zero `kind`.
     /// Must be called by an SBT contract.
     /// Must emit `Mint` event.
     /// Must provide enough NEAR to cover registry storage cost.
