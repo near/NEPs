@@ -347,17 +347,45 @@ trait SBT {
 sequenceDiagram
     actor Alice
     actor Issuer1 as SBT_1 Issuer
+
     participant SBT1 as SBT_1 Contract
     participant SBT_Registry
 
-    Issuer1->>SBT_1_Contract: sbt_mint(alice, 1, metadata)
+    Issuer1->>SBT1: sbt_mint(alice, 1, metadata)
+    activate SBT1
     SBT1-)SBT_Registry: sbt_mint(alice, 1, metadata)
+    SBT1->>SBT1: emit Mint(SBT_1_Contract, alice, [238])
     SBT_Registry-)SBT1: token_id: 238
+    deactivate SBT1
 
-    Note over Issuer1,SBT1,SBT_Registry: now Alice can query registry to check her SBT
+    Note over Alice,SBT_Registry: now Alice can query registry to check her SBT
 
-    Alice-->SBT_Registry: sbt(SBT_1_Contract, 238)
-    SBT_Registry-->Alice: {token_id: 238, owner_id: alice, metadata}
+    Alice-->>SBT_Registry: sbt(SBT_1_Contract, 238)
+    SBT_Registry-->>Alice: {token_id: 238, owner_id: alice, metadata}
+
+    Note over Alice,SBT_Registry: Alice partiicpates in other community and applies for another SBT. <br/> However she will use a differnt wallet: alice2
+
+    participant SBT2 as SBT_2 Contract
+    actor Issuer2 as SBT_2 Issuer
+
+    Issuer2->>SBT2: sbt_mint(alice2, 1, metadata)
+    activate SBT2
+    SBT2-)SBT_Registry: sbt_mint(alice2, 1, metadata)
+    SBT2->>SBT2: emit Mint(SBT_2_Contract, alice2, [7991])
+    SBT_Registry-)SBT2: token_id: 7991
+    deactivate SBT2
+
+    Alice-->>SBT_Registry: sbt(SBT_2_Contract, 7991)
+    SBT_Registry-->>Alice: {token_id: 7991, owner_id: alice2, metadata}
+
+    Note over Alice,SBT_Registry: After a while Alice decides to merge her `alice2` account into `alice2`
+    Alice->>SBT_Registry: sbt_soul_transfer(alice) --accountId alice2
+
+    Alice-->>+SBT_Registry: sbt_tokens_by_owner(alice2)
+    SBT_Registry-->>-Alice: {}
+
+    Alice-->>+SBT_Registry: sbt_tokens_by_owner(alice1)
+    SBT_Registry-->>-Alice: {SBT_1_Contract: [238], SBT_2_Contract: [7991]}
 ```
 
 ## Consequences
