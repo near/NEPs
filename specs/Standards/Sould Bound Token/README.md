@@ -96,6 +96,10 @@ SBT registry can define it's own mechanism to atomically recover all tokens rela
 
 SBT Registry based recovery is not part of this specification.
 
+#### Minting authorization
+
+A registry can limit which contracts can mint SBTs by implementing a custom issuer registration methods. Example: a simple access control list managed by a DAO.
+
 ### Smart contract interface
 
 For the Token ID type we propose `u64` rather than `U128`. `u64` capacity is more than 1e19. If we will mint 10'000 SBTs per second, than it will take us 58'494'241 years to get into the capacity.
@@ -147,22 +151,23 @@ trait SBTRegistry {
     * QUERIES
     **********/
 
-    /// get the information about specific token ID
+    /// get the information about specific token ID issued by `ctr` SBT contract.
     fn sbt(&self, ctr: AccountId, token_id: TokenId) -> Option<Token>;
 
-    /// returns total amount of tokens minted by this contract
-    fn sbt_total_supply(&self, ctr: AccountId) -> u64;
+    /// returns total amount of tokens issued by `ctr` SBT contract.
+    fn sbt_supply(&self, ctr: AccountId) -> u64;
 
     /// returns total amount of tokens of given kind minted by this contract
-    fn sbt_total_supply_by_kind(&self, ctr: AccountId, kind: KindId) -> u64;
+    fn sbt_supply_by_kind(&self, ctr: AccountId, kind: KindId) -> u64;
 
-    /// returns total supply of SBTs for a given owner
+    /// returns total supply of SBTs for a given owner.
     fn sbt_supply_by_owner(&self, ctr: AccountId, account: AccountId) -> u64;
 
     /// returns true if the `account` has a token of a given `kind`.
     fn sbt_supply_by_kind(&self, ctr: AccountId, account: AccountId, kind: KindId) -> bool;
 
-    /// Query sbt tokens. If `from_index` is not specified, then `from_index` should be assumed
+    /// Query sbt tokens issued by a given contract.
+    /// If `from_index` is not specified, then `from_index` should be assumed
     /// to be the first valid token id.
     fn sbt_tokens(
         &self,
@@ -174,13 +179,14 @@ trait SBTRegistry {
     /// Query sbt tokens by owner
     /// If `from_kind` is not specified, then `from_kind` should be assumed to be the first
     /// valid kind id.
+    /// Returns list of pairs: `(Contract address, list of token IDs)`.
     fn sbt_tokens_by_owner(
         &self,
-        ctr: AccountId,
         account: AccountId,
+        ctr: Option<AccountId>,
         from_kind: Option<u64>,
         limit: Option<u32>,
-    ) -> Vec<TokenId>;
+    ) -> Vec<(AccountId, Vec<TokenId>)>;
 
     /*************
      * Transactions
