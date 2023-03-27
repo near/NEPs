@@ -109,8 +109,8 @@ pub type TokenId = u64;
 pub type KindId = u64;
 
 pub struct Token {
-    pub token_id: TokenId,
-    pub owner_id: AccountId,
+    pub token: TokenId,
+    pub owner: AccountId,
     pub metadata: TokenMetadata,
 }
 ```
@@ -150,7 +150,7 @@ trait SBTRegistry {
     **********/
 
     /// get the information about specific token ID issued by `ctr` SBT contract.
-    fn sbt(&self, ctr: AccountId, token_id: TokenId) -> Option<Token>;
+    fn sbt(&self, ctr: AccountId, token: TokenId) -> Option<Token>;
 
     /// returns total amount of tokens issued by `ctr` SBT contract.
     fn sbt_supply(&self, ctr: AccountId) -> u64;
@@ -222,8 +222,8 @@ trait SBTRegistry {
     /// Revokes SBT, could potentailly burn it or update the expire time.
     /// Must be called by an SBT contract.
     /// Must emit `Revoke` event.
-    /// Returns true if a token_id is a valid, active SBT. Otherwise returns false.
-    fn sbt_revoke(&mut self, token_id: u64) -> bool;
+    /// Returns true if a token is a valid, active SBT. Otherwise returns false.
+    fn sbt_revoke(&mut self, token: u64) -> bool;
 
     /// Transfers atomically all SBT tokens from one account to another account.
     /// Must be an SBT holder.
@@ -346,7 +346,7 @@ trait SBT {
 
     fn sbt_renew(&mut self, tokens: Vec<TokenId>, expires_at: u64, memo: Option<String>);
 
-    fn sbt_revoke(token_id: u64) -> bool;
+    fn sbt_revoke(token: u64) -> bool;
 }
 ```
 
@@ -368,29 +368,29 @@ sequenceDiagram
     Issuer1->>SBT1: sbt_mint(alice, 1, metadata)
     activate SBT1
     SBT1-)SBT_Registry: sbt_mint([[alice, metadata])
-    SBT1->>SBT1: emit Mint(SBT_1_Contract, alice, [238])
-    SBT_Registry-)SBT1: token_id: 238
+    SBT_Registry->>SBT_Registry: emit Mint(SBT_1_Contract, alice, [238])
+    SBT_Registry-)SBT1: [238]
     deactivate SBT1
 
     Note over Alice,SBT_Registry: now Alice can query registry to check her SBT
 
     Alice-->>SBT_Registry: sbt(SBT_1_Contract, 238)
-    SBT_Registry-->>Alice: {token_id: 238, owner_id: alice, metadata}
+    SBT_Registry-->>Alice: {token: 238, owner: alice, metadata}
 
-    Note over Alice,SBT_Registry: Alice partiicpates in other community and applies for another SBT. <br/> However she will use a differnt wallet: alice2
+    Note over Alice,SBT_Registry: Alice participates in other community and applies for another SBT.<br/> She will get 2 SBTs. However she uses a differnt wallet: alice2.
 
     participant SBT2 as SBT_2 Contract
     actor Issuer2 as SBT_2 Issuer
 
-    Issuer2->>SBT2: sbt_mint(alice2, 1, metadata)
+    Issuer2->>SBT2: sbt_mint_multi([[alice2, metadata2], [alice2, metadata3]])
     activate SBT2
-    SBT2-)SBT_Registry: sbt_mint([[alice2, metadata]])
-    SBT2->>SBT2: emit Mint(SBT_2_Contract, alice2, [7991])
-    SBT_Registry-)SBT2: token_id: 7991
+    SBT2-)SBT_Registry: sbt_mint([[alice2, metadata2], [alice2, metadata3]])
+    SBT_Registry->>SBT_Registry: emit Mint(SBT_2_Contract, alice2, [7991, 17992])
+    SBT_Registry-)SBT2: [7991, 1992]
     deactivate SBT2
 
     Alice-->>SBT_Registry: sbt(SBT_2_Contract, 7991)
-    SBT_Registry-->>Alice: {token_id: 7991, owner_id: alice2, metadata}
+    SBT_Registry-->>Alice: {token: 7991, owner: alice2, metadata: metadata2}
 
     Note over Alice,SBT_Registry: After a while Alice decides to merge her `alice2` account into `alice2`
     Alice->>SBT_Registry: sbt_soul_transfer(alice) --accountId alice2
@@ -399,7 +399,7 @@ sequenceDiagram
     SBT_Registry-->>-Alice: []
 
     Alice-->>+SBT_Registry: sbt_tokens_by_owner(alice1)
-    SBT_Registry-->>-Alice: [[SBT_1_Contract, [238]], [SBT_2_Contract, [7991]]]}
+    SBT_Registry-->>-Alice: [[SBT_1_Contract, [238]], [SBT_2_Contract, [7991, 7992]]]}
 ```
 
 ## Consequences
