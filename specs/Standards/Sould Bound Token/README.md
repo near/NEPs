@@ -60,7 +60,7 @@ However we identify a need for having few token kinds in a single contract:
 We also see a trend in the NFT community and demand for market places to support multi token contracts.
 
 - In Ethereum community many projects are using [ERC-1155 Multi Token Standard](https://eips.ethereum.org/EIPS/eip-1155). NFT projects are using it for fraction ownership: each token id can have many fungible fractions.
-- NEAR [NEP-246](https://github.com/near/NEPs/blob/master/neps/nep-0245.md) has elaborated similar interface for both bridge compatibility with EVM chains as well as flexibility to define different token types with different behavior in a single contract.
+- NEAR [NEP-245](https://github.com/near/NEPs/blob/master/neps/nep-0245.md) has elaborated similar interface for both bridge compatibility with EVM chains as well as flexibility to define different token types with different behavior in a single contract. [DevGovGigs Board](https://near.social/#/mob.near/widget/MainPage.Post.Page?accountId=devgovgigs.near&blockHeight=87938945) recently also shows growing interest to move NEP-245 adoption forward.
 - [NEP-454](https://github.com/near/NEPs/pull/454) proposes royalties support for multi token contracts.
 
 We propose that the SBT Standard will support the multi-token idea from the get go. This won't increase the complexity of the contract (in a traditional case, where one contract will only issue tokens of the single kind, the `kind` argument is simply ignored in the state, and in the functions it's required to be of a constant value, eg `1`) but will unify the interface.
@@ -398,6 +398,7 @@ CALL FOR ACTION: Shall the events be issued by the registry or by the issuing co
 - Should we use NEP-171 Mint and NEP-171 Burn (instead of revoke) events? If the events will be emitted by registry, then we need new events to include the contract address. Since the native token ID is different in SBT and NFT, we should probably keep SBT events version
 - Also confirm that only the registry emits the events.
 - Decide if we need to keep memo in the events.
+- Should we keep the proposed multi-token approach?
 
 ## Copyright
 
