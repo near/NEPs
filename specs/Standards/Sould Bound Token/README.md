@@ -193,19 +193,17 @@ trait SBTRegistry {
      *************/
 
     /// Creates a new, unique token and assigns it to the `receiver`.
+    /// `token_spec` is a vector of pairs: owner AccountId and TokenMetadata.
+    /// each TokenMetadata must have non zero kind.
     /// Must be called by an SBT contract.
     /// Must emit `Mint` event.
     /// Must provide enough NEAR to cover registry storage cost.
-    /// The arguments to this function can vary, depending on the use-case.
-    /// `kind` is provided as an explicit argument and it must overwrite `metadata.kind`.
     /// Requires attaching enough tokens to cover the storage growth.
     // #[payable]
     fn sbt_mint(
         &mut self,
-        account: AccountId,
-        kind: Option<u64>,
-        metadata: TokenMetadata,
-    ) -> TokenId;
+        token_spec: Vec<(AccountId, TokenMetadata)>,
+    ) -> Vec<TokenId>;
 
     /// sbt_recover reassigns all tokens from the old owner to a new owner,
     /// and registers `old_owner` to a burned addresses registry.
@@ -323,14 +321,26 @@ Although the transaction functions below are not part of the SBT smart contract 
 These functions should emit appropriate events and relay calls to a SBT registry.
 
 ```rust
-
 trait SBT {
+    /// the function should overwrite `metadata.kind = kind`.
     // #[payable]
     fn sbt_mint(
         &mut self,
         account: AccountId,
-        kind: Option<u64>,
+        kind: u64,
         metadata: TokenMetadata,
+    ) -> TokenId;
+
+    /// Creates a new, unique token and assigns it to the `receiver`.
+    /// `token_spec` is a vector of pairs: owner AccountId and TokenMetadata.
+    /// Must be called by an SBT contract.
+    /// Must emit `Mint` event.
+    /// Must provide enough NEAR to cover registry storage cost.
+    /// Requires attaching enough tokens to cover the storage growth.
+    // #[payable]
+    fn sbt_mint_multi(
+        &mut self,
+        token_spec: Vec<(AccountId, TokenMetadata)>,
     ) -> Vec<TokenId>;
 
     // #[payable]
@@ -359,7 +369,7 @@ sequenceDiagram
 
     Issuer1->>SBT1: sbt_mint(alice, 1, metadata)
     activate SBT1
-    SBT1-)SBT_Registry: sbt_mint(alice, 1, metadata)
+    SBT1-)SBT_Registry: sbt_mint([[alice, metadata])
     SBT1->>SBT1: emit Mint(SBT_1_Contract, alice, [238])
     SBT_Registry-)SBT1: token_id: 238
     deactivate SBT1
@@ -376,7 +386,7 @@ sequenceDiagram
 
     Issuer2->>SBT2: sbt_mint(alice2, 1, metadata)
     activate SBT2
-    SBT2-)SBT_Registry: sbt_mint(alice2, 1, metadata)
+    SBT2-)SBT_Registry: sbt_mint([[alice2, metadata]])
     SBT2->>SBT2: emit Mint(SBT_2_Contract, alice2, [7991])
     SBT_Registry-)SBT2: token_id: 7991
     deactivate SBT2
@@ -388,10 +398,10 @@ sequenceDiagram
     Alice->>SBT_Registry: sbt_soul_transfer(alice) --accountId alice2
 
     Alice-->>+SBT_Registry: sbt_tokens_by_owner(alice2)
-    SBT_Registry-->>-Alice: {}
+    SBT_Registry-->>-Alice: []
 
     Alice-->>+SBT_Registry: sbt_tokens_by_owner(alice1)
-    SBT_Registry-->>-Alice: {SBT_1_Contract: [238], SBT_2_Contract: [7991]}
+    SBT_Registry-->>-Alice: [[SBT_1_Contract, [238]], [SBT_2_Contract, [7991]]]}
 ```
 
 ## Consequences
