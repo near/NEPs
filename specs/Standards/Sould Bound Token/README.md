@@ -49,6 +49,8 @@ Soulbound tokens can have an _expire date_. This is useful for tokens which are 
 
 An issuer can provide a _sbt revocation_ in his contract (eg, when a related certificate or membership should be revoked). When doing so, the SBT registry MUST be updated and `Revoke` event must be emitted. It's up to the registry to define revocation handling (either by burning a token, or changing expire date of it's metadata).
 
+A registry can emit a `Kill` event without doing soul transfer. Handling it depends on the registry governance or registry use cases. One example is to use social governance to identify fake accounts (like bots) - in that case the registry should allow to emit `Kill` and block a scam soul and block future transfers.
+
 ### Token Kind
 
 SBT tokens can't be fractionized. Also, by definition there should be only one of a token per token kind per user. Examples: user should not be able to receive few badges of the same kind, or few proof of attendance to the same event.
@@ -231,7 +233,7 @@ trait SBTRegistry {
     /// Must be an SBT holder.
     /// Must emit `Revoke` event.
     // #[payable]
-    fn sbt_soul_transfer(&mut self, to: AccountId) -> bool;
+    fn osbt_soul_transfer(&mut self, to: AccountId) -> bool;
 }
 ```
 
@@ -437,12 +439,10 @@ There are so many examples where NFT standards are poorly or improperly implemen
 CALL FOR ACTION: Shall the events be issued by the registry or by the issuing contract?
 
 - registry: we query registry, so it makes sense to use registry. If we emit the event by the registry, we need to add smart contract argument as a field of the events.
-- issuing contract: all actions, except soul transfer, are initiated through the issuing contract. So maybe only `SoulTransfer` event should be emitted by a registry.
 - maybe we should reduce amount of tokens: merge {mint, renew}?
-- maybe we can remove Kill event -- currently it's implicit by the SoulTransfer event... but maybe future use cases will require it?
-- Should we use NEP-171 Mint and NEP-171 Burn (instead of revoke) events? If the events will be emitted by registry, then we need new events to include the contract address. Since the native token ID is different in SBT and NFT, we should probably keep SBT events version
-- Also confirm that only the registry emits the events.
-- Decide if we need to keep memo in the events.
+- Should we use NEP-171 Mint and NEP-171 Burn (instead of revoke) events? If the events will be emitted by registry, then we need new events to include the contract address. Since the native token ID is different in SBT and NFT, we should probably keep SBT events version. Also, with registry, it makes less sense to issue NEP-171 Mint and Burn.
+- Confirm that only the registry emits the events.
+- Decide if we need to keep memo in the events (it's already in the transaction).
 - Should we keep the proposed multi-token approach?
 
 ## Copyright
