@@ -79,7 +79,7 @@ An SBT smart contract, SHOULD opt-in to a registry using `opt_in` function. One 
 - many registries: it MUST relay all state change functions to all registries.
 - or to no registry: it MUST issue the SBT state change emits by itself.
 
-If an SBT smart contract doesn't opt-in to any registry, then we should think about it as a single token registry, and it MUST strictly implement all SBT Registry query functions by itself: the contract address must be part of the arguments, and it must check that it equals to the deployed account address (`require!(ctr == env::current_account_id())`).
+If a SBT smart contract doesn't opt-in to any registry, then we should think about it as a single token registry, and it MUST strictly implement all SBT Registry query functions by itself: the contract address must be part of the arguments, and it must check that it equals to the deployed account address (`require!(ctr == env::current_account_id())`).
 
 Moreover, a registry will provide an efficient way to query multiple tokens for a single user. This will allow implementation of use cases such us:
 
@@ -197,10 +197,9 @@ trait SBTRegistry {
     /// Creates a new, unique token and assigns it to the `receiver`.
     /// `token_spec` is a vector of pairs: owner AccountId and TokenMetadata.
     /// each TokenMetadata must have non zero `kind`.
-    /// Must be called by an SBT contract.
+    /// Must be called by a SBT contract.
     /// Must emit `Mint` event.
     /// Must provide enough NEAR to cover registry storage cost.
-    /// Requires attaching enough tokens to cover the storage growth.
     // #[payable]
     fn sbt_mint(
         &mut self,
@@ -209,7 +208,7 @@ trait SBTRegistry {
 
     /// sbt_recover reassigns all tokens from the old owner to a new owner,
     /// and registers `old_owner` to a burned addresses registry.
-    /// Must be called by an SBT contract.
+    /// Must be called by a SBT contract.
     /// Must emit `Recover` event.
     /// Must be called by an operator.
     /// Must provide enough NEAR to cover registry storage cost.
@@ -219,18 +218,18 @@ trait SBTRegistry {
 
     /// sbt_renew will update the expire time of provided tokens.
     /// `expires_at` is a unix timestamp (in seconds).
-    /// Must be called by an SBT contract.
+    /// Must be called by a SBT contract.
     /// Must emit `Renew` event.
     fn sbt_renew(&mut self, tokens: Vec<TokenId>, expires_at: u64, memo: Option<String>);
 
     /// Revokes SBT, could potentailly burn it or update the expire time.
-    /// Must be called by an SBT contract.
-    /// Must emit `Revoke` event.
+    /// Must be called by a SBT contract.
+    /// Must emit one of `Revoke` or `Burn` event.
     /// Returns true if a token is a valid, active SBT. Otherwise returns false.
     fn sbt_revoke(&mut self, token: u64) -> bool;
 
     /// Transfers atomically all SBT tokens from one account to another account.
-    /// Must be an SBT holder.
+    /// Must be a SBT holder.
     /// Must emit `Revoke` event.
     // #[payable]
     fn osbt_soul_transfer(&mut self, to: AccountId) -> bool;
@@ -253,8 +252,8 @@ trait SBTNFT {
 type SbtEventKind {
   standard: "nep393";
   version: "1.0.0";
-  event: "mint" | "recover" | "renew" | "revoke" | "kill";
-  data: Mint | Recover | Renew | Revoke | SoulTransfer | Kill;
+  event: "mint" | "recover" | "renew" | "revoke" | "burn" | "soul_transfer" | "kill";
+  data: Mint | Recover | Renew | Revoke | Burn | SoulTransfer | Kill;
 }
 
 /// An event minted by the Registry when new SBT is created.
@@ -269,7 +268,7 @@ type Mint {
 /// An event emitted when a recovery process succeeded to reassign SBT, usually due to account
 /// access loss. This action is usually requested by the owner, but executed by an issuer,
 /// and doesn't trigger Soul Transfer.
-/// Must be emitted by an SBT registry.
+/// Must be emitted by a SBT registry.
 type Recover {
   ctr: AccountId         // SBT Contract recovering the tokens
   old_owner: AccountId;  // current holder of the SBT
@@ -279,25 +278,34 @@ type Recover {
 }
 
 /// An event emitted when a existing tokens are renewed.
-/// Must be emitted by an SBT registry.
+/// Must be emitted by a SBT registry.
 type Renew {
   ctr: AccountId  // SBT Contract renewing the tokens
   tokens: []u64;  // list of token ids.
   memo?: string;  // optional message
 }
 
-/// An event emitted when a existing tokens are revoked.
+/// An event emitted when an existing tokens are revoked.
 /// Revoked tokens should not be listed in a wallet.
-/// Must be emitted by an SBT registry.
+/// Must be emitted by a SBT registry.
 type Revoke {
   ctr: AccountId  // SBT Contract revoking the tokens
   tokens: []u64;  // list of token ids.
   memo?: string;  // optional message
 }
 
+/// An event emitted when an existing tokens are burned.
+/// Must be emitted by a SBT registry.
+type Burn {
+  ctr: AccountId  // SBT Contract revoking the tokens
+  tokens: []u64;  // list of token ids.
+  memo?: string;  // optional message
+}
+
+
 /// An event emitted when soul transfer is happening: all SBTs owned by `from` are transferred
 /// to `to`, and the `from` account is killed (can't receive any new SBT).
-/// Must be emitted by an SBT registry.
+/// Must be emitted by a SBT registry.
 /// Registry MUST emit `Kill` whenever the soul transfer happens.
 type SoulTransfer {
   from: AccountId;
@@ -306,17 +314,17 @@ type SoulTransfer {
 }
 
 /// An event emitted when the `account` is killed within the emitting registry.
-/// Must be emitted by an SBT registry.
+/// Must be emitted by a SBT registry.
 /// Registry must add the `account` to a blocklist and prohibit issuing SBTs to this account
 /// in the future
-/// Must be emitted by an SBT registry.
+/// Must be emitted by a SBT registry.
 type Kill {
   account: AccountId;
   memo?: string;   // optional message
 }
 ```
 
-Whenever a recovery is made in a way that an existing SBT is burned, the `NftBurn` event must be emitted.
+Whenever a recovery is made in a way that an existing SBT is burned, the `Burn` event MUST be emitted. If `Revoke` burns token then `Burn` event MUST be emitted instead of `Revoke`.
 
 ### Recommended functions
 
@@ -326,6 +334,7 @@ These functions should emit appropriate events and relay calls to a SBT registry
 ```rust
 trait SBT {
     /// the function should overwrite `metadata.kind = kind`.
+    /// Must provide enough NEAR to cover registry storage cost.
     // #[payable]
     fn sbt_mint(
         &mut self,
@@ -336,10 +345,7 @@ trait SBT {
 
     /// Creates a new, unique token and assigns it to the `receiver`.
     /// `token_spec` is a vector of pairs: owner AccountId and TokenMetadata.
-    /// Must be called by an SBT contract.
-    /// Must emit `Mint` event.
     /// Must provide enough NEAR to cover registry storage cost.
-    /// Requires attaching enough tokens to cover the storage growth.
     // #[payable]
     fn sbt_mint_multi(
         &mut self,
