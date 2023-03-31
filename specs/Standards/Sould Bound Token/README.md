@@ -14,7 +14,7 @@ Requires:
 
 ## Summary
 
-Soulbound Token (SBT) is a form of a NFT which represents an aspect of an account: _soul_. Transferability is limited only to a case of recoverability or transferring the soul - a _soul transfer_ should coordinate with a registry to transfer all SBTs from one account to another, and _killing_ the source account.
+Soulbound Token (SBT) is a form of a NFT which represents an aspect of an account: _soul_. Transferability is limited only to a case of recoverability or transferring the soul - a _soul transfer_ should coordinate with a registry to transfer all SBTs from one account to another, and _banning_ the source account.
 
 SBTs are well suited for carrying proof-of-attendance, proof-of-unique-human "stamps" and other similar credibility-carriers.
 
@@ -40,16 +40,16 @@ Main requirement for Soulbound tokens is to bound an account to a human. A **Sou
 This becomes especially important for proof-of-human stamps that can only be issued once per user. Few safeguards against misuse of recovery are contemplated:
 
 1. Users cannot recover an SBT by themselves. The issuer, a DAO or a smart contract (e.g. multisig) dedicated to manage the recovery should be assigned.
-2. Whenever a soul transfer is triggered then the SBT registry emits `SoulTransfer` and `Kill` events. The latter signals that the account can't host and receive any SBT in the future. It creates an inherit cost for such action: the account identity is burned.
-3. The recovery function is additional economical risk preventing account trading: user should always be able to recover his SBT, and move to another, not killed account.
+2. Whenever a soul transfer is triggered then the SBT registry emits `SoulTransfer` and `Ban` events. The latter signals that the account can't host and receive any SBT in the future. It creates an inherit cost for such action: the account identity is burned.
+3. The recovery function is additional economical risk preventing account trading: user should always be able to recover his SBT, and move to another, not banned account.
 
-SBT recover MUST not trigger `SoulTransfer` nor `Kill`: malicious issuer could compromise the system by faking the token recovery and take over all other SBTs from a user. Only the owner of the account can call `soul_transfer` and merge 2 accounts he owns.
+SBT recover MUST not trigger `SoulTransfer` nor `Ban`: malicious issuer could compromise the system by faking the token recovery and take over all other SBTs from a user. Only the owner of the account can call `soul_transfer` and merge 2 accounts he owns.
 
 Soulbound tokens can have an _expire date_. This is useful for tokens which are related to real world certificates with expire time, or social mechanisms (e.g. community membership). Such tokens SHOULD have an option to be renewable. Examples include mandatory renewal with a frequency to check that the owner is still alive, or renew membership to a DAO that uses SBTs as membership gating.
 
 An issuer can provide a _sbt revocation_ in his contract (eg, when a related certificate or membership should be revoked). When doing so, the SBT registry MUST be updated and `Revoke` event must be emitted. It's up to the registry to define revocation handling (either by burning a token, or changing expire date of it's metadata).
 
-A registry can emit a `Kill` event without doing soul transfer. Handling it depends on the registry governance or registry use cases. One example is to use social governance to identify fake accounts (like bots) - in that case the registry should allow to emit `Kill` and block a scam soul and block future transfers.
+A registry can emit a `Ban` event without doing soul transfer. Handling it depends on the registry governance or registry use cases. One example is to use social governance to identify fake accounts (like bots) - in that case the registry should allow to emit `Ban` and block a scam soul and block future transfers.
 
 ### Token Kind
 
@@ -72,7 +72,7 @@ Finally, we require that each token ID is unique within the smart contract. This
 
 ### SBT Registry
 
-Atomicity of _soul transfer_ in current NEAR runtime is not possible if the token balance is kept separately for each SBT smart contract. We need an additional contract: the `SBT Registry`, to provide atomic transfer of all user tokens and efficient way to block accounts in relation to a Kill event. The registry will provide a balance book for all associated SBT tokens.
+Atomicity of _soul transfer_ in current NEAR runtime is not possible if the token balance is kept separately for each SBT smart contract. We need an additional contract: the `SBT Registry`, to provide atomic transfer of all user tokens and efficient way to block accounts in relation to a Ban event. The registry will provide a balance book for all associated SBT tokens.
 
 An SBT smart contract, SHOULD opt-in to a registry using `opt_in` function. One SBT smart contract can opt-in to:
 
@@ -252,8 +252,8 @@ trait SBTNFT {
 type SbtEventKind {
   standard: "nep393";
   version: "1.0.0";
-  event: "mint" | "recover" | "renew" | "revoke" | "burn" | "soul_transfer" | "kill";
-  data: Mint | Recover | Renew | Revoke | Burn | SoulTransfer | Kill;
+  event: "mint" | "recover" | "renew" | "revoke" | "burn" | "soul_transfer" | "ban";
+  data: Mint | Recover | Renew | Revoke | Burn | SoulTransfer | Ban;
 }
 
 /// An event minted by the Registry when new SBT is created.
@@ -304,21 +304,21 @@ type Burn {
 
 
 /// An event emitted when soul transfer is happening: all SBTs owned by `from` are transferred
-/// to `to`, and the `from` account is killed (can't receive any new SBT).
+/// to `to`, and the `from` account is banned (can't receive any new SBT).
 /// Must be emitted by an SBT registry.
-/// Registry MUST emit `Kill` whenever the soul transfer happens.
+/// Registry MUST emit `Ban` whenever the soul transfer happens.
 type SoulTransfer {
   from: AccountId;
   to: AccountId;
   memo?: string;   // optional message
 }
 
-/// An event emitted when the `account` is killed within the emitting registry.
+/// An event emitted when the `account` is banned within the emitting registry.
 /// Must be emitted by an SBT registry.
 /// Registry must add the `account` to a blocklist and prohibit issuing SBTs to this account
 /// in the future
 /// Must be emitted by an SBT registry.
-type Kill {
+type Ban {
   account: AccountId;
   memo?: string;   // optional message
 }
