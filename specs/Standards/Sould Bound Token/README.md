@@ -14,7 +14,7 @@ Requires:
 
 ## Summary
 
-Soulbound Token (SBT) is a form of a NFT which represents an aspect of an account: _soul_. Transferability is limited only to a case of recover-ability or transferring the soul - a _soul transfer_ should coordinate with a registry to transfer all SBTs from one account to another, and _killing_ the source account.
+Soulbound Token (SBT) is a form of a NFT which represents an aspect of an account: _soul_. Transferability is limited only to a case of recoverability or transferring the soul - a _soul transfer_ should coordinate with a registry to transfer all SBTs from one account to another, and _killing_ the source account.
 
 SBTs are well suited for carrying proof-of-attendance, proof-of-unique-human "stamps" and other similar credibility-carriers.
 
@@ -26,7 +26,7 @@ Recent [Decentralized Society](https://www.bankless.com/decentralized-society-de
 
 Creating a strong primitives is necessary to model new innovative systems and decentralized societies. Examples include reputation protocols, undercollateralized lending, one-person-one-vote, fair airdrops & ICOs, universal basic income, non KYC identity systems, Human DAOs and methods for Sybil attack resistance.
 
-We propose a SBT standard to model protocols described above.
+We propose an SBT standard to model protocols described above.
 
 _Verifiable Credentials_ (VC) could be seen as subset of SBT. However there is an important distinction: VC require set of claims and privacy protocols. It would make more sense to model VC with relation to W3 DID standard. SBT is different, it doesn't require a [resolver](https://www.w3.org/TR/did-core/#dfn-did-resolvers) nor [method](https://www.w3.org/TR/did-core/#dfn-did-methods) registry. For SBT, we need something more elastic than VC.
 
@@ -34,7 +34,7 @@ _Verifiable Credentials_ (VC) could be seen as subset of SBT. However there is a
 
 Main requirement for Soulbound tokens is to bound an account to a human. A **Soul** is an account with SBTs, which are used to define account identity. Moving SBTs from one account to another should be strictly limited to:
 
-- **recover-ability** in case a user's private key is compromised due to extortion, loss, etc;
+- **recoverability** in case a user's private key is compromised due to extortion, loss, etc;
 - **soul transfer** - when a user needs to merge his accounts merge (e.g. he started with few different account but later decides to merge them to increase an account reputation).
 
 This becomes especially important for proof-of-human stamps that can only be issued once per user. Few safeguards against misuse of recovery are contemplated:
@@ -79,7 +79,7 @@ An SBT smart contract, SHOULD opt-in to a registry using `opt_in` function. One 
 - many registries: it MUST relay all state change functions to all registries.
 - or to no registry: it MUST issue the SBT state change emits by itself.
 
-If a SBT smart contract doesn't opt-in to any registry, then we should think about it as a single token registry, and it MUST strictly implement all SBT Registry query functions by itself: the contract address must be part of the arguments, and it must check that it equals to the deployed account address (`require!(ctr == env::current_account_id())`).
+If an SBT smart contract doesn't opt-in to any registry, then we should think about it as a single token registry, and it MUST strictly implement all SBT Registry query functions by itself: the contract address must be part of the arguments, and it must check that it equals to the deployed account address (`require!(ctr == env::current_account_id())`).
 
 Moreover, a registry will provide an efficient way to query multiple tokens for a single user. This will allow implementation of use cases such us:
 
@@ -87,7 +87,7 @@ Moreover, a registry will provide an efficient way to query multiple tokens for 
 - SBT classes;
 - decentralized societies.
 
-#### Recovery within a SBT Registry
+#### Recovery within an SBT Registry
 
 SBT registry can define it's own mechanism to atomically recover all tokens related to one account and execute soul transfer to another account, without going one by one through each SBT issuer (sometimes that might be even not possible). Example mechanisms a Registry can implement to recovery mechanism:
 
@@ -178,7 +178,7 @@ trait SBTRegistry {
         limit: Option<u32>,
     ) -> Vec<TokenId>;
 
-    /// Query sbt tokens by owner
+    /// Query SBT tokens by owner
     /// If `from_kind` is not specified, then `from_kind` should be assumed to be the first
     /// valid kind id.
     /// Returns list of pairs: `(Contract address, list of token IDs)`.
@@ -196,8 +196,8 @@ trait SBTRegistry {
 
     /// Creates a new, unique token and assigns it to the `receiver`.
     /// `token_spec` is a vector of pairs: owner AccountId and TokenMetadata.
-    /// each TokenMetadata must have non zero `kind`.
-    /// Must be called by a SBT contract.
+    /// Each TokenMetadata must have non zero `kind`.
+    /// Must be called by an SBT contract.
     /// Must emit `Mint` event.
     /// Must provide enough NEAR to cover registry storage cost.
     // #[payable]
@@ -208,7 +208,7 @@ trait SBTRegistry {
 
     /// sbt_recover reassigns all tokens from the old owner to a new owner,
     /// and registers `old_owner` to a burned addresses registry.
-    /// Must be called by a SBT contract.
+    /// Must be called by an SBT contract.
     /// Must emit `Recover` event.
     /// Must be called by an operator.
     /// Must provide enough NEAR to cover registry storage cost.
@@ -218,18 +218,18 @@ trait SBTRegistry {
 
     /// sbt_renew will update the expire time of provided tokens.
     /// `expires_at` is a unix timestamp (in seconds).
-    /// Must be called by a SBT contract.
+    /// Must be called by an SBT contract.
     /// Must emit `Renew` event.
     fn sbt_renew(&mut self, tokens: Vec<TokenId>, expires_at: u64, memo: Option<String>);
 
     /// Revokes SBT, could potentially burn it or update the expire time.
-    /// Must be called by a SBT contract.
+    /// Must be called by an SBT contract.
     /// Must emit one of `Revoke` or `Burn` event.
     /// Returns true if a token is a valid, active SBT. Otherwise returns false.
     fn sbt_revoke(&mut self, token: u64) -> bool;
 
     /// Transfers atomically all SBT tokens from one account to another account.
-    /// Must be a SBT holder.
+    /// The caller must be an SBT holder and the `to` must not be a banned account.
     /// Must emit `Revoke` event.
     // #[payable]
     fn sbt_soul_transfer(&mut self, to: AccountId) -> bool;
@@ -268,7 +268,7 @@ type Mint {
 /// An event emitted when a recovery process succeeded to reassign SBT, usually due to account
 /// access loss. This action is usually requested by the owner, but executed by an issuer,
 /// and doesn't trigger Soul Transfer.
-/// Must be emitted by a SBT registry.
+/// Must be emitted by an SBT registry.
 type Recover {
   ctr: AccountId         // SBT Contract recovering the tokens
   old_owner: AccountId;  // current holder of the SBT
@@ -278,7 +278,7 @@ type Recover {
 }
 
 /// An event emitted when a existing tokens are renewed.
-/// Must be emitted by a SBT registry.
+/// Must be emitted by an SBT registry.
 type Renew {
   ctr: AccountId  // SBT Contract renewing the tokens
   tokens: []u64;  // list of token ids.
@@ -287,7 +287,7 @@ type Renew {
 
 /// An event emitted when an existing tokens are revoked.
 /// Revoked tokens should not be listed in a wallet.
-/// Must be emitted by a SBT registry.
+/// Must be emitted by an SBT registry.
 type Revoke {
   ctr: AccountId  // SBT Contract revoking the tokens
   tokens: []u64;  // list of token ids.
@@ -295,7 +295,7 @@ type Revoke {
 }
 
 /// An event emitted when an existing tokens are burned.
-/// Must be emitted by a SBT registry.
+/// Must be emitted by an SBT registry.
 type Burn {
   ctr: AccountId  // SBT Contract revoking the tokens
   tokens: []u64;  // list of token ids.
@@ -305,7 +305,7 @@ type Burn {
 
 /// An event emitted when soul transfer is happening: all SBTs owned by `from` are transferred
 /// to `to`, and the `from` account is killed (can't receive any new SBT).
-/// Must be emitted by a SBT registry.
+/// Must be emitted by an SBT registry.
 /// Registry MUST emit `Kill` whenever the soul transfer happens.
 type SoulTransfer {
   from: AccountId;
@@ -314,10 +314,10 @@ type SoulTransfer {
 }
 
 /// An event emitted when the `account` is killed within the emitting registry.
-/// Must be emitted by a SBT registry.
+/// Must be emitted by an SBT registry.
 /// Registry must add the `account` to a blocklist and prohibit issuing SBTs to this account
 /// in the future
-/// Must be emitted by a SBT registry.
+/// Must be emitted by an SBT registry.
 type Kill {
   account: AccountId;
   memo?: string;   // optional message
@@ -329,7 +329,7 @@ Whenever a recovery is made in a way that an existing SBT is burned, the `Burn` 
 ### Recommended functions
 
 Although the transaction functions below are not part of the SBT smart contract standard (depending on a use case, they may have different parameters), we recommend them as a part of implementation and we also provide them in the reference implementation.
-These functions should emit appropriate events and relay calls to a SBT registry.
+These functions should emit appropriate events and relay calls to an SBT registry.
 
 ```rust
 trait SBT {
@@ -421,7 +421,7 @@ sequenceDiagram
 - Ability to create SBT aggregators.
 - Ability to use SBT as a primitive to model non KYC identity, badges, certificates etc...
 - SBT can be further used for "lego" protocols, like: Proof of Humanity (discussed for NDC Governance), undercollateralized lending, role based authentication systems, innovative economic and social applications...
-- Standard recover-ability mechanism.
+- Standard recoverability mechanism.
 - SBT are considered as a basic primitive for Decentralized Societies.
 - new way to implement Sybil attack resistance.
 
