@@ -163,10 +163,8 @@ trait SBTRegistry {
     fn sbt_supply_by_kind(&self, ctr: AccountId, kind: KindId) -> u64;
 
     /// returns total supply of SBTs for a given owner.
-    fn sbt_supply_by_owner(&self, ctr: AccountId, account: AccountId) -> u64;
-
-    /// returns true if the `account` has a token of a given `kind`.
-    fn sbt_supply_by_kind(&self, ctr: AccountId, account: AccountId, kind: KindId) -> bool;
+    /// If kind is specified, returns only owner supply of the given kind -- must be 0 or 1.
+    fn sbt_supply_by_owner(&self, ctr: AccountId, account: AccountId, kind: Option<KindId>) -> u64;
 
     /// Query sbt tokens issued by a given contract.
     /// If `from_index` is not specified, then `from_index` should be assumed
