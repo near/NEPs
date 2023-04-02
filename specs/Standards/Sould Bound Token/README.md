@@ -104,8 +104,8 @@ A registry can limit which contracts can mint SBTs by implementing a custom issu
 
 ### Smart contract interface
 
-For the Token ID type we propose `u64` rather than `U128`. `u64` capacity is more than 1e19. If we will mint 10'000 SBTs per second, than it will take us 58'494'241 years to get into the capacity.
-Today, the JS integer limit is `2^53-1 ~ 9e15`. It will take us 28561 years to fill that when minting 10'000 SBTs per second. So, we don't need to u128 nor a String type. However, if for some reason, we will need to get u64 support for JS, then we can always add another set of methods which will return String, so making it compatible with NFT standard (which is using `U128`, which is a string).
+For the Token ID type we propose `u64` rather than `U128`. `u64` capacity is more than 1e19. If we will mint 10'000 SBTs per second, then it will take us 58'494'241 years to fill the capacity.
+Today, the JS integer limit is `2^53-1 ~ 9e15`. Similarly, when minting 10'000 SBTs per second, it will take us 28'561 years to reach the limit. So, we don't need u128 nor the String type. However, if for some reason, we will need to get u64 support for JS, then we can always add another set of methods which will return String, so making it compatible with NFT standard (which is using `U128`, which is a string). Also, it's worth to note, that in 28'000 years JS (if it will still exists) will be completely different.
 
 ```rust
 // TokenId and Kind Id must be positive (0 is not a valid id)
@@ -425,13 +425,12 @@ sequenceDiagram
 
 ### Neutral
 
-- The API partially follows the NEP-171 (NFT) standard. The proposed design is to have native SBT API and also support NFT based queries.
-  NOTE: we can decide to use `nft_` prefix whenever possible.
+- The API partially follows the NEP-171 (NFT) standard. The proposed design is to have native SBT API and make it possible for issuer contracts to support NFT based queries if needed (such contract will have a limitation of only issuing SBTs with one `KindID` only).
 
 ### Negative
 
-- new set of events to be handled by the indexer and wallets.
-- complexity of integration with a registry: all SBT related transactions must go through Registry.
+- New set of events to be handled by the indexer and wallets.
+- Complexity of integration with a registry: all SBT related transactions must go through Registry.
 
 ## Considerations
 
