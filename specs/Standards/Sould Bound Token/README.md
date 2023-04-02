@@ -124,7 +124,8 @@ The Soulbound Token follows the NFT [NEP-171](https://github.com/near/NEPs/blob/
 - token ID is `u64` (as discussed above).
 - token class is `u64`, it's required when minting and it's part of the token metadata.
 - `TokenMetadata` doesn't have `title`, `description`, `media`, `media_hash`, `copies`, `extra`, `starts_at` nor `updated_at`. All that attributes except the `updated_at` can be part of the document stored at `reference`. `updated_at` can be tracked easily by indexers.
-- We don't have normal transferability, we propose to use more targeted events, to better reflect the event nature. Moreover events are emitted by the registry, so we need to include issuer contract address in the event.
+- We don't have normal transferability.
+- We propose to use more targeted events, to better reflect the event nature. Moreover events are emitted by the registry, so we need to include issuer contract address in the event.
 
 ```rust
 /// ContractMetadata defines contract wide attributes, which describes the whole contract.
@@ -164,7 +165,12 @@ trait SBTRegistry {
 
     /// returns total supply of SBTs for a given owner.
     /// If class is specified, returns only owner supply of the given class -- must be 0 or 1.
-    fn sbt_supply_by_owner(&self, ctr: AccountId, account: AccountId, class: Option<ClassId>) -> u64;
+    fn sbt_supply_by_owner(
+        &self,
+        ctr: AccountId,
+        account: AccountId,
+        class: Option<ClassId>,
+    ) -> u64;
 
     /// Query sbt tokens issued by a given contract.
     /// If `from_index` is not specified, then `from_index` should be assumed
@@ -199,10 +205,7 @@ trait SBTRegistry {
     /// Must emit `Mint` event.
     /// Must provide enough NEAR to cover registry storage cost.
     // #[payable]
-    fn sbt_mint(
-        &mut self,
-        token_spec: Vec<(AccountId, TokenMetadata)>,
-    ) -> Vec<TokenId>;
+    fn sbt_mint(&mut self, token_spec: Vec<(AccountId, TokenMetadata)>) -> Vec<TokenId>;
 
     /// sbt_recover reassigns all tokens from the old owner to a new owner,
     /// and registers `old_owner` to a burned addresses registry.
@@ -250,18 +253,17 @@ trait SBTNFT {
 type SbtEventClass {
   standard: "nep393";
   version: "1.0.0";
-  event: "mint" | "recover" | "renew" | "revoke" | "burn" | "soul_transfer" | "ban";
-  data: Mint | Recover | Renew | Revoke | Burn | SoulTransfer | Ban;
+  event: "mint" | "recover" | "renew" | "revoke" | "burn" | "ban" | "soul_transfer" ;
+  data: Mint[] | Recover[] | Renew | Revoke | Burn | Ban[] | SoulTransfer[];
 }
 
 /// An event minted by the Registry when new SBT is created.
 type Mint {
-  ctr: AccountId    // SBT Contract recovering the tokens
-  owner: AccountId, // holder of the newly minted SBT
-  tokens: []u64,    // newly minted token ids
-  memo?: string,    // optional message
+  ctr: AccountId;    // SBT Contract recovering the tokens
+  owner: AccountId; // holder of the newly minted SBT
+  tokens: []u64;    // newly minted token ids
+  memo?: string;    // optional message
 }
-
 
 /// An event emitted when a recovery process succeeded to reassign SBT, usually due to account
 /// access loss. This action is usually requested by the owner, but executed by an issuer,
@@ -278,7 +280,7 @@ type Recover {
 /// An event emitted when a existing tokens are renewed.
 /// Must be emitted by an SBT registry.
 type Renew {
-  ctr: AccountId  // SBT Contract renewing the tokens
+  ctr: AccountId;  // SBT Contract renewing the tokens
   tokens: []u64;  // list of token ids.
   memo?: string;  // optional message
 }
@@ -287,7 +289,7 @@ type Renew {
 /// Revoked tokens should not be listed in a wallet.
 /// Must be emitted by an SBT registry.
 type Revoke {
-  ctr: AccountId  // SBT Contract revoking the tokens
+  ctr: AccountId;  // SBT Contract revoking the tokens
   tokens: []u64;  // list of token ids.
   memo?: string;  // optional message
 }
@@ -295,29 +297,27 @@ type Revoke {
 /// An event emitted when an existing tokens are burned.
 /// Must be emitted by an SBT registry.
 type Burn {
-  ctr: AccountId  // SBT Contract revoking the tokens
+  ctr: AccountId;  // SBT Contract burning the tokens
   tokens: []u64;  // list of token ids.
   memo?: string;  // optional message
 }
 
+/// An event emitted when the `account` is banned within the emitting registry.
+/// Registry must add the `account` to a list of accounts that are not allowed to get any SBT
+/// in the future.
+/// Must be emitted by an SBT registry.
+type Ban {
+  account: AccountId;
+  memo?: string;   // optional message
+}
 
 /// An event emitted when soul transfer is happening: all SBTs owned by `from` are transferred
 /// to `to`, and the `from` account is banned (can't receive any new SBT).
 /// Must be emitted by an SBT registry.
-/// Registry MUST emit `Ban` whenever the soul transfer happens.
+/// Registry MUST also emit `Ban` whenever the soul transfer happens.
 type SoulTransfer {
   from: AccountId;
   to: AccountId;
-  memo?: string;   // optional message
-}
-
-/// An event emitted when the `account` is banned within the emitting registry.
-/// Must be emitted by an SBT registry.
-/// Registry must add the `account` to a blocklist and prohibit issuing SBTs to this account
-/// in the future
-/// Must be emitted by an SBT registry.
-type Ban {
-  account: AccountId;
   memo?: string;   // optional message
 }
 ```
