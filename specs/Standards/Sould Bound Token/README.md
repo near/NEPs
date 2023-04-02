@@ -205,7 +205,7 @@ trait SBTRegistry {
     /// Must emit `Mint` event.
     /// Must provide enough NEAR to cover registry storage cost.
     // #[payable]
-    fn sbt_mint(&mut self, token_spec: Vec<(AccountId, TokenMetadata)>, memo: Option<String>) -> Vec<TokenId>;
+    fn sbt_mint(&mut self, token_spec: Vec<(AccountId, TokenMetadata)>) -> Vec<TokenId>;
 
     /// sbt_recover reassigns all tokens from the old owner to a new owner,
     /// and registers `old_owner` to a burned addresses registry.
@@ -214,25 +214,25 @@ trait SBTRegistry {
     /// Must provide enough NEAR to cover registry storage cost.
     /// Requires attaching enough tokens to cover the storage growth.
     // #[payable]
-    fn sbt_recover(&mut self, from: AccountId, to: AccountId, memo: Option<String>);
+    fn sbt_recover(&mut self, from: AccountId, to: AccountId);
 
     /// sbt_renew will update the expire time of provided tokens.
     /// `expires_at` is a unix timestamp (in seconds).
     /// Must be called by an SBT contract.
     /// Must emit `Renew` event.
-    fn sbt_renew(&mut self, tokens: Vec<TokenId>, expires_at: u64, memo: Option<String>);
+    fn sbt_renew(&mut self, tokens: Vec<TokenId>, expires_at: u64);
 
     /// Revokes SBT, could potentially burn it or update the expire time.
     /// Must be called by an SBT contract.
     /// Must emit one of `Revoke` or `Burn` event.
     /// Returns true if a token is a valid, active SBT. Otherwise returns false.
-    fn sbt_revoke(&mut self, token: u64, memo: Option<String>) -> bool;
+    fn sbt_revoke(&mut self, token: u64) -> bool;
 
     /// Transfers atomically all SBT tokens from one account to another account.
     /// The caller must be an SBT holder and the `to` must not be a banned account.
     /// Must emit `Revoke` event.
     // #[payable]
-    fn sbt_soul_transfer(&mut self, to: AccountId, memo: Option<String>) -> bool;
+    fn sbt_soul_transfer(&mut self, to: AccountId) -> bool;
 }
 ```
 
@@ -266,7 +266,6 @@ type SbtEventClass {
 type Mint {
   ctr: AccountId;    // SBT Contract recovering the tokens
   tokens: [[AccountId, []u64]];  // list of pairs (token owner, TokenId[])
-  memo?: string;    // optional message
 }
 
 /// An event emitted when a recovery process succeeded to reassign SBT, usually due to account
@@ -278,7 +277,6 @@ type Recover {
   ctr: AccountId         // SBT Contract recovering the tokens
   old_owner: AccountId;  // current holder of the SBT
   new_owner: AccountId;  // destination account.
-  memo?: string;  // optional message
 }
 
 /// An event emitted when a existing tokens are renewed.
@@ -286,7 +284,6 @@ type Recover {
 type Renew {
   ctr: AccountId;  // SBT Contract renewing the tokens
   tokens: []u64;  // list of token ids.
-  memo?: string;  // optional message
 }
 
 /// An event emitted when an existing tokens are revoked.
@@ -295,7 +292,6 @@ type Renew {
 type Revoke {
   ctr: AccountId;  // SBT Contract revoking the tokens
   tokens: []u64;  // list of token ids.
-  memo?: string;  // optional message
 }
 
 /// An event emitted when an existing tokens are burned.
@@ -303,7 +299,6 @@ type Revoke {
 type Burn {
   ctr: AccountId;  // SBT Contract burning the tokens
   tokens: []u64;  // list of token ids.
-  memo?: string;  // optional message
 }
 
 /// An event emitted when the `account` is banned within the emitting registry.
@@ -312,7 +307,6 @@ type Burn {
 /// Must be emitted by an SBT registry.
 type Ban {
   account: AccountId;
-  memo?: string;   // optional message
 }
 
 /// An event emitted when soul transfer is happening: all SBTs owned by `from` are transferred
@@ -322,7 +316,6 @@ type Ban {
 type SoulTransfer {
   from: AccountId;
   to: AccountId;
-  memo?: string;   // optional message
 }
 ```
 
@@ -332,6 +325,7 @@ Whenever a recovery is made in a way that an existing SBT is burned, the `Burn` 
 
 Although the transaction functions below are not part of the SBT smart contract standard (depending on a use case, they may have different parameters), we recommend them as a part of implementation and we also provide them in the reference implementation.
 These functions should emit appropriate events and relay calls to an SBT registry.
+We recommend that the all functions related to an event will take an optional `memo: Option<String>` argument for accounting purposes.
 
 ```rust
 trait SBT {
@@ -361,7 +355,7 @@ trait SBT {
 
     fn sbt_renew(&mut self, tokens: Vec<TokenId>, expires_at: u64, memo: Option<String>);
 
-    fn sbt_revoke(token: u64, memo: Option<String>) -> bool;
+    fn sbt_revoke(token: Vec<u64>, memo: Option<String>) -> bool;
 }
 ```
 
