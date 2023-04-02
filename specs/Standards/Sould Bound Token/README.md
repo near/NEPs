@@ -205,17 +205,16 @@ trait SBTRegistry {
     /// Must emit `Mint` event.
     /// Must provide enough NEAR to cover registry storage cost.
     // #[payable]
-    fn sbt_mint(&mut self, token_spec: Vec<(AccountId, TokenMetadata)>) -> Vec<TokenId>;
+    fn sbt_mint(&mut self, token_spec: Vec<(AccountId, TokenMetadata)>, memo: Option<String>) -> Vec<TokenId>;
 
     /// sbt_recover reassigns all tokens from the old owner to a new owner,
     /// and registers `old_owner` to a burned addresses registry.
     /// Must be called by an SBT contract.
     /// Must emit `Recover` event.
-    /// Must be called by an operator.
     /// Must provide enough NEAR to cover registry storage cost.
     /// Requires attaching enough tokens to cover the storage growth.
     // #[payable]
-    fn sbt_recover(&mut self, from: AccountId, to: AccountId);
+    fn sbt_recover(&mut self, from: AccountId, to: AccountId, memo: Option<String>);
 
     /// sbt_renew will update the expire time of provided tokens.
     /// `expires_at` is a unix timestamp (in seconds).
@@ -227,13 +226,13 @@ trait SBTRegistry {
     /// Must be called by an SBT contract.
     /// Must emit one of `Revoke` or `Burn` event.
     /// Returns true if a token is a valid, active SBT. Otherwise returns false.
-    fn sbt_revoke(&mut self, token: u64) -> bool;
+    fn sbt_revoke(&mut self, token: u64, memo: Option<String>) -> bool;
 
     /// Transfers atomically all SBT tokens from one account to another account.
     /// The caller must be an SBT holder and the `to` must not be a banned account.
     /// Must emit `Revoke` event.
     // #[payable]
-    fn sbt_soul_transfer(&mut self, to: AccountId) -> bool;
+    fn sbt_soul_transfer(&mut self, to: AccountId, memo: Option<String>) -> bool;
 }
 ```
 
@@ -249,31 +248,36 @@ trait SBTNFT {
 
 ### Events
 
+Event design principles:
+
+- Events don't need to repeat all function arguments - these are easy to retrieve by indexer (events are consumed by indexers anyway).
+- Events must include fields necessary to identify subject matters related to use case.
+- When possible, events should contain aggregated data, with respect to the standard function related to the event.
+
 ```typescript
 type SbtEventClass {
   standard: "nep393";
   version: "1.0.0";
   event: "mint" | "recover" | "renew" | "revoke" | "burn" | "ban" | "soul_transfer" ;
-  data: Mint[] | Recover[] | Renew | Revoke | Burn | Ban[] | SoulTransfer[];
+  data: Mint | Recover | Renew | Revoke | Burn | Ban[] | SoulTransfer;
 }
 
 /// An event minted by the Registry when new SBT is created.
 type Mint {
   ctr: AccountId;    // SBT Contract recovering the tokens
-  owner: AccountId; // holder of the newly minted SBT
-  tokens: []u64;    // newly minted token ids
+  tokens: [[AccountId, []u64]];  // list of pairs (token owner, TokenId[])
   memo?: string;    // optional message
 }
 
 /// An event emitted when a recovery process succeeded to reassign SBT, usually due to account
 /// access loss. This action is usually requested by the owner, but executed by an issuer,
-/// and doesn't trigger Soul Transfer.
+/// and doesn't trigger Soul Transfer. Registry recovers all tokens assigned to `old_owner`,
+/// hence we don't need to enumerate them.
 /// Must be emitted by an SBT registry.
 type Recover {
   ctr: AccountId         // SBT Contract recovering the tokens
   old_owner: AccountId;  // current holder of the SBT
   new_owner: AccountId;  // destination account.
-  tokens: []u64;  // list of token ids.
   memo?: string;  // optional message
 }
 
@@ -339,6 +343,7 @@ trait SBT {
         account: AccountId,
         class: u64,
         metadata: TokenMetadata,
+        memo: Option<String>,
     ) -> TokenId;
 
     /// Creates a new, unique token and assigns it to the `receiver`.
@@ -348,14 +353,15 @@ trait SBT {
     fn sbt_mint_multi(
         &mut self,
         token_spec: Vec<(AccountId, TokenMetadata)>,
+        memo: Option<String>,
     ) -> Vec<TokenId>;
 
     // #[payable]
-    fn sbt_recover(&mut self, from: AccountId, to: AccountId);
+    fn sbt_recover(&mut self, from: AccountId, to: AccountId, memo: Option<String>);
 
     fn sbt_renew(&mut self, tokens: Vec<TokenId>, expires_at: u64, memo: Option<String>);
 
-    fn sbt_revoke(token: u64) -> bool;
+    fn sbt_revoke(token: u64, memo: Option<String>) -> bool;
 }
 ```
 
