@@ -51,13 +51,13 @@ An issuer can provide a _sbt revocation_ in his contract (eg, when a related cer
 
 A registry can emit a `Ban` event without doing soul transfer. Handling it depends on the registry governance or registry use cases. One example is to use social governance to identify fake accounts (like bots) - in that case the registry should allow to emit `Ban` and block a scam soul and block future transfers.
 
-### Token Kind
+### Token Class
 
-SBT tokens can't be fractionized. Also, by definition there should be only one of a token per token kind per user. Examples: user should not be able to receive few badges of the same kind, or few proof of attendance to the same event.
-However we identify a need for having few token kinds in a single contract:
+SBT tokens can't be fractionized. Also, by definition there should be only one of a token per token class per user. Examples: user should not be able to receive few badges of the same class, or few proof of attendance to the same event.
+However we identify a need for having few token classes in a single contract:
 
-- badges: one contract with multiple badge kind (community lead, OG...);
-- certificates: one issuer can create certificates of a different kind (eg school department can create diplomas for each major and each graduation year).
+- badges: one contract with multiple badge class (community lead, OG...);
+- certificates: one issuer can create certificates of a different class (eg school department can create diplomas for each major and each graduation year).
 
 We also see a trend in the NFT community and demand for market places to support multi token contracts.
 
@@ -65,10 +65,10 @@ We also see a trend in the NFT community and demand for market places to support
 - NEAR [NEP-245](https://github.com/near/NEPs/blob/master/neps/nep-0245.md) has elaborated similar interface for both bridge compatibility with EVM chains as well as flexibility to define different token types with different behavior in a single contract. [DevGovGigs Board](https://near.social/#/mob.near/widget/MainPage.Post.Page?accountId=devgovgigs.near&blockHeight=87938945) recently also shows growing interest to move NEP-245 adoption forward.
 - [NEP-454](https://github.com/near/NEPs/pull/454) proposes royalties support for multi token contracts.
 
-We propose that the SBT Standard will support the multi-token idea from the get go. This won't increase the complexity of the contract (in a traditional case, where one contract will only issue tokens of the single kind, the `kind` argument is simply ignored in the state, and in the functions it's required to be of a constant value, eg `1`) but will unify the interface.
-It's up to the smart contract design how the token kinds is managed. A smart contract can expose an admin function (example: `sbt_new_kind() -> KindId`) or hard code the pre-registered kinds.
+We propose that the SBT Standard will support the multi-token idea from the get go. This won't increase the complexity of the contract (in a traditional case, where one contract will only issue tokens of the single class, the `class` argument is simply ignored in the state, and in the functions it's required to be of a constant value, eg `1`) but will unify the interface.
+It's up to the smart contract design how the token classes is managed. A smart contract can expose an admin function (example: `sbt_new_class() -> ClassId`) or hard code the pre-registered classes.
 
-Finally, we require that each token ID is unique within the smart contract. This will allow us to query token only by token ID, without knowing it's kind.
+Finally, we require that each token ID is unique within the smart contract. This will allow us to query token only by token ID, without knowing it's class.
 
 ### SBT Registry
 
@@ -108,9 +108,9 @@ For the Token ID type we propose `u64` rather than `U128`. `u64` capacity is mor
 Today, the JS integer limit is `2^53-1 ~ 9e15`. Similarly, when minting 10'000 SBTs per second, it will take us 28'561 years to reach the limit. So, we don't need u128 nor the String type. However, if for some reason, we will need to get u64 support for JS, then we can always add another set of methods which will return String, so making it compatible with NFT standard (which is using `U128`, which is a string). Also, it's worth to note, that in 28'000 years JS (if it will still exists) will be completely different.
 
 ```rust
-// TokenId and Kind Id must be positive (0 is not a valid id)
+// TokenId and ClassId must be positive (0 is not a valid ID)
 pub type TokenId = u64;
-pub type KindId = u64;
+pub type ClassId = u64;
 
 pub struct Token {
     pub token: TokenId,
@@ -122,7 +122,7 @@ pub struct Token {
 The Soulbound Token follows the NFT [NEP-171](https://github.com/near/NEPs/blob/master/neps/nep-0171.md) interface, with few differences:
 
 - token ID is `u64` (as discussed above).
-- token kind is `u64`, it's required when minting and it's part of the token metadata.
+- token class is `u64`, it's required when minting and it's part of the token metadata.
 - `TokenMetadata` doesn't have `title`, `description`, `media`, `media_hash`, `copies`, `extra`, `starts_at` nor `updated_at`. All that attributes except the `updated_at` can be part of the document stored at `reference`. `updated_at` can be tracked easily by indexers.
 - We don't have normal transferability, we propose to use more targeted events, to better reflect the event nature. Moreover events are emitted by the registry, so we need to include issuer contract address in the event.
 
@@ -140,7 +140,7 @@ pub struct ContractMetadata {
 
 /// TokenMetadata defines attributes for each SBT token.
 pub struct TokenMetadata {
-    pub kind: KindId, // Kind of a token
+    pub class: ClassId, // token class
     pub issued_at: Option<u64>, // When token was issued or minted, Unix epoch in milliseconds
     pub expires_at: Option<u64>, // When token expires, Unix epoch in milliseconds
     pub reference: Option<String>, // URL to an off-chain JSON file with more info.
@@ -159,12 +159,12 @@ trait SBTRegistry {
     /// returns total amount of tokens issued by `ctr` SBT contract.
     fn sbt_supply(&self, ctr: AccountId) -> u64;
 
-    /// returns total amount of tokens of given kind minted by this contract
-    fn sbt_supply_by_kind(&self, ctr: AccountId, kind: KindId) -> u64;
+    /// returns total amount of tokens of given class minted by this contract
+    fn sbt_supply_by_class(&self, ctr: AccountId, class: ClassId) -> u64;
 
     /// returns total supply of SBTs for a given owner.
-    /// If kind is specified, returns only owner supply of the given kind -- must be 0 or 1.
-    fn sbt_supply_by_owner(&self, ctr: AccountId, account: AccountId, kind: Option<KindId>) -> u64;
+    /// If class is specified, returns only owner supply of the given class -- must be 0 or 1.
+    fn sbt_supply_by_owner(&self, ctr: AccountId, account: AccountId, class: Option<ClassId>) -> u64;
 
     /// Query sbt tokens issued by a given contract.
     /// If `from_index` is not specified, then `from_index` should be assumed
@@ -177,14 +177,14 @@ trait SBTRegistry {
     ) -> Vec<TokenId>;
 
     /// Query SBT tokens by owner
-    /// If `from_kind` is not specified, then `from_kind` should be assumed to be the first
-    /// valid kind id.
+    /// If `from_class` is not specified, then `from_class` should be assumed to be the first
+    /// valid class id.
     /// Returns list of pairs: `(Contract address, list of token IDs)`.
     fn sbt_tokens_by_owner(
         &self,
         account: AccountId,
         ctr: Option<AccountId>,
-        from_kind: Option<u64>,
+        from_class: Option<u64>,
         limit: Option<u32>,
     ) -> Vec<(AccountId, Vec<TokenId>)>;
 
@@ -194,7 +194,7 @@ trait SBTRegistry {
 
     /// Creates a new, unique token and assigns it to the `receiver`.
     /// `token_spec` is a vector of pairs: owner AccountId and TokenMetadata.
-    /// Each TokenMetadata must have non zero `kind`.
+    /// Each TokenMetadata must have non zero `class`.
     /// Must be called by an SBT contract.
     /// Must emit `Mint` event.
     /// Must provide enough NEAR to cover registry storage cost.
@@ -239,7 +239,7 @@ SBT smart contracts can implement NFT query interface to make it compatible with
 ```rust
 trait SBTNFT {
   fn nft_total_supply(&self) -> U64
-  // here we index by token id instead of by kind id (as done in `sbt_tokens_by_owner`)
+  // here we index by token id instead of by class id (as done in `sbt_tokens_by_owner`)
   fn nft_tokens_for_owner(&self, account_id: AccountId, from_index: Option<U64>, limit: Option<u64>) -> Vec<Token>
   fn nft_supply_for_owner(&self, account_id: AccountId) -> U64
 ```
@@ -247,7 +247,7 @@ trait SBTNFT {
 ### Events
 
 ```typescript
-type SbtEventKind {
+type SbtEventClass {
   standard: "nep393";
   version: "1.0.0";
   event: "mint" | "recover" | "renew" | "revoke" | "burn" | "soul_transfer" | "ban";
@@ -331,13 +331,13 @@ These functions should emit appropriate events and relay calls to an SBT registr
 
 ```rust
 trait SBT {
-    /// the function should overwrite `metadata.kind = kind`.
+    /// the function should overwrite `metadata.class = class`.
     /// Must provide enough NEAR to cover registry storage cost.
     // #[payable]
     fn sbt_mint(
         &mut self,
         account: AccountId,
-        kind: u64,
+        class: u64,
         metadata: TokenMetadata,
     ) -> TokenId;
 
@@ -425,7 +425,7 @@ sequenceDiagram
 
 ### Neutral
 
-- The API partially follows the NEP-171 (NFT) standard. The proposed design is to have native SBT API and make it possible for issuer contracts to support NFT based queries if needed (such contract will have a limitation of only issuing SBTs with one `KindID` only).
+- The API partially follows the NEP-171 (NFT) standard. The proposed design is to have native SBT API and make it possible for issuer contracts to support NFT based queries if needed (such contract will have a limitation of only issuing SBTs with one `ClassId` only).
 
 ### Negative
 
