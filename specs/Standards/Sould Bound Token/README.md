@@ -50,6 +50,7 @@ Soulbound tokens can have an _expire date_. This is useful for tokens which are 
 An issuer can provide a _sbt revocation_ in his contract (eg, when a related certificate or membership should be revoked). When doing so, the SBT registry MUST be updated and `Revoke` event must be emitted. It's up to the registry to define revocation handling (either by burning a token, or changing expire date of it's metadata).
 
 A registry can emit a `Ban` event without doing soul transfer. Handling it depends on the registry governance or registry use cases. One example is to use social governance to identify fake accounts (like bots) - in that case the registry should allow to emit `Ban` and block a scam soul and block future transfers.
+NOTE: SBT smart contract (issuer) can have it's own list of blocked accounts or allowed only accounts.
 
 ### Token Class
 
@@ -72,7 +73,7 @@ Finally, we require that each token ID is unique within the smart contract. This
 
 ### SBT Registry
 
-Atomicity of _soul transfer_ in current NEAR runtime is not possible if the token balance is kept separately for each SBT smart contract. We need an additional contract: the `SBT Registry`, to provide atomic transfer of all user tokens and efficient way to block accounts in relation to a Ban event. The registry will provide a balance book for all associated SBT tokens.
+Atomicity of _soul transfer_ in current NEAR runtime is not possible if the token balance is kept separately for each SBT smart contract. We need an additional contract: the `SBT Registry`, to provide atomic transfer of all user tokens and efficient way to block accounts in relation to a Ban event. The registry provides a balance book of all associated SBT tokens.
 
 An SBT smart contract, SHOULD opt-in to a registry using `opt_in` function. One SBT smart contract can opt-in to:
 
@@ -193,6 +194,10 @@ trait SBTRegistry {
         from_class: Option<u64>,
         limit: Option<u32>,
     ) -> Vec<(AccountId, Vec<TokenId>)>;
+
+    /// checks if an `account` was banned by the registry.
+    fn is_banned(&self, account: AccountId) -> bool;
+
 
     /*************
      * Transactions
