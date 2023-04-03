@@ -73,9 +73,9 @@ Finally, we require that each token ID is unique within the smart contract. This
 
 ### SBT Registry
 
-Atomicity of _soul transfer_ in current NEAR runtime is not possible if the token balance is kept separately for each SBT smart contract. We need an additional contract: the `SBT Registry`, to provide atomic transfer of all user tokens and efficient way to block accounts in relation to a Ban event. The registry provides a balance book of all associated SBT tokens.
+Atomicity of _soul transfer_ in current NEAR runtime is not possible if the token balance is kept separately for each SBT smart contract. We need an additional contract: the `SBT Registry`, to provide atomic transfer of all user SBTs and efficient way to ban accounts in relation to the Ban event. The registry provides a balance book of all associated SBT tokens. So, each SBT is requested by a smart contract (issuer), however it's is created in the registry.
 
-An SBT smart contract, SHOULD opt-in to a registry using `opt_in` function. One SBT smart contract can opt-in to:
+We can have multiple competing registries (with different purpose or different management scheme). Registries can utilize the same SBT contracts. An SBT smart contract, SHOULD opt-in to a registry using `opt_in` function. One SBT smart contract can opt-in to:
 
 - many registries: it MUST relay all state change functions to all registries.
 - or to no registry: it MUST issue the SBT state change emits by itself.
