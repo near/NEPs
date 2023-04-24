@@ -29,15 +29,15 @@ Almost every wallet implementation in NEAR used a single account model until we 
 
 ### Storage of key pairs for FunctionCall access keys in dApp context vs. wallet context
 
-- NEAR's unique concept of `FunctionCall` access keys allow for the concept of 'signing in' to a dApp using your wallet.  'Signing In' to a dApp is accomplished by adding `FunctionCall` type access key that the dApp owns to the account that the user is logging in as.
-- Once a user has 'signed in' to a dApp, the dApp can then use the keypair that it owns to execute transactions without having to prompt the user to route and approve those transactions through their wallet. 
-- `FunctionCall` access keys have a limited quota that can only be used to pay for gas fees (typically 0.25 NEAR) and can further be restricted to only be allowed to call *specific methods* on one **specific** smart contract.
-- This allows for an ideal user experience for dApps that require small gas-only transactions regularly while in use.  Those transactions can be done without interrupting the user experience by requiring them to be approved through their wallet.  A great example of this is evident in gaming use-cases -- take a gaming dApp where some interactions the user makes must write to the blockchain as they do common actions in the game world.  Without the 'sign in' concept that provides the dApp with its own limited usage key, the user might be constantly interrupted by needing to approve transactions on their wallet as they perform common actions. If a player has their account secured with a ledger, the gameplay experience would be constantly interrupted by prompts to approve transactions on their ledger device!  With the 'sign in' concept, the user will only intermittently need to approve transactions to re-sign-in, when the quota that they approved for gas usage during their last login has been used up.
+- NEAR's unique concept of `FunctionCall` access keys allow for the concept of 'signing in' to a dApp using your wallet. 'Signing In' to a dApp is accomplished by adding `FunctionCall` type access key that the dApp owns to the account that the user is logging in as.
+- Once a user has 'signed in' to a dApp, the dApp can then use the keypair that it owns to execute transactions without having to prompt the user to route and approve those transactions through their wallet.
+- `FunctionCall` access keys have a limited quota that can only be used to pay for gas fees (typically 0.25 NEAR) and can further be restricted to only be allowed to call _specific methods_ on one **specific** smart contract.
+- This allows for an ideal user experience for dApps that require small gas-only transactions regularly while in use. Those transactions can be done without interrupting the user experience by requiring them to be approved through their wallet. A great example of this is evident in gaming use-cases -- take a gaming dApp where some interactions the user makes must write to the blockchain as they do common actions in the game world. Without the 'sign in' concept that provides the dApp with its own limited usage key, the user might be constantly interrupted by needing to approve transactions on their wallet as they perform common actions. If a player has their account secured with a ledger, the gameplay experience would be constantly interrupted by prompts to approve transactions on their ledger device! With the 'sign in' concept, the user will only intermittently need to approve transactions to re-sign-in, when the quota that they approved for gas usage during their last login has been used up.
 - Generally, it is recommended to only keep `FullAccess` keys in wallet scope and hidden from the dApp consumer. `FunctionCall` type keys should be generated and owned by the dApp, and requested to be added using the `signIn` method. They should **not** be 'hidden' inside the wallet in the way that `FullAccess` type keys are.
 
 ## Specification
 
-Injected wallets are typically browser extensions that implement the `Wallet` API (see below).  References to the currently available wallets are tracked on the `window` object. To avoid namespace collisions and easily detect when they're available, wallets must mount under their own key of the object `window.near` (e.g. `window.near.sender`).
+Injected wallets are typically browser extensions that implement the `Wallet` API (see below). References to the currently available wallets are tracked on the `window` object. To avoid namespace collisions and easily detect when they're available, wallets must mount under their own key of the object `window.near` (e.g. `window.near.sender`).
 **NOTE: Do not replace the entire `window.near` object with your wallet implementation, or add any objects as properties of the `window.near` object that do not conform to the Injected Wallet Standard**
 
 At the core of a wallet are [`signTransaction`](#signtransaction) and [`signTransactions`](#signtransactions). These methods, when given a [`TransactionOptions`](#Wallet-API) instance, will prompt the user to sign with a key pair previously imported (with the assumption it has [`FullAccess`](https://nomicon.io/DataStructures/AccessKey) permission).
@@ -78,9 +78,9 @@ interface SignOutParams {
 }
 
 interface TransactionOptions {
-    receiverId: string;
-    actions: Array<transactions.Action>;
-    signerId?: string;
+  receiverId: string;
+  actions: Array<transactions.Action>;
+  signerId?: string;
 }
 
 interface SignTransactionParams {
@@ -96,7 +96,7 @@ interface Events {
 }
 
 interface ConnectParams {
-    networkId: string;
+  networkId: string;
 }
 
 type Unsubscribe = () => void;
@@ -112,8 +112,12 @@ interface Wallet {
   signIn(params: SignInParams): Promise<void>;
   signInMulti(params: SignInMultiParams): Promise<void>;
   signOut(params: SignOutParams): Promise<void>;
-  signTransaction(params: SignTransactionParams): Promise<transactions.SignedTransaction>;
-  signTransactions(params: SignTransactionsParams): Promise<Array<transactions.SignedTransaction>>;
+  signTransaction(
+    params: SignTransactionParams
+  ): Promise<transactions.SignedTransaction>;
+  signTransactions(
+    params: SignTransactionsParams
+  ): Promise<Array<transactions.SignedTransaction>>;
   disconnect(): Promise<void>;
   on<EventName extends keyof Events>(
     event: EventName,
@@ -135,7 +139,7 @@ Retrieve the wallet's unique identifier.
 ```ts
 const { id } = window.near.wallet;
 
-console.log(id) // "wallet"
+console.log(id); // "wallet"
 ```
 
 ##### `connected`
@@ -145,7 +149,7 @@ Determine whether we're already connected to the wallet and have visibility of a
 ```ts
 const { connected } = window.near.wallet;
 
-console.log(connected) // true
+console.log(connected); // true
 ```
 
 ##### `network`
@@ -155,7 +159,7 @@ Retrieve the currently selected network.
 ```ts
 const { network } = window.near.wallet;
 
-console.log(network) // { networkId: "testnet", nodeUrl: "https://rpc.testnet.near.org" }
+console.log(network); // { networkId: "testnet", nodeUrl: "https://rpc.testnet.near.org" }
 ```
 
 ##### `accounts`
@@ -165,7 +169,7 @@ Retrieve all accounts visible to the dApp.
 ```ts
 const { accounts } = window.near.wallet;
 
-console.log(accounts) // [{ accountId: "test.testnet", publicKey: PublicKey }]
+console.log(accounts); // [{ accountId: "test.testnet", publicKey: PublicKey }]
 ```
 
 #### Methods
@@ -197,13 +201,15 @@ const signedTx = await window.near.wallet.signTransaction({
   transaction: {
     signerId: accounts[0].accountId,
     receiverId: "guest-book.testnet",
-    actions: [transactions.functionCall(
-      "addMessage",
-      { text: "Hello World!" },
-      utils.format.parseNearAmount("0.00000000003"),
-      utils.format.parseNearAmount("0.01")
-    )]
-  }
+    actions: [
+      transactions.functionCall(
+        "addMessage",
+        { text: "Hello World!" },
+        utils.format.parseNearAmount("0.00000000003"),
+        utils.format.parseNearAmount("0.01")
+      ),
+    ],
+  },
 });
 // Send the transaction to the blockchain.
 await provider.sendTransaction(signedTx);
@@ -225,31 +231,35 @@ const provider = new providers.JsonRpcProvider({ url: network.nodeUrl });
 const signedTxs = await window.near.wallet.signTransactions({
   transactions: [
     {
-        signerId: accounts[0].accountId,
-        receiverId: "guest-book.testnet",
-        actions: [transactions.functionCall(
-            "addMessage",
-            { text: "Hello World! (1/2)" },
-            utils.format.parseNearAmount("0.00000000003"),
-            utils.format.parseNearAmount("0.01")
-        )]
+      signerId: accounts[0].accountId,
+      receiverId: "guest-book.testnet",
+      actions: [
+        transactions.functionCall(
+          "addMessage",
+          { text: "Hello World! (1/2)" },
+          utils.format.parseNearAmount("0.00000000003"),
+          utils.format.parseNearAmount("0.01")
+        ),
+      ],
     },
     {
-        signerId: accounts[0].accountId,
-        receiverId: "guest-book.testnet",
-        actions: [transactions.functionCall(
-            "addMessage",
-            { text: "Hello World! (2/2)" },
-            utils.format.parseNearAmount("0.00000000003"),
-            utils.format.parseNearAmount("0.01")
-        )]
-    }
-  ]
-}); 
+      signerId: accounts[0].accountId,
+      receiverId: "guest-book.testnet",
+      actions: [
+        transactions.functionCall(
+          "addMessage",
+          { text: "Hello World! (2/2)" },
+          utils.format.parseNearAmount("0.00000000003"),
+          utils.format.parseNearAmount("0.01")
+        ),
+      ],
+    },
+  ],
+});
 
 for (let i = 0; i < signedTxs.length; i += 1) {
   const signedTx = signedTxs[i];
-  
+
   // Send the transaction to the blockchain.
   await provider.sendTransaction(signedTx);
 }
@@ -280,8 +290,8 @@ await window.near.wallet.signIn({
     methodNames: [],
   },
   account: {
-    accountId,
-    publicKey: utils.KeyPair.fromRandom("ed25519").getPublicKey()
+    accountId: accounts[0].accountId,
+    publicKey: utils.KeyPair.fromRandom("ed25519").getPublicKey(),
   },
 });
 ```
@@ -306,19 +316,21 @@ await window.near.wallet.signInMulti({
     {
       receiverId: "guest-book2.testnet",
       methodNames: [],
-    }
+    },
   ],
   account: {
-    accountId,
-    publicKey: utils.KeyPair.fromRandom("ed25519").getPublicKey()
+    accountId: accounts[0].accountId,
+    publicKey: utils.KeyPair.fromRandom("ed25519").getPublicKey(),
   },
 });
 ```
 
 ##### Benefits
+
 This NEP will optimize UX for multi contract DApps and avoid multiple redirects. These are more and more common in the ecosystem and this NEP will benefit the UX for those DApps.
 
 ##### Concerns
+
 - The currently available keystores will have to catch up in order to support multiple keys per account
 - We should add the new method to the Wallet interface for clarity in the NEP doc
 
@@ -343,7 +355,7 @@ await window.near.wallet.signOut({
 
       return {
         accountId,
-        publicKey: keyPair.getPublicKey()
+        publicKey: keyPair.getPublicKey(),
       };
     })
   ),
@@ -361,4 +373,3 @@ window.near.wallet.on("accountsChanged", ({ accounts }) => {
   console.log("Accounts Changed", accounts);
 });
 ```
-
