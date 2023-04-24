@@ -65,12 +65,12 @@ interface Network {
 
 interface SignInParams {
   permission: transactions.FunctionCallPermission;
-  accounts: Array<Account>;
+  accounts: Account;
 }
 
 interface SignInMultiParams {
   permissions: Array<transactions.FunctionCallPermission>;
-  accounts: Array<Account>;
+  accounts: Account;
 }
 
 interface SignOutParams {
@@ -110,6 +110,7 @@ interface Wallet {
   supportsNetwork(networkId: string): Promise<boolean>;
   connect(params: ConnectParams): Promise<Array<Account>>;
   signIn(params: SignInParams): Promise<void>;
+  signInMulti(params: SignInMultiParams): Promise<void>;
   signOut(params: SignOutParams): Promise<void>;
   signTransaction(params: SignTransactionParams): Promise<transactions.SignedTransaction>;
   signTransactions(params: SignTransactionsParams): Promise<Array<transactions.SignedTransaction>>;
@@ -322,6 +323,13 @@ await window.near.wallet.signInMulti({
 });
 ```
 
+##### Benefits
+This NEP will optimize UX for multi contract DApps and avoid multiple redirects. These are more and more common in the ecosystem and this NEP will benefit the UX for those DApps.
+
+##### Concerns
+- The currently available keystores will have to catch up in order to support multiple keys per account
+- We should add the new method to the Wallet interface for clarity in the NEP doc
+
 ##### `signOut`
 
 Delete `FunctionCall` access key(s) for one or more accounts. This request should require explicit approval from the user.
@@ -361,3 +369,4 @@ window.near.wallet.on("accountsChanged", ({ accounts }) => {
   console.log("Accounts Changed", accounts);
 });
 ```
+
