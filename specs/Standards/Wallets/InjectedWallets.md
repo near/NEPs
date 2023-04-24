@@ -65,12 +65,12 @@ interface Network {
 
 interface SignInParams {
   permission: transactions.FunctionCallPermission;
-  accounts: Account;
+  account: Account;
 }
 
 interface SignInMultiParams {
   permissions: Array<transactions.FunctionCallPermission>;
-  accounts: Account;
+  account: Account;
 }
 
 interface SignOutParams {
@@ -279,14 +279,10 @@ await window.near.wallet.signIn({
     receiverId: "guest-book.testnet",
     methodNames: [],
   },
-  accounts: accounts.map(({ accountId }) => {
-    const keyPair = utils.KeyPair.fromRandom("ed25519");
-
-    return {
-      accountId,
-      publicKey: keyPair.getPublicKey()
-    };
-  }),
+  account: {
+    accountId,
+    publicKey: utils.KeyPair.fromRandom("ed25519").getPublicKey()
+  },
 });
 ```
 
@@ -312,14 +308,10 @@ await window.near.wallet.signInMulti({
       methodNames: [],
     }
   ],
-  accounts: accounts.map(({ accountId }) => {
-    const keyPair = utils.KeyPair.fromRandom("ed25519");
-
-    return {
-      accountId,
-      publicKey: keyPair.getPublicKey()
-    };
-  }),
+  account: {
+    accountId,
+    publicKey: utils.KeyPair.fromRandom("ed25519").getPublicKey()
+  },
 });
 ```
 
