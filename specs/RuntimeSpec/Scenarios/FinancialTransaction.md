@@ -50,17 +50,17 @@ succession) which should be strictly increasing with each transaction. Unlike in
 the entire accounts, so several users using the same account through different access keys need not to worry about accidentally
 reusing each other's nonces.
 
-The block hash is used to calculate the transaction "freshness".  It
-is used to make sure the transaction does not get lost (let's say
-somewhere in the network) and then arrive days, weeks or years later
-when it is not longer relevant or would be undesirable to execute.
-The transaction does not need to arrive at the specific block, instead
-it is required to arrive within certain number of blocks from the bock
+The block hash is used to calculate a transaction's "freshness".  It
+is used to make sure a transaction does not get lost (let's say
+somewhere in the network) and then arrive days, weeks, or years later
+when it is not longer relevant and would be undesirable to execute.
+A transaction does not need to arrive at a specific block, instead
+it is required to arrive within a certain number of blocks from the block
 identified by the `block_hash`.  Any transaction arriving outside this
 threshold is considered to be invalid.  Allowed delay is defined by
-`transaction_validity_period` option in chain’s genesis file.  On
-mainnet the value is 86400 (which corresponds to roughly a day) while
-on testnet it’s 100.
+`transaction_validity_period` option in the chain’s genesis file.  On
+mainnet, this value is 86400 (which corresponds to roughly a day) and
+on testnet it is 100.
 
 near-shell or other tool that Alice uses then signs this transaction, by: computing the hash of the transaction and signing it
 with the secret key, resulting in a `SignedTransaction` object.
