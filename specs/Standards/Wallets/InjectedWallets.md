@@ -65,12 +65,12 @@ interface Network {
 
 interface SignInParams {
   permission: transactions.FunctionCallPermission;
-  account: Account;
+  account?: Account;
 }
 
 interface SignInMultiParams {
   permissions: Array<transactions.FunctionCallPermission>;
-  account: Account;
+  account?: Account;
 }
 
 interface SignOutParams {
