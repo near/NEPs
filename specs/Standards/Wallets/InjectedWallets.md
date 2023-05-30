@@ -297,6 +297,7 @@ await window.near.wallet.signIn({
 ```
 
 ##### The account param is optional
+
 The `account` param in the `SignInParams` and `SignInMultiParams` is optional. This allows the existing wallets that don't require/need an account during sign-in to keep the implementation for `signIn` and `signInMulti` similar and becomes a non-blocker for wallets that don't need an account during sign-in.
 
 
