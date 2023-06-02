@@ -70,18 +70,6 @@ The section should return to the examples given in the previous section, and exp
 
 [Explicitly outline any security concerns in relation to the NEP, and potential ways to resolve or mitigate them. At the very least, well-known relevant threats must be covered, e.g. person-in-the-middle, double-spend, XSS, CSRF, etc.]
 
-## Drawbacks (Optional)
-
-[Explain why we should not implement this NEP and any limitations. It is helpful to record any concerns raised throughout the NEP discussion.]
-
-## Unresolved Issues (Optional)
-
-[Explain any issues that warrant further discussion. Considerations:
-
-- What parts of the design do you expect to resolve through the NEP process before this gets merged?
-- What parts of the design do you expect to resolve through the implementation of this feature before stabilization?
-- What related issues do you consider out of scope for this NEP that could be addressed in the future independently of the solution that comes out of this NEP?]
-
 ## Alternatives
 
 [Explain any alternative designs that were considered and the rationale for not choosing them. Why your design is superior?]
@@ -90,31 +78,59 @@ The section should return to the examples given in the previous section, and exp
 
 [Describe any natural extensions and evolutions to the NEP proposal, and how they would impact the project. Use this section as a tool to help fully consider all possible interactions with the project in your proposal. This is also a good place to "dump ideas"; if they are out of scope for the NEP but otherwise related. Note that having something written down in the future-possibilities section is not a reason to accept the current or a future NEP. Such notes should be in the section on motivation or rationale in this or subsequent NEPs. The section merely provides additional information.]
 
+## Consequences
+
+[This section describes the consequences, after applying the decision. All consequences should be summarized here, not just the "positive" ones. Record any concerns raised throughout the NEP discussion.]
+
+### Positive
+
+- p1
+
+### Neutral
+
+- n1
+
+### Negative
+
+- n1
+
+### Backwards Compatibility
+
+[All NEPs that introduce backwards incompatibilities must include a section describing these incompatibilities and their severity. Author must explain a proposes to deal with these incompatibilities. Submissions without a sufficient backwards compatibility treatise may be rejected outright.]
+
+## Unresolved Issues (Optional)
+
+[Explain any issues that warrant further discussion. Considerations
+
+- What parts of the design do you expect to resolve through the NEP process before this gets merged?
+- What parts of the design do you expect to resolve through the implementation of this feature before stabilization?
+- What related issues do you consider out of scope for this NEP that could be addressed in the future independently of the solution that comes out of this NEP?]
+
 ## Changelog
 
 [The changelog section provides historical context for how the NEP developed over time. Initial NEP submission should start with version 1.0.0, and all subsequent NEP extensions must follow [Semantic Versioning](https://semver.org/). Every version should have the benefits and concerns raised during the review. The author does not need to fill out this section for the initial draft. Instead, the assigned reviewers (Subject Matter Experts) should create the first version during the first technical review. After the final public call, the author should then finalize the last version of the decision context.]
 
 ### 1.0.0 - Initial Version
 
-[Placeholder for the context about when and who approved this NEP version.]
+> Placeholder for the context about when and who approved this NEP version.
 
 #### Benefits
 
-[Placeholder for Subject Matter Experts review for this version:]
+> List of benefits filled by the Subject Matter Experts while reviewing this version:
 
 - Benefit 1
 - Benefit 2
 
 #### Concerns
 
-[Template for Subject Matter Experts review for this version:]
-| # | Concern | Resolution | Status |
-| - | - | - | - |  
-| 1 | | | |
-| 2 | | | |
+> Template for Subject Matter Experts review for this version:
+> Status: New | Ongoing | Resolved
+
+|   # | Concern | Resolution | Status |
+| --: | :------ | :--------- | -----: |
+|   1 |         |            |        |
+|   2 |         |            |        |
 
 ## Copyright
-
-[copyright]: #copyright
 
 Copyright and related rights waived via [CC0](https://creativecommons.org/publicdomain/zero/1.0/).
