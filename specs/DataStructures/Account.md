@@ -151,7 +151,7 @@ Every account has its own storage. It's a persistent key-value trie. Keys are or
 The storage can only be modified by the contract on the account.
 Current implementation on Runtime only allows your account's contract to read from the storage, but this might change in the future and other accounts's contracts will be able to read from your storage.
 
-NOTE: Accounts are charged recurrent rent for the total storage. This includes storage of the account itself, contract code, contract storage and all access keys.
+NOTE: Accounts must maintain a minimum amount of value at a rate of 1 NEAR per 1 megabyte of total storage in order to remain responsive. This includes storage of the account itself, contract code, contract storage and all access keys.  Any account with less than this minimum amount will not be able to maintain a responsive contract and will, instead, return an error related to this mismatch in storage vs minimum account balance.
 
 #### Access Keys
 
