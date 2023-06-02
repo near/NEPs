@@ -6,12 +6,12 @@
 # Summary
 [summary]: #summary
 
-Adding economics specification for NEAR Protocol based on the economics paper - https://nearprotocol.com/papers/economics-in-sharded-blockchain/
+Adding economics specification for NEAR Protocol based on the economics paper - https://near.org/papers/economics-in-sharded-blockchain/
 
 # Motivation
 [motivation]: #motivation
 
-Currently, the specification is defined by the implementation in https://github.com/nearprotocol/nearcore. This codifies all the parameters and formulas and defines main concepts.
+Currently, the specification is defined by the implementation in https://github.com/near/nearcore. This codifies all the parameters and formulas and defines main concepts.
 
 # Guide-level explanation
 [guide-level-explanation]: #guide-level-explanation

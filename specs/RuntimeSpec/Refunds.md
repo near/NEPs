@@ -1,12 +1,12 @@
 # Refunds
 
-When execution of a receipt fails or there are left some unused amount of prepaid gas after a function call, the Runtime generates refund receipts.
+When execution of a receipt fails or there is some unused amount of prepaid gas left after a function call, the Runtime generates refund receipts.
 
-The are 2 types of refunds.
-- Refunds for the failed receipt for attached deposits. Let's call them deposit refunds.
-- Refunds for the unused gas and fees. Let's call them gas refunds.
+The are 2 types of refunds:
+- Refunds for the failed receipt for attached deposits. Let's call them **deposit refunds**.
+- Refunds for the unused gas and fees. Let's call them **gas refunds**.
 
-Refunds receipts are identified by having `predecessor_id == "system"`. They are also special because they don't cost any gas to generate or execute. As a result, they also do not contribute to the block gas limit.
+Refund receipts are identified by having `predecessor_id == "system"`. They are also special because they don't cost any gas to generate or execute. As a result, they also do not contribute to the block gas limit.
 
 If the execution of a refund fails, the refund amount is burnt.
 The refund receipt is an `ActionReceipt` that consists of a single action `Transfer` with the `deposit` amount of the refund.
@@ -14,9 +14,9 @@ The refund receipt is an `ActionReceipt` that consists of a single action `Trans
 ## Deposit Refunds
 
 Deposit refunds are generated when an action receipt fails to execute. All attached deposit amounts are summed together and
-send as a refund to a `predecessor_id`. Because of only the predecessor can attach deposits.
+sent as a refund to a `predecessor_id` (because only the predecessor can attach deposits).
 
-Deposit refunds have the following fields in the ActionReceipt:
+Deposit refunds have the following fields in the `ActionReceipt`:
 - `signer_id` is `system`
 - `signer_public_key` is ED25519 key with data equal to 32 bytes of `0`.
 
@@ -33,7 +33,7 @@ newly generated receipts, e.g. from cross-contract calls in function calls actio
 
 Then the gas amount is converted to tokens by multiplying by the gas price at which the original transaction was generated.
 
-Gas refunds have the following fields in the ActionReceipt:
+Gas refunds have the following fields in the `ActionReceipt`:
 - `signer_id` is the actual `signer_id` from the receipt that generates this refund.
 - `signer_public_key` is the `signer_public_key` from the receipt that generates this refund.
 
