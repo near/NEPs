@@ -1,0 +1,349 @@
+---
+NEP: TODO
+Title: Non-Refundable Storage Staking
+Authors: Jakob Meier <jakob@near.org>
+Status: Draft
+DiscussionsTo: https://gov.near.org/t/proposal-locking-account-storage-refunds-to-avoid-faucet-draining-attacks/34155
+Type: Protocol Track
+Version: 1.0.0
+Created: 2023-07-24
+LastUpdated: 2023-07-24
+---
+
+
+## Summary
+
+Non-refundable storage allows to create accounts with arbitrary state for users,
+without being susceptible to refund abuse.
+
+This is done by tracking non-refundable balance in a separate field of the
+account. This balance is only useful for storage staking and otherwise can be
+considered burned.
+
+
+## Motivation
+
+Creating new accounts on chain costs a gas fee and a storage staking fee. The
+more state is added to the account, the higher the storage staking fees. When
+deploying a contract on the account, it can quickly go above 1 NEAR per account.
+
+Some business models are okay with paying that fee for users upfront, just to
+get them onboard. However, it turns out if you do that today, the user can
+delete their new account and refund the storage staking fee to another account
+in their control. Thereby taking advantage of the business who sponsored their
+account.
+
+While spam avoidance is best handled at the application level, the protocol
+should at least allow to create accounts in a way that is not susceptible to
+such refund abuse. This would at least change the incentives such that creating
+fake users is no longer profitable.
+
+Non-refundable storage staking is a further improvement over
+[NEP-448](https://github.com/near/NEPs/pull/448) (Zero Balance Accounts) which
+addressed the same issue. But the limit on the state size of accounts makes it
+practically impossible to use sponsored accounts with contracts deployed on
+them.
+
+## Specification
+
+Users can opt-in to nonrefundable storage when creating new accounts. For that,
+we extend the `Transfer` action with a new field:
+
+```rust
+struct Transfer {
+    pub deposit: Balance,
+    /// If this flag is set, the balance will be added to the receiver's non-refundable balance.
+    pub nonrefundable: bool,
+}
+```
+
+To create a named account today, the typical pattern is a transaction with
+`CreateAccount`, `Transfer`, and `AddKey`. To make the funds nonrefundable, one
+can use the same pattern with the non-refundable flag set to true:
+```json
+"Actions": {
+  "CreateAccount": {},
+  "Transfer": { "deposit": "1000000000000000000000000", "nonrefundable": true },
+  "AddKey": { "public_key": ..., "access_key": ... }
+}
+```
+
+It is also possible it combine nonrefundable balance and normal (refundable)
+balance in the same account creation by adding a second `Transfer` action.
+```json
+"Actions": {
+  "CreateAccount": {},
+  "Transfer": { "deposit": "1000000000000000000000000", "nonrefundable": true },
+  "Transfer": { "deposit": "1000000000000000000000000", "nonrefundable": false },
+  "AddKey": { "public_key": ..., "access_key": ... }
+}
+```
+
+To create implicit accounts, the current protocol requires a single `Transfer`
+action without further actions in the same transaction. Setting it to
+non-refundable will make the full balance non-refundable. If users want to add
+refundable balance, it must done in a second transaction.
+
+If a non-refundable transfer arrives at an account that already exists, it will
+fail and the funds are returned to the predecessor.
+
+Finally, when querying an account for its balance, there will be an additional
+field `nonrefundable` in the output. Wallets will need to decide how they want
+to show it. They could, for example, add a new field called "non-refundable
+storage credits".
+```js
+// Account near
+{
+  "amount": "68844924385676812880674962949",
+  "block_hash": "3d6SisRc5SuwrkJnLwQb3W5pWitZKCjGhiKZuc6tPpao",
+  "block_height": 97314513,
+  "code_hash": "Dmi6UTRYTT3eNirp8ndgDNh8kYk2T9SZ6PJZDUXB1VR3",
+  "locked": "0",
+  "storage_paid_at": 0,
+  "storage_usage": 2511772,
+  "formattedAmount": "68,844.924385676812880674962949",
+  // this is new
+  "nonrefundable": "0"
+}
+```
+
+
+## Reference Implementation
+
+On the protocol side, the change to the `Transfer` struct requires changing the
+serialization format. To ensure backwards compatibility, we add a new variant to
+`enum Action`:
+
+```rust
+enum Action {
+  CreateAccount(CreateAccountAction), 
+  DeployContract(DeployContractAction),
+  FunctionCall(FunctionCallAction),
+  // kept for backwards compatibility but new clients should only use `TransferV2`
+  Transfer(TransferAction),
+  Stake(StakeAction),
+  AddKey(AddKeyAction),
+  DeleteKey(DeleteKeyAction),
+  DeleteAccount(DeleteAccountAction),
+  Delegate(super::delegate_action::SignedDelegateAction),
+  // this gets added in the end
+  TransferV2(TransferActionV2),
+}
+```
+
+Further, we have to update the account meta data representation in the state
+trie to track the non-refundable storage.
+
+```rust
+pub struct Account {
+    amount: Balance,
+    locked: Balance,
+    // this field is new
+    nonrefundable: Balance,
+    code_hash: CryptoHash,
+    storage_usage: StorageUsage,
+    // the account version will be increased from 1 to 2
+    version: AccountVersion,
+}
+```
+
+The field `nonrefundable` must be added to the normal `amount` and the `locked`
+balance calculate how much state the account is allowed to use. The new formula
+to check storage balance therefore becomes
+```rust
+amount + locked + nonrefundable >= storage_usage * storage_amount_per_byte
+```
+
+For old accounts that don't have the new field, the non-refundable balance is
+always zero.
+
+Conceptually, these are all changes on the protocol level. However,
+unfortunately, the account version field is not currently serialized, hence not
+included in the on-chain state.
+
+Therefore, as the last change necessary for this NEP, we also introduce a new
+serialization format new accounts.
+```rust
+    // new: prefix with a sentinel value to detect V1 accounts, they will have
+    //      a real balance here which is smaller than u128::MAX
+    writer.serialize(u128::MAX)?;
+    // new: include version number (u8) for accounts with version 2 or more
+    writer.serialize(version)?;
+    writer.serialize(amount)?;
+    writer.serialize(locked)?;
+    writer.serialize(code_hash)?;
+    writer.serialize(storage_usage)?;
+    // new: this is the field we added, the type is u128 like other balances
+    writer.serialize(nonrefundable)?;
+```
+
+Note that we are not migrating old accounts. Accounts created as version 1 will
+remain at version 1. This
+
+A proof of concept implementation for nearcore is available in this PR: [TODO]
+insert link to PoC PR
+
+## Security Implications
+
+There is a risk for users to accidentally create accounts with nonrefundable
+storage and lose the balance as a consequence. This is mitigated because the
+default behavior with `nonrefundable = false` will behave exactly like a normal
+transfer and not have this problem.
+
+Otherwise, we were not able to come up with security relevant implications.
+
+## Alternatives
+
+There are small variations in the implementation, and there completely different
+ways to look at the problem. Let's start with the small variations first.
+
+### Variation: Allow adding nonrefundable balance to existing accounts
+
+Instead of failing when a non-refundable transfer arrives at an existing
+account, we could add the balance to the existing non-refundable balance. This
+would be more user flexible to use, as a business can easily add more funds for
+storage even after account creation.
+
+The main problems with that are in implementation details. It would allow to add
+non-refundable storage to existing accounts, which would require some form of
+migration of the all accounts in the state trie.
+
+We could maybe do it lazily, i.e. read account version 1 and automatically
+convert it to version 2. However, that would break the assumption that every
+logical value in the merkle trie has a unique borsh representation, as there
+would be a account version 1 and a version 2 borsh serialization that both map
+to the same logical version 2 value.
+
+It is not 100% clear to me, the author, if this is a problem we could work
+around. However, the complications it would involve do not seem to be worth it,
+given that in the feature discussions nobody saw it as critical to add
+non-refundable balance to existing accounts.
+
+Another consideration is user friendliness. When someone wants to create a new
+implicit account but the account already exists, the current design will fail
+and return the tokens. In the alternative, this tokens would be added to the
+refundable storage and no longer be retrievable.
+
+### Variation: Allow refunds to original sponsor
+
+Instead of complete non-refundability, the tokens reserved for storage staking
+could be returned to the original account that created the account when an
+account is deleted.
+
+The community discussions ended with the conclusion that this feature would
+probably not be used and we should not implement it until there is real demand
+for it.
+
+### Alternative: Don't use smart contracts on user accounts
+
+Instead of deploying contracts on the user account, one could build a similar
+solution that uses zero balance accounts and a single master contract that
+performs all smart contract functionality required. This master contract can
+implement the [Storage Management]
+(https://nomicon.io/Standards/StorageManagement) standard to limit storage usage
+per user.
+
+This solution is not as flexible. The master account cannot make cross-contract
+function calls with the user id as the predecessor.
+
+### Alternative: Move away from storage staking
+
+We could also abandon the concept of storage staking entirely. However, coming
+up with a scalable, sustainable solution that does not suffer from the same
+refund problems is hard to come up with.
+
+One proposed design is a combination of sharing code between contracts and zero
+balance accounts. Basically, if somehow the deployed code is stored in a way
+that does not require storage staking by the user itself, maybe the per-user
+state is small enough to fit in the 770 bytes limit of zero balance accounts.
+(Questionable for most non-trivial use cases.)
+
+This alternative is much harder to design and implement. The proposal that has
+gotten the furthest so far is [Ephemeral
+Storage](https://github.com/near/NEPs/pull/485), which is pretty complicated and
+does not have community consensus yet. But even on that, nobody is currently
+working on. While we could wait for that to eventually make progress, the
+community is held back in their innovation because of the refund problem.
+
+## Future possibilities
+
+- We might want to add the possibility to make non-refundable balance transfers
+  from within a smart contract. This would require changes to the WASM smart
+  contract to host interface. Since removing anything from there is virtually
+  impossible, we shouldn't be too eager in adding it there but if there is
+  demand for it, we certainly can do it without much trouble.
+- We could later add the possibility to refund the non-refundable tokens to the
+  account who sent the tokens initially.
+- We could allow sending non-refundable balance to existing accounts.
+- If (cheap) code sharing between contracts is implemented in the future, this
+  proposal will most likely work well in combination with that. Per-user data
+  will still need to be paid for by the user, which could be sponsored as
+  non-refundable balance without running into refund abuse.
+
+
+## Consequences
+
+
+### Positive
+
+- Businesses can sponsor new user accounts without the user being able to steal
+  the sponsored tokens.
+
+### Neutral
+
+- Non-refundable tokens are removed from the circulating supply, i.e. burnt.
+
+### Negative
+
+- Understanding a user's balance become even more complicated than it already
+  is. (Instead of only `amount` amd `locked`, there will be a third component.)
+- There is no incentive anymore to delete an account and its state when the
+  backing tokens are not refundable.
+
+
+### Backwards Compatibility
+
+We believe this can be implemented with full backwards compatibility.
+
+## Unresolved Issues (Optional)
+
+All of these issues already have a proposed solution above. But nevertheless,
+these points are likely to be challenged / discussed:
+
+- Should we allow adding non-refundable balance to existing accounts? (proposal:
+  no)
+- Should we allow adding more non-refundable balance after account creation?
+  (proposal: no)
+- Should this NEP include a host function to send non-refundable balance from
+  smart contracts? (proposal: no)
+- How should a wallet display non-refundable balances? (proposal: up to wallet
+  providers, probably a new separate field)
+
+## Changelog
+
+### 1.0.0 - Initial Version
+
+> Placeholder for the context about when and who approved this NEP version.
+
+#### Benefits
+
+> List of benefits filled by the Subject Matter Experts while reviewing this
+> version:
+
+- Benefit 1
+- Benefit 2
+
+#### Concerns
+
+> Template for Subject Matter Experts review for this version: Status: New |
+> Ongoing | Resolved
+
+|   # | Concern | Resolution | Status |
+| --: | :------ | :--------- | -----: |
+|   1 |         |            |        |
+|   2 |         |            |        |
+
+## Copyright
+
+Copyright and related rights waived via
+[CC0](https://creativecommons.org/publicdomain/zero/1.0/).
