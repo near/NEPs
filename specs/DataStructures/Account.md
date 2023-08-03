@@ -2,8 +2,6 @@
 
 ## Account ID
 
-[account_id]: #account_id
-
 NEAR Protocol has an account names system. Account ID is similar to a username. Account IDs have to follow the rules.
 
 ### Account ID Rules
@@ -26,6 +24,7 @@ Regex for a full account ID, without checking for length:
 ```regex
 ^(([a-z\d]+[\-_])*[a-z\d]+\.)*([a-z\d]+[\-_])*[a-z\d]+$
 ```
+
 ### Top Level Accounts
 
 | Name | Value |
@@ -52,7 +51,7 @@ def action_create_account(predecessor_id, account_id):
 
 Valid accounts:
 
-```
+```c
 ok
 bowen
 ek-2
@@ -73,7 +72,7 @@ bro.a
 
 Invalid accounts:
 
-```
+```c
 not ok           // Whitespace characters are not allowed
 a                // Too short
 100-             // Suffix separator
@@ -91,6 +90,7 @@ abcdefghijklmnopqrstuvwxyz.abcdefghijklmnopqrstuvwxyz.abcdefghijklmnopqrstuvwxyz
 ```
 
 ## System account
+
 `system` is a special account that is only used to identify refund receipts. For refund receipts, we set the predecessor_id to be `system` to indicate that it is a refund receipt. Users cannot create or access the `system` account. In fact, this account does not exist as part of the state. 
 
 ## Implicit account IDs
@@ -116,8 +116,6 @@ This account can not be created using `CreateAccount` action to avoid being able
 Once an implicit account is created it acts as a regular account until it's deleted.
 
 ## Account
-
-[account]: #account
 
 Data for an single account is collocated in one shard. The account data consists of the following:
 
