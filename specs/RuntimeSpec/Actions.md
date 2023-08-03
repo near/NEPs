@@ -50,6 +50,7 @@ If `receiver_id` has length == 64, this account id is considered to be `hex(publ
 
 - If the action tries to create a top level account whose length is no greater than 32 characters, and `predecessor_id` is not
 `registrar_account_id`, which is defined by the protocol, the following error will be returned
+
 ```rust
 /// A top-level account ID can only be created by registrar.
 CreateAccountOnlyByRegistrar {
@@ -61,6 +62,7 @@ CreateAccountOnlyByRegistrar {
 
 - If the action tries to create an account that is neither a top-level account or a subaccount of `predecessor_id`,
 the following error will be returned
+
 ```rust
 /// A newly created account must be under a namespace of the creator account
 CreateAccountNotAllowed { account_id: AccountId, predecessor_id: AccountId },
@@ -83,12 +85,14 @@ pub struct DeployContractAction {
 **Validation Error**:
 
 - if the length of `code` exceeds `max_contract_size`, which is a genesis parameter, the following error will be returned:
+
 ```rust
 /// The size of the contract code exceeded the limit in a DeployContract action.
 ContractSizeExceeded { size: u64, limit: u64 },
 ```
 
 **Execution Error**:
+
 - If state or storage is corrupted, it may return `StorageError`.
 
 ## FunctionCallAction
@@ -149,6 +153,7 @@ in the next block.
 **Validation Error**:
 
 - If the `public_key` is not an ristretto compatible ed25519 key, the following error will be returned:
+
 ```rust
 /// An attempt to stake with a public key that is not convertible to ristretto.
 UnsuitableStakingKey { public_key: PublicKey },
@@ -231,6 +236,7 @@ AddKeyMethodNamesNumberOfBytesExceeded { total_number_of_bytes: u64, limit: u64 
 ```
 
 **Execution Error**:
+
 - If an account tries to add an access key with a given public key, but an existing access key with this public key already exists, the following error will be returned
 
 ```rust
@@ -280,7 +286,8 @@ pub struct DeleteAccountAction {
 
 ### Errors
 
-**Validation Error**
+**Validation Error**:
+
 - If `beneficiary_id` is not a valid account id, the following error will be returned
 
 ```rust
@@ -366,7 +373,6 @@ DelegateActionMustBeOnlyOne
 ```
 
 **Execution Error**:
-
 
 - If the Sender's account doesn't exist
 
