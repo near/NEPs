@@ -30,7 +30,7 @@ Prior art:
 
 Learn about NEP-141:
 
-- [Figment Learning Pathway](https://learn.figment.io/tutorials/stake-fungible-token)
+- [Figment Learning Pathway](https://web.archive.org/web/20220621055335/https://learn.figment.io/tutorials/stake-fungible-token)
 
 ## Guide-level explanation
 
