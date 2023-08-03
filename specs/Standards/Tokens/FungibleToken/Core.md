@@ -12,8 +12,9 @@ The [fungible token metadata standard](Metadata.md) provides the fields needed f
 ## Motivation
 
 NEAR Protocol uses an asynchronous, sharded runtime. This means the following:
- - Storage for different contracts and accounts can be located on the different shards.
- - Two contracts can be executed at the same time in different shards.
+
+- Storage for different contracts and accounts can be located on the different shards.
+- Two contracts can be executed at the same time in different shards.
 
 While this increases the transaction throughput linearly with the number of shards, it also creates some challenges for cross-contract development. For example, if one contract wants to query some information from the state of another contract (e.g. current balance), by the time the first contract receives the balance the real balance can change. In such an async system, a contract can't rely on the state of another contract and assume it's not going to change.
 
@@ -35,6 +36,7 @@ Learn about NEP-141:
 ## Guide-level explanation
 
 We should be able to do the following:
+
 - Initialize contract once. The given total supply will be owned by the given account ID.
 - Get the total supply.
 - Transfer tokens to a new user.
@@ -43,6 +45,7 @@ We should be able to do the following:
 - Remove state for the key/value pair corresponding with a user's account, withdrawing a nominal balance of Ⓝ that was used for storage.
 
 There are a few concepts in the scenarios above:
+
 - **Total supply**: the total number of tokens in circulation.
 - **Balance owner**: an account ID that owns some amount of tokens.
 - **Balance**: an amount of tokens.
@@ -60,7 +63,7 @@ Given that multiple users will use a Fungible Token contract, and their activity
 
 Alice wants to send 5 wBTC tokens to Bob.
 
-**Assumptions**
+##### Assumptions
 
 - The wBTC token contract is `wbtc`.
 - Alice's account is `alice`.
@@ -68,11 +71,11 @@ Alice wants to send 5 wBTC tokens to Bob.
 - The precision ("decimals" in the metadata standard) on wBTC contract is `10^8`.
 - The 5 tokens is `5 * 10^8` or as a number is `500000000`.
 
-**High-level explanation**
+##### High-level explanation
 
 Alice needs to issue one transaction to wBTC contract to transfer 5 tokens (multiplied by precision) to Bob.
 
-**Technical calls**
+##### Technical calls
 
 1. `alice` calls `wbtc::ft_transfer({"receiver_id": "bob", "amount": "500000000"})`.
 
@@ -80,7 +83,7 @@ Alice needs to issue one transaction to wBTC contract to transfer 5 tokens (mult
 
 Alice wants to deposit 1000 DAI tokens to a compound interest contract to earn extra tokens.
 
-**Assumptions**
+##### Assumptions
 
 - The DAI token contract is `dai`.
 - Alice's account is `alice`.
@@ -92,14 +95,15 @@ Alice wants to deposit 1000 DAI tokens to a compound interest contract to earn e
 <details>
 <summary>For this example, you may expand this section to see how a previous fungible token standard using escrows would deal with the scenario.</summary>
 
-**High-level explanation** (NEP-21 standard)
+##### High-level explanation (NEP-21 standard)
 
 Alice needs to issue 2 transactions. The first one to `dai` to set an allowance for `compound` to be able to withdraw tokens from `alice`.
 The second transaction is to the `compound` to start the deposit process. Compound will check that the DAI tokens are supported and will try to withdraw the desired amount of DAI from `alice`.
+
 - If transfer succeeded, `compound` can increase local ownership for `alice` to 1000 DAI
 - If transfer fails, `compound` doesn't need to do anything in current example, but maybe can notify `alice` of unsuccessful transfer.
 
-**Technical calls** (NEP-21 standard)
+##### Technical calls (NEP-21 standard)
 
 1. `alice` calls `dai::set_allowance({"escrow_account_id": "compound", "allowance": "1000000000000000000000"})`.
 2. `alice` calls `compound::deposit({"token_contract": "dai", "amount": "1000000000000000000000"})`. During the `deposit` call, `compound` does the following:
@@ -108,11 +112,11 @@ The second transaction is to the `compound` to start the deposit process. Compou
 
 </details>
 
-**High-level explanation**
+##### High-level explanation
 
 Alice needs to issue 1 transaction, as opposed to 2 with a typical escrow workflow.
 
-**Technical calls**
+##### Technical calls
 
 1. `alice` calls `dai::ft_transfer_call({"receiver_id": "compound", "amount": "1000000000000000000000", "msg": "invest"})`. During the `ft_transfer_call` call, `dai` does the following:
    1. makes async call `compound::ft_on_transfer({"sender_id": "alice", "amount": "1000000000000000000000", "msg": "invest"})`.
@@ -179,6 +183,7 @@ Altogether then, Alice may take two steps, though the first may be a background 
 ## Reference-level explanation
 
 **NOTES**:
+
 - All amounts, balances and allowance are limited by `U128` (max value `2**128 - 1`).
 - Token standard uses JSON for serialization of arguments and results.
 - Amounts in arguments and results have are serialized as Base-10 strings, e.g. `"100"`. This is done to avoid JSON limitation of max integer value of `2**53`.
@@ -322,6 +327,7 @@ function ft_resolve_transfer(
 ## History
 
 See also the discussions:
+
 - [Fungible token core](https://github.com/near/NEPs/discussions/146#discussioncomment-298943)
 - [Fungible token metadata](https://github.com/near/NEPs/discussions/148)
 - [Storage standard](https://github.com/near/NEPs/discussions/145)
