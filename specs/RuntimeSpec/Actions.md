@@ -162,6 +162,7 @@ UnsuitableStakingKey { public_key: PublicKey },
 **Execution Error**:
 
 - If an account has not staked but it tries to unstake, the following error will be returned:
+
 ```rust
 /// Account is not yet staked, but tries to unstake
 TriesToUnstake { account_id: AccountId },
@@ -206,7 +207,7 @@ pub struct AddKeyAction {
 
 - Adds a new [AccessKey](/DataStructures/AccessKey.md) to the receiver's account and associates it with a `public_key` provided.
 
-### Errors:
+### Errors
 
 **Validation Error**:
 
@@ -356,7 +357,7 @@ struct DelegateAction {
 }
 ```
 
-### Outcomes:
+### Outcomes
 
 - All actions inside `delegate_action.actions` are submitted with the `delegate_action.sender_id` as the predecessor, `delegate_action.receiver_id` as the receiver, and the relayer (predecessor of `DelegateAction`) as the signer.
 - All gas and balance costs for submitting `delegate_action.actions` are subtracted from the relayer.
