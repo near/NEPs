@@ -128,7 +128,7 @@ Alice needs to issue 1 transaction, as opposed to 2 with a typical escrow workfl
 
 Alice wants to swap 5 wrapped NEAR (wNEAR) for BNNA tokens at current market rate, with less than 2% slippage.
 
-**Assumptions**
+##### Assumptions
 
 - The wNEAR token contract is `wnear`.
 - Alice's account is `alice`.
@@ -137,7 +137,7 @@ Alice wants to swap 5 wrapped NEAR (wNEAR) for BNNA tokens at current market rat
 - The precision ("decimals" in the metadata standard) on wNEAR contract is `10^24`.
 - The 5 tokens is `5 * 10^24` or as a number is `5000000000000000000000000`.
 
-**High-level explanation**
+##### High-level explanation
 
 Alice needs to issue one transaction to wNEAR contract to transfer 5 tokens (multiplied by precision) to `amm`, specifying her desired action (swap), her destination token (BNNA) & maximum slippage (<2%) in `msg`.
 
@@ -147,7 +147,7 @@ Alice needs to attach one yoctoNEAR. This will result in her seeing a confirmati
 
 Altogether then, Alice may take two steps, though the first may be a background detail of the app she uses.
 
-**Technical calls**
+##### Technical calls
 
 1. View `amm::ft_data_to_msg({ action: "swap", destination_token: "bnna", max_slip: 2 })`. Using [NEAR CLI](https://docs.near.org/docs/tools/near-cli):
 
