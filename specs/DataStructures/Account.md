@@ -107,6 +107,7 @@ The corresponding secret key allows you to sign transactions on behalf of this a
 ### Implicit account creation
 
 An account with implicit account ID can only be created by sending a transaction/receipt with a single `Transfer` action to the implicit account ID receiver:
+
 - The account will be created with the account ID.
 - The account will have a new full access key with the ED25519-curve public key of `decode_hex(account_id)` and nonce `0`.
 - The account balance will have a transfer balance deposited to it.
