@@ -1,0 +1,230 @@
+---
+NEP: 0
+Title: SBT Metadata Interface
+Authors: Robert Zaremba (@robert-zaremba)
+Status: New
+DiscussionsTo: https://github.com/nearprotocol/neps/pull/0000
+Type: Contract Standard
+Version: 1.0.0
+Created: 2023-08-21
+LastUpdated: 2023-09-06
+---
+
+## Summary
+
+A standard interface for [SBT](https://github.com/near/NEPs/pull/393) Metadata: tokens, classes and issuers.
+This allows an SBT registry and issuers to be interrogated for its name and for details an SBT represent.
+
+The proposal addresses potential challenges related to metadata reconstruction, off-chain storage security, owner/operator dependence, and data privacy.
+
+## Motivation
+
+[NEP-393](https://github.com/near/NEPs/pull/393) defines a standard for Soul Bound Tokens, which are a foundational for Decentralized Society. SBTs can represent certificates, badges and anything that should be bound to a "soul".
+The contract issuers often need more details than what NEP-393 defines. Such details are meant to be set in the `reference` field, which has an open, non standardized format.
+
+NEAR doesn't have a well structured Metadata standard. The [NFT Metadata](https://github.com/near/NEPs/blob/master/neps/nep-0177.md) doesn't clearly define the `reference` extension. In fact, the NEP-393 Metadata is defined based on NFT Metadata. The schema defined here can be used by other token variations as well.
+
+Issuers, contract implementers and users demand a guideline and a minimum schema to make better integration with tools and projects. This document defines a minimum common schema for reference fields of `ContractMetadata` and `TokenMetadata`. Moreover, while working with various issuers, we found that issuers and minters often duplicate lot of data in the `TokenMetadata`. We found that it is unnecessary and it would be useful to create a new type: `ClassMetadata`, that defines common data for all tokens of a given (issuer, class) pair.
+
+## Specification
+
+NEP-393 `TokenMetadata` is minimalistic. It only requires data which a contract can reason about, and all user facing details (such as title, description) are meant to be part of the reference.
+Similarly, `ContractMetadata` only defines issuer basic info.
+
+### Class Metadata
+
+We start by defining a `ClassMetadata` which will contain all common information about tokens of the same class.
+This will allow to avoid duplicating such information in all `TokenMetadata` and potentially allow to leave `TokenMetadata.reference` empty, if the tokens only differentiate by the class, issued_at and expires_at attributes.
+
+```rust
+pub struct ClassMetadata {
+    /// Issuer class name. Required.
+    pub name: String,
+    /// If defined, should be used instead of `contract_metadata.symbol`.
+    pub symbol: Option<String>,
+    /// Icon content (SVG) or a link to an Icon. If it doesn't start with a scheme (eg: https://)
+    /// then `contract_metadata.base_uri` should be prepended.
+    pub icon: Option<String>,
+    /// JSON or an URL to a JSON file with more info. If it doesn't start with a scheme
+    /// (eg: https://) then base_uri should be prepended.
+    pub reference: Option<String>,
+    /// Base64-encoded sha256 hash of JSON from reference field. Required if `reference` is included.
+    pub reference_hash: Option<Base64VecU8>,
+}
+```
+
+The Class Metadata should be defined by the Issuer and stored by the issuer contract. Note, that Contract Metadata is stored in the issuer contract and the Token Metadata is stored in the registry.
+Having Class Metadata in issuer contract allows more granular storage control, shard the data, and facilitate easier migration patterns.
+
+We recommend to store in the Class Metadata as much common information as possible, rather than pushing it down to the Token Metadata. For example if all tokens of give (issuer, class) pair have the same `icon`, then the `icon` should be defined in the `ClassMetadata` rather than `TokenMetadata.reference`.
+
+The API to set `ClassMetadata` is not part of the standard, and can be custom for every implementation.
+
+### Reference Field
+
+The `reference` is attribute is part of all Metadata structures (Token, Class and Contract). It must be a valid JSON string or an URL link to a valid JSON file. In the latter case we recommend to set `reference_hash` to facilitate secure off-chain metadata storage and a mechanism for consistency checks.
+It's up to the issuer if he wants to store `reference` fully on chain (as a JSON string) or off-chain. The latter case won't guarantee data availability, but may provide faster data access.
+
+We define a `ReferenceBase` type. All entries are optional, and don't have to be set. If an entry is set, then it must have type compatible with `ReferenceBase`. The Reference object can extend the `ReferenceBase` and provide more fields.
+
+```rust
+struct ReferenceBase {
+    description: Option<String>,
+    website: Option<String>,
+    minting_info: Option<String>,
+    created_at: u64,
+    social_media: Map<String, String>,
+    // keys are contact types
+    contact: Map<String, Vec<String>>,
+    // keys are image format
+    icon: Map<String, Vec<String>>,
+    // keys are video format
+    video: Map<String, Vec<String>>,
+    // keys are audio format
+    audio: Map<String, Vec<String>>,
+}
+```
+
+Example JS value:
+
+```js
+{
+  "description": "Detailed description about the issuer and the contract",
+  // resource address. For token, it should point to a token website, or an project webiste. In
+  // the latter case it's recommended to set such information in the Class or Contract Metadata.
+  "website": "your.address.com/resource",
+  "minting_info": "additional information about minting or a link to a resource",
+  // Unix time in ms, when the project / issuer was created.
+  "created_at": 1689330000000,
+  // Sub object defining social media references. Keys should represent the social media domain, not a name.
+  "social_media": {
+    "near.social": "https://nearefi.org/bos,"
+    "x.com": "https://nearefi.org/twitter", // twitter is X now
+    "facebook.com": "https://facebook.com/...",
+    "soundcloud.com": "https://soundcloud.com/..."
+  },
+  // Sub object defining contact resources. Each value must be a list.
+  "contact": {
+    "email": ["contact@example.com", "contact2@example.com"], // must be a list
+    "telegram": ["telegram_handle_1", "telegram_handle2"], // must be a list
+  },
+  // Default token icon
+  "icon": {
+    "png": "https://genadrop.mypinata.cloud/ipfs/...",
+    "svg": "https://genadrop.mypinata.cloud/ipfs/..."
+  },
+  // additional video content. Sub object, where key is a video format.
+  "video": {
+    "mp4": "https://youtube.com/...",
+    "vp9": "ipfs://..."
+  },
+  // additional audio content. Sub object, where key is an audio format.
+  "audio": {
+    "ogg": "ipfs://..."
+  }
+```
+
+All reference fields (`TokenMetadata.reference`, `ClassMetadata.reference`, `ContractMetadata.reference`) share the same scheme. Common information should be pushed up in the category. For example project information should be stored in Class Metadata or Contract Metadata, rather than the Token Metadata. Issuer information and issuer website should be stored in the `ContractMetadata`.
+
+### Information flow
+
+Projects and dapps should use all stack of information to correctly render token information. Let's consider the following examples, where each token is part of the same class (`class1`) and same issuer (`issuer1`)
+
+1. All `token1metadata.reference.icon`, `class1metadata.reference.icon` and `issuer1metadata.reference.icon` are defined. To render token, the `token1metadata` icon field should be used. Moreover, each application can choose which format (png, jpg, svg...) to use.
+1. All `token1metadata.reference.icon` is not defined and `class1metadata.reference.icon` is defined. The `class1metadata` icon should be used to render token.
+1. Both `token1metadata.reference.webiste` and `class1metadata.reference.webiste` are defined. A dapp can use both token and class level metadata to provide detailed information.
+
+### Events
+
+Whenever a metadata is updated, an event should be emitted. We propose to follow the same event principles as defined in NEP-393:
+
+- Events don't need to repeat all function arguments - these are easy to retrieve by indexer (events are consumed by indexers anyway).
+- Events must include fields necessary to identify subject matters related to use case.
+- When possible, events should contain aggregated data, with respect to the standard function related to the event.
+
+```typescript
+type NepXXXEvent {
+  standard: "nepXXX";
+  version: "1.0.0";
+  event: "token" | "class" | "issuer";
+  data: Token | Class | Issuer ;
+}
+
+```
+
+## Reference Implementation
+
+The concept was implemented and iterated in the [I Am Human](https://i-am-human.app/) project and used in the [Community SBT](https://github.com/near-ndc/i-am-human/tree/master/contracts/community-sbt) contracts.
+
+## Security Implications
+
+The proposal doesn't introduce new cross contract calls, nor extends the API of SBT reference. The implementation is encapsulated in the issuer contract, and should not impact any other contract.
+
+## Alternatives
+
+NEP-177 was used as a base for the Token and Contract Metadata in NEP-393. This proposal builds on top of that.
+
+## Future possibilities
+
+We can introduce Metadata versioning by wrapping the `ReferenceBase` object in an enum:
+
+```json
+{
+  "v1": reference
+}
+```
+
+or adding new field: `"ver": 1` to the ReferenceBase.
+
+## Consequences
+
+### Positive
+
+- p1
+
+### Neutral
+
+- n1
+
+### Negative
+
+- n1
+
+### Backwards Compatibility
+
+The standard is compatible with NEP-393 (SBT) and can be used by NEP-177 (NFT Metadata).
+
+## Unresolved Issues (Optional)
+
+[Explain any issues that warrant further discussion. Considerations
+
+- What parts of the design do you expect to resolve through the NEP process before this gets merged?
+- What parts of the design do you expect to resolve through the implementation of this feature before stabilization?
+- What related issues do you consider out of scope for this NEP that could be addressed in the future independently of the solution that comes out of this NEP?]
+
+## Changelog
+
+### 1.0.0 - Initial Version
+
+> Placeholder for the context about when and who approved this NEP version.
+
+#### Benefits
+
+> List of benefits filled by the Subject Matter Experts while reviewing this version:
+
+- Benefit 1
+- Benefit 2
+
+#### Concerns
+
+> Template for Subject Matter Experts review for this version:
+> Status: New | Ongoing | Resolved
+
+|   # | Concern | Resolution | Status |
+| --: | :------ | :--------- | -----: |
+|   1 |         |            |        |
+|   2 |         |            |        |
+
+## Copyright
+
+Copyright and related rights waived via [CC0](https://creativecommons.org/publicdomain/zero/1.0/).
