@@ -30,7 +30,7 @@ Changes to the protocol specification and standards are called NEAR Enhancement 
 | [0399](https://github.com/near/NEPs/blob/master/neps/nep-0399.md) | Flat Storage                             | @Longarithm @mzhangmzz                      | Review |
 | [0448](https://github.com/near/NEPs/blob/master/neps/nep-0448.md) | Zero-balance Accounts                    | @bowenwang1996                              | Final  |
 | [0455](https://github.com/near/NEPs/blob/master/neps/nep-0455.md) | Parameter Compute Costs                  | @akashin @jakmeier                          | Final  |
-| [0514](https://github.com/near/NEPs/blob/master/neps/nep-0514.md) | Fewer Block Producer Seats in `testnet`  | @nikurt                                     | Review |
+| [0514](https://github.com/near/NEPs/blob/master/neps/nep-0514.md) | Fewer Block Producer Seats in `testnet`  | @nikurt                                     | Final  |
 
 
 ## Specification
