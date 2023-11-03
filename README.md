@@ -11,7 +11,7 @@ Changes to the protocol specification and standards are called NEAR Enhancement 
 ## NEPs
 
 | NEP #                                                             | Title                                    | Author                                      | Status |
-| ----------------------------------------------------------------- | ---------------------------------------- | ------------------------------------------- | ------ |
+| ----------------------------------------------------------------- |------------------------------------------|---------------------------------------------|--------|
 | [0001](https://github.com/near/NEPs/blob/master/neps/nep-0001.md) | NEP Purpose and Guidelines               | @jlogelin                                   | Living |
 | [0021](https://github.com/near/NEPs/blob/master/neps/nep-0021.md) | Fungible Token Standard (Deprecated)     | @evgenykuzyakov                             | Final  |
 | [0141](https://github.com/near/NEPs/blob/master/neps/nep-0141.md) | Fungible Token Standard                  | @evgenykuzyakov @oysterpack                 | Final  |
@@ -30,6 +30,8 @@ Changes to the protocol specification and standards are called NEAR Enhancement 
 | [0399](https://github.com/near/NEPs/blob/master/neps/nep-0399.md) | Flat Storage                             | @Longarithm @mzhangmzz                      | Review |
 | [0448](https://github.com/near/NEPs/blob/master/neps/nep-0448.md) | Zero-balance Accounts                    | @bowenwang1996                              | Final  |
 | [0455](https://github.com/near/NEPs/blob/master/neps/nep-0455.md) | Parameter Compute Costs                  | @akashin @jakmeier                          | Final  |
+| [0514](https://github.com/near/NEPs/blob/master/neps/nep-0514.md) | Fewer Block Producer Seats in `testnet`  | @nikurt                                     | Final  |
+
 
 ## Specification
 
