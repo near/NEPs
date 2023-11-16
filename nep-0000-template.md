@@ -58,11 +58,11 @@ See example above -->
 
 [This technical section is required for Protocol proposals but optional for other categories. A draft implementation should demonstrate a minimal implementation that assists in understanding or implementing this proposal. Explain the design in sufficient detail that:
 
-- Its interaction with other features is clear.
-- Where possible, include a Minimum Viable Interface subsection expressing the required behavior and types in a target programming language. (ie. traits and structs for rust, interfaces and classes for javascript, function signatures and structs for c, etc.)
-- It is reasonably clear how the feature would be implemented.
-- Corner cases are dissected by example.
-- For protocol changes: A link to a draft PR on nearcore that shows how it can be integrated in the current code. It should at least solve the key technical challenges.
+* Its interaction with other features is clear.
+* Where possible, include a Minimum Viable Interface subsection expressing the required behavior and types in a target programming language. (ie. traits and structs for rust, interfaces and classes for javascript, function signatures and structs for c, etc.)
+* It is reasonably clear how the feature would be implemented.
+* Corner cases are dissected by example.
+* For protocol changes: A link to a draft PR on nearcore that shows how it can be integrated in the current code. It should at least solve the key technical challenges.
 
 The section should return to the examples given in the previous section, and explain more fully how the detailed proposal makes those examples work.]
 
@@ -84,15 +84,15 @@ The section should return to the examples given in the previous section, and exp
 
 ### Positive
 
-- p1
+* p1
 
 ### Neutral
 
-- n1
+* n1
 
 ### Negative
 
-- n1
+* n1
 
 ### Backwards Compatibility
 
@@ -102,9 +102,9 @@ The section should return to the examples given in the previous section, and exp
 
 [Explain any issues that warrant further discussion. Considerations
 
-- What parts of the design do you expect to resolve through the NEP process before this gets merged?
-- What parts of the design do you expect to resolve through the implementation of this feature before stabilization?
-- What related issues do you consider out of scope for this NEP that could be addressed in the future independently of the solution that comes out of this NEP?]
+* What parts of the design do you expect to resolve through the NEP process before this gets merged?
+* What parts of the design do you expect to resolve through the implementation of this feature before stabilization?
+* What related issues do you consider out of scope for this NEP that could be addressed in the future independently of the solution that comes out of this NEP?]
 
 ## Changelog
 
@@ -118,8 +118,8 @@ The section should return to the examples given in the previous section, and exp
 
 > List of benefits filled by the Subject Matter Experts while reviewing this version:
 
-- Benefit 1
-- Benefit 2
+* Benefit 1
+* Benefit 2
 
 #### Concerns
 
