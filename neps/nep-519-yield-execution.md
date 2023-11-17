@@ -1,16 +1,14 @@
 ---
-NEP: 0
+NEP: 519
 Title: Yield Execution
 Authors: Akhi Singhania <akhi3030@gmail.com>
 Status: Draft
-DiscussionsTo: https://github.com/nearprotocol/neps/pull/0000
+DiscussionsTo: https://github.com/near/NEPs/pull/519
 Type: Protocol
 Version: 0.0.0
 Created: 2023-11-17
 LastUpdated: 2023-11-17
 ---
-
-[This is a NEP (NEAR Enhancement Proposal) template, as described in [NEP-0001](https://github.com/near/NEPs/blob/master/neps/nep-0001.md). Use this when creating a new NEP. The author should delete or replace all the comments or commented brackets when merging their NEP.]
 
 <!-- NEP Header Preamble
 
@@ -44,7 +42,7 @@ See example above -->
 
 ## Summary
 
-[Provide a short human-readable (~200 words) description of the proposal. A reader should get from this section a high-level understanding about the issue this NEP is addressing.]
+Today, when a smart contract is called by a user or another contract, it has no sensible way to delay responding to the caller.  There exist use cases where contracts would benefit from being able to delay responding till some arbitrary time in the future.  This proposal introduces such possibility into the NEAR protocol.
 
 ## Motivation
 
