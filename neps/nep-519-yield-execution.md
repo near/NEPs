@@ -7,38 +7,8 @@ DiscussionsTo: https://github.com/near/NEPs/pull/519
 Type: Protocol
 Version: 0.0.0
 Created: 2023-11-17
-LastUpdated: 2023-11-17
+LastUpdated: 2023-11-20
 ---
-
-<!-- NEP Header Preamble
-
-Each NEP must begin with an RFC 822 style header preamble. The headers must appear in the following order:
-
-NEP: The NEP title in no more than 4-5 words.
-
-Title: NEP title
-
-Author: List of author name(s) and optional contact info. Examples FirstName LastName <satoshi@fakenews.org>, FirstName LastName (@GitHubUserName)>
-
-Status: The NEP status -- New | Approved | Deprecated.
-
-DiscussionsTo (Optional): URL of current canonical discussion thread, e.g. GitHub Pull Request link.
-
-Type: The NEP type -- Protocol | Contract Standard | Wallet Standard | DevTools Standard.
-
-Requires (Optional): NEPs may have a Requires header, indicating the NEP numbers that this NEP depends on.
-
-Replaces (Optional): A newer NEP marked with a SupercededBy header must have a Replaces header containing the number of the NEP that it rendered obsolete.
-
-SupersededBy (Optional): NEPs may also have a SupersededBy header indicating that a NEP has been rendered obsolete by a later document; the value is the number of the NEP that replaces the current document.
-
-Version: The version number. A new NEP should start with 1.0.0, and future NEP Extensions must follow Semantic Versioning.
-
-Created: The Created header records the date that the NEP was assigned a number, should be in ISO 8601 yyyy-mm-dd format, e.g. 2022-12-31.
-
-LastUpdated: The Created header records the date that the NEP was assigned a number, should be in ISO 8601 yyyy-mm-dd format, e.g. 2022-12-31.
-
-See example above -->
 
 ## Summary
 
