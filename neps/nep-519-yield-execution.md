@@ -16,7 +16,20 @@ Today, when a smart contract is called by a user or another contract, it has no 
 
 ## Motivation
 
-[Explain why this proposal is necessary, how it will benefit the NEAR protocol or community, and what problems it solves. Also describe why the existing protocol specification is inadequate to address the problem that this NEP solves, and what potential use cases or outcomes.]
+There exist some situations where when a smart contract on NEAR is called, it will only be able to provide an answer at some arbitrary time in the future.  So the callee needs a way to defer replying to the caller till this time in future.
+
+Examples include when a smart contract (`S`) provides MPC signing capabilities parties external to the NEAR protocol are computing the signature.  The rough steps are:
+1. Signer contract provides a function `fn sign_payload(Payload, ...)`.
+2. When called, the contract updates some contract state which is being monitored by external indexers to indicate that a new signing request has been received.  It also defers replying to the caller.
+3. The indexers observe the new signing request, they compute a signature and call another function `fn signature_available(Signature, ...)` on the signer contract.
+4. The signer contract validates the signature and if validate, replies to the original caller.
+
+Today, the NEAR protocol has no sensible way to defer replying to the caller in step 2 above.  This proposal proposes adding two following new host functions to the NEAR protocol:
+
+- `yield`: this can be called by a contract to indicate to the protocol that it is not ready yet to reply to its caller.
+- `resume`: a contract can use this mechanism to indicate to a protocol that it is now ready to reply to a caller that it had deferred earlier.
+
+If these two host functions were available, then `yield` would be used in step 2 above and `resume` would be used in step 4 above.
 
 ## Specification
 
