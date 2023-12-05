@@ -33,7 +33,54 @@ If these two host functions were available, then `yield` would be used in step 2
 
 ## Specification
 
-[Explain the proposal as if you were teaching it to another developer. This generally means describing the syntax and semantics, naming new concepts, and providing clear examples. The specification needs to include sufficient detail to allow interoperable implementations getting built by following only the provided specification. In cases where it is infeasible to specify all implementation details upfront, broadly describe what they are.]
+The proposal is to add the following host functions to the NEAR protocol:
+
+
+```rust
+/// Instructs the protocol that the smart contract is not ready yet to respond
+/// to its caller yet.  The smart contract promises to call `yield_resume()`
+/// within `yield_num_blocks` blocks.  When `yield_resume()` is called, the
+/// protocol will call the method on the smart contract that is identified by
+/// `method_name_len` and `method_name_ptr` and this method will be expected to
+/// either respond to the caller or create another promise.
+///
+/// If the contract fails to call `yield_resume()` within `yield_num_blocks`,
+/// then the protocol will call the method on the smart contract that is
+/// identified by `method_name_len` and `method_name_ptr` with a timeout error.
+///
+/// `gas_for_resumed_method` is the prepayment of Gas that will be used to
+/// execute the method identified by `method_name_len` and `method_name_ptr`.
+///
+/// `gas_weight`: as specified in
+/// [this](https://github.com/near/NEPs/blob/master/neps/nep-0264.md) NEP, this
+/// improves the devX by allowing the developer to specify how to divide up the
+/// remaining gas.
+///
+/// Return value: u64: Similar to the
+/// [promise_create](https://github.com/near/nearcore/blob/a908de36ab6f75eb130447a5788007e26d05f93e/runtime/near-vm-runner/src/logic/logic.rs#L1281)
+/// host function, this function also create a promise and returns an index to
+/// the promise.
+pub fn yield_create(
+    method_name_len: u64,
+    method_name_ptr: u64,
+    yield_num_blocks: u64,
+    gas_for_resumed_method: Gas,
+    gas_weight: u64,
+) -> u64;
+
+/// When a smart contract has postponed replying to its caller earlier, it can
+/// use this function to indicate that it may now be ready to reply to it.  When
+/// this is called, then the protocol will call the method that the smart
+/// contract referred to in the earlier `yield_create()` call.
+///
+/// `promise_index`: the index that was returned from the promise that created
+/// from an earlier call to `yield_create()`.
+///
+/// `arguments_len` and `arguments_ptr`: the smart contract can provide an
+/// optional list of arguments that should be passed to the method that will be
+/// resumed.
+pub fn yield_resume(promise_index: u64, arguments_len: u64, argument_ptr: u64) -> ();
+```
 
 ## Reference Implementation
 
