@@ -41,8 +41,8 @@ The proposal is to add the following host functions to the NEAR protocol:
 /// to its caller yet.  The smart contract promises to call `yield_resume()`
 /// within `yield_num_blocks` blocks.  When `yield_resume()` is called, the
 /// protocol will call the method on the smart contract that is identified by
-/// `method_name_len` and `method_name_ptr` and this method will be expected to
-/// either respond to the caller or create another promise.
+/// `method_name_len` and `method_name_ptr` and this method may respond to the caller.
+/// Once the method has responded, `yield_resume` can no longer be called on this promise.
 ///
 /// If the contract fails to call `yield_resume()` within `yield_num_blocks`,
 /// then the protocol will call the method on the smart contract that is
