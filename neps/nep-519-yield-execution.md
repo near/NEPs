@@ -118,7 +118,17 @@ The section should return to the examples given in the previous section, and exp
 
 ## Alternatives
 
-[Explain any alternative designs that were considered and the rationale for not choosing them. Why your design is superior?]
+Two alternatives have been identified.
+
+### Self calls to delay replying
+
+In the `fn sign_payload(Payload, ...)` function, instead of calling `yield`, the contract can keep calling itself in a loop till external indexer replies with the signature.  This would work but would be very fragile and expensive.  The contract would have to pay for all the calls and function executions while it is waiting for the response.  Also depending on the congestion on the network; if the shard is not busy at all, some self calls could happen within the same block meaning that the contract might not actually wait for as long as it hoped for and if the network is very busy then the call from the external indexer might be arbitrarily delayed.
+
+### Change the flow of calls
+
+The general flow of cross contract calls in NEAR is that a contract `A` sends a request to another contract `B` to perform a service and `B` replies to `A` with the response.  This flow could be altered.  When a contract `A` calls `B` to perform a service, `B` could respond with a "promise to call it later with the answer".  Then when the signature is eventually available, `B` can then send `A` a request with the signature.
+
+There are some problems with this approach though.  After the change of flow of calls; `B` is now going to be paying for gas for various executions that `A` should have been paying for.  Due to bugs or malicious intent, `B` could forget to call `A` with the signature.  If `A` is calling `B` deep in a call tree and `B` replies to it without actually providing an answer, then `A` would need a mechanism to keep the call tree alive while it waits for `B` to call it with the signature in effect running into the same problem that this NEP is attempting to solve.
 
 ## Future possibilities
 
