@@ -208,15 +208,15 @@ There are some problems with this approach though.  After the change of flow of 
 
 ### Positive
 
-* p1
+- p1
 
 ### Neutral
 
-* n1
+- n1
 
 ### Negative
 
-* n1
+- n1
 
 ### Backwards Compatibility
 
@@ -226,9 +226,9 @@ There are some problems with this approach though.  After the change of flow of 
 
 [Explain any issues that warrant further discussion. Considerations
 
-* What parts of the design do you expect to resolve through the NEP process before this gets merged?
-* What parts of the design do you expect to resolve through the implementation of this feature before stabilization?
-* What related issues do you consider out of scope for this NEP that could be addressed in the future independently of the solution that comes out of this NEP?]
+- What parts of the design do you expect to resolve through the NEP process before this gets merged?
+- What parts of the design do you expect to resolve through the implementation of this feature before stabilization?
+- What related issues do you consider out of scope for this NEP that could be addressed in the future independently of the solution that comes out of this NEP?]
 
 ## Changelog
 
@@ -242,8 +242,8 @@ There are some problems with this approach though.  After the change of flow of 
 
 > List of benefits filled by the Subject Matter Experts while reviewing this version:
 
-* Benefit 1
-* Benefit 2
+- Benefit 1
+- Benefit 2
 
 #### Concerns
 
