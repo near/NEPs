@@ -12,16 +12,17 @@ LastUpdated: 2023-11-20
 
 ## Summary
 
-Today, when a smart contract is called by a user or another contract, it has no sensible way to delay responding to the caller.  There exist use cases where contracts would benefit from being able to delay responding till some arbitrary time in the future.  This proposal introduces such possibility into the NEAR protocol.
+Today, when a smart contract is called by a user or another contract, it has no sensible way to delay responding to the caller till it has observed another future transaction.  This proposal introduces this possibility into the NEAR protocol.
 
 ## Motivation
 
 There exist some situations where when a smart contract on NEAR is called, it will only be able to provide an answer at some arbitrary time in the future.  So the callee needs a way to defer replying to the caller till this time in future.
 
 Examples include when a smart contract (`S`) provides MPC signing capabilities parties external to the NEAR protocol are computing the signature.  The rough steps are:
+
 1. Signer contract provides a function `fn sign_payload(Payload, ...)`.
-2. When called, the contract updates some contract state which is being monitored by external indexers to indicate that a new signing request has been received.  It also defers replying to the caller.
-3. The indexers observe the new signing request, they compute a signature and call another function `fn signature_available(Signature, ...)` on the signer contract.
+2. When called, the contract defers replying to the caller.
+3. External indexers are monitoring the transactions on the contract; they observe the new signing request, compute a signature, and call another function `fn signature_available(Signature, ...)` on the signer contract.
 4. The signer contract validates the signature and if validate, replies to the original caller.
 
 Today, the NEAR protocol has no sensible way to defer replying to the caller in step 2 above.  This proposal proposes adding two following new host functions to the NEAR protocol:
@@ -44,8 +45,8 @@ The proposal is to add the following host functions to the NEAR protocol:
 /// smart contract that is identified by `method_name_len` and `method_name_ptr`
 /// and this method may or may not respond to the caller.
 ///
-/// `arguments_len` and `arguments_ptr` provide an initial set of arguments that
-/// will be passed to the method.
+/// `arguments_len` and `arguments_ptr` provide an initial blob of arguments
+/// that will be passed to the method.
 ///
 /// If the contract fails to call `promise_yield_resume()` within X blocks, then
 /// the protocol will call the method with a timeout error.
@@ -88,10 +89,10 @@ pub fn promise_yield_create(
 /// to `promise_yield_create` and uniquely identifies which yielded execution
 /// should be resumed.
 ///
-/// `payload_len` and `payload_ptr`: the smart contract can provide an optional
-/// list of arguments that should be passed to the method that will be resumed.
-/// These will be appended to the list that was provided in
-/// `promise_yield_create`
+/// `payload_len` and `payload_ptr`: the smart contract can provide an
+/// additional optional blob of arguments that should be passed to the method
+/// that will be resumed. These will be appended to the list that was provided
+/// in `promise_yield_create`
 pub fn promise_yield_resume(
     data_id_len: u64,
     data_id_ptr: u64,
