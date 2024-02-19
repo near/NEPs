@@ -115,7 +115,10 @@ The section should return to the examples given in the previous section, and exp
 
 ## Security Implications
 
-[Explicitly outline any security concerns in relation to the NEP, and potential ways to resolve or mitigate them. At the very least, well-known relevant threats must be covered, e.g. person-in-the-middle, double-spend, XSS, CSRF, etc.]
+Some potential security issues have been identified and are covered below:
+
+* Smart contracts using this functionality have to be careful not to let just any party trigger a call to `promise_yield_resume`.  In the example above, it is possible that a malicious actor may pretend to be an external signer and call the `signature_available()` function with an incorrect signature.  Hence contracts should be taking precautions by only letting select callers call the function (by using [this](https://github.com/aurora-is-near/near-plugins/blob/master/near-plugins/src/access_controllable.rs) service for example) and validating the payload before acting upon it.
+* This mechanism introduces a new way to create delayed receipts in the protocol.  When the protocol is under conditions of congestion, this mechanism could be used to further aggravate the situation.  This is deemed as not a terrible issue as the existing mechanisms of using promises and etc. can also be used to further exacerbate the situation.
 
 ## Alternatives
 
