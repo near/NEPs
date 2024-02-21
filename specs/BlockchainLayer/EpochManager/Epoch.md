@@ -10,6 +10,7 @@ Within one epoch, validator assignment is based on block height: each height has
 each height and shard have a chunk producer.
 
 ### End of an epoch
+
 Let `estimated_next_epoch_start = first_block_in_epoch.height + epoch_length`
 
 A `block` is defined to be the last block in its epoch if it's the genesis block or if the following condition is met:
