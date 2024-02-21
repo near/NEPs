@@ -10,12 +10,18 @@ Within one epoch, validator assignment is based on block height: each height has
 each height and shard have a chunk producer.
 
 ### End of an epoch
-A block is defined to be the last block in its epoch if it's the genesis block or if the following conditions are met:
-- Let `estimated_next_epoch_start = first_block_in_epoch.height + epoch_length`
-- `block.height + 1 >= estimated_next_epoch_start`
+Let `estimated_next_epoch_start = first_block_in_epoch.height + epoch_length`
+
+A `block` is defined to be the last block in its epoch if it's the genesis block or if the following condition is met:
 - `block.last_finalized_height + 3 >= estimated_next_epoch_start`
 
 `epoch_length` is defined in `genesis_config` and has a value of `43200` height delta on mainnet (12 hours at 1 block per second).
+
+Since every final block must have two more blocks on top of it, it means that the last block in an epoch will have a height of at least `block.last_finalized_height + 2`, so for the last block it holds that `block.height + 1 >= estimated_next_epoch_start`. Its height will be at least `estimated_next_epoch_start - 1`.
+
+Note that an epoch only ends when there is a final block above a certain height. If there are no final blocks, the epoch will be stretched until the required final block appears. An epoch can potentially be much longer than `epoch_length`.
+
+![Diagram of epoch end](epoch_end_diagram.png)
 
 ### EpochHeight
 Epochs on one chain can be identified by height, which is defined the following way:
