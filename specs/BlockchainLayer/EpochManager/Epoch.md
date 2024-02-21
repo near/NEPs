@@ -44,7 +44,7 @@ Epoch id is defined as
 - For epoch with height `1` it's the hash of genesis block 
 - For epoch with height `T+2` it's the hash of the last block in epoch `T`
 
-### End of an epoch
+### Epoch end
 
 - After processing the last block of epoch `T`, `EpochManager` aggregates information from block of the epoch, and computes
 validator set for epoch `T+2`. This process is described in [EpochManager](EpochManager.md).
