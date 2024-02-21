@@ -14,6 +14,7 @@ each height and shard have a chunk producer.
 Let `estimated_next_epoch_start = first_block_in_epoch.height + epoch_length`
 
 A `block` is defined to be the last block in its epoch if it's the genesis block or if the following condition is met:
+
 - `block.last_finalized_height + 3 >= estimated_next_epoch_start`
 
 `epoch_length` is defined in `genesis_config` and has a value of `43200` height delta on mainnet (12 hours at 1 block per second).
