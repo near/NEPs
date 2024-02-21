@@ -26,21 +26,26 @@ Note that an epoch only ends when there is a final block above a certain height.
 ![Diagram of epoch end](epoch_end_diagram.png)
 
 ### EpochHeight
+
 Epochs on one chain can be identified by height, which is defined the following way:
+
 - Special epoch that contains genesis block only: undefined
 - Epoch starting from the block that's after genesis: `0` (NOTE: in current implementation it's `1` due to a bug, so there are two epochs with height `1`)
 - Following epochs: height of the parent epoch plus one
 
 ### Epoch id
+
 Every block stores the id of its epoch - `epoch_id`.
 
 Epoch id is defined as
+
 - For special genesis block epoch it's `0`
 - For epoch with height `0` it's `0` (NOTE: the first two epochs use the same epoch id)
 - For epoch with height `1` it's the hash of genesis block 
 - For epoch with height `T+2` it's the hash of the last block in epoch `T`
 
 ### End of an epoch
+
 - After processing the last block of epoch `T`, `EpochManager` aggregates information from block of the epoch, and computes
 validator set for epoch `T+2`. This process is described in [EpochManager](EpochManager.md).
 - After that, the validator set rotates to epoch `T+1`, and the next block is produced by the validator from the new set
