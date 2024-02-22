@@ -1,7 +1,7 @@
 ---
 NEP: 519
 Title: Yield Execution
-Authors: Akhi Singhania <akhi3030@gmail.com>
+Authors: Akhi Singhania <akhi3030@gmail.com>; Saketh Are <saketh@near.org>
 Status: Draft
 DiscussionsTo: https://github.com/near/NEPs/pull/519
 Type: Protocol
