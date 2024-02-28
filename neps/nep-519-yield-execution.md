@@ -38,29 +38,32 @@ The proposal is to add the following host functions to the NEAR protocol:
 
 
 ```rust
-/// Instructs the protocol that the smart contract is not yet ready to respond
-/// to its caller yet.  The smart contract promises to call
-/// `promise_yield_resume()` within 200 blocks.  When `promise_yield_resume()`
-/// is called, the protocol will call the method on the smart contract that is
-/// identified by `method_name_len` and `method_name_ptr` and this method may or
-/// may not respond to the caller.
+/// Smart contracts can use this host function along with
+/// `promise_yield_resume()` to delay replying to their caller for up to 200
+/// blocks.  This host function allows the contract to provide a callback to the
+/// protocol that will be executed after either contract calls
+/// `promise_yield_resume()` or after 200 blocks have been executed.  The
+/// callback then has the opportunity to either reply to the caller or to delay
+/// replying again.
+///
+/// `method_name_len` and `method_name_ptr`: Identify the callback method that
+/// should be executed either after the contract calls `promise_yield_resume()`
+/// or after 200 blocks have been executed.
 ///
 /// `arguments_len` and `arguments_ptr` provide an initial blob of arguments
-/// that will be passed to the method.  These will be available via the `input`
-/// host function.
+/// that will be passed to the callback.  These will be available via the
+/// `input` host function.
 ///
-/// If the contract fails to call `promise_yield_resume()` within 200 blocks,
-/// then the protocol will call the method with a timeout error.
-///
-/// Similar to the `gas` parameter in
+/// `gas`: Similar to the `gas` parameter in
 /// [promise_create](https://github.com/near/nearcore/blob/a908de36ab6f75eb130447a5788007e26d05f93e/runtime/near-vm-runner/src/logic/logic.rs#L1281),
 /// the `gas` parameter is a prepayment for the gas that would be used to
-/// execute the method.
+/// execute the callback.
 ///
-/// `gas_weight`: as specified in
-/// [this](https://github.com/near/NEPs/blob/master/neps/nep-0264.md) NEP, this
-/// improves the devX of specifying a portion of the remaining gas for executing
-/// the method instead of specifying a precise amount.
+/// `gas_weight`: Similar to the `gas_weight` parameter in
+/// [promise_batch_action_function_call_weight](https://github.com/near/nearcore/blob/a908de36ab6f75eb130447a5788007e26d05f93e/runtime/near-vm-runner/src/logic/logic.rs#L1699),
+/// this improves the devX for the smart contract.  It allows a contract to
+/// specify a portion of the remaining gas for executing the callback instead of
+/// specifying a precise amount.
 ///
 /// `register_id`: is used to identify the register that will be filled with a
 /// unique resumption token. This token is used with `promise_yield_resume` to
@@ -80,17 +83,19 @@ pub fn promise_yield_create(
     register_id: u64,
 ) -> u64;
 
-/// When a smart contract has postponed replying to its caller earlier, it can
-/// use this function to indicate that it may now be ready to reply to it.  When
-/// this is called, then the protocol will call the method that the smart
-/// contract referred to in the earlier `promise_yield_create()` call.
+/// See `promise_yield_create()` for more details.  This host function can be
+/// used to resolve the continuation that was set up by
+/// `promise_yield_create()`.  The contract calling this function must be the
+/// same contract that called `promise_yield_create()` earlier.  This host
+/// function cannot be called for the same resumption token twice or if the
+/// callback specified in `promise_yield_create()` has already executed.
 ///
-/// `data_id_len` and `data_it_ptr`: This value was returned in an earlier call
-/// to `promise_yield_create` and uniquely identifies which yielded execution
-/// should be resumed.
+/// `data_id_len` and `data_it_ptr`: Used to pass the unique resumption token
+/// that was returned to the smart contract in the `promise_yield_create()`
+/// function.
 ///
 /// `payload_len` and `payload_ptr`: the smart contract can provide an
-/// additional optional blob of arguments that should be passed to the method
+/// additional optional blob of arguments that should be passed to the callback
 /// that will be resumed.  These are available via the `promise_result` host
 /// function.
 pub fn promise_yield_resume(
@@ -99,7 +104,6 @@ pub fn promise_yield_resume(
     payload_len: u64,
     payload_ptr: u64,
 ) -> ();
-
 ```
 
 ## Reference Implementation
