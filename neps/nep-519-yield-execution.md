@@ -40,16 +40,17 @@ The proposal is to add the following host functions to the NEAR protocol:
 ```rust
 /// Instructs the protocol that the smart contract is not yet ready to respond
 /// to its caller yet.  The smart contract promises to call
-/// `promise_yield_resume()` within 200 blocks.  When
-/// `promise_yield_resume()` is called, the protocol will call the method on the
-/// smart contract that is identified by `method_name_len` and `method_name_ptr`
-/// and this method may or may not respond to the caller.
+/// `promise_yield_resume()` within 200 blocks.  When `promise_yield_resume()`
+/// is called, the protocol will call the method on the smart contract that is
+/// identified by `method_name_len` and `method_name_ptr` and this method may or
+/// may not respond to the caller.
 ///
 /// `arguments_len` and `arguments_ptr` provide an initial blob of arguments
-/// that will be passed to the method.
+/// that will be passed to the method.  These will be available via the `input`
+/// host function.
 ///
-/// If the contract fails to call `promise_yield_resume()` within 200 blocks, then
-/// the protocol will call the method with a timeout error.
+/// If the contract fails to call `promise_yield_resume()` within 200 blocks,
+/// then the protocol will call the method with a timeout error.
 ///
 /// Similar to the `gas` parameter in
 /// [promise_create](https://github.com/near/nearcore/blob/a908de36ab6f75eb130447a5788007e26d05f93e/runtime/near-vm-runner/src/logic/logic.rs#L1281),
@@ -61,10 +62,9 @@ The proposal is to add the following host functions to the NEAR protocol:
 /// improves the devX of specifying a portion of the remaining gas for executing
 /// the method instead of specifying a precise amount.
 ///
-/// `register_id`: is used to identify the register that will be filled 
-/// with a unique resumption token. This token is used with
-/// `promise_yield_resume` to resolve the continuation receipt set up by this
-/// function.
+/// `register_id`: is used to identify the register that will be filled with a
+/// unique resumption token. This token is used with `promise_yield_resume` to
+/// resolve the continuation receipt set up by this function.
 ///
 /// Return value: u64: Similar to the
 /// [promise_create](https://github.com/near/nearcore/blob/a908de36ab6f75eb130447a5788007e26d05f93e/runtime/near-vm-runner/src/logic/logic.rs#L1281)
@@ -91,14 +91,15 @@ pub fn promise_yield_create(
 ///
 /// `payload_len` and `payload_ptr`: the smart contract can provide an
 /// additional optional blob of arguments that should be passed to the method
-/// that will be resumed. These will be appended to the list that was provided
-/// in `promise_yield_create`
+/// that will be resumed.  These are available via the `promise_result` host
+/// function.
 pub fn promise_yield_resume(
     data_id_len: u64,
     data_id_ptr: u64,
     payload_len: u64,
     payload_ptr: u64,
 ) -> ();
+
 ```
 
 ## Reference Implementation
