@@ -48,7 +48,7 @@ The proposal is to add the following host functions to the NEAR protocol:
 /// `arguments_len` and `arguments_ptr` provide an initial blob of arguments
 /// that will be passed to the method.
 ///
-/// If the contract fails to call `promise_yield_resume()` within X blocks, then
+/// If the contract fails to call `promise_yield_resume()` within 200 blocks, then
 /// the protocol will call the method with a timeout error.
 ///
 /// Similar to the `gas` parameter in
