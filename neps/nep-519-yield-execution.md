@@ -30,7 +30,7 @@ Today, the NEAR protocol has no sensible way to defer replying to the caller in 
 - `promise_yield_create`: this can be called by a contract to indicate to the protocol that it is not ready yet to reply to its caller.
 - `promise_yield_resume`: a contract can use this mechanism to indicate to a protocol that it is now ready to reply to a caller that it had deferred earlier.
 
-If these two host functions were available, then `yield` would be used in step 2 above and `resume` would be used in step 4 above.
+If these two host functions were available, then `promise_yield_create` would be used in step 2 above and `promise_yield_resume` would be used in step 4 above.
 
 ## Specification
 
