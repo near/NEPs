@@ -30,7 +30,7 @@ Today, the NEAR protocol has no sensible way to defer replying to the caller in 
 - `promise_yield_create`: allows setting up a continuation function that should only be executed after `promise_yield_resume` is invoked.  Together with `promise_return` this allows delaying the reply to the caller;
 - `promise_yield_resume`: indicates to the protocol that the continuation to the yield may now be executed.
 
-If these two host functions were available, then `promise_yield_create` would be used in step 2 above and `promise_yield_resume` would be used in step 4 above.
+If these two host functions were available, then `promise_yield_create` would be used to implement step 2 above and `promise_yield_resume` would be used for step 3 of the motivating example above.
 
 ## Specification
 
