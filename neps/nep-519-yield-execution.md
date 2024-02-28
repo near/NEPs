@@ -40,7 +40,7 @@ The proposal is to add the following host functions to the NEAR protocol:
 ```rust
 /// Instructs the protocol that the smart contract is not yet ready to respond
 /// to its caller yet.  The smart contract promises to call
-/// `promise_yield_resume()` within X (TBD) blocks.  When
+/// `promise_yield_resume()` within 200 blocks.  When
 /// `promise_yield_resume()` is called, the protocol will call the method on the
 /// smart contract that is identified by `method_name_len` and `method_name_ptr`
 /// and this method may or may not respond to the caller.
