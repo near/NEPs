@@ -61,10 +61,10 @@ The proposal is to add the following host functions to the NEAR protocol:
 /// improves the devX of specifying a portion of the remaining gas for executing
 /// the method instead of specifying a precise amount.
 ///
-/// `register_id`: is used to identify the register that will be used by the
-/// protocol to return unique token referring to this yielded execution to the
-/// contract.  The contract will have to pass this value when it calls
-/// `promise_yield_resume`.
+/// `register_id`: is used to identify the register that will be filled 
+/// with a unique resumption token. This token is used with
+/// `promise_yield_resume` to resolve the continuation receipt set up by this
+/// function.
 ///
 /// Return value: u64: Similar to the
 /// [promise_create](https://github.com/near/nearcore/blob/a908de36ab6f75eb130447a5788007e26d05f93e/runtime/near-vm-runner/src/logic/logic.rs#L1281)
