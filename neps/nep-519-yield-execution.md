@@ -23,7 +23,7 @@ Examples include when a smart contract (`S`) provides MPC signing capabilities p
 1. Signer contract provides a function `fn sign_payload(Payload, ...)`.
 2. When called, the contract defers replying to the caller.
 3. External indexers are monitoring the transactions on the contract; they observe the new signing request, compute a signature, and call another function `fn signature_available(Signature, ...)` on the signer contract.
-4. The signer contract validates the signature and if validate, replies to the original caller.
+4. The signer contract validates the signature and replies to the original caller.
 
 Today, the NEAR protocol has no sensible way to defer replying to the caller in step 2 above.  This proposal proposes adding two following new host functions to the NEAR protocol:
 
