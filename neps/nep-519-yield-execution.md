@@ -18,7 +18,7 @@ Today, when a smart contract is called by a user or another contract, it has no 
 
 There exist some situations where when a smart contract on NEAR is called, it will only be able to provide an answer at some time in the future.  The callee needs a way to defer replying to the caller while the response is being prepared.
 
-Examples include when a smart contract (`S`) provides MPC signing capabilities parties external to the NEAR protocol are computing the signature.  The rough steps are:
+Examples include a smart contract (`S`) that provides the MPC signing capability.  It relies on indexers external to the NEAR protocol for computing the signatures.  The rough steps are:
 
 1. Signer contract provides a function `fn sign_payload(Payload, ...)`.
 2. When called, the contract defers replying to the caller.
