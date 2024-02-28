@@ -16,7 +16,7 @@ Today, when a smart contract is called by a user or another contract, it has no 
 
 ## Motivation
 
-There exist some situations where when a smart contract on NEAR is called, it will only be able to provide an answer at some arbitrary time in the future.  So the callee needs a way to defer replying to the caller till this time in future.
+There exist some situations where when a smart contract on NEAR is called, it will only be able to provide an answer at some time in the future.  The callee needs a way to defer replying to the caller while the response is being prepared.
 
 Examples include when a smart contract (`S`) provides MPC signing capabilities parties external to the NEAR protocol are computing the signature.  The rough steps are:
 
