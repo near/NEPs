@@ -27,8 +27,8 @@ Examples include a smart contract (`S`) that provides the MPC signing capability
 
 Today, the NEAR protocol has no sensible way to defer replying to the caller in step 2 above.  This proposal proposes adding two following new host functions to the NEAR protocol:
 
-- `promise_yield_create`: this can be called by a contract to indicate to the protocol that it is not ready yet to reply to its caller.
-- `promise_yield_resume`: a contract can use this mechanism to indicate to a protocol that it is now ready to reply to a caller that it had deferred earlier.
+- `promise_yield_create`: allows setting up a continuation function that should only be executed after `promise_yield_resume` is invoked.  Together with `promise_return` this allows delaying the reply to the caller;
+- `promise_yield_resume`: indicates to the protocol that the continuation to the yield may now be executed.
 
 If these two host functions were available, then `promise_yield_create` would be used in step 2 above and `promise_yield_resume` would be used in step 4 above.
 
