@@ -92,18 +92,20 @@ pub fn promise_yield_create(
 ///
 /// `data_id_len` and `data_it_ptr`: Used to pass the unique resumption token
 /// that was returned to the smart contract in the `promise_yield_create()`
-/// function.
+/// function (via the register).
 ///
 /// `payload_len` and `payload_ptr`: the smart contract can provide an
 /// additional optional blob of arguments that should be passed to the callback
 /// that will be resumed.  These are available via the `promise_result` host
 /// function.
 ///
-/// The function returns `1` if submitting the payload was successful. This 
-/// guarantees that the yielded callback will be executes with one of the
-/// successfully submitted payloads as the input. Otherwise (e.g. if the yield 
-/// receipt has already timed out) `0` will be returned, indicating that this
-/// payload could not be submitted successfully.
+/// This function can be called multiple times.  If it is called successfully
+/// multiple times, then the implementation guarantees that the yielded callback
+/// will execute with one of the successfully submitted payloads.  If submission
+/// was successful, then `1` is returned.   Otherwise (e.g. if the yield receipt
+/// has already timed out or the yielded callback has already been executed) `0`
+/// will be returned, indicating that this payload could not be submitted
+/// successfully.
 pub fn promise_yield_resume(
     data_id_len: u64,
     data_id_ptr: u64,
