@@ -98,12 +98,18 @@ pub fn promise_yield_create(
 /// additional optional blob of arguments that should be passed to the callback
 /// that will be resumed.  These are available via the `promise_result` host
 /// function.
+///
+/// The function returns `1` if submitting the payload was successful. This 
+/// guarantees that the yielded callback will be executes with one of the
+/// successfully submitted payloads as the input. Otherwise (e.g. if the yield 
+/// receipt has already timed out) `0` will be returned, indicating that this
+/// payload could not be submitted successfully.
 pub fn promise_yield_resume(
     data_id_len: u64,
     data_id_ptr: u64,
     payload_len: u64,
     payload_ptr: u64,
-) -> ();
+) -> u32;
 ```
 
 ## Reference Implementation
