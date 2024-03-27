@@ -21,7 +21,7 @@ A `block` is defined to be the last block in its epoch if it's the genesis block
 
 Since every final block must have two more blocks on top of it, it means that the last block in an epoch will have a height of at least `block.last_finalized_height + 2`, so for the last block it holds that `block.height + 1 >= estimated_next_epoch_start`. Its height will be at least `estimated_next_epoch_start - 1`.
 
-Note that an epoch only ends when there is a final block above a certain height. If there are no final blocks, the epoch will be stretched until the required final block appears. An epoch can potentially be much longer than `epoch_length`.
+Note that an epoch only ends when there is a final block above a certain height. If there are no final blocks, the epoch will be stretched until the required final block appears. An epoch can potentially be longer than `epoch_length`.
 
 ![Diagram of epoch end](epoch_end_diagram.png)
 
