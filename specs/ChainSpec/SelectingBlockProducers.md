@@ -25,6 +25,7 @@ block producers to be the one responsible for producing the chunk/block at each 
 shard.
 
 There are several desiderata for these algorithms:
+
 * Larger stakes should be preferred (more staked tokens means more security)
 * The frequency with which a given participant is selected to produce a particular chunk/block is
   proportional to that participant's stake
@@ -71,6 +72,7 @@ In mainnet and testnet, `epoch_length` is set to `43200`. Let $\text{PROBABILITY
 we obtain, $s_\text{min} / S = 160/1000,000$.
 
 ## Algorithm for selecting block and chunk producers
+
 A potential validator cannot specify whether they want to become a block producer or a chunk-only producer. 
 There is only one type of proposal. The same algorithm is used for selecting block producers and chunk producers, 
 but with different thresholds. The threshold for becoming block producers is higher, so if a node is selected as a block 
@@ -78,7 +80,9 @@ producer, it will also be a chunk producer, but not the other way around. Valida
 but not block producers are chunk-only producers.
 
 ### select_validators
+
 ### Input
+
 * `max_num_validators: u16` max number of validators to be selected
 * `min_stake_fraction: Ratio<u128>` minimum stake ratio for selected validator
 * `validator_proposals: Vec<ValidatorStake>` (proposed stakes for the next epoch from nodes sending
@@ -110,7 +114,9 @@ return (validators, validator_sampler)
 ```
 
 ### Algorithm for selecting block producers
+
 ### Input
+
 * `MAX_NUM_BP: u16` Max number of block producers, see Assumptions
 * `min_stake_fraction: Ratio<u128>` $s_\text{min} / S$, see Assumptions
 * `validator_proposals: Vec<ValidatorStake>` (proposed stakes for the next epoch from nodes sending
@@ -121,7 +127,9 @@ select_validators(MAX_NUM_BP, min_stake_fraction, validator_proposals)
 ```
 
 ### Algorithm for selecting chunk producers
+
 ### Input
+
 * `MAX_NUM_CP: u16` max number of chunk producers, see Assumptions`
 * `min_stake_fraction: Ratio<u128>` $s_\text{min} / S$, see Assumptions
 * `num_shards: u64` number of shards
@@ -137,6 +145,7 @@ them in a way that the total stake in each shard is distributed as evenly as pos
 So the total stake in each shard will be roughly be `total_stake_all_chunk_producers / num_shards`.
 
 ## Algorithm for assigning chunk producers to shards
+
 Note that block producers are a subset of chunk producers, so this algorithm will also assign block producers
 to shards. This also means that a block producer may only be assigned to a subset of shards. For the security of 
 the protocol, all block producers must track all shards, even if they are not assigned to produce chunks for all shards. 
@@ -181,6 +190,7 @@ the same algorithm works to assign chunk producers to shards; it is only a matte
 variables referencing "block producers" to reference "chunk producers" instead.
 
 ## Algorithm for sampling validators proportional to stake
+
 We sample validators with probability proportional to their stake using the following data structure.
 * `weighted_sampler: WeightedIndex`
   - Allow $O(1)$ sampling
