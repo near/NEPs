@@ -185,7 +185,7 @@ We sample validators with probability proportional to their stake using the foll
 * `weighted_sampler: WeightedIndex`
   - Allow $O(1)$ sampling
   - This structure will be based on the
-    [WeightedIndex](https://rust-random.github.io/rand/rand/distributions/weighted/alias_method/struct.WeightedIndex.html)
+    [WeightedIndex](https://rust-random.github.io/rand/rand/distributions/struct.WeightedIndex.html)
     implementation (see a description of [Vose's Alias
     Method](https://en.wikipedia.org/wiki/Alias_method) for details)
 
