@@ -6,7 +6,7 @@
 # Summary
 [summary]: #summary
 
-Adding economics specification for NEAR Protocol based on the economics paper - https://near.org/papers/economics-in-sharded-blockchain/
+Adding economics specification for NEAR Protocol based on the NEAR whitepaper - https://pages.near.org/papers/the-official-near-white-paper/#economics
 
 # Motivation
 [motivation]: #motivation
