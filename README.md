@@ -30,6 +30,7 @@ Changes to the protocol specification and standards are called NEAR Enhancement 
 | [0393](https://github.com/near/NEPs/blob/master/neps/nep-0393.md) | Sould Bound Token (SBT)                  | @robert-zaremba                              | Final      |
 | [0399](https://github.com/near/NEPs/blob/master/neps/nep-0399.md) | Flat Storage                             | @Longarithm @mzhangmzz                       | Final     |
 | [0448](https://github.com/near/NEPs/blob/master/neps/nep-0448.md) | Zero-balance Accounts                    | @bowenwang1996                               | Final      |
+| [0452](https://github.com/near/NEPs/blob/master/neps/nep-0452.md) | Linkdrop Standard                        | @benkurrek @miyachi                          | Final      |
 | [0455](https://github.com/near/NEPs/blob/master/neps/nep-0455.md) | Parameter Compute Costs                  | @akashin @jakmeier                           | Final      |
 | [0514](https://github.com/near/NEPs/blob/master/neps/nep-0514.md) | Fewer Block Producer Seats in `testnet`  | @nikurt                                      | Final      |
 
