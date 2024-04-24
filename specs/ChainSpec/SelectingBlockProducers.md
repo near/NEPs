@@ -25,17 +25,18 @@ block producers to be the one responsible for producing the chunk/block at each 
 shard.
 
 There are several desiderata for these algorithms:
-* Larger stakes should be preferred (more staked tokens means more security)
-* The frequency with which a given participant is selected to produce a particular chunk/block is
+
+- Larger stakes should be preferred (more staked tokens means more security)
+- The frequency with which a given participant is selected to produce a particular chunk/block is
   proportional to that participant's stake
-* All participants selected as chunk/block producers should be selected to produce at least one
+- All participants selected as chunk/block producers should be selected to produce at least one
   chunk/block during the epoch
-* It should be possible to determine which chunk/block producer is supposed to produce the
+- It should be possible to determine which chunk/block producer is supposed to produce the
   chunk/block at height $h$, for any $h$ within the epoch, in constant time
-* The block producer chosen at height $h$ should have been a chunk producer for some shard at
+- The block producer chosen at height $h$ should have been a chunk producer for some shard at
   height $h - 1$, this minimizes network communication between chunk producers and block
   producers
-* The number of distinct chunk-only/block producers should be as large as is allowed by the
+- The number of distinct chunk-only/block producers should be as large as is allowed by the
   scalability in the consensus algorithm (too large and the system would be too slow, too small and
   the system would be too centralized) $^{\dagger}$
 
@@ -46,16 +47,16 @@ There are several desiderata for these algorithms:
 
 ## Assumptions
 
-* The maximum number of distinct chunk-only producers and block producers supported by the consensus
+- The maximum number of distinct chunk-only producers and block producers supported by the consensus
   algorithm is a fixed constant. This will be a parameter of the protocol itself (i.e. all nodes
   must agree on the constant). In this document, we will denote the maximum number of chunk-only
   producers as `MAX_NUM_CP` and the maximum number of block producers by `MAX_NUM_BP`.
-* The minimum number of blocks in the epoch is known at the time of block producer selection. This
+- The minimum number of blocks in the epoch is known at the time of block producer selection. This
   minimum does not need to be incredibly accurate, but we will assume it is within a factor of 2 of
   the actual number of blocks in the epoch. In this document we will refer to this as the "length of
   the epoch", denoted by `epoch_length`.
-* To meet the requirement that any chosen validator will be selected to produce at least one
-  chunk/block in the epoch, we assume it is acceptable for the probability of this *not* happening
+- To meet the requirement that any chosen validator will be selected to produce at least one
+  chunk/block in the epoch, we assume it is acceptable for the probability of this _not_ happening
   to be sufficiently low. Let `PROBABILITY_NEVER_SELECTED` be a protocol constant which gives the
   maximum allowable probability that the chunk-only/block producer with the least stake will never
   be selected to produce a chunk/block during the epoch. We will additionally assume the chunk/block
@@ -66,27 +67,30 @@ There are several desiderata for these algorithms:
   stake (what stake is "relevant" depends on whether the validator is a chunk-only producer or a
   block producer; more details below). Hence, the algorithm will enforce the condition $(1 -
   (s_\text{min} / S))^\text{epoch\_length} < \text{PROBABILITY\_NEVER\_SELECTED}$.
-  
-In mainnet and testnet, `epoch_length` is set to `43200`. Let $\text{PROBABILITY\_NEVER\_SELECTED}=0.001$, 
+
+In mainnet and testnet, `epoch_length` is set to `43200`. Let $\text{PROBABILITY\_NEVER\_SELECTED}=0.001$,
 we obtain, $s_\text{min} / S = 160/1000,000$.
 
 ## Algorithm for selecting block and chunk producers
-A potential validator cannot specify whether they want to become a block producer or a chunk-only producer. 
-There is only one type of proposal. The same algorithm is used for selecting block producers and chunk producers, 
-but with different thresholds. The threshold for becoming block producers is higher, so if a node is selected as a block 
+
+A potential validator cannot specify whether they want to become a block producer or a chunk-only producer.
+There is only one type of proposal. The same algorithm is used for selecting block producers and chunk producers,
+but with different thresholds. The threshold for becoming block producers is higher, so if a node is selected as a block
 producer, it will also be a chunk producer, but not the other way around. Validators who are selected as chunk producers
 but not block producers are chunk-only producers.
 
 ### select_validators
+
 ### Input
-* `max_num_validators: u16` max number of validators to be selected
-* `min_stake_fraction: Ratio<u128>` minimum stake ratio for selected validator
-* `validator_proposals: Vec<ValidatorStake>` (proposed stakes for the next epoch from nodes sending
+
+- `max_num_validators: u16` max number of validators to be selected
+- `min_stake_fraction: Ratio<u128>` minimum stake ratio for selected validator
+- `validator_proposals: Vec<ValidatorStake>` (proposed stakes for the next epoch from nodes sending
   staking transactions)
 
 ### Output
 
-* `(validators: Vec<ValidatorStake>, sampler: WeightedIndex)`
+- `(validators: Vec<ValidatorStake>, sampler: WeightedIndex)`
 
 ### Steps
 
@@ -110,10 +114,12 @@ return (validators, validator_sampler)
 ```
 
 ### Algorithm for selecting block producers
+
 ### Input
-* `MAX_NUM_BP: u16` Max number of block producers, see Assumptions
-* `min_stake_fraction: Ratio<u128>` $s_\text{min} / S$, see Assumptions
-* `validator_proposals: Vec<ValidatorStake>` (proposed stakes for the next epoch from nodes sending
+
+- `MAX_NUM_BP: u16` Max number of block producers, see Assumptions
+- `min_stake_fraction: Ratio<u128>` $s_\text{min} / S$, see Assumptions
+- `validator_proposals: Vec<ValidatorStake>` (proposed stakes for the next epoch from nodes sending
   staking transactions)
 
 ```python
@@ -121,42 +127,46 @@ select_validators(MAX_NUM_BP, min_stake_fraction, validator_proposals)
 ```
 
 ### Algorithm for selecting chunk producers
+
 ### Input
-* `MAX_NUM_CP: u16` max number of chunk producers, see Assumptions`
-* `min_stake_fraction: Ratio<u128>` $s_\text{min} / S$, see Assumptions
-* `num_shards: u64` number of shards
-* `validator_proposals: Vec<ValidatorStake>` (proposed stakes for the next epoch from nodes sending
+
+- `MAX_NUM_CP: u16` max number of chunk producers, see Assumptions`
+- `min_stake_fraction: Ratio<u128>` $s_\text{min} / S$, see Assumptions
+- `num_shards: u64` number of shards
+- `validator_proposals: Vec<ValidatorStake>` (proposed stakes for the next epoch from nodes sending
   staking transactions)
 
 ```python
 select_validators(MAX_NUM_CP, min_stake_fraction/num_shards, validator_proposals)
 ```
-The reasoning for using `min_stake_fraction/num_shards` as the threshold here is that 
-we will assign chunk producers to shards later and the algorithm (described below) will try to assign 
+
+The reasoning for using `min_stake_fraction/num_shards` as the threshold here is that
+we will assign chunk producers to shards later and the algorithm (described below) will try to assign
 them in a way that the total stake in each shard is distributed as evenly as possible.
 So the total stake in each shard will be roughly be `total_stake_all_chunk_producers / num_shards`.
 
 ## Algorithm for assigning chunk producers to shards
+
 Note that block producers are a subset of chunk producers, so this algorithm will also assign block producers
-to shards. This also means that a block producer may only be assigned to a subset of shards. For the security of 
-the protocol, all block producers must track all shards, even if they are not assigned to produce chunks for all shards. 
-We enforce that in the implementation level, not the protocol level. A validator node will panic if it doesn't track all 
-shards. 
+to shards. This also means that a block producer may only be assigned to a subset of shards. For the security of
+the protocol, all block producers must track all shards, even if they are not assigned to produce chunks for all shards.
+We enforce that in the implementation level, not the protocol level. A validator node will panic if it doesn't track all
+shards.
 
 ### Input
 
-* `chunk_producers: Vec<ValidatorStake>`
-* `num_shards: usize`
-* `min_validators_per_shard: usize`
+- `chunk_producers: Vec<ValidatorStake>`
+- `num_shards: usize`
+- `min_validators_per_shard: usize`
 
 ### Output
 
-* `validator_shard_assignments: Vec<Vec<ValidatorStake>>`
+- `validator_shard_assignments: Vec<Vec<ValidatorStake>>`
   - $i$-th element gives the validators assigned to shard $i$
 
 ### Steps
 
-* While any shard has fewer than `min_validators_per_shard` validators assigned to it:
+- While any shard has fewer than `min_validators_per_shard` validators assigned to it:
   - Let `cp_i` be the next element of `chunk_producers` (cycle back to the beginning as needed)
     - Note: if there are more shards than chunk producers, then some chunk producers will
       be assigned to multiple shards. This is undesirable because we want each chunk-only producer
@@ -167,12 +177,12 @@ shards.
   - Let `shard_id` be the shard with the fewest number of assigned validators such that `cp_i` has
     not been assigned to `shard_id`
   - Assign `cp_i` to `shard_id`
-* While there are any validators which have not been assigned to any shard:
+- While there are any validators which have not been assigned to any shard:
   - Let `cp_i` be the next validator not assigned to any shard
   - Let `shard_id` be the shard with the least total stake (total stake = sum of stakes of all
     validators assigned to that shard)
   - Assign `cp_i` to `shard_id`
-* Return the shard assignments
+- Return the shard assignments
 
 In addition to the above description, we have a [proof-of-concept (PoC) on
 GitHub](https://github.com/birchmd/bp-shard-assign-poc). Note: this PoC has not been updated since
@@ -181,11 +191,13 @@ the same algorithm works to assign chunk producers to shards; it is only a matte
 variables referencing "block producers" to reference "chunk producers" instead.
 
 ## Algorithm for sampling validators proportional to stake
+
 We sample validators with probability proportional to their stake using the following data structure.
-* `weighted_sampler: WeightedIndex`
+
+- `weighted_sampler: WeightedIndex`
   - Allow $O(1)$ sampling
   - This structure will be based on the
-    [WeightedIndex](https://rust-random.github.io/rand/rand/distributions/weighted/alias_method/struct.WeightedIndex.html)
+    [WeightedIndex](https://rust-random.github.io/rand/rand/distributions/struct.WeightedIndex.html)
     implementation (see a description of [Vose's Alias
     Method](https://en.wikipedia.org/wiki/Alias_method) for details)
 
@@ -194,14 +206,14 @@ algorithms for selecting a specific block producer and chunk producer at each he
 
 ### Input
 
-* `rng_seed: [u8; 32]`
+- `rng_seed: [u8; 32]`
   - See usages of this algorithm below to see how this seed is generated
-* `validators: Vec<ValidatorStake>`
-* `sampler: WeightedIndex`
+- `validators: Vec<ValidatorStake>`
+- `sampler: WeightedIndex`
 
 ### Output
 
-* `selection: ValidatorStake`
+- `selection: ValidatorStake`
 
 ### Steps
 
@@ -228,18 +240,18 @@ return validators[index]
 
 ### Input
 
-* `h: BlockHeight`
+- `h: BlockHeight`
   - Height to compute the block producer for
   - Only heights within the epoch corresponding to the given block producers make sense as input
-* `block_producers: Vec<ValidatorStake>` (output from above)
-* `block_producer_sampler: WeightedIndex`
-* `epoch_rng_seed: [u8; 32]`
+- `block_producers: Vec<ValidatorStake>` (output from above)
+- `block_producer_sampler: WeightedIndex`
+- `epoch_rng_seed: [u8; 32]`
   - Fixed seed for the epoch determined from Verified Random Function (VRF) output of last block in
     the previous epoch
 
 ### Output
 
-* `block_producer: ValidatorStake`
+- `block_producer: ValidatorStake`
 
 ### Steps
 
@@ -256,14 +268,14 @@ return select_validator(rng_seed=block_seed, validators=block_producers, sampler
 
 ### Input
 
-* (same inputs as selection of block producer at height h)
-* `num_shards: usize`
-* `chunk_producer_sampler: Vec<WeightedIndex>` (outputs from chunk-only producer selection)
-* `validator_shard_assignments: Vec<Vec<ValidatorStake>>`
+- (same inputs as selection of block producer at height h)
+- `num_shards: usize`
+- `chunk_producer_sampler: Vec<WeightedIndex>` (outputs from chunk-only producer selection)
+- `validator_shard_assignments: Vec<Vec<ValidatorStake>>`
 
 ### Output
 
-* `chunk_producers: Vec<ValidatorStake>`
+- `chunk_producers: Vec<ValidatorStake>`
   - `i`th element gives the validator that will produce the chunk for shard `i`. Note: at least one
     of these will be a block producer, while others will be chunk-only producers.
 

@@ -195,7 +195,9 @@ Now back to the theorem. Without loss of generality, assume that $\operatorname{
 
 ## Liveness
 
-See the proof of liveness in [near.ai/doomslug](https://near.ai/doomslug). The consensus in this section differs in that it requires two consecutive blocks with endorsements. The proof in the linked paper trivially extends, by observing that once the delay is sufficiently long for a honest block producer to collect enough endorsements, the next block producer ought to have enough time to collect all the endorsements too.
+See the proof of liveness in [Doomslug Whitepaper](https://discovery-domain.org/papers/doomslug.pdf) and the recent [Nightshade](https://discovery-domain.org/papers/nightshade.pdf) sharding protocol. 
+
+The consensus in this section differs in that it requires two consecutive blocks with endorsements. The proof in the linked paper trivially extends, by observing that once the delay is sufficiently long for a honest block producer to collect enough endorsements, the next block producer ought to have enough time to collect all the endorsements too.
 
 ## Approval condition
 
