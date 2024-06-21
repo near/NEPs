@@ -33,6 +33,7 @@ Changes to the protocol specification and standards are called NEAR Enhancement 
 | [0452](https://github.com/near/NEPs/blob/master/neps/nep-0452.md) | Linkdrop Standard                        | @benkurrek @miyachi                          | Final      |
 | [0455](https://github.com/near/NEPs/blob/master/neps/nep-0455.md) | Parameter Compute Costs                  | @akashin @jakmeier                           | Final      |
 | [0514](https://github.com/near/NEPs/blob/master/neps/nep-0514.md) | Fewer Block Producer Seats in `testnet`  | @nikurt                                      | Final      |
+| [0529](https://github.com/near/NEPs/blob/master/neps/nep-0529.md) | Rich Online Digital Tokens spec  | @cableguard                                      | Draft      |
 
 ## Specification
 
