@@ -100,7 +100,7 @@ If smart contract finishes its execution with some value (not Promise), runtime 
 
 - **`type`**: `CryptoHash`
 
-An a unique `DataReceipt` identifier.
+A unique `DataReceipt` identifier.
 
 #### data
 
