@@ -92,7 +92,7 @@ returned value. Eventually, these `DataReceipt` will be delivered to the corresp
 ### ReceiptIndex Result
 
 Successful result could not return any Value, but generates a bunch of new ActionReceipts instead.
-One example could be a callback. In this case, we assume the the new Receipt will send its Value
+One example could be a callback. In this case, we assume the new Receipt will send its Value
 Result to the [`output_data_receivers`](Receipts.md#output_data_receivers) of the current
 `ActionReceipt`.
 

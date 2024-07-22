@@ -115,7 +115,7 @@ Checks if there is a key-value pair.
 storage_iter_prefix(prefix_len: u64, prefix_ptr: u64) -> u64
 ```
 
-DEPRECATED, calling it will result result in `HostError::Deprecated` error.
+DEPRECATED, calling it will result in `HostError::Deprecated` error.
 Creates an iterator object inside the host.
 Returns the identifier that uniquely differentiates the given iterator from other iterators that can be simultaneously
 created.
@@ -135,7 +135,7 @@ created.
 storage_iter_range(start_len: u64, start_ptr: u64, end_len: u64, end_ptr: u64) -> u64
 ```
 
-DEPRECATED, calling it will result result in `HostError::Deprecated` error.
+DEPRECATED, calling it will result in `HostError::Deprecated` error.
 Similarly to `storage_iter_prefix`
 creates an iterator object inside the host.
 
@@ -156,7 +156,7 @@ Note, this definition allows for `start` or `end` keys to not actually exist on 
 storage_iter_next(iterator_id: u64, key_register_id: u64, value_register_id: u64) -> u64
 ```
 
-DEPRECATED, calling it will result result in `HostError::Deprecated` error.
+DEPRECATED, calling it will result in `HostError::Deprecated` error.
 Advances iterator and saves the next key and value in the register.
 
 ###### Normal operation
