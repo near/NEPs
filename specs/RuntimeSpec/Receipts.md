@@ -1,6 +1,7 @@
 # Receipt
 
-All cross-contract (we assume that each account lives in it's own shard) communication in Near happens trough Receipts.
+All cross-contract (we assume that each account lives in its own shard) communication in Near happens through Receipts.
+
 Receipts are stateful in a sense that they serve not only as messages between accounts but also can be stored in the account storage to await DataReceipts.
 
 Each receipt has a [`predecessor_id`](#predecessor_id) (who sent it) and [`receiver_id`](#receiver_id) the current account.
@@ -41,7 +42,7 @@ The destination account_id.
 
 #### receipt_id
 
-- **`type`**: `AccountId`
+- **`type`**: `CryptoHash`
 
 An unique id for the receipt.
 
@@ -99,7 +100,7 @@ If smart contract finishes its execution with some value (not Promise), runtime 
 
 - **`type`**: `CryptoHash`
 
-An a unique `DataReceipt` identifier.
+A unique `DataReceipt` identifier.
 
 #### data
 
@@ -126,7 +127,7 @@ A Receipt which runtime stores until all the designated [`DataReceipt`s](#datare
 - **`key`** = `account_id`,`receipt_id`
 - **`value`** = `[u8]`
 
-_Where `account_id` is [`Receipt.receiver_id`](#receiver_id), `receipt_id` is [`Receipt.receiver_id`](#receipt_id) and value is a serialized [`Receipt`](#receipt) (which [type](#type) must be [ActionReceipt](#actionreceipt))._
+_Where `account_id` is [`Receipt.receiver_id`](#receiver_id), `receipt_id` is [`Receipt.receipt_id`](#receipt_id) and value is a serialized [`Receipt`](#receipt) (which [type](#type) must be [ActionReceipt](#actionreceipt))._
 
 #### Pending DataReceipt Count
 

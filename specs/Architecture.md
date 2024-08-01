@@ -90,9 +90,9 @@ Interestingly, the following concepts are for the blockchain layer only and the 
 - Blocks or chunks -- the runtime does not know that the receipts that it processes constitute a chunk and that the output
   receipts will be used in other chunks. From the runtime perspective it consumes and outputs batches of transactions and receipts;
 - Consensus -- the runtime does not know how consistency of the state is maintained;
-- Communication -- the runtime don't know anything about the current network topology. Receipt has only a receiver_id (a recipient account), but knows nothing about the destination shard, so it's a responsibility of a blockchain layer to route a particular receipt.
+- Communication -- the runtime does not know anything about the current network topology. Receipt has only a receiver_id (a recipient account), but knows nothing about the destination shard, so it's a responsibility of the blockchain layer to route a particular receipt.
 
 ## Runtime Layer Concepts
 
-- Fees and rewards -- fees and rewards are neatly encapsulated in the runtime layer. The blockchain layer, however
+- Fees and rewards -- fees and rewards are neatly encapsulated in the runtime layer. The blockchain layer, however,
   has an indirect knowledge of them through the computation of the tokens-to-gas exchange rate and the inflation.

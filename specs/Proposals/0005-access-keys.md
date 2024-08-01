@@ -1,6 +1,6 @@
 - Proposal Code Name: access_keys
 - Start Date: 2019-07-08
-- NEP PR: [nearprotocol/neps#0000](https://github.com/nearprotocol/neps/pull/0000)
+- NEP PR: [nearprotocol/neps#0000](https://github.com/near/NEPs/blob/master/nep-0000-template.md)
 - Issue(s): [nearprotocol/nearcore#687](https://github.com/nearprotocol/nearcore/issues/687)
 
 # Summary
@@ -267,7 +267,7 @@ When some amount is spent, it's subtracted from both the allowance of the access
 If in some case the user wants to have unlimited allowance for this key, then we have a `None` allowance option.
 
 NOTE: In the previous iteration of access keys, we used balance instead of the allowance.
-But it required to sum up all access keys balances to get the the total account balance.
+But it required to sum up all access keys balances to get the total account balance.
 It also prevented sharing of the account balance between access keys.
 
 #### Permissions

@@ -53,63 +53,91 @@ and potentially errors returned when they fail.
 
 ### Basic Validation
 
-Basic validation of a transaction can be done without the state. Such validation includes
-- Whether `signer_id` is valid. If not, a
+Basic validation of a transaction can be done without the state.
+
+#### Valid `signer_id` format
+
+Whether `signer_id` is valid. If not, a
 ```rust
 /// TX signer_id is not in a valid format or not satisfy requirements see `near_core::primitives::utils::is_valid_account_id`
 InvalidSignerId { signer_id: AccountId },
 ```
 error is returned.
-- Whether `receiver_id` is valid. If not, a
+
+#### Valid `receiver_id` format
+
+Whether `receiver_id` is valid. If not, a
 ```rust
 /// TX receiver_id is not in a valid format or not satisfy requirements see `near_core::primitives::utils::is_valid_account_id`
 InvalidReceiverId { receiver_id: AccountId },
 ```
 error is returned.
-- Whether `signature` is signed by `public_key`. If not, a
+
+#### Valid `signature`
+
+Whether transaction is signed by the access key that corresponds to `public_key`. If not, a
 ```rust
 /// TX signature is not valid
 InvalidSignature
 ```
 error is returned.
-- Whether the number of actions included in the transaction is no greater than `max_actions_per_receipt`. If not, a
+
+#### Number of actions does not exceed `max_actions_per_receipt`
+
+Whether the number of actions included in the transaction is not greater than `max_actions_per_receipt`. If not, a
 ```rust
  /// The number of actions exceeded the given limit.
 TotalNumberOfActionsExceeded { total_number_of_actions: u64, limit: u64 }
 ```
-is returned.
-- Among the actions in the transaction, whether `DeleteAccount`, if present, is the last action. If not, a
+error is returned.
+
+#### `DeleteAccount` is the last action
+
+Among the actions in the transaction, whether `DeleteAccount`, if present, is the last action. If not, a
 ```rust
 /// The delete action must be a final action in transaction
 DeleteActionMustBeFinal
 ```
 error is returned.
-- Whether total prepaid gas does not exceed `max_total_prepaid_gas`. If not, a
+
+#### Prepaid gas does not exceed `max_total_prepaid_gas`
+
+Whether total prepaid gas does not exceed `max_total_prepaid_gas`. If not, a
 ```rust
 /// The total prepaid gas (for all given actions) exceeded the limit.
 TotalPrepaidGasExceeded { total_prepaid_gas: Gas, limit: Gas }
 ```
 error is returned.
-- Whether each action included is valid. Details of such check can be found in [action](Actions.md).
+
+#### Valid actions
+
+Whether each included action is valid. Details of such check can be found in [Actions](Actions.md).
 
 ### Validation With State
 
-After the basic validation is done, we check the transaction against current state to perform further validation. This includes
-- Whether `signer_id` exists. If not, a
+After the basic validation is done, we check the transaction against current state to perform further validation.
+
+#### Existing `signer_id`
+
+Whether `signer_id` exists. If not, a
 ```rust
 /// TX signer_id is not found in a storage
 SignerDoesNotExist { signer_id: AccountId },
 ```
 error is returned.
 
-- Whether the transaction nonce is greater than the existing nonce on the access key. If not, a
+#### Valid transaction nonce
+
+Whether the transaction nonce is greater than the existing nonce on the access key. If not, a
 ```rust
 /// Transaction nonce must be account[access_key].nonce + 1
 InvalidNonce { tx_nonce: Nonce, ak_nonce: Nonce },
 ```
 error is returned.
 
-- If `signer_id` account has enough balance to cover the cost of the transaction. If not, a
+#### Enough balance to cover transaction cost
+
+If `signer_id` account has enough balance to cover the cost of the transaction. If not, a
 ```rust
  /// Account does not have enough balance to cover TX cost
 NotEnoughBalance {
@@ -120,7 +148,9 @@ NotEnoughBalance {
 ```
 error is returned.
 
-- If the transaction is signed by a function call access key and the function call access key does not have enough
+#### Access Key is allowed to cover transaction cost
+
+If the transaction is signed by a function call access key and the function call access key does not have enough
 allowance to cover the cost of the transaction, a
 ```rust
 /// Access Key does not have enough allowance to cover transaction cost
@@ -133,7 +163,9 @@ NotEnoughAllowance {
 ```
 error is returned.
 
-- If `signer_id` account does not have enough balance to cover its storage after paying for the cost of the transaction, a
+#### Sufficient account balance to cover storage
+
+If `signer_id` account does not have enough balance to cover its storage after paying for the cost of the transaction, a
 ```rust
 /// Signer account doesn't have enough balance after transaction.
 LackBalanceForState {
@@ -145,19 +177,11 @@ LackBalanceForState {
 ```
 error is returned.
 
-- If a transaction is signed by a function call access key, the following errors are possible:
+#### Function call access key validations
+
+If a transaction is signed by a function call access key, the following errors are possible:
 * `InvalidAccessKeyError::RequiresFullAccess` if the transaction contains more than one action or if the only action it
 contains is not a `FunctionCall` action.
 * `InvalidAccessKeyError::DepositWithFunctionCall` if the function call action has nonzero `deposit`.
-*
-```rust
-/// Transaction `receiver_id` doesn't match the access key receiver_id
-InvalidAccessKeyError::ReceiverMismatch { tx_receiver: AccountId, ak_receiver: AccountId },
-```
-is returned when transaction's `receiver_id` does not match the `receiver_id` of the access key.
-*
-```rust
-/// Transaction method name isn't allowed by the access key
-InvalidAccessKeyError::MethodNameMismatch { method_name: String },
-```
-is returned if the name of the method that the transaction tries to call is not allowed by the access key.
+* `InvalidAccessKeyError::ReceiverMismatch { tx_receiver: AccountId, ak_receiver: AccountId }` if transaction's `receiver_id` does not match the `receiver_id` of the access key.
+* `InvalidAccessKeyError::MethodNameMismatch { method_name: String }` if the name of the method that the transaction tries to call is not allowed by the access key.
