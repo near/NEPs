@@ -1,0 +1,170 @@
+---
+NEP: TBD
+Title: Deterministic Derivation Paths for MPC Network
+Authors: Ben Kurrek <benjaminkurrek@gmail.com>
+Status: New
+DiscussionsTo: TBD
+Type: Standards Track
+Version: 1.0.0
+Created: 2024-09-10
+LastUpdated: 2024-09-10
+---
+
+## Summary
+
+This NEP proposes a standard for deterministic derivation paths for NEAR accounts interacting with the Multi-Party Computation (MPC) network. The goal is to enable any wallet or service to deterministically regenerate addresses on foreign blockchains (e.g., Ethereum, Avalanche) from a NEAR account without requiring external information or tracking. This will simplify the process of creating and managing multi-chain accounts while ensuring that all accounts derived from a single NEAR account are easily reproducible across different applications and wallets.
+
+## Motivation
+
+As the NEAR MPC network becomes more widely adopted, there is a need for a standardized approach to generate multi-chain addresses from a NEAR account. Without a deterministic standard, it becomes difficult to infer the derivation paths for multi-chain addresses, making it challenging to manage multi-chain accounts consistently across different platforms.
+
+For example, a user with a NEAR account and an Ethereum account derived through MPC has no direct way of exposing or sharing their derivation path in a straightforward, repeatable manner. Wallets and services that need to access the user’s Ethereum account from the NEAR account would face difficulties without knowing how the Ethereum address was derived. By introducing a deterministic derivation path standard, any wallet or service can consistently regenerate foreign accounts from the NEAR account without additional tracking or custom configurations.
+
+This proposal seeks to prevent fragmentation by establishing a clear, scalable solution for deriving accounts across chains before multiple, incompatible solutions start emerging in the ecosystem.
+
+## Specification
+
+### Derivation Path Structure
+
+The derivation of foreign addresses will follow a deterministic method based on the NEAR account ID, a unique chain identifier, and a nonce. This structure allows for multiple foreign addresses to be derived from a single NEAR account on the same blockchain. The formula for deriving addresses is as follows:
+
+```
+{NEAR_ACCOUNT_ID} + {CHAIN_IDENTIFIER} + {NONCE} = {FOREIGN_ADDRESS}
+```
+
+Where:
+
+- `{NEAR_ACCOUNT_ID}` is the user’s NEAR account (e.g., example.near).
+- `{CHAIN_IDENTIFIER}` is a unique string representing the target blockchain (e.g., ethereum for Ethereum, avalanche for Avalanche).
+- `{NONCE}` is an incrementing number starting from 1, allowing for multiple foreign addresses to be derived for the same NEAR account on the same blockchain.
+
+This structure ensures that wallets can deterministically derive all foreign addresses associated with a NEAR account on any supported blockchain by iterating through the nonces.
+
+Example:
+
+- example.near + ethereum + 1 = 0x123... (Ethereum Address 1)
+- example.near + ethereum + 2 = 0x456... (Ethereum Address 2)
+- example.near + avalanche + 1 = 0xabc... (Avalanche Address 1)
+
+### Wallet Implementation for Multiple Foreign Addresses
+
+Wallets will start with {NONCE} = 1 and increment while attempting to derive foreign addresses for a given chain. The wallet will continue this process until it encounters a case where no valid address is found (i.e., when the derived address no longer exists on the target blockchain). This allows wallets to regenerate all foreign accounts for a given chain in a straightforward and scalable manner.
+
+### Key Components
+
+1. **Deterministic Address Derivation with Nonce**:
+   - Each NEAR account will have a deterministic relationship with its derived foreign addresses using both the chain identifier and a nonce starting from 1.
+   - This ensures that wallets and services can regenerate all foreign addresses associated with a NEAR account on any supported chain.
+2. **No Need for External Path Tracking**:
+   - Wallets do not need to store any metadata about the foreign accounts. Instead, they can iterate over nonces (1, 2, 3, …) to derive all associated foreign addresses until they find no address.
+3. **MPC Signature Service**:
+   - Once foreign addresses are derived, the NEAR MPC network will provide the necessary signature services for transactions on those addresses. The private keys remain secure and are never exposed, ensuring safe cross-chain operations.
+
+## Reference Implementation
+
+This section provides a reference implementation of deterministic derivation paths using NEAR account ID, chain identifier, and a nonce to generate foreign addresses. The example is written in JavaScript and demonstrates how a wallet might derive foreign addresses incrementally.
+
+### Derivation Function
+
+The following function derives foreign addresses based on the NEAR account, chain identifier, and nonce:
+
+```js
+async function deriveForeignAddress(nearAccountId, chainId, nonce) {
+  // Construct the deterministic derivation path
+  const derivationPath = `${nearAccountId}+${chainId}+${nonce}`;
+
+  // Use the MPC service to derive the foreign address based on the derivation path
+  const foreignAddress = await MPCService.deriveChildPublicKey(
+    nearAccountId,
+    derivationPath,
+  );
+
+  // Return the derived foreign address
+  return foreignAddress;
+}
+```
+
+### Wallet Loop to Regenerate All Foreign Addresses
+
+The following function demonstrates how a wallet can loop through nonces, starting from 1, to regenerate all foreign addresses for a given chain. The process stops when no valid address is found.
+
+```js
+async function regenerateForeignAddresses(nearAccountId, chainId) {
+  let nonce = 1;
+  let addresses = [];
+
+  while (true) {
+    // Derive the next foreign address based on the current nonce
+    const foreignAddress = await deriveForeignAddress(
+      nearAccountId,
+      chainId,
+      nonce,
+    );
+
+    // Check if the derived address exists (this is a placeholder function, adjust for real-world implementation)
+    const exists = await checkAddressExistsOnChain(foreignAddress, chainId);
+
+    // If the address does not exist, stop the loop
+    if (!exists) break;
+
+    // Otherwise, add the address to the list and increment the nonce
+    addresses.push(foreignAddress);
+    nonce++;
+  }
+
+  // Return all regenerated foreign addresses
+  return addresses;
+}
+```
+
+### Example Usage
+
+```js
+async function main() {
+  const nearAccountId = "example.near";
+  const chainId = "ethereum";
+
+  // Regenerate all Ethereum addresses derived from the NEAR account
+  const ethereumAddresses = await regenerateForeignAddresses(
+    nearAccountId,
+    chainId,
+  );
+
+  console.log("Ethereum Addresses:", ethereumAddresses);
+}
+```
+
+### Explanation of Key Components
+
+1.  **deriveForeignAddress**: This function takes the NEAR account ID, the target chain ID, and a nonce, then calls the MPC service to derive the corresponding foreign address. The derivation is based on the deterministic path (`NEAR_ACCOUNT_ID + CHAIN_ID + NONCE`).
+2.  **regenerateForeignAddresses**: This function loops through nonces, starting at 1, and regenerates all foreign addresses associated with the NEAR account on a specific chain. It stops when a non-existent address is encountered.
+3.  **checkAddressExistsOnChain**: In this implementation, `checkAddressExistsOnChain` is a placeholder function that should query the blockchain (e.g., Ethereum) to check if the derived address exists. The actual implementation would vary depending on the blockchain and specific APIs being used.
+
+### Considerations
+
+- The `checkAddressExistsOnChain` function should be implemented with blockchain-specific logic to verify whether the derived address has been used or registered.
+- This implementation assumes that derived addresses will not be sparsely distributed (i.e., all nonces will correspond to valid addresses up to a certain point).
+
+## Security Implications
+
+The deterministic derivation paths do not expose private keys. The private keys remain securely managed by the MPC network, and only signature shares are used to authorize transactions.
+
+## Alternatives
+
+One alternative would be to allow each wallet to manage its own custom derivation paths for foreign accounts. However, this would introduce significant complexity and the need to store and pass custom paths between wallets and services. This approach lacks scalability and introduces potential security risks. The deterministic approach in this NEP is more scalable, secure, and easier to implement across the ecosystem.
+
+## Future Possibilities
+
+### Standardizing a Data Structure for Chain Identifiers
+
+One possible future enhancement is the standardization of a data structure that can be passed into wallets, specifying the chain IDs for which a user has derived accounts. This structure would significantly improve wallet efficiency by eliminating the need to loop through every possible chain and nonce to regenerate accounts. Instead, wallets would directly know which chains to check for derived addresses.
+
+This data structure could potentially be stored on-chain in a smart contract. Wallets and services could query this contract to retrieve the relevant chain IDs and account information, ensuring that the user’s cross-chain account data is accessible in a decentralized and secure manner.
+
+### Accounts Interacting via Proxy Middleman Contracts
+
+Another future possibility involves users interacting with the MPC network via proxy or middleman contracts. In such cases, the derivation path will need to account for this additional layer of abstraction. Specifically, the path might need to incorporate an identifier for the specific signer account to ensure the correct foreign address is derived.
+
+## Backwards Compatibility
+
+This proposal introduces a new standard for deterministic derivation paths but does not conflict with existing NEAR functionality. However, wallets and services that wish to integrate multi-chain features via the MPC network will need to adopt this standard to ensure consistency across the ecosystem.
