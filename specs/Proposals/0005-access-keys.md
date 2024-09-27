@@ -267,7 +267,7 @@ When some amount is spent, it's subtracted from both the allowance of the access
 If in some case the user wants to have unlimited allowance for this key, then we have a `None` allowance option.
 
 NOTE: In the previous iteration of access keys, we used balance instead of the allowance.
-But it required to sum up all access keys balances to get the the total account balance.
+But it required to sum up all access keys balances to get the total account balance.
 It also prevented sharing of the account balance between access keys.
 
 #### Permissions
