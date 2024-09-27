@@ -113,7 +113,7 @@ validator_sampler = WeightedIndex([v.stake for v in validators])
 return (validators, validator_sampler)
 ```
 
-### Algorithm for selecting block producers
+## Algorithm for selecting block producers
 
 ### Input
 
@@ -126,7 +126,7 @@ return (validators, validator_sampler)
 select_validators(MAX_NUM_BP, min_stake_fraction, validator_proposals)
 ```
 
-### Algorithm for selecting chunk producers
+## Algorithm for selecting chunk producers
 
 ### Input
 
