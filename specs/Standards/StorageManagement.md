@@ -176,7 +176,7 @@ Bob wants to close his account, but has a non-zero balance of `ft` tokens.
 
 ### Example 2: Social Media Contract
 
-Imagine a social media smart contract which passes storage costs onto users for posts and follower data. Let's say this this contract is deployed at account `social`. Like the Fungible Token contract example above, the `storage_balance_bounds.min` is 0.00235, because this contract will likewise add a newly-registered user to an internal Map. However, this contract sets no `storage_balance_bounds.max`, since users can add more data to the contract over time and must cover the cost for this storage.
+Imagine a social media smart contract which passes storage costs onto users for posts and follower data. Let's say this contract is deployed at account `social`. Like the Fungible Token contract example above, the `storage_balance_bounds.min` is 0.00235, because this contract will likewise add a newly-registered user to an internal Map. However, this contract sets no `storage_balance_bounds.max`, since users can add more data to the contract over time and must cover the cost for this storage.
 
 So for this contract, `storage_balance_bounds` will return:
 
