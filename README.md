@@ -10,30 +10,40 @@ Changes to the protocol specification and standards are called NEAR Enhancement 
 
 ## NEPs
 
-| NEP #                                                             | Title                                    | Author                                       | Status     |
-| ----------------------------------------------------------------- | ---------------------------------------- | -------------------------------------------- | ---------- |
-| [0001](https://github.com/near/NEPs/blob/master/neps/nep-0001.md) | NEP Purpose and Guidelines               | @jlogelin                                    | Living     |
-| [0021](https://github.com/near/NEPs/blob/master/neps/nep-0021.md) | Fungible Token Standard (Deprecated)     | @evgenykuzyakov                              | Deprecated |
-| [0141](https://github.com/near/NEPs/blob/master/neps/nep-0141.md) | Fungible Token Standard                  | @evgenykuzyakov @oysterpack, @robert-zaremba | Final      |
-| [0145](https://github.com/near/NEPs/blob/master/neps/nep-0145.md) | Storage Management                       | @evgenykuzyakov                              | Final      |
-| [0148](https://github.com/near/NEPs/blob/master/neps/nep-0148.md) | Fungible Token Metadata                  | @robert-zaremba @evgenykuzyakov @oysterpack  | Final      |
-| [0171](https://github.com/near/NEPs/blob/master/neps/nep-0171.md) | Non Fungible Token Standard              | @mikedotexe @evgenykuzyakov @oysterpack      | Final      |
-| [0177](https://github.com/near/NEPs/blob/master/neps/nep-0177.md) | Non Fungible Token Metadata              | @chadoh @mikedotexe                          | Final      |
-| [0178](https://github.com/near/NEPs/blob/master/neps/nep-0178.md) | Non Fungible Token Approval Management   | @chadoh @thor314                             | Final      |
-| [0181](https://github.com/near/NEPs/blob/master/neps/nep-0181.md) | Non Fungible Token Enumeration           | @chadoh @thor314                             | Final      |
-| [0199](https://github.com/near/NEPs/blob/master/neps/nep-0199.md) | Non Fungible Token Royalties and Payouts | @thor314 @mattlockyer                        | Final      |
-| [0245](https://github.com/near/NEPs/blob/master/neps/nep-0245.md) | Multi Token Standard                     | @zcstarr @riqi @jriemann @marcos.sun         | Review     |
-| [0264](https://github.com/near/NEPs/blob/master/neps/nep-0264.md) | Promise Gas Weights                      | @austinabell                                 | Final      |
-| [0297](https://github.com/near/NEPs/blob/master/neps/nep-0297.md) | Events Standard                          | @telezhnaya                                  | Final      |
-| [0330](https://github.com/near/NEPs/blob/master/neps/nep-0330.md) | Source Metadata                          | @BenKurrek                                   | Review     |
-| [0366](https://github.com/near/NEPs/blob/master/neps/nep-0366.md) | Meta Transactions                        | @ilblackdragon @e-uleyskiy @fadeevab         | Final      |
-| [0393](https://github.com/near/NEPs/blob/master/neps/nep-0393.md) | Sould Bound Token (SBT)                  | @robert-zaremba                              | Final      |
-| [0399](https://github.com/near/NEPs/blob/master/neps/nep-0399.md) | Flat Storage                             | @Longarithm @mzhangmzz                       | Final     |
-| [0448](https://github.com/near/NEPs/blob/master/neps/nep-0448.md) | Zero-balance Accounts                    | @bowenwang1996                               | Final      |
-| [0452](https://github.com/near/NEPs/blob/master/neps/nep-0452.md) | Linkdrop Standard                        | @benkurrek @miyachi                          | Final      |
-| [0455](https://github.com/near/NEPs/blob/master/neps/nep-0455.md) | Parameter Compute Costs                  | @akashin @jakmeier                           | Final      |
-| [0491](https://github.com/near/NEPs/blob/master/neps/nep-0491.md) | Non-Refundable Storage Staking           | @jakmeier                                   | Review |
-| [0514](https://github.com/near/NEPs/blob/master/neps/nep-0514.md) | Fewer Block Producer Seats in `testnet`  | @nikurt                                      | Final      |
+| NEP #                                                             | Title                                                             | Author                                            | Status     |
+| ----------------------------------------------------------------- | ----------------------------------------------------------------- | ------------------------------------------------- | ---------- |
+| [0001](https://github.com/near/NEPs/blob/master/neps/nep-0001.md) | NEP Purpose and Guidelines                                        | @jlogelin                                         | Living     |
+| [0021](https://github.com/near/NEPs/blob/master/neps/nep-0021.md) | Fungible Token Standard (Deprecated)                              | @evgenykuzyakov                                   | Deprecated |
+| [0141](https://github.com/near/NEPs/blob/master/neps/nep-0141.md) | Fungible Token Standard                                           | @evgenykuzyakov @oysterpack, @robert-zaremba      | Final      |
+| [0145](https://github.com/near/NEPs/blob/master/neps/nep-0145.md) | Storage Management                                                | @evgenykuzyakov                                   | Final      |
+| [0148](https://github.com/near/NEPs/blob/master/neps/nep-0148.md) | Fungible Token Metadata                                           | @robert-zaremba @evgenykuzyakov @oysterpack       | Final      |
+| [0171](https://github.com/near/NEPs/blob/master/neps/nep-0171.md) | Non Fungible Token Standard                                       | @mikedotexe @evgenykuzyakov @oysterpack           | Final      |
+| [0177](https://github.com/near/NEPs/blob/master/neps/nep-0177.md) | Non Fungible Token Metadata                                       | @chadoh @mikedotexe                               | Final      |
+| [0178](https://github.com/near/NEPs/blob/master/neps/nep-0178.md) | Non Fungible Token Approval Management                            | @chadoh @thor314                                  | Final      |
+| [0181](https://github.com/near/NEPs/blob/master/neps/nep-0181.md) | Non Fungible Token Enumeration                                    | @chadoh @thor314                                  | Final      |
+| [0199](https://github.com/near/NEPs/blob/master/neps/nep-0199.md) | Non Fungible Token Royalties and Payouts                          | @thor314 @mattlockyer                             | Final      |
+| [0245](https://github.com/near/NEPs/blob/master/neps/nep-0245.md) | Multi Token Standard                                              | @zcstarr @riqi @jriemann @marcos.sun              | Final      |
+| [0264](https://github.com/near/NEPs/blob/master/neps/nep-0264.md) | Promise Gas Weights                                               | @austinabell                                      | Final      |
+| [0297](https://github.com/near/NEPs/blob/master/neps/nep-0297.md) | Events Standard                                                   | @telezhnaya                                       | Final      |
+| [0330](https://github.com/near/NEPs/blob/master/neps/nep-0330.md) | Source Metadata                                                   | @BenKurrek                                        | Final      |
+| [0364](https://github.com/near/NEPs/blob/master/neps/nep-0364.md) | Efficient signature verification and hashing precompile functions | @blasrodri                                        | Final      |
+| [0366](https://github.com/near/NEPs/blob/master/neps/nep-0366.md) | Meta Transactions                                                 | @ilblackdragon @e-uleyskiy @fadeevab              | Final      |
+| [0393](https://github.com/near/NEPs/blob/master/neps/nep-0393.md) | Sould Bound Token (SBT)                                           | @robert-zaremba                                   | Final      |
+| [0399](https://github.com/near/NEPs/blob/master/neps/nep-0399.md) | Flat Storage                                                      | @Longarithm @mzhangmzz                            | Final      |
+| [0413](https://github.com/near/NEPs/blob/master/neps/nep-0413.md) | Near Wallet API - support for signMessage method                  | @gagdiez @gutsyphilip                             | Final      |
+| [0418](https://github.com/near/NEPs/blob/master/neps/nep-0418.md) | Remove attached_deposit view panic                                | @austinabell                                      | Final      |
+| [0448](https://github.com/near/NEPs/blob/master/neps/nep-0448.md) | Zero-balance Accounts                                             | @bowenwang1996                                    | Final      |
+| [0452](https://github.com/near/NEPs/blob/master/neps/nep-0452.md) | Linkdrop Standard                                                 | @benkurrek @miyachi                               | Final      |
+| [0455](https://github.com/near/NEPs/blob/master/neps/nep-0455.md) | Parameter Compute Costs                                           | @akashin @jakmeier                                | Final      |
+| [0488](https://github.com/near/NEPs/blob/master/neps/nep-0488.md) | Host Functions for BLS12-381 Curve Operations                     | @olga24912                                        | Final      |
+| [0491](https://github.com/near/NEPs/blob/master/neps/nep-0491.md) | Non-Refundable Storage Staking                                    | @jakmeier                                         | Final      |
+| [0492](https://github.com/near/NEPs/blob/master/neps/nep-0492.md) | Restrict creation of Ethereum Addresses                           | @bowenwang1996                                    | Final      |
+| [0508](https://github.com/near/NEPs/blob/master/neps/nep-0508.md) | Resharding v2                                                     | @wacban @shreyan-gupta @walnut-the-cat            | Final      |
+| [0509](https://github.com/near/NEPs/blob/master/neps/nep-0509.md) | Stateless validation Stage 0                                      | @robin-near @pugachAG @Longarithm @walnut-the-cat | Final      |
+| [0514](https://github.com/near/NEPs/blob/master/neps/nep-0514.md) | Fewer Block Producer Seats in `testnet`                           | @nikurt                                           | Final      |
+| [0519](https://github.com/near/NEPs/blob/master/neps/nep-0519.md) | Yield Execution                                                   | @akhi3030 @saketh-are                             | Final      |
+| [0536](https://github.com/near/NEPs/blob/master/neps/nep-0536.md) | Reduce the number of gas refunds                                  | @evgenykuzyakov @bowenwang1996                    | Final      |
+| [0539](https://github.com/near/NEPs/blob/master/neps/nep-0539.md) | Cross-Shard Congestion Control                                    | @wacban @jakmeier                                 | Final      |
 
 ## Specification
 
