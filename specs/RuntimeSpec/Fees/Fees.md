@@ -136,7 +136,7 @@ It contains 4 actions with 2 actions that requires to compute number of bytes.
 We assume `code` in `DeployContractAction` contains `128000` bytes. And `FunctionCallAction` has
 `method_name` with length of `3` and `args` length of `26`, so total of `29`.
 
-First let's compute the the amount that will be burned immediately for sending a receipt.
+First let's compute the amount that will be burned immediately for sending a receipt.
 ```python
 burnt_gas = \
     config.action_receipt_creation_config.send_not_sir + \

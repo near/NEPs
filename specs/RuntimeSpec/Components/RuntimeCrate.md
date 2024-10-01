@@ -58,7 +58,7 @@ Runtime does validation again for the following reasons:
 - to compute burnt gas;
 - to validate transactions again, in case the chunk producer was malicious.
 
-If the transaction has the the same `signer_id` and `receiver_id`, then the new receipt is added to the list of new local receipts,
+If the transaction has the same `signer_id` and `receiver_id`, then the new receipt is added to the list of new local receipts,
 otherwise it's added to the list of new outgoing receipts.
 
 ## Receipt processing
