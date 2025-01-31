@@ -101,12 +101,14 @@ You can reserve an account ID before it's created by generating a corresponding 
 The public key maps to the account ID. The corresponding secret key allows you to use the account once it's created on chain.
 
 ### NEAR-implicit account ID
+
 The account ID is a lowercase hex representation of the public key.
 An ED25519 public key is 32 bytes long and maps to a 64-character account ID.
 
 Example: a public key in base58 `BGCCDDHfysuuVnaNVtEhhqeT4k9Muyem3Kpgq2U1m9HX` will map to the account ID `98793cd91a3f870fb126f66285808c7e094afcfc4eda8a970f6648cdf0dbd6de`.
 
 ### ETH-implicit account ID
+
 The account ID is derived from a Secp256K1 public key using the following formula: `'0x' + keccak256(public_key)[12:32].hex()`.
 
 Example: a public key in base58 `2KFsZcvNUMBfmTp5DTMmguyeQyontXZ2CirPsb21GgPG3KMhwrkRuNiFCdMyRU3R4KbopMpSMXTFQfLoMkrg4HsT` will map to the account ID `0x87b435f1fcb4519306f9b755e274107cc78ac4e3`.
@@ -128,12 +130,14 @@ An ETH-implicit account can only be used by calling the methods of the [Wallet C
 The primary purpose of ETH-implicit accounts is to enable seamless integration of existing Ethereum tools (such as wallets) with the NEAR blockchain.
 
 ### Wallet Contract
+
 The Wallet Contract (see [NEP-518](https://github.com/near/NEPs/issues/518) for more details) functions as a user account and is designed to receive, validate, and execute Ethereum-compatible transactions on the NEAR blockchain.
 
 Without going into details, an Ethereum-compatible wallet user sends a transaction to an RPC endpoint, which wraps it and passes it to the Wallet Contract (on the target account) as an `rlp_execute(target: AccountId, tx_bytes_b64: Vec<u8>)` contract call.
 Then, the contract parses `tx_bytes_b64` and verifies it is signed with the private key matching the target [ETH-implicit account ID](#eth-implicit-account-id) on which the contract is hosted.
 
 Under the hood, the transaction encodes a NEAR-native action. Currently supported actions are:
+
 - Transfer (from ETH-implicit account).
 - Function call (call another contract).
 - Add `AccessKey` with `FunctionCallPermission`. This allows adding a relayer's public key to an ETH-implicit account, enabling the relayer to pay the gas fee for transactions from this account. Still, each transaction has to be signed by the owner of the account (corresponding Secp256K1 private key).
