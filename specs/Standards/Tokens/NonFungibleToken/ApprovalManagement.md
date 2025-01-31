@@ -27,11 +27,11 @@ Prior art:
 
 Let's consider some examples. Our cast of characters & apps:
 
-* Alice: has account `alice` with no contract deployed to it
-* Bob: has account `bob` with no contract deployed to it
-* NFT: a contract with account `nft`, implementing only the [Core NFT standard](Core.md) with this Approval Management extension
-* Market: a contract with account `market` which sells tokens from `nft` as well as other NFT contracts
-* Bazaar: similar to Market, but implemented differently (spoiler alert: has no `nft_on_approve` function!), has account `bazaar`
+- Alice: has account `alice` with no contract deployed to it
+- Bob: has account `bob` with no contract deployed to it
+- NFT: a contract with account `nft`, implementing only the [Core NFT standard](Core.md) with this Approval Management extension
+- Market: a contract with account `market` which sells tokens from `nft` as well as other NFT contracts
+- Bazaar: similar to Market, but implemented differently (spoiler alert: has no `nft_on_approve` function!), has account `bazaar`
 
 Alice and Bob are already [registered](../../StorageManagement.md) with NFT, Market, and Bazaar, and Alice owns a token on the NFT contract with ID=`"1"`.
 
@@ -284,6 +284,7 @@ Example token data:
 ```
 
 In Rust, the standard library `HashMap` is the recommended type for the `approvals` field, though any `map` may be used.
+
 ```diff
  pub struct Token = {
    pub id: String,
@@ -482,4 +483,4 @@ NFT contracts should be implemented in a way to avoid extra gas fees for seriali
 
 ## Errata
 
-* **2022-02-03**: updated `Token` struct field names. `id` was changed to `token_id` and `approvals` was changed to `approved_account_ids`. This is to be consistent with current implementations of the standard and the rust SDK docs.
+- **2022-02-03**: updated `Token` struct field names. `id` was changed to `token_id` and `approvals` was changed to `approved_account_ids`. This is to be consistent with current implementations of the standard and the rust SDK docs.

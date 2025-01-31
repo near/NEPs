@@ -13,6 +13,7 @@ A system for allowing a set of users or contracts to transfer specific tokens on
 
   [ERC-721]: https://eips.ethereum.org/EIPS/eip-721
   [ERC-1155]: https://eips.ethereum.org/EIPS/eip-1155
+
 ## Motivation
 
 People familiar with [ERC-721] may expect to need an approval management system for basic transfers, where a simple transfer from Alice to Bob requires that Alice first _approve_ Bob to spend one of her tokens, after which Bob can call `transfer_from` to actually transfer the token to himself.
@@ -30,11 +31,11 @@ Prior art:
 
 Let's consider some examples. Our cast of characters & apps:
 
-* Alice: has account `alice` with no contract deployed to it
-* Bob: has account `bob` with no contract deployed to it
-* MT: a contract with account `mt`, implementing only the [Multi Token Standard](Core.md) with this Approval Management extension
-* Market: a contract with account `market` which sells tokens from `mt` as well as other token contracts
-* Bazaar: similar to Market, but implemented differently (spoiler alert: has no `mt_on_approve` function!), has account `bazaar`
+- Alice: has account `alice` with no contract deployed to it
+- Bob: has account `bob` with no contract deployed to it
+- MT: a contract with account `mt`, implementing only the [Multi Token Standard](Core.md) with this Approval Management extension
+- Market: a contract with account `market` which sells tokens from `mt` as well as other token contracts
+- Bazaar: similar to Market, but implemented differently (spoiler alert: has no `mt_on_approve` function!), has account `bazaar`
 
 Alice and Bob are already [registered](../../StorageManagement.md) with MT, Market, and Bazaar, and Alice owns a token on the MT contract with ID=`"1"` and a fungible style token with ID =`"2"` and AMOUNT =`"100"`.
 
@@ -177,6 +178,7 @@ Using near-cli notation for consistency:
     }' --accountId market --amount .000000000000000000000001
 
 ### 5. Approval IDs, edge case
+
 Bob transfers same token back to Alice, Alice re-approves Market & Bazaar, listing her token at a higher price than before. Bazaar is somehow unaware of these changes, and still stores `approval_id: 3` internally along with Alice's old price. Bob tries to buy from Bazaar at the old price. Like the previous example, this probably starts with a call to a different contract, which eventually results in a call to `mt_transfer` on `bazaar`. Let's consider a possible scenario from that point.
 
 **High-level explanation**
