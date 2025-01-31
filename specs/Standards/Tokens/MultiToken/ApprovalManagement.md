@@ -98,7 +98,7 @@ Alice approves Market to transfer some of her tokens and passes `msg` so that MT
          "msg": "{\"action\": \"list\", \"price\": [\"100\",\"50\"],\"token\": \"nDAI\" }"
        }' --accountId alice --amount .000000000000000000000001
 
-   At this point, near-cli will hang until the cross-contract call chain fully resolves, which would also be true if Alice used a Market frontend using [near-api-js](https://docs.near.org/tools/near-api-js/quick-reference). Alice's part is done, though. The rest happens behind the scenes.
+   At this point, near-cli will hang until the cross-contract call chain fully resolves, which would also be true if Alice used a Market frontend using [near-api](https://docs.near.org/tools/near-api). Alice's part is done, though. The rest happens behind the scenes.
 
 2. `mt` schedules a call to `mt_on_approve` on `market`. Using near-cli notation for easy cross-reference with the above, this would look like:
 
