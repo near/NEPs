@@ -13,6 +13,7 @@ A system for allowing a set of users or contracts to transfer specific tokens on
 
   [ERC-721]: https://eips.ethereum.org/EIPS/eip-721
   [ERC-1155]: https://eips.ethereum.org/EIPS/eip-1155
+
 ## Motivation
 
 People familiar with [ERC-721] may expect to need an approval management system for basic transfers, where a simple transfer from Alice to Bob requires that Alice first _approve_ Bob to spend one of her tokens, after which Bob can call `transfer_from` to actually transfer the token to himself.
@@ -30,11 +31,11 @@ Prior art:
 
 Let's consider some examples. Our cast of characters & apps:
 
-* Alice: has account `alice` with no contract deployed to it
-* Bob: has account `bob` with no contract deployed to it
-* MT: a contract with account `mt`, implementing only the [Multi Token Standard](Core.md) with this Approval Management extension
-* Market: a contract with account `market` which sells tokens from `mt` as well as other token contracts
-* Bazaar: similar to Market, but implemented differently (spoiler alert: has no `mt_on_approve` function!), has account `bazaar`
+- Alice: has account `alice` with no contract deployed to it
+- Bob: has account `bob` with no contract deployed to it
+- MT: a contract with account `mt`, implementing only the [Multi Token Standard](Core.md) with this Approval Management extension
+- Market: a contract with account `market` which sells tokens from `mt` as well as other token contracts
+- Bazaar: similar to Market, but implemented differently (spoiler alert: has no `mt_on_approve` function!), has account `bazaar`
 
 Alice and Bob are already [registered](../../StorageManagement.md) with MT, Market, and Bazaar, and Alice owns a token on the MT contract with ID=`"1"` and a fungible style token with ID =`"2"` and AMOUNT =`"100"`.
 
@@ -52,12 +53,12 @@ Let's examine the technical calls through the following scenarios:
 
 Alice approves Bob to transfer her tokens.
 
-**High-level explanation**
+#### High-level explanation
 
 1. Alice approves Bob
 2. Alice queries the token to verify
 
-**Technical calls**
+#### Technical calls
 
 1. Alice calls `mt::mt_approve({ "token_ids": ["1","2"], amounts:["1","100"], "account_id": "bob" })`. She attaches 1 yoctoⓃ, (.000000000000000000000001Ⓝ). Using [NEAR CLI](https://docs.near.org/tools/near-cli) to make this call, the command would be:
 
@@ -77,17 +78,17 @@ Alice approves Bob to transfer her tokens.
 
        true
 
-### 3. Approval with cross-contract call
+### 2. Approval with cross-contract call
 
 Alice approves Market to transfer some of her tokens and passes `msg` so that MT will call `mt_on_approve` on Market's contract. She probably does this via Market's frontend app which would know how to construct `msg` in a useful way.
 
-**High-level explanation**
+#### High-level explanation
 
 1. Alice calls `mt_approve` to approve `market` to transfer her token, and passes a `msg`
 2. Since `msg` is included, `mt` will schedule a cross-contract call to `market`
 3. Market can do whatever it wants with this info, such as listing the token for sale at a given price. The result of this operation is returned as the promise outcome to the original `mt_approve` call.
 
-**Technical calls**
+#### Technical calls
 
 1. Using near-cli:
 
@@ -98,7 +99,7 @@ Alice approves Market to transfer some of her tokens and passes `msg` so that MT
          "msg": "{\"action\": \"list\", \"price\": [\"100\",\"50\"],\"token\": \"nDAI\" }"
        }' --accountId alice --amount .000000000000000000000001
 
-   At this point, near-cli will hang until the cross-contract call chain fully resolves, which would also be true if Alice used a Market frontend using [near-api-js](https://docs.near.org/tools/near-api-js/quick-reference). Alice's part is done, though. The rest happens behind the scenes.
+   At this point, near-cli will hang until the cross-contract call chain fully resolves, which would also be true if Alice used a Market frontend using [near-api](https://docs.near.org/tools/near-api). Alice's part is done, though. The rest happens behind the scenes.
 
 2. `mt` schedules a call to `mt_on_approve` on `market`. Using near-cli notation for easy cross-reference with the above, this would look like:
 
@@ -118,14 +119,14 @@ Alice approves Bazaar and passes `msg` again. Maybe she actually does this via n
 
 Not to worry, though, she checks `mt_is_approved` and sees that she did successfully approve Bazaar, despite the error. She will have to find a new way to list her token for sale in Bazaar, rather than using the same `msg` shortcut that worked for Market.
 
-**High-level explanation**
+#### High-level explanation
 
 1. Alice calls `mt_approve` to approve `bazaar` to transfer her token, and passes a `msg`.
 2. Since `msg` is included, `mt` will schedule a cross-contract call to `bazaar`.
 3. Bazaar doesn't implement `mt_on_approve`, so this call results in an error. The approval still worked, but Alice sees an error in her near-cli output.
 4. Alice checks if `bazaar` is approved, and sees that it is, despite the error.
 
-**Technical calls**
+#### Technical calls
 
 1. Using near-cli:
 
@@ -161,11 +162,11 @@ Not to worry, though, she checks `mt_is_approved` and sees that she did successf
 
 Bob buys Alice's token via Market. Bob probably does this via Market's frontend, which will probably initiate the transfer via a call to `ft_transfer_call` on the nDAI contract to transfer 100 nDAI to `market`. Like the MT standard's "transfer and call" function, [Fungible Token](../FungibleToken/Core.md)'s `ft_transfer_call` takes a `msg` which `market` can use to pass along information it will need to pay Alice and actually transfer the MT. The actual transfer of the MT is the only part we care about here.
 
-**High-level explanation**
+#### High-level explanation
 
 1. Bob signs some transaction which results in the `market` contract calling `mt_transfer` on the `mt` contract, as described above. To be trustworthy and pass security audits, `market` needs to pass along `approval_id` so that it knows it has up-to-date information.
 
-**Technical calls**
+#### Technical calls
 
 Using near-cli notation for consistency:
 
@@ -177,13 +178,14 @@ Using near-cli notation for consistency:
     }' --accountId market --amount .000000000000000000000001
 
 ### 5. Approval IDs, edge case
+
 Bob transfers same token back to Alice, Alice re-approves Market & Bazaar, listing her token at a higher price than before. Bazaar is somehow unaware of these changes, and still stores `approval_id: 3` internally along with Alice's old price. Bob tries to buy from Bazaar at the old price. Like the previous example, this probably starts with a call to a different contract, which eventually results in a call to `mt_transfer` on `bazaar`. Let's consider a possible scenario from that point.
 
-**High-level explanation**
+#### High-level explanation
 
 Bob signs some transaction which results in the `bazaar` contract calling `mt_transfer` on the `mt` contract, as described above. To be trustworthy and pass security audits, `bazaar` needs to pass along `approval_id` so that it knows it has up-to-date information. It does not have up-to-date information, so the call fails. If the initial `mt_transfer` call is part of a call chain originating from a call to `ft_transfer_call` on a fungible token, Bob's payment will be refunded and no assets will change hands.
 
-**Technical calls**
+#### Technical calls
 
 Using near-cli notation for consistency:
 
@@ -198,7 +200,7 @@ Using near-cli notation for consistency:
 
 Alice revokes Market's approval for this token.
 
-**Technical calls**
+#### Technical calls
 
 Using near-cli:
 
@@ -213,7 +215,7 @@ Note that `market` will not get a cross-contract call in this case. The implemen
 
 Alice revokes all approval for these tokens
 
-**Technical calls**
+#### Technical calls
 
 Using near-cli:
 
