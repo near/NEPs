@@ -209,7 +209,7 @@ Using near-cli:
       "token_ids": ["1"],
     }' --accountId alice --amount .000000000000000000000001
 
-Note that `market` will not get a cross-contract call in this case. The implementors of the Market app should implement [cron](https://en.wikipedia.org/wiki/Cron)-type functionality to intermittently check that Market still has the access they expect.
+Note that `market` will not get a cross-contract call in this case. The implementers of the Market app should implement [cron](https://en.wikipedia.org/wiki/Cron)-type functionality to intermittently check that Market still has the access they expect.
 
 ### 7. Revoke all
 
