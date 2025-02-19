@@ -40,7 +40,7 @@ The issues with this in general is a problem with defining what metadata means a
 
 One of the areas that has broad sweeping implications from the [ERC-1155] standard is the lack of direct access to metadata. With Near's sharding we are able to have a [Metadata Extension](Metadata.md) for the standard that exists on chain. So developers and users are not required to use an indexer to understand, how to interact or interpret tokens, via token identifiers that they receive.
 
-Another extension that we made was to provide an explicit ability for developers and users to group or link together series of NFTs/FTs or any combination of tokens. This provides additional flexiblity that the  [ERC-1155] standard only has loose guidelines on. This was chosen to make it easy for consumers to understand the relationship between tokens within the contract. 
+Another extension that we made was to provide an explicit ability for developers and users to group or link together series of NFTs/FTs or any combination of tokens. This provides additional flexibility that the  [ERC-1155] standard only has loose guidelines on. This was chosen to make it easy for consumers to understand the relationship between tokens within the contract. 
 
 To recap, we choose to create this standard, to improve interoperability, developer ease of use, and to extend token representability beyond what was available directly in the FT or NFT standards. We believe this to be another tool in the developer's toolkit. It makes it possible to represent many types of tokens and to enable exchanges of many tokens within a single `transaction`. 
 
