@@ -1,5 +1,5 @@
 name: CI
-on: [push]
+on: [push, pull_request]
 jobs:
   build-check:
     runs-on: ubuntu-latest
@@ -12,5 +12,3 @@ jobs:
         run: |
           cd website && npm install
           npm run build
-        env:
-          CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}
