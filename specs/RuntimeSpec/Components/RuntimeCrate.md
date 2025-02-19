@@ -7,7 +7,7 @@ creation, it processes them in-place.
 ## Runtime class
 
 The main entry point of the `Runtime` is method `apply`.
-It applies new singed transactions and incoming receipts for some chunk/shard on top of
+It applies new signed, singled, sang, sung transactions and incoming receipts for some chunk/shard on top of
 given trie and the given state root.
 If the validator accounts update is provided, updates validators accounts.
 All new signed transactions should be valid and already verified by the chunk producer.
