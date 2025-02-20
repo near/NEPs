@@ -69,7 +69,7 @@ Let's follow two users, Alice with account `alice` and Bob with account `bob`, a
 
 1. Alice queries a view-only method to determine if she already has storage on this contract with `ft::storage_balance_of({"account_id": "alice"})`. Using [NEAR CLI](https://docs.near.org/tools/near-cli) to make this view call, the command would be:
 
-       near view ft storage_balance_of '{"account_id": "alice"}'
+       near view ft storage_balance_of '\{"account_id": "alice"}'
 
    The response:
 
@@ -88,7 +88,7 @@ Let's follow two users, Alice with account `alice` and Bob with account `bob`, a
 
    The result:
 
-       {
+       \{
          total: "2350000000000000000000",
          available: "0"
        }
@@ -106,12 +106,12 @@ Alice issues a transaction to deposit Ⓝ for Bob's account.
 
 Alice calls `ft::storage_deposit({"account_id": "bob"})` with the attached deposit of '0.00235'. Using NEAR CLI the command would be:
 
-    near call ft storage_deposit '{"account_id": "bob"}' \
+    near call ft storage_deposit '\{"account_id": "bob"}' \
       --accountId alice --amount 0.00235
 
 The result:
 
-    {
+    \{
       total: "2350000000000000000000",
       available: "0"
     }
@@ -120,12 +120,12 @@ The result:
 
 Alice accidentally makes the same call again, and even misses a leading zero in her deposit amount.
 
-    near call ft storage_deposit '{"account_id": "bob"}' \
+    near call ft storage_deposit '\{"account_id": "bob"}' \
       --accountId alice --amount 0.0235
 
 The result:
 
-    {
+    \{
       total: "2350000000000000000000",
       available: "0"
     }
@@ -144,7 +144,7 @@ Alice issues a transaction to unregister her account and recover the Ⓝ from he
 
 Alice calls `ft::storage_unregister({"force": true})` with a 1 yoctoⓃ deposit. Using NEAR CLI the command would be:
 
-    near call ft storage_unregister '{ "force": true }' \
+    near call ft storage_unregister '\{ "force": true }' \
       --accountId alice --depositYocto 1
 
 The result:
@@ -209,7 +209,7 @@ Using NEAR CLI:
 
 The result:
 
-    {
+    \{
       total: '100000000000000000000000',
       available: '97650000000000000000000'
     }
@@ -226,12 +226,12 @@ Alice can't remember if she already registered and re-sends the call, using the 
 
 Using NEAR CLI:
 
-    near call social storage_deposit '{"registration_only": true}' \
+    near call social storage_deposit '\{"registration_only": true}' \
       --accountId alice --amount 0.1
 
 The result:
 
-    {
+    \{
       total: '100000000000000000000000',
       available: '97650000000000000000000'
     }
@@ -263,7 +263,7 @@ Note that applications will probably want to avoid this situation in the first p
 
    The result:
 
-       {
+       \{
          total: '200000000000000000000000',
          available: '100100000000000000000000'
        }
@@ -283,11 +283,11 @@ Assumption: Alice has more deposited than she is using.
 
 1. Alice queries `social::storage_balance_of({ "account_id": "alice" })`. With NEAR CLI:
 
-       near view social storage_balance_of '{"account_id": "alice"}'
+       near view social storage_balance_of '\{"account_id": "alice"}'
 
    Response:
 
-       {
+       \{
          total: '200000000000000000000000',
          available: '100100000000000000000000'
        }
@@ -295,12 +295,12 @@ Assumption: Alice has more deposited than she is using.
 2. Alice calls `storage_withdraw` with a 1 yoctoⓃ deposit. NEAR CLI command:
 
        near call social storage_withdraw \
-         '{"amount": "100100000000000000000000"}' \
+         '\{"amount": "100100000000000000000000"}' \
          --accountId alice --depositYocto 1
 
    Result:
 
-       {
+       \{
          total: '200000000000000000000000',
          available: '0'
        }
