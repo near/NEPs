@@ -19,7 +19,7 @@ ActionReceipt {
 ### `input_data_ids` to `PromiseResult`s
 
 `ActionReceipt.input_data_ids` must be satisfied before execution (see
-[Receipt Matching](#receipt-matching)). Each of `ActionReceipt.input_data_ids` will be converted to
+[Receipt Matching](/RuntimeSpec/Receipts#receipt-matching)). Each of `ActionReceipt.input_data_ids` will be converted to
 the `PromiseResult::Successful(Vec<u8>)` if `data_id.data` is `Some(Vec<u8>)` otherwise if
 `data_id.data` is `None` promise will be `PromiseResult::Failed`.
 
@@ -27,7 +27,7 @@ the `PromiseResult::Successful(Vec<u8>)` if `data_id.data` is `Some(Vec<u8>)` ot
 
 The `FunctionCall` executes in the `receiver_id` account environment.
 
-- a vector of [Promise Results](#promise-results) which can be accessed by a `promise_result`
+- a vector of [Promise Results](#input_data_ids-to-promiseresults) which can be accessed by a `promise_result`
   import [PromisesAPI](Components/BindingsSpec/PromisesAPI.md) `promise_result`)
 - the original Transaction `signer_id`, `signer_public_key` data from the ActionReceipt (e.g.
   `method_name`, `args`, `predecessor_id`, `deposit`, `prepaid_gas` (which is `gas` in
@@ -43,7 +43,7 @@ API](Components/BindingsSpec/ContextAPI.md) and [Trie](Components/BindingsSpec/T
 
 In order to implement this action, the runtime will:
 
-- load the contract code from the `receiver_id` [account](../DataStructures/Account.md#account)’s
+- load the contract code from the `receiver_id` [account](../DataStructures/Account#account)’s
   storage;
 - parse, validate and instrument the contract code (see [Preparation](./Preparation.md));
 - optionally, convert the contract code to a different executable format;
@@ -53,7 +53,7 @@ In order to implement this action, the runtime will:
   that specified in the `FunctionCall.method_name` field.
 
 Note that some of these steps may be executed during the
-[`DeployContractAction`](./Actions.md#DeployContractAction) instead. This is largely an
+[`DeployContractAction`](./Actions.md#deploycontractaction) instead. This is largely an
 optimization of the `FunctionCall` gas fee, and must not result in an observable behavioral
 difference of the `FunctionCall` action.
 
@@ -78,7 +78,7 @@ The output of the `FunctionCall`:
 - `logs` - during contract execution, utf8/16 string log records could be created. Logs are not
   persistent currently.
 - `new_receipts` - new `ActionReceipts` created during the execution. These receipts are going to
-  be sent to the respective `receiver_id`s (see [Receipt Matching explanation](#receipt-matching))
+  be sent to the respective `receiver_id`s (see [Receipt Matching explanation](/RuntimeSpec/Receipts#receipt-matching))
 - result could be either [`ReturnData::Value(Vec<u8>)`](#value-result) or
   [`ReturnData::ReceiptIndex(u64)`](#receiptindex-result)`
 

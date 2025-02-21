@@ -252,7 +252,7 @@ The suggestion from @nearmax:
 We need to spec out here how transactions from different access keys are going to be ordered with respect to each other. For example:
 3 access keys (A,B,C) issue 3 transactions each:
 A1, A2, A3; B1,B2,B3; C1, C2, C3;
-All these transactions operate on the same state so they need to have an order. First transaction to execute is one of {A1,B1,C1} that has lowest hash, let's say it is B1. Second transaction to execute is one of {A1,B2,C1} with lowest hash, etc.
+All these transactions operate on the same state so they need to have an order. First transaction to execute is one of \{A1,B1,C1} that has lowest hash, let's say it is B1. Second transaction to execute is one of \{A1,B2,C1} with lowest hash, etc.
 "
 
 We should also restrict the nonce of the next transaction to be exactly the previous nonce incremented by 1.
