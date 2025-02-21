@@ -32,7 +32,7 @@ the newly created receipt is executed on the receiver's account.
 
 ## Fees for actions
 
-Every [`Action`](/RuntimeSpec/Actions.md#actions) has a corresponding Fee(s) described in the config [`action_creation_config`](/GenesisConfig/RuntimeFeeConfig/ActionCreationConfig.md).
+Every [`Action`](/RuntimeSpec/Actions) has a corresponding Fee(s) described in the config [`action_creation_config`](/GenesisConfig/RuntimeFeeConfig/ActionCreationConfig.md).
 Similar to a receipt creation costs, the `send` gas is burned when an action is added to a receipt to be sent, and the `execution` gas is only charged, but not burned.
 
 Fees are either a base fee or a fee per byte of some data within the action.
@@ -49,16 +49,16 @@ Here is the list of actions and their corresponding fees:
     - the fee per byte of method name string and per byte of arguments with the fee [`function_call_cost_per_byte`](/GenesisConfig/RuntimeFeeConfig/ActionCreationConfig.md#function_call_cost_per_byte).
     To compute the number of bytes for a function call action `function_call_action` use `function_call_action.method_name.as_bytes().len() + function_call_action.args.len()`
 - [Transfer](/RuntimeSpec/Actions.md#transferaction) uses one of the following fees:
-    - if the `receiver_id` is an [Implicit Account ID](/DataStructures/Account.md#implicit-account-ids), then a sum of base fees is used:
+    - if the `receiver_id` is an [Implicit Account ID](/DataStructures/Account#near-implicit-account-id), then a sum of base fees is used:
         - the create account base fee [`create_account_cost`](/GenesisConfig/RuntimeFeeConfig/ActionCreationConfig.md#create_account_cost)
         - the transfer base fee [`transfer_cost`](/GenesisConfig/RuntimeFeeConfig/ActionCreationConfig.md#transfer_cost)
         - the add full access key base fee [`add_key_cost.full_access_cost`](/GenesisConfig/RuntimeFeeConfig/AccessKeyCreationConfig.md#full_access_cost)
-    - if the `receiver_id` is NOT an [Implicit Account ID](/DataStructures/Account.md#implicit-account-ids), then only the base fee is used:
+    - if the `receiver_id` is NOT an [Implicit Account ID](/DataStructures/Account.md#near-implicit-account-id), then only the base fee is used:
         - the transfer base fee [`transfer_cost`](/GenesisConfig/RuntimeFeeConfig/ActionCreationConfig.md#transfer_cost)
 - [Stake](/RuntimeSpec/Actions.md#stakeaction) uses
     - the base fee [`stake_cost`](/GenesisConfig/RuntimeFeeConfig/ActionCreationConfig.md#stake_cost)
 - [AddKey](/RuntimeSpec/Actions.md#addkeyaction) uses one of the following fees:
-    - if the access key is [`AccessKeyPermission::FullAccess`](/DataStructures/AccessKey.md#access-keys) the base fee is used
+    - if the access key is [`AccessKeyPermission::FullAccess`](/DataStructures/AccessKey) the base fee is used
         - the add full access key base fee [`add_key_cost.full_access_cost`](/GenesisConfig/RuntimeFeeConfig/AccessKeyCreationConfig.md#full_access_cost)
     - if the access key is [`AccessKeyPermission::FunctionCall`](/DataStructures/AccessKey.md#accesskeypermissionfunctioncall) the sum of the fees is used
         - the add function call permission access key base fee [`add_key_cost.function_call_cost`](/GenesisConfig/RuntimeFeeConfig/AccessKeyCreationConfig.md#full_access_cost)

@@ -24,8 +24,8 @@ An overview of different `Routing Graph Reconciliation` algorithms can be a foun
 
 The process of exchanging `routing tables` involves exchanging edges between a pair of nodes.
 For given nodes `A`, `B`, that involves adding edges which `A` has, but `B` doesn't and vice-versa.
-For each connection we create a data structure [IbfSet](#IbfSet).
-It stores `Inverse Bloom Filters` [Ibf](#Ibf) of powers of `2^k` for `k` in range `10..17`.
+For each connection we create a data structure [IbfSet](#ibfset).
+It stores `Inverse Bloom Filters` [Ibf](#ibf) of powers of `2^k` for `k` in range `10..17`.
 This allows us to recover around `2^17 / 1.3` edges with `99%` probability according to [Efficient Set Reconciliation without Prior Context](https://www.ics.uci.edu/~eppstein/pubs/EppGooUye-SIGCOMM-11.pdf).
 Otherwise, we do full routing table exchange.
 
@@ -95,8 +95,8 @@ pub struct RoutingSyncV2 {
 - `requested_edges` - list of hashes of edges peer want to get
 - `done` - true if it's the last message in synchronization
 
+## IbfSet
 
-# IbfSet
 Structure used to represent set of `Inverse Bloom Filters` for given peer.
 ```rust
 pub struct IbfSet<T: Hash + Clone> {
@@ -113,7 +113,7 @@ pub struct IbfSet<T: Hash + Clone> {
   copies of given edge.
 - `hasher` - hashing function
 
-# Ibf
+## Ibf
 Structure representing Reverse Bloom Filter.
 ```rust
 pub struct Ibf {
@@ -128,7 +128,8 @@ pub struct Ibf {
 - `seed` - seed of each inverse bloom filter
 - `hasher` - hashing function
 
-# IbfElem
+## IbfElem
+
 Element of bloom filter
 ```rust
 pub struct IbfElem {
@@ -139,7 +140,7 @@ pub struct IbfElem {
 - `xor_element` - xor of hashes of edges stored in given box
 - `xor_hash` - xor of hashes of hashes of edges stored in give n box
 
-# Routing table exchange
+## Routing table exchange
 
 The process of exchanging routing tables involves multiple steps.
 It could be reduced if needed by adding an estimator of how many edges differ, but it's not implemented for sake of simplicity.

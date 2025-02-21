@@ -1,4 +1,7 @@
 {
+  "engines": {
+    "node": ">=18.0"
+  },
   "name": "website",
   "version": "0.0.0",
   "private": true,
