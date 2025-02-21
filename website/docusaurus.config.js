@@ -82,7 +82,7 @@ const config = {
             position: 'left',
           },
           {
-            href: 'https://wiki.near.org/',
+            href: 'https://dev.near.org/',
             label: 'Wiki',
             position: 'left',
           },
