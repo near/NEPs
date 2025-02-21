@@ -1,6 +1,7 @@
 # Staking and slashing
 
 ## Stake invariant
+
 `Account` has two fields representing its tokens: `amount` and `locked`. `amount + locked` is the total number of
 tokens an account has: locking/unlocking actions involve transferring balance between the two fields, and slashing
 is done by subtracting from the `locked` value.
@@ -14,6 +15,7 @@ equal to the maximum of the last three stakes and the highest proposal in the cu
 
 
 ### Returning stake
+
 `locked` is the number of tokens locked for staking, it's computed the following way:
 - initially it's the value in genesis or `0` for new accounts
 - on a staking proposal with a value higher than `locked`, it increases to that value
@@ -24,5 +26,6 @@ equal to the maximum of the last three stakes and the highest proposal in the cu
     4. change `locked` to the resulting value (and update `amount` so that `amount + locked` stays the same)
 
 ### Slashing
+
 TODO.
 

@@ -162,7 +162,7 @@ Total account balance consists of unlocked balance and locked balance.
 Unlocked balance is tokens that the account can use for transaction fees, transfers staking and other operations.
 
 Locked balance is the tokens that are currently in use for staking to be a validator or to become a validator.
-Locked balance may become unlocked at the beginning of an epoch. See [Staking](../BlockchainLayer/EpochManager/Staking.md) for details.
+Locked balance may become unlocked at the beginning of an epoch. See [Staking](../BlockchainLayer/EpochAndStaking/Staking.md) for details.
 
 #### Contracts
 

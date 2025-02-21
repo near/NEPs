@@ -274,12 +274,12 @@ Note that applications will probably want to avoid this situation in the first p
 
 Assumption: Alice has more deposited than she is using.
 
-#### High-level explanation
+##### High-level explanation
 
 1. Alice views her storage balance and sees that she has extra.
 2. Alice withdraws her excess deposit.
 
-#### Technical calls
+##### Technical calls
 
 1. Alice queries `social::storage_balance_of({ "account_id": "alice" })`. With NEAR CLI:
 
@@ -307,14 +307,14 @@ Assumption: Alice has more deposited than she is using.
 
 ## Reference-level explanation
 
-#### NOTES:
+#### NOTES
 
 - All amounts, balances and allowance are limited by `U128` (max value 2<sup>128</sup> - 1).
 - This storage standard uses JSON for serialization of arguments and results.
 - Amounts in arguments and results are serialized as Base-10 strings, e.g. `"100"`. This is done to avoid JSON limitation of max integer value of 2<sup>53</sup>.
 - To prevent the deployed contract from being modified or deleted, it should not have any access keys on its account.
 
-#### Interface:
+##### Interface
 
 ```ts
 // The structure that will be returned for the methods:
