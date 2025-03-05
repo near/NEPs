@@ -82,8 +82,8 @@ const config = {
             position: 'left',
           },
           {
-            href: 'https://wiki.near.org/',
-            label: 'Wiki',
+            href: 'https://dev.near.org/',
+            label: 'Dev Portal',
             position: 'left',
           },
           {
