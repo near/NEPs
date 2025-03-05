@@ -83,7 +83,7 @@ const config = {
           },
           {
             href: 'https://dev.near.org/',
-            label: 'Wiki',
+            label: 'Dev Portal',
             position: 'left',
           },
           {
