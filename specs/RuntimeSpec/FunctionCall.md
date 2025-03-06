@@ -43,7 +43,7 @@ API](Components/BindingsSpec/ContextAPI.md) and [Trie](Components/BindingsSpec/T
 
 In order to implement this action, the runtime will:
 
-- load the contract code from the `receiver_id` [account](../DataStructures/Account#account)’s
+- load the contract code from the `receiver_id` [account](../DataStructures/Account.md#account)’s
   storage;
 - parse, validate and instrument the contract code (see [Preparation](./Preparation.md));
 - optionally, convert the contract code to a different executable format;
