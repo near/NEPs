@@ -23,23 +23,13 @@ jobs:
         with:
           files: "**/*.md"
           separator: ","
-      - uses: DavidAnson/markdownlint-cli2-action@v9
+      - uses: DavidAnson/markdownlint-cli2-action@v19
         if: steps.changed-files.outputs.any_changed == 'true'
         with:
-          globs: ${{ steps.changed-files.outputs.all_changed_files }}
+          config: .markdownlint.json
+          globs: |
+            ${{ steps.changed-files.outputs.all_changed_files }}
           separator: ","
-          config: |
-            {
-              "default": true,
-              "MD001": false,
-              "MD013": false,
-              "MD024": { "siblings_only": true },
-              "MD025": false,
-              "MD033": false,
-              "MD034": false,
-              "MD046": false,
-              "whitespace": false,
-            }
 
   markdown-link-check:
     runs-on: ubuntu-latest
