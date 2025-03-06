@@ -2,8 +2,8 @@
 
 ## numerator
 
-_type: u64_
+`type: u64`
 
 ## denominator
 
-_type: u64_
+`type: u64`

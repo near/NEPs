@@ -43,7 +43,7 @@ To achieve this, NEP introduces a new message `Action` that represents one of at
 
 An `Action` can be of the following:
 
-- `CreateAccount` creates a new account with the `receiver_id` account ID. The action fails if the account already exists. `CreateAccount` also grants permission for all subsequent batched action for the newly created account. For example, permission to deploy code on the new account. Permission details are described in the reference section below. 
+- `CreateAccount` creates a new account with the `receiver_id` account ID. The action fails if the account already exists. `CreateAccount` also grants permission for all subsequent batched action for the newly created account. For example, permission to deploy code on the new account. Permission details are described in the reference section below.
 - `DeployContract` deploys given binary wasm code on the account. Either the `receiver_id` equals to the `signer_id`, or the batch of actions has started with `CreateAccount`, which granted that permission.
 - `FunctionCall` executes a function call on the last deployed contract. The action fails if the account or the code doesn't exist. E.g. if the previous action was `DeployContract`, then the code to execute will be the new deployed contract. `FunctionCall` has `method_name` and `args` to identify method with arguments to call. It also has `gas` and the `deposit`. `gas` is a prepaid amount of gas for this call (the price of gas is determined when a signed transaction is converted to a receipt. `deposit` is the attached deposit balance of NEAR tokens that the contract can spend, e.g. 10 tokens to pay for a crypto-corgi.
 - `Transfer` transfers the given `deposit` balance of tokens from the predecessor to the receiver.
@@ -62,7 +62,7 @@ The new `Receipt` contains the shared information and either one of the receipt 
   - `DataReceipt` is used when some data needs to be passed from the predecessor to the receiver, e.g. an execution result.
 
 To support promises and callbacks we introduce a concept of cross-shard data sharing with dependencies. Each `ActionReceipt` may have a list of input `data_id`. The execution will not start until all required inputs are received. Once the execution completes and if there is `output_data_id`, it produces a `DataReceipt` that will be routed to the `output_receiver_id`.
- 
+
 `ActionReceipt` contains the following fields:
 
 - `signer_id` the account ID of the signer, who signed the transaction.
@@ -103,14 +103,14 @@ Example of a receipt for a refund of `42000` atto-tokens to `vasya.near`:
     "action": {
         "signer_id": "vasya.near",
         "signer_public_key": ...,
-        
+
         "gas_price": "3",
-        
+
         "output_data_id": null,
         "output_receiver_id": null,
 
         "input_data_id": [],
-        
+
         "action": [
             {
                 "transfer": {
@@ -187,14 +187,14 @@ Once we validated and subtracted the total amount from `vasya.near` account, thi
     "action": {
         "signer_id": "vasya.near",
         "signer_public_key": ...,
-        
+
         "gas_price": "3",
-        
+
         "output_data_id": null,
         "output_receiver_id": null,
 
         "input_data_id": [],
-        
+
         "action": [...]
     }
 }
@@ -227,14 +227,14 @@ The receipt for the new promise towards `b.contract.near`
     "action": {
         "signer_id": "vasya.near",
         "signer_public_key": ...,
-        
+
         "gas_price": "3",
 
         "output_data_id": "data_123_1",
         "output_receiver_id": "a.contract.near",
 
         "input_data_id": [],
-        
+
         "action": [
             {
                 "function_call": {
@@ -267,14 +267,14 @@ The other receipt is for the callback which will stay in the same shard.
     "action": {
         "signer_id": "vasya.near",
         "signer_public_key": ...,
-        
+
         "gas_price": "3",
 
         "output_data_id": null,
         "output_receiver_id": null,
 
         "input_data_id": ["data_123_1"],
-        
+
         "action": [
             {
                 "function_call": {
@@ -350,14 +350,14 @@ The receipt (#3) for the remote callback that has to be executed on `d.contract.
     "action": {
         "signer_id": "vasya.near",
         "signer_public_key": ...,
-        
+
         "gas_price": "3",
 
         "output_data_id": "bla_543",
         "output_receiver_id": "a.contract.near",
 
         "input_data_id": ["data_123_b", "data_321_c"],
-        
+
         "action": [
             {
                 "function_call": {
@@ -387,7 +387,7 @@ And finally the part of the receipt (#4) for the local callback on `a.contract.n
 
 For all of this to execute the first 3 receipts needs to go to the corresponding shards and be processed.
 If for some reason the data arrived before the corresponding action receipt, then this data will be hold there until the action receipt arrives.
-An example for this is if the receipt #3 is delayed for some reason, while the receipt #2 was processed and generated a data receipt towards `d.contract.near` which arrived before #3. 
+An example for this is if the receipt #3 is delayed for some reason, while the receipt #2 was processed and generated a data receipt towards `d.contract.near` which arrived before #3.
 
 Also if any of the function calls fail, the receipt still going to generate a new `DataReceipt` because it has `output_data_id` and `output_receiver_id`. Here is an example of a DataReceipt for a failed execution:
 
@@ -415,7 +415,7 @@ Since there are no swap key action, we can just batch 2 actions together. One fo
 
 ### Updated protobufs
 
-**public_key.proto**
+##### public_key.proto
 
 ```proto
 syntax = "proto3";
@@ -429,7 +429,7 @@ message PublicKey {
 }
 ```
 
-**signed_transaction.proto**
+##### signed_transaction.proto
 
 ```proto
 syntax = "proto3";
@@ -508,7 +508,7 @@ message SignedTransaction {
 
 ```
 
-**receipt.proto**
+##### receipt.proto
 
 ```proto
 syntax = "proto3";
@@ -581,7 +581,7 @@ The actions in the `ActionReceipt` are executed in given order.
 Each action has to check for the validity before execution.
 
 Since `CreateAccount` gives permissions to perform actions on the new account, like it's your account, we introduce temporary variable `actor_id`.
-At the beginning of the execution `actor_id` is set to the value of `predecessor_id`. 
+At the beginning of the execution `actor_id` is set to the value of `predecessor_id`.
 
 Validation rules for actions:
 
@@ -668,11 +668,11 @@ This triggers the case #4, so it doesn't generate the data receipt yet, instead 
 ...
 ```
 
-Once it completes, it would send a data receipt to `a.app` (unless `c.app` is a middleman as well). 
+Once it completes, it would send a data receipt to `a.app` (unless `c.app` is a middleman as well).
 
 But let's say `b.app` doesn't want to reveal it's a middleman.
 In this case it would call `c.app`, but instead of returning data directly to `a.app`, `b.app` wants to wrap the result into some nice wrapper.
-Then instead of returning the promise to `c.app`, `b.app` would attach a callback to itself and return the promise ID of that callback. Here is how it would look: 
+Then instead of returning the promise to `c.app`, `b.app` would attach a callback to itself and return the promise ID of that callback. Here is how it would look:
 Towards `c.app`:
 
 ```
@@ -717,7 +717,7 @@ But once, its promise ID is returned with `promise_return`, it is updated to ret
 We should maintain the following persistent maps per account (`receiver_id`)
 
 - Received data: `data_id -> (success, data)`
-- Postponed receipts: `receipt_id -> Receipt` 
+- Postponed receipts: `receipt_id -> Receipt`
 - Pending input data: `data_id -> receipt_id`
 
 When `ActionReceipt` is received, the runtime iterates through the list of `input_data_id`.
@@ -732,7 +732,7 @@ If it's present, then `data_id` is removed from the pending input data and the c
 NOTE: we can optimize by not storing `data_id` in the received data map when the pending input data is present and it was the final input data item in the receipt.
 
 When `ActionReceipt` is executed, the runtime deletes all `input_data_id` from the received data map.
-The `receipt_id` is deleted from the postponed receipts map (if present).  
+The `receipt_id` is deleted from the postponed receipts map (if present).
 
 ### TODO Receipt execution
 
@@ -741,4 +741,4 @@ The `receipt_id` is deleted from the postponed receipts map (if present).
 
 # Future possibilities
 
-- We can add `or` based data selector, so data storage can be affected. 
+- We can add `or` based data selector, so data storage can be affected.

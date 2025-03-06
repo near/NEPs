@@ -269,6 +269,7 @@ apply_receipt(postponed_receipt)
 ## Receipt Validation Error
 
 Some postprocessing validation is done after an action receipt is applied. The validation includes:
+
 - Whether the generated receipts are valid. A generated receipt can be invalid, if, for example, a function call
 generates a receipt to call another function on some other contract, but the contract name is invalid. Here there are
 mainly two types of errors:

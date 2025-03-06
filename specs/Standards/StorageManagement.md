@@ -59,13 +59,13 @@ Let's follow two users, Alice with account `alice` and Bob with account `bob`, a
 
 #### 1. Account pays own registration fee
 
-#### High-level explanation
+##### High-level explanation
 
 1. Alice checks if she is registered with the `ft` contract.
 2. Alice determines the needed registration fee to register with the `ft` contract.
 3. Alice issues a transaction to deposit Ⓝ for her account.
 
-#### Technical calls
+##### Technical calls
 
 1. Alice queries a view-only method to determine if she already has storage on this contract with `ft::storage_balance_of({"account_id": "alice"})`. Using [NEAR CLI](https://docs.near.org/tools/near-cli) to make this view call, the command would be:
 
@@ -98,11 +98,11 @@ Let's follow two users, Alice with account `alice` and Bob with account `bob`, a
 
 Alice wishes to eventually send `ft` tokens to Bob who is not registered. She decides to pay for Bob's storage.
 
-#### High-level explanation
+##### High-level explanation
 
 Alice issues a transaction to deposit Ⓝ for Bob's account.
 
-#### Technical calls
+##### Technical calls
 
 Alice calls `ft::storage_deposit({"account_id": "bob"})` with the attached deposit of '0.00235'. Using NEAR CLI the command would be:
 
@@ -136,11 +136,11 @@ Additionally, Alice will be refunded the 0.0235Ⓝ she attached, because the `st
 
 Alice decides she doesn't care about her `ft` tokens and wants to forcibly recover her registration fee. If the contract permits this operation, her remaining `ft` tokens will either be burned or transferred to another account, which she may or may not have the ability to specify prior to force-closing.
 
-#### High-level explanation
+##### High-level explanation
 
 Alice issues a transaction to unregister her account and recover the Ⓝ from her registration fee. She must attach 1 yoctoⓃ, expressed in Ⓝ as `.000000000000000000000001`.
 
-#### Technical calls
+##### Technical calls
 
 Alice calls `ft::storage_unregister({"force": true})` with a 1 yoctoⓃ deposit. Using NEAR CLI the command would be:
 
@@ -155,13 +155,13 @@ The result:
 
 Bob wants to close his account, but has a non-zero balance of `ft` tokens.
 
-#### High-level explanation
+##### High-level explanation
 
 1. Bob tries to gracefully close his account, calling `storage_unregister()` without specifying `force=true`. This results in an intelligible error that tells him why his account can't yet be unregistered gracefully.
 2. Bob sends all of his `ft` tokens to a friend.
 3. Bob retries to gracefully close his account. It works.
 
-#### Technical calls
+##### Technical calls
 
 1. Bob calls `ft::storage_unregister()` with a 1 yoctoⓃ deposit. Using NEAR CLI the command would be:
 
@@ -196,11 +196,11 @@ Let's follow a user, Alice with account `alice`, as she interacts with `social` 
 
 #### 1. Account registers with `social`
 
-#### High-level explanation
+##### High-level explanation
 
 Alice issues a transaction to deposit Ⓝ for her account. While the `storage_balance_bounds.min` for this contract is 0.00235Ⓝ, the frontend she uses suggests adding 0.1Ⓝ, so that she can immediately start adding data to the app, rather than *only* registering.
 
-#### Technical calls
+##### Technical calls
 
 Using NEAR CLI:
 
@@ -218,11 +218,11 @@ Here we see that she has deposited 0.1Ⓝ and that 0.00235 of it has been used t
 
 #### 2. Unnecessary attempt to re-register using `registration_only` param
 
-#### High-level explanation
+##### High-level explanation
 
 Alice can't remember if she already registered and re-sends the call, using the `registration_only` param to ensure she doesn't attach another 0.1Ⓝ.
 
-#### Technical calls
+##### Technical calls
 
 Using NEAR CLI:
 
@@ -246,13 +246,13 @@ Assumption: `social` has a `post` function which allows creating a new post with
 
 Note that applications will probably want to avoid this situation in the first place by prompting users to top up storage deposits sufficiently before available balance runs out.
 
-#### High-level explanation
+##### High-level explanation
 
 1. Alice issues a transaction, let's say `social.post`, and it fails with an intelligible error message to tell her that she has an insufficient storage balance to cover the cost of the operation
 2. Alice issues a transaction to increase her storage balance
 3. Alice retries the initial transaction and it succeeds
 
-#### Technical calls
+##### Technical calls
 
 1. This is outside the scope of this spec, but let's say Alice calls `near call social post '{ "text": "very long message" }'`, and that this fails with a message saying something like "Insufficient storage deposit for transaction. Please call `storage_deposit` and attach at least 0.1 NEAR, then try again."
 

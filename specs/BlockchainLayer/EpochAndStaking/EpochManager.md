@@ -62,12 +62,10 @@ necessarily validators of `T+1`, but are kept in slashing sets due to the rule d
 1. `Slashed`: accounts in the slash set of the last block in `T`
 2. `Unstaked`: accounts that remove their stake in epoch `T`, if their stake is non-zero for epoch `T+1`
 3. `NotEnoughBlocks/NotEnoughChunks`: For each validator compute the ratio of blocks produced to expected blocks produced (same with chunks produced/expected).
-  If the percentage is below `block_producer_kickout_threshold` (`chunk_producer_kickout_threshold`), the validator is kicked out.
-
-  - Exception: If all validators of `T` are either in `kickout[T+1]` or to be kicked out, we don't kick out the
+    If the percentage is below `block_producer_kickout_threshold` (`chunk_producer_kickout_threshold`), the validator is kicked out.
+    - Exception: If all validators of `T` are either in `kickout[T+1]` or to be kicked out, we don't kick out the
     validator with the maximum number of blocks produced. If there are multiple, we choose the one with
     lowest validator id in the epoch.
-
 4. `NotEnoughStake`: computed after validator selection. Accounts who have stake in epoch `T+1`, but don't meet stake threshold for epoch `T+2`.
 5. `DidNotGetASeat`: computed after validator selection. Accounts who have stake in epoch `T+1`, meet stake threshold for epoch `T+2`, but didn't get any seats.
 
@@ -78,8 +76,8 @@ the following way:
 
 1. If an account is in the slash set as of the end of `T`, or gets kicked out for `NotEnoughBlocks/NotEnoughChunks` in epoch `T`,
   its proposal is ignored.
-3. If a validator is in `validators[T+1]`, and didn't make a proposal, add an implicit proposal with its stake in `T+1`.
-2. If a validator is in both `validators[T]` and `validators[T+1]`, and made a proposal in `T` (including implicit),
+2. If a validator is in `validators[T+1]`, and didn't make a proposal, add an implicit proposal with its stake in `T+1`.
+3. If a validator is in both `validators[T]` and `validators[T+1]`, and made a proposal in `T` (including implicit),
   then its reward for epoch `T` is automatically added to the proposal.
 
 The adjusted set of proposals is used to compute the seat price, and determine `validators`,`block_producers_settlement`,

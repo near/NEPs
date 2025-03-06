@@ -4,41 +4,41 @@ Config of wasm operations.
 
 ## ext_costs
 
-_type: [ExtCostsConfig](ExtCostsConfig.md)_
+`type: [ExtCostsConfig]` [ExtCostsConfig](ExtCostsConfig.md)
 
 Costs for runtime externals
 
 ## grow_mem_cost
 
-_type: u32_
+`type: u32
 
 Gas cost of a growing memory by single page.
 
 ## regular_op_cost
 
-_type: u32_
+`type: u32
 
 Gas cost of a regular operation.
 
 ## max_gas_burnt
 
-_type: Gas_
+`type: Gas
 
 Max amount of gas that can be used, excluding gas attached to promises.
 
 ## max_stack_height
 
-_type: u32_
+`type: u32
 
 How tall the stack is allowed to grow?
 
 ## initial_memory_pages
 
-_type: u32_
+`type: u32
 
 ## max_memory_pages
 
-_type: u32_
+`type: u32
 
 The initial number of memory pages.
 What is the maximal memory pages amount is allowed to have for
@@ -46,30 +46,30 @@ a contract.
 
 ## registers_memory_limit
 
-_type: u64_
+`type: u64
 
 Limit of memory used by registers.
 
 ## max_register_size
 
-_type: u64_
+`type: u64
 
 Maximum number of bytes that can be stored in a single register.
 
 ## max_number_registers
 
-_type: u64_
+`type: u64
 
 Maximum number of registers that can be used simultaneously.
 
 ## max_number_logs
 
-_type: u64_
+`type: u64
 
 Maximum number of log entries.
 
 ## max_log_len
 
-_type: u64_
+`type: u64
 
 Maximum length of a single log, in bytes.

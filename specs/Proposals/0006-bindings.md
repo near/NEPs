@@ -89,6 +89,8 @@ wrong location this function will overwrite memory that it is not supposed to ov
 
 ---
 
+##### register_len
+
 ```rust
 register_len(register_id: u64) -> u64
 ```
@@ -106,6 +108,8 @@ Here we provide a specification of trie API. After this NEP is merged, the cases
 not follow the specification are considered to be bugs that need to be fixed.
 
 ---
+
+##### storage_write
 
 ```rust
 storage_write(key_len: u64, key_ptr: u64, value_len: u64, value_ptr: u64, register_id: u64) -> u64
@@ -139,6 +143,8 @@ create this error and terminate the execution of VM. For mocks of the host that 
 
 ---
 
+##### storage_read
+
 ```rust
 storage_read(key_len: u64, key_ptr: u64, register_id: u64) -> u64
 ```
@@ -165,6 +171,8 @@ Reads the value stored under the given key.
 - This function currently does not exist.
 
 ---
+
+##### storage_remove
 
 ```rust
 storage_remove(key_len: u64, key_ptr: u64, register_id: u64) -> u64
@@ -197,6 +205,8 @@ Very similar to `storage_read`:
 
 ---
 
+##### storage_has_key
+
 ```rust
 storage_has_key(key_len: u64, key_ptr: u64) -> u64
 ```
@@ -213,6 +223,8 @@ Checks if there is a key-value pair.
 - If `key_len + key_ptr` exceeds the memory container it panics with `MemoryAccessViolation`;
 
 ---
+
+#### storage_iter_prefix
 
 ```rust
 storage_iter_prefix(prefix_len: u64, prefix_ptr: u64) -> u64
@@ -233,6 +245,8 @@ order of the bytes in the keys. If there are no keys, it creates an empty iterat
 
 ---
 
+#### storage_iter_range
+
 ```rust
 storage_iter_range(start_len: u64, start_ptr: u64, end_len: u64, end_ptr: u64) -> u64
 ```
@@ -252,6 +266,8 @@ Note, this definition allows for `start` or `end` keys to not actually exist on 
 - If `start_len + start_ptr` or `end_len + end_ptr` exceeds the memory container or points to an unused register it panics with `MemoryAccessViolation`;
 
 ---
+
+##### storage_iter_next
 
 ```rust
 storage_iter_next(iterator_id: u64, key_register_id: u64, value_register_id: u64) -> u64
@@ -300,6 +316,8 @@ However there is one reason to not have `data_read` -- it makes `API` more human
 
 ---
 
+##### current_account_id
+
 ```rust
 current_account_id(register_id: u64)
 ```
@@ -311,6 +329,8 @@ Saves the account id of the current contract that we execute into the register.
 - If the registers exceed the memory limit panics with `MemoryAccessViolation`;
 
 ---
+
+##### signer_account_id
 
 ```rust
 signer_account_id(register_id: u64)
@@ -333,6 +353,8 @@ some access key and submitted into a memory pool (either through the wallet usin
 
 ---
 
+##### signer_account_pk
+
 ```rust
 signer_account_pk(register_id: u64)
 ```
@@ -351,6 +373,8 @@ e.g. to increase the allowance or manipulate with the public key.
 - Not implemented.
 
 ---
+
+#### predecessor_account_id
 
 ```rust
 predecessor_account_id(register_id: u64)
@@ -372,6 +396,8 @@ that does function invocation on the contract or another contract as a result of
 - Not implemented.
 
 ---
+
+#### input
 
 ```rust
 input(register_id: u64)
@@ -400,6 +426,8 @@ be used to read all
 
 ---
 
+#### block_index
+
 ```rust
 block_index() -> u64
 ```
@@ -407,6 +435,8 @@ block_index() -> u64
 Returns the current block index.
 
 ---
+
+#### storage_usage
 
 ```rust
 storage_usage() -> u64
@@ -461,6 +491,8 @@ used_gas() -> u64
 
 ## Math
 
+#### random_seed
+
 ```rust
 random_seed(register_id: u64)
 ```
@@ -472,6 +504,8 @@ Returns random seed that can be used for pseudo-random number generation in dete
 - If the size of the registers exceed the set limit `MemoryAccessViolation`;
 
 ---
+
+#### sha256
 
 ```rust
 sha256(value_len: u64, value_ptr: u64, register_id: u64)
@@ -489,6 +523,8 @@ Hashes the random sequence of bytes using sha256 and returns it into `register_i
 - We have `hash32` that largely duplicates the mechanics of `hash` because it returns the first 4 bytes only.
 
 ---
+
+#### check_ethash
 
 ```rust
 check_ethash(block_number_ptr: u64,
@@ -548,6 +584,8 @@ or `amount_ptr + 16` points outside the memory of the guest or host, with `Memor
 
 ---
 
+#### promise_then
+
 ```rust
 promise_then(promise_idx: u64,
              account_id_len: u64,
@@ -574,6 +612,8 @@ or `amount_ptr + 16` points outside the memory of the guest or host, with `Memor
 
 ---
 
+#### promise_and
+
 ```rust
 promise_and(promise_idx_ptr: u64, promise_idx_count: u64) -> u64
 ```
@@ -593,6 +633,8 @@ The array contains indices of promises that need to be waited on jointly.
 
 ---
 
+#### promise_results_count
+
 ```rust
 promise_results_count() -> u64
 ```
@@ -610,6 +652,8 @@ Note, we are only going to have incomplete callbacks once we have `promise_or` c
 
 
 ---
+
+#### promise_result
 
 ```rust
 promise_result(result_idx: u64, register_id: u64) -> u64
@@ -640,6 +684,8 @@ caused the callback. This function returns the result in blob format and places 
 
 ---
 
+#### promise_return
+
 ```rust
 promise_return(promise_idx: u64)
 ```
@@ -655,6 +701,8 @@ When promise `promise_idx` finishes executing its result is considered to be the
 - The current name `return_promise` is inconsistent with the naming convention of Promise API.
 
 ## Miscellaneous API
+
+#### value_return
 
 ```rust
 value_return(value_len: u64, value_ptr: u64)
@@ -676,6 +724,8 @@ Terminates the execution of the program with panic `GuestPanic`.
 
 ---
 
+#### log_utf8
+
 ```rust
 log_utf8(len: u64, ptr: u64)
 ```
@@ -693,6 +743,8 @@ If `len == u64::MAX` then treats the string as null-terminated with character `'
 
 ---
 
+#### log_utf16
+
 ```rust
 log_utf16(len: u64, ptr: u64)
 ```
@@ -708,6 +760,8 @@ If `len == u64::MAX` then treats the string as null-terminated with two-byte seq
 - If string extends outside the memory of the guest with `MemoryAccessViolation`;
 
 ---
+
+#### abort
 
 ```rust
 abort(msg_ptr: u32, filename_ptr: u32, line: u32, col: u32)

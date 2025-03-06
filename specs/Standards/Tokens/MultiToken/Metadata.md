@@ -30,7 +30,6 @@ Prior art:
 Metadata applies at both the class level (`MTBaseTokenMetadata`) and the specific instance level (`MTTokenMetadata`). The relevant metadata for each:
 
 ```ts
-
 type MTContractMetadata = {
   spec: string, // required, essentially a version like "mt-1.0.0"
   name: string, // required Zoink's Digitial Sword Collection

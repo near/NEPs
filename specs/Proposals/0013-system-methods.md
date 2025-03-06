@@ -42,6 +42,8 @@ For more examples see NEP#8: https://github.com/nearprotocol/NEPs/pull/8/files?s
 
 ## Promises API
 
+#### promise_batch_create
+
 ```rust
 promise_batch_create(account_id_len: u64, account_id_ptr: u64) -> u64
 ```
@@ -49,27 +51,35 @@ promise_batch_create(account_id_len: u64, account_id_ptr: u64) -> u64
 Creates a new promise towards given `account_id` without any actions attached to it.
 
 ###### Panics
+
 - If `account_id_len + account_id_ptr` points outside the memory of the guest or host, with `MemoryAccessViolation`.
 
 ###### Returns
+
 - Index of the new promise that uniquely identifies it within the current execution of the method.
 
 ---
 
+#### promise_batch_then
+
 ```rust
-promise_batch_then(promise_idx: u64, account_id_len: u64, account_id_ptr: u64) -> u64            
+promise_batch_then(promise_idx: u64, account_id_len: u64, account_id_ptr: u64) -> u64
 ```
 
 Attaches a new empty promise that is executed after promise pointed by `promise_idx` is complete.
 
 ###### Panics
+
 - If `promise_idx` does not correspond to an existing promise panics with `InvalidPromiseIndex`.
 - If `account_id_len + account_id_ptr` points outside the memory of the guest or host, with `MemoryAccessViolation`.
 
 ###### Returns
+
 - Index of the new promise that uniquely identifies it within the current execution of the method.
 
 ---
+
+##### promise_batch_action_create_account
 
 ```rust
 promise_batch_action_create_account(promise_idx: u64)
@@ -79,10 +89,13 @@ Appends `CreateAccount` action to the batch of actions for the given promise poi
 Details for the action: https://github.com/nearprotocol/NEPs/pull/8/files#diff-15b6752ec7d78e7b85b8c7de4a19cbd4R48
 
 ###### Panics
+
 - If `promise_idx` does not correspond to an existing promise panics with `InvalidPromiseIndex`.
 - If the promise pointed by the `promise_idx` is an ephemeral promise created by `promise_and`.
 
 ---
+
+#### promise_batch_action_deploy_contract
 
 ```rust
 promise_batch_action_deploy_contract(promise_idx: u64, code_len: u64, code_ptr: u64)
@@ -92,11 +105,14 @@ Appends `DeployContract` action to the batch of actions for the given promise po
 Details for the action: https://github.com/nearprotocol/NEPs/pull/8/files#diff-15b6752ec7d78e7b85b8c7de4a19cbd4R49
 
 ###### Panics
+
 - If `promise_idx` does not correspond to an existing promise panics with `InvalidPromiseIndex`.
 - If the promise pointed by the `promise_idx` is an ephemeral promise created by `promise_and`.
 - If `code_len + code_ptr` points outside the memory of the guest or host, with `MemoryAccessViolation`.
 
 ---
+
+#### promise_batch_action_function_call
 
 ```rust
 promise_batch_action_function_call(promise_idx: u64,
@@ -114,12 +130,15 @@ Details for the action: https://github.com/nearprotocol/NEPs/pull/8/files#diff-1
 *NOTE: Calling `promise_batch_create` and then `promise_batch_action_function_call` will produce the same promise as calling `promise_create` directly.*
 
 ###### Panics
+
 - If `promise_idx` does not correspond to an existing promise panics with `InvalidPromiseIndex`.
 - If the promise pointed by the `promise_idx` is an ephemeral promise created by `promise_and`.
 - If `account_id_len + account_id_ptr` or `method_name_len + method_name_ptr` or `arguments_len + arguments_ptr`
 or `amount_ptr + 16` points outside the memory of the guest or host, with `MemoryAccessViolation`.
 
 ---
+
+#### promise_batch_action_transfer
 
 ```rust
 promise_batch_action_transfer(promise_idx: u64, amount_ptr: u64)
@@ -129,11 +148,14 @@ Appends `Transfer` action to the batch of actions for the given promise pointed 
 Details for the action: https://github.com/nearprotocol/NEPs/pull/8/files#diff-15b6752ec7d78e7b85b8c7de4a19cbd4R51
 
 ###### Panics
+
 - If `promise_idx` does not correspond to an existing promise panics with `InvalidPromiseIndex`.
 - If the promise pointed by the `promise_idx` is an ephemeral promise created by `promise_and`.
 - If `amount_ptr + 16` points outside the memory of the guest or host, with `MemoryAccessViolation`.
 
 ---
+
+#### promise_batch_action_stake
 
 ```rust
 promise_batch_action_stake(promise_idx: u64,
@@ -146,12 +168,15 @@ Appends `Stake` action to the batch of actions for the given promise pointed by 
 Details for the action: https://github.com/nearprotocol/NEPs/pull/8/files#diff-15b6752ec7d78e7b85b8c7de4a19cbd4R52
 
 ###### Panics
+
 - If `promise_idx` does not correspond to an existing promise panics with `InvalidPromiseIndex`.
 - If the promise pointed by the `promise_idx` is an ephemeral promise created by `promise_and`.
 - If the given public key is not a valid public key (e.g. wrong length) `InvalidPublicKey`.
 - If `amount_ptr + 16` or `public_key_len + public_key_ptr` points outside the memory of the guest or host, with `MemoryAccessViolation`.
 
 ---
+
+#### promise_batch_action_add_key_with_full_access
 
 ```rust
 promise_batch_action_add_key_with_full_access(promise_idx: u64,
@@ -165,12 +190,15 @@ Details for the action: https://github.com/nearprotocol/NEPs/pull/8/files#diff-1
 The access key will have `FullAccess` permission, details: [0005-access-keys.md#guide-level-explanation](click here)
 
 ###### Panics
+
 - If `promise_idx` does not correspond to an existing promise panics with `InvalidPromiseIndex`.
 - If the promise pointed by the `promise_idx` is an ephemeral promise created by `promise_and`.
 - If the given public key is not a valid public key (e.g. wrong length) `InvalidPublicKey`.
 - If `public_key_len + public_key_ptr` points outside the memory of the guest or host, with `MemoryAccessViolation`.
 
 ---
+
+#### promise_batch_action_add_key_with_function_call
 
 ```rust
 promise_batch_action_add_key_with_function_call(promise_idx: u64,
@@ -192,14 +220,17 @@ The access key will have `FunctionCall` permission, details: [0005-access-keys.m
 - Given `method_names` is a `utf-8` string with `,` used as a separator. The vm will split the given string into a vector of strings.
 
 ###### Panics
+
 - If `promise_idx` does not correspond to an existing promise panics with `InvalidPromiseIndex`.
 - If the promise pointed by the `promise_idx` is an ephemeral promise created by `promise_and`.
 - If the given public key is not a valid public key (e.g. wrong length) `InvalidPublicKey`.
 - if `method_names` is not a valid `utf-8` string, fails with `BadUTF8`.
-- If `public_key_len + public_key_ptr`, `allowance_ptr + 16`, `receiver_id_len + receiver_id_ptr` or 
+- If `public_key_len + public_key_ptr`, `allowance_ptr + 16`, `receiver_id_len + receiver_id_ptr` or
 `method_names_len + method_names_ptr` points outside the memory of the guest or host, with `MemoryAccessViolation`.
 
 ---
+
+#### promise_batch_action_delete_key
 
 ```rust
 promise_batch_action_delete_key(promise_idx: u64,
@@ -211,12 +242,15 @@ Appends `DeleteKey` action to the batch of actions for the given promise pointed
 Details for the action: https://github.com/nearprotocol/NEPs/pull/8/files#diff-15b6752ec7d78e7b85b8c7de4a19cbd4R55
 
 ###### Panics
+
 - If `promise_idx` does not correspond to an existing promise panics with `InvalidPromiseIndex`.
 - If the promise pointed by the `promise_idx` is an ephemeral promise created by `promise_and`.
 - If the given public key is not a valid public key (e.g. wrong length) `InvalidPublicKey`.
 - If `public_key_len + public_key_ptr` points outside the memory of the guest or host, with `MemoryAccessViolation`.
 
 ---
+
+#### promise_batch_action_delete_account
 
 ```rust
 promise_batch_action_delete_account(promise_idx: u64,
@@ -229,9 +263,9 @@ Action is used to delete an account. It can be performed on a newly created acco
 insufficient funds to pay rent. Takes `beneficiary_id` to indicate where to send the remaining funds.
 
 ###### Panics
+
 - If `promise_idx` does not correspond to an existing promise panics with `InvalidPromiseIndex`.
 - If the promise pointed by the `promise_idx` is an ephemeral promise created by `promise_and`.
 - If `beneficiary_id_len + beneficiary_id_ptr` points outside the memory of the guest or host, with `MemoryAccessViolation`.
 
 ---
-
