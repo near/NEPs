@@ -12,7 +12,7 @@ Base storage usage for an account
 _type: Gas_
 Base cost for a k/v record
 
-## key_cost_per_byte:
+## key_cost_per_byte
 
 _type: Gas_
 Cost per byte of key

@@ -49,6 +49,7 @@ interface EventLogData {
 ```
 
 Thus, to emit an event, you only need to log a string following the rules above. Here is a barebones example using Rust SDK `near_sdk::log!` macro (security note: prefer using `serde_json` or alternatives to serialize the JSON string to avoid potential injections and corrupted events):
+
 ```rust
 use near_sdk::log;
 
@@ -60,7 +61,7 @@ log!(
 // ...
 ```
 
-#### Valid event logs:
+#### Valid event logs
 
 ```js
 EVENT_JSON:{
@@ -81,9 +82,10 @@ EVENT_JSON:{
 }
 ```
 
-#### Invalid event logs:
+#### Invalid event logs
 
 * Two events in a single log entry (instead, call `log` for each individual event)
+
 ```js
 EVENT_JSON:{
     "standard": "nepXXX",
@@ -96,11 +98,15 @@ EVENT_JSON:{
     "event": "xyz_is_triggered"
 }
 ```
+
 * Invalid JSON data
+
 ```js
 EVENT_JSON:invalid json
 ```
+
 * Missing required fields `standard`, `version` or `event`
+
 ```js
 EVENT_JSON:{
     "standard": "nepXXX",

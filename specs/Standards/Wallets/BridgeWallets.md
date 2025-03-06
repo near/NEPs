@@ -12,7 +12,7 @@ Bridge wallets such as [WalletConnect](https://docs.walletconnect.com/2.0/) and 
 
 At its most basic, a wallet manages key pairs which are used to sign messages. The signed messages are typically then submitted by the wallet to the blockchain.  This standard aims to define an API (based on our learning from [Wallet Selector](https://github.com/near/wallet-selector)) that achieves this requirement through a number of methods compatible with a relay architecture.
 
-There have been many iterations of this standard to help inform what we consider the best approach right now for NEAR. You can find more relevant content in the [Injected Wallet Standard](#).
+There have been many iterations of this standard to help inform what we consider the best approach right now for NEAR. You can find more relevant content in the Injected Wallet Standard.
 
 ## Specification
 
@@ -24,7 +24,7 @@ Once a session has been created, the dApp can make requests to sign transactions
 
 For dApps that regularly sign gas-only transactions, Limited [`FunctionCall`](https://nomicon.io/DataStructures/AccessKey#accesskeypermissionfunctioncall) access keys can be added/deleted to one or more accounts by using the [`signIn`](#signin) and [`signOut`](#signout) methods. While the same functionality could be achieved with [`signTransactions`](#signtransactions), that contain actions that add specific access keys with particular permissions to a specific account, by using `signIn`, the wallet receives a direct intention that a user wishes to sign in/out of a dApp's smart contract, which can provide a cleaner UI to the wallet user and allow convenient behavior to be implemented by wallet providers such as 'sign out' automatically deleting the associated limited access key that was created when the user first signed in.
 
-Although intentionally similar to the [Injected Wallet Standard](#), this standard focuses on the transport layer instead of the high-level abstractions found in injected wallets. Below are the key differences between the standards:
+Although intentionally similar to the Injected Wallet Standard, this standard focuses on the transport layer instead of the high-level abstractions found in injected wallets. Below are the key differences between the standards:
 
 - [Transactions](https://nomicon.io/RuntimeSpec/Transactions) passed to `signTransaction` and `signTransactions` must be encoded.
 - The result of `signTransaction` and `signTransactions` are encoded [SignedTransaction](https://nomicon.io/RuntimeSpec/Transactions#signed-transaction) models.
@@ -118,14 +118,14 @@ type GetAccountsResponse = Array<Account>;
 
 ## Flows
 
-**Connect**
+### Connect
 
 1. dApp initiates pairing via QR modal.
 2. wallet establishes pairing and prompts selection of accounts for new session.
 3. wallet responds with session (id and accounts).
 4. dApp stores reference to session.
 
-**Sign in (optional)**
+### Sign in (optional)
 
 1. dApp generates a key pair for one or more accounts in the session.
 2. dApp makes `signIn` request with `permission` and `accounts`.
@@ -133,14 +133,14 @@ type GetAccountsResponse = Array<Account>;
 4. wallet responds with `null`.
 5. dApp stores the newly generated key pairs securely.
 
-**Sign out (optional)**
+### Sign out (optional)
 
 1. dApp makes `signOut` request with `accounts`.
 2. wallet receives request and executes a transaction containing a `DeleteKey` Action for each account.
 3. wallet responds with `null`.
 4. dApp clears stored key pairs.
 
-**Sign transaction**
+### Sign transaction
 
 1. dApp makes `signTransaction` request.
 2. wallet prompts approval of transaction.
@@ -149,7 +149,7 @@ type GetAccountsResponse = Array<Account>;
 5. dApp decodes signed transaction.
 6. dApp sends signed transaction.
 
-**Sign transactions**
+### Sign transactions
 
 1. dApp makes `signTransactions` request.
 2. wallet prompts approval of transactions.

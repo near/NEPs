@@ -35,6 +35,8 @@ attached_deposit(balance_ptr: u64)
 
 ---
 
+####
+
 ```rust
 prepaid_gas() -> u64
 used_gas() -> u64

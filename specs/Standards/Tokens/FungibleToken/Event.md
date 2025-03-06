@@ -115,6 +115,7 @@ EVENT_JSON:{
 ## Further methods
 
 Note that the example events covered above cover two different kinds of events:
+
 1. Events that are not specified in the FT Standard (`ft_mint`, `ft_burn`)
 2. An event that is covered in the [FT Core Standard](Core.md). (`ft_transfer`)
 

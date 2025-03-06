@@ -4,20 +4,18 @@
 - Issue(s): https://github.com/nearprotocol/nearcore/issues/1307
 
 # Summary
-[summary]: #summary
 
 Refactor current TransactionResult/TransactionLog/FinalTransactionResult to improve naming, deduplicate results and provide
 results resolution by the front-end for async-calls.
 
 # Motivation
-[motivation]: #motivation
 
 Right now the contract calls 2 promises and doesn't return a value, the front-end will return one of the promises results as an execution result. It's because we return the last result from final transaction result. With the current API, it's impossible to know what is the actual result of the contract execution.
 
 # Guide-level explanation
-[guide-level-explanation]: #guide-level-explanation
 
 Here is the proposed Rust structures. Highlights:
+
 - Rename `TransactionResult` to `ExecutionOutcome` since it's used for transactions and receipts
 - Rename `TransactionStatus` and merge it with result into `ExecutionResult`.
 - In case of success `ExecutionStatus` can either be a value of a receipt_id. This helps to resolve the

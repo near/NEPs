@@ -4,7 +4,6 @@
 - Issue(s): [nearprotocol/nearcore#687](https://github.com/nearprotocol/nearcore/issues/687)
 
 # Summary
-[summary]: #summary
 
 Access keys provide limited access to an account.
 Each access key belongs to some account and identified by a unique (within the account) public key.
@@ -13,7 +12,6 @@ Access keys will replace original account-level public keys.
 Access keys allow to act on behalf of the account by restricting allowed transactions with the access key permissions.
 
 # Motivation
-[motivation]: #motivation
 
 Access keys give an ability to use dApps in a secure way without asking the user to sign every transaction in the wallet.
 By issuing the access key once for the application, the application can now act on behalf of the user in a restricted environment.
@@ -22,7 +20,6 @@ This enables seamless experience for the user.
 Access keys also enable a few other use-cases that are discussed in details below.
 
 # Guide-level explanation
-[guide-level-explanation]: #guide-level-explanation
 
 Here are proposed changes for the AccessKey and Account structs.  
 
@@ -86,6 +83,7 @@ it essentially acts as an account-level public key. Which means we can remove ac
 public keys from the account struct and rely only on access keys.
 
 An access key example from user `vasya.near` with full access:
+
 ```rust
 /// vasya.near,a123bca2
 AccessKey {
@@ -111,6 +109,7 @@ The application might also hint the user about this desired allowance in some wa
 Now the app can issue function call transactions on behalf of the user’s account towards the app’s contract without requiring the user to sign each transaction.
 
 An access key example for chess app from user `vasya.near`:
+
 ```rust
 /// vasya.near,c5d312f3
 AccessKey {
@@ -144,10 +143,12 @@ If the access key wants to support user's identity from the account ID. The cont
 Once this is done, a user can request a new access key with the linked public key (sponsored by the app), but it is linked to the user's account ID.
 
 There are some caveats with this approach:
+
 - The dApp is required to have a backend and to have some sybil resistance for users. It's needed to prevent abuse by bots.
 - Writing the contract is slightly more complicated, since the contract now needs to handle mapping of the public keys to the account IDs.
 
 An access key example for chess app paid by the chess app from `chess.funds` account:
+
 ```rust
 /// chess.funds,2bc2b3b
 AccessKey {
@@ -172,6 +173,7 @@ AccessKey {
 This examples demonstrates how to have more granular control on top of built-in access key restrictions.
 
 Let's say a user wants to:
+
 - limit the number of calls the access key can make per minute
 - support multiple contracts with the same access key
 - select which methods name can be called and which can't
@@ -188,6 +190,7 @@ The `proxy` method can find out which access key is used by comparing public key
 E.g. the access key should only be able to call `chess.app` at most 3 times per 20 block and can transfer at most 1M tokens to the `chess.app`.
 The `proxy` function internally can validate that this access key is used, fetch its config, validate the passed arguments and proxy the transaction.
 A `proxy` method might take the following arguments for a function call:
+
 ```json
 {
   "action": "call",
@@ -204,6 +207,7 @@ The same `proxy` function in theory can handle other actions, e.g. staking or ve
 The benefit of having a proxy function on your own account is that it doesn't require additional receipt, because the account's state and the code are available at the transaction verification time.
 
 An example of an access key limited to `proxy` function:
+
 ```rust
 /// vasya.near,3bc2b3b
 AccessKey {
@@ -224,7 +228,6 @@ AccessKey {
 ```
 
 # Reference-level explanation
-[reference-level-explanation]: #reference-level-explanation
 
 - Access keys are stored with the `account_id,public_key` key. Where `account_id` and `public_key` are actual Account ID and public keys, and `,` is a separator.
 They should be stored on the same shard as the account.
@@ -252,7 +255,7 @@ The suggestion from @nearmax:
 We need to spec out here how transactions from different access keys are going to be ordered with respect to each other. For example:
 3 access keys (A,B,C) issue 3 transactions each:
 A1, A2, A3; B1,B2,B3; C1, C2, C3;
-All these transactions operate on the same state so they need to have an order. First transaction to execute is one of {A1,B1,C1} that has lowest hash, let's say it is B1. Second transaction to execute is one of {A1,B2,C1} with lowest hash, etc.
+All these transactions operate on the same state so they need to have an order. First transaction to execute is one of \{A1,B1,C1} that has lowest hash, let's say it is B1. Second transaction to execute is one of \{A1,B2,C1} with lowest hash, etc.
 "
 
 We should also restrict the nonce of the next transaction to be exactly the previous nonce incremented by 1.
@@ -289,13 +292,11 @@ For this to work, we might need to update the storage computation formula for th
 Especially, because we currently don't use the proto size for the storage_usage for the account itself.
 
 # Drawbacks
-[drawbacks]: #drawbacks
 
 Currently the permission model is quite limited to either a function call with one or any method names, or a full access key.
 But we may add more permissions in the future in order to handle this issue. 
 
 # Rationale and alternatives
-[rationale-and-alternatives]: #rationale-and-alternatives
 
 ## Alternatives
 
@@ -327,7 +328,6 @@ In the previous design, the `receiver_id` was called `contract_id` and was an op
 We can potentially use `None` to mean unlimited key, and require user to explicitly specify their own account_id if they want to use proxy function.
 
 # Unresolved questions
-[unresolved-questions]: #unresolved-questions
 
 #### Transactions ordering and nonce restrictions
 
@@ -340,7 +340,6 @@ Not clear whether a single pair of `receiver_id`/`method_name` is enough to cove
 E.g. if I want to use my account that already has some code on it, e.g. vesting locked account. I can't deploy a new code on it, so I can't use a `proxy` method.
 
 # Future possibilities
-[future-possibilities]: #future-possibilities
 
 For all use-cases to work we need to add all missing runtime methods that are currently only possible with `SignedTransaction` at the moment, e.g. staking, account creation, public/access key management and code deployment.
 

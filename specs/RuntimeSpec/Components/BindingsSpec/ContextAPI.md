@@ -31,6 +31,8 @@ Saves the account id of the current contract that we execute into the register.
 
 ---
 
+#### signer_account_id
+
 ```rust
 signer_account_id(register_id: u64)
 ```
@@ -53,6 +55,8 @@ some access key and submitted into a memory pool (either through the wallet usin
 
 ---
 
+#### signer_account_pk
+
 ```rust
 signer_account_pk(register_id: u64)
 ```
@@ -71,6 +75,8 @@ e.g. to increase the allowance or manipulate with the public key.
 - Not implemented.
 
 ---
+
+#### predecessor_account_id
 
 ```rust
 predecessor_account_id(register_id: u64)
@@ -93,6 +99,8 @@ that does function invocation on the contract or another contract as a result of
 - Not implemented.
 
 ---
+
+#### input
 
 ```rust
 input(register_id: u64)

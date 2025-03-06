@@ -16,9 +16,9 @@ It is expected that a node periodically requests a list of peers from its neighb
 
 ### Handshakes
 
-To establish a new connections between pair of nodes, they will follow the following protocol. Node A open a connection with node B and sends a [Handshake](Messages.md#Handshake) to it. If handshake is valid (see reasons to [decline the handshake](#Decline-handshake)) then node B will proceed to send [Handshake](Messages.md#Handshake) to node A. After each node accept a handshake it will mark the other node as an active connection, until one of them stop the connection.
+To establish a new connections between pair of nodes, they will follow the following protocol. Node A open a connection with node B and sends a [Handshake](Messages.md#handshake) to it. If handshake is valid (see reasons to [decline the handshake](#decline-handshake)) then node B will proceed to send [Handshake](Messages.md#handshake) to node A. After each node accept a handshake it will mark the other node as an active connection, until one of them stop the connection.
 
-[Handshake](Messages.md#Handshake) contains relevant information about the node, the current chain and information to create a new edge between both nodes.
+[Handshake](Messages.md#handshake) contains relevant information about the node, the current chain and information to create a new edge between both nodes.
 
 #### Decline handshake
 
@@ -29,7 +29,7 @@ When a node receives a handshake from other node it will decline this connection
 
 #### Edge
 
-Edges are used to let other nodes in the network know that there is currently an active connection between a pair of nodes. See the definition of [this data structure](Messages.md#Edge).
+Edges are used to let other nodes in the network know that there is currently an active connection between a pair of nodes. See the definition of [this data structure](Messages.md#edge).
 
 If the nonce of the edge is odd, it denotes an `Added` edge, otherwise it denotes a `Removed` edge. Each node should keep track of the nonce used for edges between every pair of nodes. Peer C believes that the peers A and B are currently connected if and only if the edge with the highest nonce known to C for them has an odd nonce.
 

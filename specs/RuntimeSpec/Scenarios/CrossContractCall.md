@@ -6,7 +6,7 @@ Suppose Alice is a calling a function `reserve_trip(city: String, date: u64)` on
 account which in turn calls `reserve(date: u64)` on a smart contract deployed to a `hotel_near` account and attaches
 a callback to method `hotel_reservation_complete(date: u64)` on `travel_agency`.
 
-<img src="/images/receipt_flow_diagram.svg" />
+<img src="/images/receipt_flow_diagram.svg" alt="Receipt Flow Diagram"/>
 
 ## Pre-requisites
 

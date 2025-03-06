@@ -104,9 +104,9 @@ Contracts should be implemented in a way to avoid extra gas fees for serializati
 
 ## Drawbacks
 
-* When this NFT contract is created and initialized, the storage use per-token will be higher than an NFT Core version. Frontends can account for this by adding extra deposit when minting. This could be done by padding with a reasonable amount, or by the frontend using the [RPC call detailed here](https://docs.near.org/docs/develop/front-end/rpc#genesis-config) that gets genesis configuration and actually determine precisely how much deposit is needed.
-* Convention of `icon` being a data URL rather than a link to an HTTP endpoint that could contain privacy-violating code cannot be done on deploy or update of contract metadata, and must be done on the consumer/app side when displaying token data.
-* If on-chain icon uses a data URL or is not set but the document given by `reference` contains a privacy-violating `icon` URL, consumers & apps of this data should not naïvely display the `reference` version, but should prefer the safe version. This is technically a violation of the "`reference` setting wins" policy described above.
+- When this NFT contract is created and initialized, the storage use per-token will be higher than an NFT Core version. Frontends can account for this by adding extra deposit when minting. This could be done by padding with a reasonable amount, or by the frontend using the [RPC call detailed here](https://docs.near.org/docs/develop/front-end/rpc#genesis-config) that gets genesis configuration and actually determine precisely how much deposit is needed.
+- Convention of `icon` being a data URL rather than a link to an HTTP endpoint that could contain privacy-violating code cannot be done on deploy or update of contract metadata, and must be done on the consumer/app side when displaying token data.
+- If on-chain icon uses a data URL or is not set but the document given by `reference` contains a privacy-violating `icon` URL, consumers & apps of this data should not naïvely display the `reference` version, but should prefer the safe version. This is technically a violation of the "`reference` setting wins" policy described above.
 
 ## Future possibilities
 
@@ -115,9 +115,10 @@ Contracts should be implemented in a way to avoid extra gas fees for serializati
 
 ## Errata
 
-* **2022-02-03**: updated `Token` struct field names. `id` was changed to `token_id`. This is to be consistent with current implementations of the standard and the rust SDK docs.
+- **2022-02-03**: updated `Token` struct field names. `id` was changed to `token_id`. This is to be consistent with current implementations of the standard and the rust SDK docs.
 
 The first version (`1.0.0`) had confusing language regarding the fields:
+
 - `issued_at`
 - `expires_at`
 - `starts_at`
