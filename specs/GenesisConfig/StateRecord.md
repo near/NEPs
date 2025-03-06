@@ -96,7 +96,7 @@ The access key serialized in JSON format.
 
 ## PostponedReceipt
 
-`type:` Box<[Receipt](../RuntimeSpec/Receipts.md)>
+`type: Box<Receipt>` [Receipt](../RuntimeSpec/Receipts.md)
 
 Record that contains a receipt that was postponed on a shard (e.g. it's waiting for incoming data).
 The receipt is in JSON-friendly format. The receipt can only be an `ActionReceipt`.
@@ -119,7 +119,7 @@ The account ID of the receiver of the data.
 
 ### data_id
 
-_type: [CryptoHash]_
+`type: CryptoHash`
 
 Data ID of the data in base58 format.
 
@@ -132,7 +132,7 @@ Optional data encoded as base64 format or null in JSON.
 
 ## DelayedReceipt
 
-`type:` Box<[Receipt](../RuntimeSpec/Receipts.md)>
+`type: Box<Receipt>` [Receipt](../RuntimeSpec/Receipts.md)
 
 Record that contains a receipt that was delayed on a shard. It means the shard was overwhelmed with receipts and it processes receipts from backlog.
 The receipt is in JSON-friendly format.  See [Delayed Receipts](../RuntimeSpec/Components/RuntimeCrate.md#delayed-receipts) for details.
