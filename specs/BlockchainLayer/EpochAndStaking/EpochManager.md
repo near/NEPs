@@ -31,7 +31,7 @@ Aggregating blocks of the epoch computes the following sets:
 
 NOTE: slashing is currently disabled. The following is the current design, which can change.
 
-Slash sets are maintained on block basis. If a validator gets slashed in epoch `T`, subsequent blocks of epochs `T` and 
+Slash sets are maintained on block basis. If a validator gets slashed in epoch `T`, subsequent blocks of epochs `T` and
 `T+1` keep it in their slash sets. At the end of epoch `T`, the slashed validator is also added to `kickout[T+2]`.
 Proposals from blocks in slash sets are ignored.
 
@@ -49,7 +49,7 @@ It's kept in the slash set (and kickout sets) for two or three epochs depending 
   - proposals from `v` in `T` and `T+1` are ignored
   - `v` is added to `kickout[T+2]` and `kickout[T+3]` as slashed
   - `v` can make a proposal in `T+2` to become a validator in `T+4`
-    
+
 ## Computing EpochInfo
 
 ### Kickout set
@@ -64,7 +64,7 @@ necessarily validators of `T+1`, but are kept in slashing sets due to the rule d
 3. `NotEnoughBlocks/NotEnoughChunks`: For each validator compute the ratio of blocks produced to expected blocks produced (same with chunks produced/expected).
   If the percentage is below `block_producer_kickout_threshold` (`chunk_producer_kickout_threshold`), the validator is kicked out.
 
-- Exception: If all validators of `T` are either in `kickout[T+1]` or to be kicked out, we don't kick out the
+  - Exception: If all validators of `T` are either in `kickout[T+1]` or to be kicked out, we don't kick out the
     validator with the maximum number of blocks produced. If there are multiple, we choose the one with
     lowest validator id in the epoch.
 

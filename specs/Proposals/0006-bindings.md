@@ -14,9 +14,10 @@ when given an empty or inverted range?).
 
 In this proposal we give a detailed specification of the functions that we will be relying on for many months to come.
 
-# Motivation
+## Motivation
 
 The current imports have the following issues:
+
 - **Trie API.** The behavior of trie API is currently unspecified. Many things are unclear: what happens when we try
 iterating over an empty range, what happens if we try accessing a non-existent key, etc. Having a trie API specification
 is important for being able to create a testing framework for Rust and AssemblyScript smart contracts, since in unit
@@ -36,6 +37,7 @@ now consider splitting attached balance into two.
 Registers allow the host function to return the data into a buffer located inside the host oppose to the buffer
 located on the client. A special operation can be used to copy the content of the buffer into the host. Memory pointers
 can then be used to point either to the memory on the guest or the memory on the host, see below. Benefits:
+
 - We can have functions that return values that are not necessarily used, e.g. inserting key-value into a trie can
 also return the preempted old value, which might not be necessarily used. Previously, if we returned something we
 would have to pass the blob from host into the guest, even if it is not used;
@@ -44,6 +46,7 @@ from the storage and insert it into under a different key;
 - It makes API cleaner, because we don't need to pass `buffer_len` and `buffer_ptr` as arguments to other functions;
 - It allows merging certain functions together, see `storage_iter_next`;
 - This is consistent with other APIs that were created for high performance, e.g. allegedly Ewasm have implemented
+
 SNARK-like computations in Wasm by exposing a bignum library through stack-like interface to the guest. The guest
 can manipulate then with the stack of 256-bit numbers that is located on the host.
 
@@ -52,6 +55,7 @@ can manipulate then with the stack of 256-bit numbers that is located on the hos
 The registers can be used to pass the blobs between host functions. For any function that
 takes a pair of arguments `*_len: u64, *_ptr: u64` this pair is pointing to a region of memory either on the guest or
 the host:
+
 - If `*_len != u64::MAX` it points to the memory on the guest;
 - If `*_len == u64::MAX` it points to the memory under the register `*_ptr` on the host.
 
@@ -74,10 +78,12 @@ read_register(register_id: u64, ptr: u64)
 Writes the entire content from the register `register_id` into the memory of the guest starting with `ptr`.
 
 ###### Panics
+
 - If the content extends outside the memory allocated to the guest. In Wasmer, it returns `MemoryAccessViolation` error message;
 - If `register_id` is pointing to unused register returns `InvalidRegisterId` error message.
 
 ###### Undefined Behavior
+
 - If the content of register extends outside the preallocated memory on the host side, or the pointer points to a
 wrong location this function will overwrite memory that it is not supposed to overwrite causing an undefined behavior.
 
@@ -90,6 +96,7 @@ register_len(register_id: u64) -> u64
 Returns the size of the blob stored in the given register.
 
 ###### Normal operation
+
 - If register is used, then returns the size, which can potentially be zero;
 - If register is not used, returns `u64::MAX`
 
@@ -107,23 +114,27 @@ storage_write(key_len: u64, key_ptr: u64, value_len: u64, value_ptr: u64, regist
 Writes key-value into storage.
 
 ###### Normal operation
+
 - If key is not in use it inserts the key-value pair and does not modify the register;
 - If key is in use it inserts the key-value and copies the old value into the `register_id`.
 
 ###### Returns
+
 - If key was not used returns `0`;
 - If key was used returns `1`.
 
 ###### Panics
+
 - If `key_len + key_ptr` or `value_len + value_ptr` exceeds the memory container or points to an unused register it panics
 with `MemoryAccessViolation`. (When we say that something panics with the given error we mean that we use Wasmer API to
 create this error and terminate the execution of VM. For mocks of the host that would only cause a non-name panic.)
 - If returning the preempted value into the registers exceed the memory container it panics with `MemoryAccessViolation`;
 
 ###### Current bugs
--  `External::storage_set` trait can return an error which is then converted to a generic non-descriptive
-   `StorageUpdateError`, [here](https://github.com/nearprotocol/nearcore/blob/942bd7bdbba5fb3403e5c2f1ee3c08963947d0c6/runtime/wasm/src/runtime.rs#L210)
-   however the actual implementation does not return error at all, [see](https://github.com/nearprotocol/nearcore/blob/4773873b3cd680936bf206cebd56bdc3701ddca9/runtime/runtime/src/ext.rs#L95);
+
+- `External::storage_set` trait can return an error which is then converted to a generic non-descriptive
+  `StorageUpdateError`, [here](https://github.com/nearprotocol/nearcore/blob/942bd7bdbba5fb3403e5c2f1ee3c08963947d0c6/runtime/wasm/src/runtime.rs#L210)
+  however the actual implementation does not return error at all, [see](https://github.com/nearprotocol/nearcore/blob/4773873b3cd680936bf206cebd56bdc3701ddca9/runtime/runtime/src/ext.rs#L95);
 - Does not return into the registers.
 
 ---
@@ -135,18 +146,22 @@ storage_read(key_len: u64, key_ptr: u64, register_id: u64) -> u64
 Reads the value stored under the given key.
 
 ###### Normal operation
+
 - If key is used copies the content of the value into the `register_id`, even if the content is zero bytes;
 - If key is not present then does not modify the register.
 
 ###### Returns
+
 - If key was not present returns `0`;
 - If key was present returns `1`.
 
 ###### Panics
+
 - If `key_len + key_ptr` exceeds the memory container or points to an unused register it panics with `MemoryAccessViolation`;
 - If returning the preempted value into the registers exceed the memory container it panics with `MemoryAccessViolation`;
 
 ###### Current bugs
+
 - This function currently does not exist.
 
 ---
@@ -160,20 +175,24 @@ Removes the value stored under the given key.
 ###### Normal operation
 
 Very similar to `storage_read`:
+
 - If key is used, removes the key-value from the trie and copies the content of the value into the `register_id`, even if the content is zero bytes.
 - If key is not present then does not modify the register.
 
 ###### Returns
+
 - If key was not present returns `0`;
 - If key was present returns `1`.
 
 ###### Panics
+
 - If `key_len + key_ptr` exceeds the memory container or points to an unused register it panics with `MemoryAccessViolation`;
 - If the registers exceed the memory limit panics with `MemoryAccessViolation`;
 - If returning the preempted value into the registers exceed the memory container it panics with `MemoryAccessViolation`;
 
 
 ###### Current bugs
+
 - Does not return into the registers.
 
 ---
@@ -185,10 +204,12 @@ storage_has_key(key_len: u64, key_ptr: u64) -> u64
 Checks if there is a key-value pair.
 
 ###### Normal operation
+
 - If key is used returns `1`, even if the value is zero bytes;
 - Otherwise returns `0`.
 
 ###### Panics
+
 - If `key_len + key_ptr` exceeds the memory container it panics with `MemoryAccessViolation`;
 
 ---
@@ -202,10 +223,12 @@ Returns the identifier that uniquely differentiates the given iterator from othe
 created.
 
 ###### Normal operation
+
 - It iterates over the keys that have the provided prefix. The order of iteration is defined by the lexicographic
 order of the bytes in the keys. If there are no keys, it creates an empty iterator, see below on empty iterators;
 
 ###### Panics
+
 - If `prefix_len + prefix_ptr` exceeds the memory container it panics with `MemoryAccessViolation`;
 
 ---
@@ -225,6 +248,7 @@ Iterates over all key-values such that keys are between `start` and `end`, where
 Note, this definition allows for `start` or `end` keys to not actually exist on the given trie.
 
 ###### Panics
+
 - If `start_len + start_ptr` or `end_len + end_ptr` exceeds the memory container or points to an unused register it panics with `MemoryAccessViolation`;
 
 ---
@@ -236,12 +260,14 @@ storage_iter_next(iterator_id: u64, key_register_id: u64, value_register_id: u64
 Advances iterator and saves the next key and value in the register.
 
 ###### Normal operation
+
 - If iterator is not empty (after calling next it points to a key-value), copies the key into `key_register_id` and value into `value_register_id` and returns `1`;
 - If iterator is empty returns `0`.
 
 This allows us to iterate over the keys that have zero bytes stored in values.
 
 ###### Panics
+
 - If `key_register_id == value_register_id` panics with `MemoryAccessViolation`;
 - If the registers exceed the memory limit panics with `MemoryAccessViolation`;
 - If `iterator_id` does not correspond to an existing iterator panics with  `InvalidIteratorId`
@@ -249,6 +275,7 @@ This allows us to iterate over the keys that have zero bytes stored in values.
   `storage_write` or `storage_remove` the iterator is invalidated and the error message is `IteratorWasInvalidated`.
 
 ###### Current bugs
+
 - Not implemented, currently we have `storage_iter_next` and `data_read` + `DATA_TYPE_STORAGE_ITER` that together fulfill
 the purpose, but have unspecified behavior.
 
@@ -260,6 +287,7 @@ other important information like storage usage.
 
 Many of the below functions are currently implemented through `data_read` which allows to read generic context data.
 However, there is no reason to have `data_read` instead of the specific functions:
+
 - `data_read` does not solve forward compatibility. If later we want to add another context function, e.g. `executed_operations`
 we can just declare it as a new function, instead of encoding it as `DATA_TYPE_EXECUTED_OPERATIONS = 42` which is passed
 as the first argument to `data_read`;
@@ -279,6 +307,7 @@ current_account_id(register_id: u64)
 Saves the account id of the current contract that we execute into the register.
 
 ###### Panics
+
 - If the registers exceed the memory limit panics with `MemoryAccessViolation`;
 
 ---
@@ -291,12 +320,15 @@ All contract calls are a result of some transaction that was signed by some acco
 some access key and submitted into a memory pool (either through the wallet using RPC or by a node itself). This function returns the id of that account.
 
 ###### Normal operation
+
 - Saves the bytes of the signer account id into the register.
 
 ###### Panics
+
 - If the registers exceed the memory limit panics with `MemoryAccessViolation`;
 
 ###### Current bugs
+
 - Currently we conflate `originator_id` and `sender_id` in our code base.
 
 ---
@@ -310,10 +342,12 @@ In rare situations smart contract might want to know the exact access key that w
 e.g. to increase the allowance or manipulate with the public key.
 
 ###### Panics
+
 - If the registers exceed the memory limit panics with `MemoryAccessViolation`;
 
 
 ###### Current bugs
+
 - Not implemented.
 
 ---
@@ -326,12 +360,15 @@ All contract calls are a result of a receipt, this receipt might be created by a
 that does function invocation on the contract or another contract as a result of cross-contract call.
 
 ###### Normal operation
+
 - Saves the bytes of the predecessor account id into the register.
 
 ###### Panics
+
 - If the registers exceed the memory limit panics with `MemoryAccessViolation`;
 
 ###### Current bugs
+
 - Not implemented.
 
 ---
@@ -343,17 +380,21 @@ input(register_id: u64)
 Reads input to the contract call into the register. Input is expected to be in JSON-format.
 
 ###### Normal operation
+
 - If input is provided saves the bytes (potentially zero) of input into register.
 - If input is not provided does not modify the register.
 
 ###### Returns
+
 - If input was not provided returns `0`;
 - If input was provided returns `1`; If input is zero bytes returns `1`, too.
 
 ###### Panics
+
 - If the registers exceed the memory limit panics with `MemoryAccessViolation`;
 
 ###### Current bugs
+
 - Implemented as part of `data_read`. However there is no reason to have one unified function, like `data_read` that can
 be used to read all
 
@@ -373,6 +414,7 @@ storage_usage() -> u64
 
 Returns the number of bytes used by the contract if it was saved to the trie as of the
 invocation. This includes:
+
 - The data written with `storage_*` functions during current and previous execution;
 - The bytes needed to store the account protobuf and the access keys of the given account.
 
@@ -381,6 +423,7 @@ invocation. This includes:
 Accounts own certain balance; and each transaction and each receipt have certain amount of balance and prepaid gas
 attached to them.
 During the contract execution, the contract has access to the following `u128` values:
+
 - `account_balance` -- the balance attached to the given account. This includes the `attached_deposit` that was attached
   to the transaction;
 - `attached_deposit` -- the balance that was attached to the call that will be immediately deposited before
@@ -402,9 +445,11 @@ attached_deposit(balance_ptr: u64)
  -- writes the value into the `u128` variable pointed by `balance_ptr`.
 
 ###### Panics
+
 - If `balance_ptr + 16` points outside the memory of the guest with `MemoryAccessViolation`;
 
 ###### Current bugs
+
 - Use a different name;
 
 ---
@@ -423,6 +468,7 @@ random_seed(register_id: u64)
 Returns random seed that can be used for pseudo-random number generation in deterministic way.
 
 ###### Panics
+
 - If the size of the registers exceed the set limit `MemoryAccessViolation`;
 
 ---
@@ -434,9 +480,11 @@ sha256(value_len: u64, value_ptr: u64, register_id: u64)
 Hashes the random sequence of bytes using sha256 and returns it into `register_id`.
 
 ###### Panics
+
 - If `value_len + value_ptr` points outside the memory or the registers use more memory than the limit with `MemoryAccessViolation`.
 
 ###### Current bugs
+
 - Current name `hash` is not specific to what hash is being used.
 - We have `hash32` that largely duplicates the mechanics of `hash` because it returns the first 4 bytes only.
 
@@ -451,6 +499,7 @@ check_ethash(block_number_ptr: u64,
 ```
 
 -- verifies hash of the header that we created using [Ethash](https://en.wikipedia.org/wiki/Ethash). Parameters are:
+
 - `block_number` -- `u256`/`[u64; 4]`, number of the block on Ethereum blockchain. We use the pointer to the slice of 32 bytes on guest memory;
 - `header_hash` -- `h256`/`[u8; 32]`, hash of the header on Ethereum blockchain. We use the pointer to the slice of 32 bytes on guest memory;
 - `nonce` -- `u64`/`h64`/`[u8; 8]`, nonce that was used to find the correct hash, passed as `u64` without pointers;
@@ -458,13 +507,16 @@ check_ethash(block_number_ptr: u64,
 - `difficulty` -- `u256`/`[u64; 4]`, the difficulty of mining the block. We use the pointer to the slice of 32 bytes on guest memory;
 
 ###### Returns
+
 - `1` if the Ethash is valid;
 - `0` otherwise.
 
 ###### Panics
+
 - If `block_number_ptr + 32` or `header_hash_ptr + 32` or `mix_hash_ptr + 32` or `difficulty_ptr + 32` point outside the memory or registers use more memory than the limit with `MemoryAccessViolation`.
 
 ###### Current bugs
+
 - `block_number` and `difficulty` are currently exposed as `u64` which are casted to `u256` which breaks Ethereum compatibility;
 - Currently, we also pass the length together with `header_hash_ptr` and `mix_hash_ptr` which is not necessary since
 we know their length.
@@ -486,10 +538,12 @@ Creates a promise that will execute a method on account with given arguments and
 `amount_ptr` point to slices of bytes representing `u128`.
 
 ###### Panics
+
 - If `account_id_len + account_id_ptr` or `method_name_len + method_name_ptr` or `arguments_len + arguments_ptr`
 or `amount_ptr + 16` points outside the memory of the guest or host, with `MemoryAccessViolation`.
 
 ###### Returns
+
 - Index of the new promise that uniquely identifies it within the current execution of the method.
 
 ---
@@ -509,11 +563,13 @@ promise_then(promise_idx: u64,
 Attaches the callback that is executed after promise pointed by `promise_idx` is complete.
 
 ###### Panics
+
 - If `promise_idx` does not correspond to an existing promise panics with `InvalidPromiseIndex`.
 - If `account_id_len + account_id_ptr` or `method_name_len + method_name_ptr` or `arguments_len + arguments_ptr`
 or `amount_ptr + 16` points outside the memory of the guest or host, with `MemoryAccessViolation`.
 
 ###### Returns
+
 - Index of the new promise that uniquely identifies it within the current execution of the method.
 
 ---
@@ -527,10 +583,12 @@ Creates a new promise which completes when time all promises passed as arguments
 The array contains indices of promises that need to be waited on jointly.
 
 ###### Panics
+
 - If `promise_ids_ptr + 8 * promise_idx_count` extend outside the guest memory with `MemoryAccessViolation`;
 - If any of the promises in the array do not correspond to existing promises panics with `InvalidPromiseIndex`.
 
 ###### Returns
+
 - Index of the new promise that uniquely identifies it within the current execution of the method.
 
 ---
@@ -545,6 +603,7 @@ caused the callback. This function returns the number of complete and incomplete
 Note, we are only going to have incomplete callbacks once we have `promise_or` combinator.
 
 ###### Normal execution
+
 - If there is only one callback `promise_results_count()` returns `1`;
 - If there are multiple callbacks (e.g. created through `promise_and`) `promise_results_count()` returns their number.
 - If the function was called not through the callback `promise_results_count()` returns `0`.
@@ -560,19 +619,23 @@ If the current function is invoked by a callback we can access the execution res
 caused the callback. This function returns the result in blob format and places it into the register.
 
 ###### Normal execution
+
 - If promise result is complete and successful copies its blob into the register;
 - If promise result is complete and failed or incomplete keeps register unused;
 
 ###### Returns
+
 - If promise result is not complete returns `0`;
 - If promise result is complete and successful returns `1`;
 - If promise result is complete and failed returns `2`.
 
 ###### Panics
+
 - If `result_idx` does not correspond to an existing result panics with `InvalidResultIndex`.
 - If copying the blob exhausts the memory limit it panics with `MemoryAccessViolation`.
 
 ###### Current bugs
+
 - We currently have two separate functions to check for result completion and copy it.
 
 ---
@@ -584,9 +647,11 @@ promise_return(promise_idx: u64)
 When promise `promise_idx` finishes executing its result is considered to be the result of the current function.
 
 ###### Panics
+
 - If `promise_idx` does not correspond to an existing promise panics with `InvalidPromiseIndex`.
 
 ###### Current bugs
+
 - The current name `return_promise` is inconsistent with the naming convention of Promise API.
 
 ## Miscellaneous API
@@ -598,6 +663,7 @@ value_return(value_len: u64, value_ptr: u64)
 Sets the blob of data as the return value of the contract.
 
 ##### Panics
+
 - If `value_len + value_ptr` exceeds the memory container or points to an unused register it panics with `MemoryAccessViolation`;
 
 ---
@@ -622,6 +688,7 @@ that null termination is not defined through encoding.
 If `len == u64::MAX` then treats the string as null-terminated with character `'\0'`;
 
 ###### Panics
+
 - If string extends outside the memory of the guest with `MemoryAccessViolation`;
 
 ---
@@ -637,6 +704,7 @@ Logs the UTF-16 encoded string. `len` is the number of bytes in the string.
 If `len == u64::MAX` then treats the string as null-terminated with two-byte sequence of `0x00 0x00`.
 
 ###### Panics
+
 - If string extends outside the memory of the guest with `MemoryAccessViolation`;
 
 ---

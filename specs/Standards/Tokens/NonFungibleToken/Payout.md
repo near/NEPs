@@ -114,7 +114,7 @@ NFT and financial contracts vary in implementation. This means that some extra C
 
 ## Drawbacks
 
-There is an introduction of trust that the contract calling `nft_transfer_payout` will indeed pay out to all intended parties. However, since the calling contract will typically be something like a marketplace used by end users, malicious actors might be found out more easily and might have less incentive.  
+There is an introduction of trust that the contract calling `nft_transfer_payout` will indeed pay out to all intended parties. However, since the calling contract will typically be something like a marketplace used by end users, malicious actors might be found out more easily and might have less incentive.
 There is an assumption that NFT contracts will understand the limits of gas and not allow for a number of payouts that cannot be achieved.
 
 ## Future possibilities
