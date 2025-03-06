@@ -28,6 +28,7 @@ _type: [StorageUsageConfig](RuntimeFeeConfig/StorageUsageConfig.md)_
 Describes fees for storage rent
 
 ## burnt_gas_reward
+
 _type: [Fraction](RuntimeFeeConfig/Fraction.md)_
 
 Fraction of the burnt gas to reward to the contract account for execution.

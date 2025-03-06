@@ -17,6 +17,7 @@ equal to the maximum of the last three stakes and the highest proposal in the cu
 ### Returning stake
 
 `locked` is the number of tokens locked for staking, it's computed the following way:
+
 - initially it's the value in genesis or `0` for new accounts
 - on a staking proposal with a value higher than `locked`, it increases to that value
 - at the start of each epoch it's recomputed:

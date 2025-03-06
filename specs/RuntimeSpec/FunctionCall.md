@@ -104,26 +104,32 @@ error.
 #### Validation Error
 
 - If there is zero gas attached to the function call, a
+
   ```rust
   /// The attached amount of gas in a FunctionCall action has to be a positive number.
   FunctionCallZeroAttachedGas,
   ```
+
   error will be returned
 
 - If the length of the method name to be called exceeds `max_length_method_name`, a genesis
   parameter whose current value is `256`, a
+
   ```rust
   /// The length of the method name exceeded the limit in a Function Call action.
   FunctionCallMethodNameLengthExceeded { length: u64, limit: u64 }
   ```
+
   error is returned.
 
 - If the length of the argument to the function call exceeds `max_arguments_length`, a genesis
   parameter whose current value is `4194304` (4MB), a
+
   ```rust
   /// The length of the arguments exceeded the limit in a Function Call action.
   FunctionCallArgumentsLengthExceeded { length: u64, limit: u64 }
   ```
+
   error is returned.
 
 #### Execution Error
@@ -131,9 +137,10 @@ error.
 There are three types of errors which may occur when applying a function call action:
 `FunctionCallError`, `ExternalError`, and `StorageError`.
 
-* `FunctionCallError` includes everything from around the execution of the wasm binary,
+- `FunctionCallError` includes everything from around the execution of the wasm binary,
 from compiling wasm to native to traps occurred while executing the compiled native binary. More specifically,
 it includes the following errors:
+
   ```rust
   pub enum FunctionCallError {
       /// Wasm compilation error
@@ -150,10 +157,12 @@ it includes the following errors:
       HostError(HostError),
   }
   ```
+
 - `CompilationError` includes errors that can occur during the compilation of wasm binary.
 - `LinkError` is returned when wasmer runtime is unable to link the wasm module with provided imports.
 - `MethodResolveError` occurs when the method in the action cannot be found in the contract code.
 - `WasmTrap` error happens when a trap occurs during the execution of the binary. Traps here include
+
   ```rust
   pub enum WasmTrap {
       /// An `unreachable` opcode was executed.
@@ -176,6 +185,7 @@ it includes the following errors:
       GenericTrap,
   }
   ```
+
 - `WasmUnknownError` occurs when something inside wasmer goes wrong
 - `HostError` includes errors that might be returned during the execution of a host function. Those errors are
 
@@ -244,7 +254,7 @@ it includes the following errors:
   }
   ```
 
-* `ExternalError` includes errors that occur during the execution inside `External`, which is an interface between runtime
+- `ExternalError` includes errors that occur during the execution inside `External`, which is an interface between runtime
 and the rest of the system. The possible errors are:
 
   ```rust
@@ -257,4 +267,4 @@ and the rest of the system. The possible errors are:
   }
   ```
 
-* `StorageError` occurs when state or storage is corrupted.
+- `StorageError` occurs when state or storage is corrupted.

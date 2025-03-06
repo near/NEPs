@@ -134,6 +134,7 @@ At the end of every epoch `T`, next algorithm gets executed to determine validat
 Note: all calculations are done in Rational numbers.
 
 Total reward every epoch `t` is equal to:
+
 ```python
 total_reward[t] = floor(totalSupply * max_inflation_rate * num_blocks_per_year / epoch_length)
 ```
@@ -142,6 +143,7 @@ where `max_inflation_rate`, `num_blocks_per_year`, `epoch_length` are genesis pa
 taken from the last block in the epoch.
 
 After that a fraction of the reward goes to the treasury and the remaining amount will be used for computing validator rewards:
+
 ```python
 treasury_reward[t] = floor(reward[t] * protocol_reward_rate)
 validator_reward[t] = total_reward[t] - treasury_reward[t]
@@ -218,5 +220,6 @@ Contract account is rewarded with 30% of gas burnt during the execution of its f
 The reward is credited to the contract account after applying the corresponding receipt with [`FunctionCallAction`](../RuntimeSpec/Actions.md#functioncallaction), gas is converted to tokens using gas price of the current block.
 
 You can read more about:
+
 - [receipts execution](../RuntimeSpec/Receipts.md);
 - [runtime fees](../RuntimeSpec/Fees/Fees.md) with description [how gas is charged](../RuntimeSpec/Fees/Fees.md#gas-tracking).

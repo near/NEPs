@@ -19,6 +19,7 @@ NEAR and third-party applications need to track
 Note that applications, including NEAR Wallet, could require implementing additional methods to display tokens correctly such as [`mt_metadata`](Metadata.md) and [`mt_tokens_for_owner`](Enumeration.md).
 
 ## Interface
+
 Multi Token Events MUST have `standard` set to `"nep245"`, standard version set to `"1.0.0"`, `event` value is one of `mt_mint`, `mt_burn`, `mt_transfer`, and `data` must be of one of the following relavant types: `MtMintLog[] | MtBurnLog[] | MtTransferLog[]`:
 
 
@@ -172,6 +173,7 @@ EVENT_JSON:{
 ## Further methods
 
 Note that the example events covered above cover two different kinds of events:
+
 1. Events that are not specified in the MT Standard (`mt_mint`, `mt_burn`)
 2. An event that is covered in the [Multi Token Core Standard](Core.md). (`mt_transfer`)
 

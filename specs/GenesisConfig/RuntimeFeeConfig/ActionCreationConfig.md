@@ -48,7 +48,8 @@ _type: Fee_
 
 Base cost of staking.
 
-## add_key_cost:
+## add_key_cost
+
 _type: [AccessKeyCreationConfig](AccessKeyCreationConfig.md)_
 Base cost of adding a key.
 

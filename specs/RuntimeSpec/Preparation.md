@@ -15,7 +15,6 @@ as such.
 
 [function calls]: ./FunctionCall.md
 [`DeployContractAction`]: ./Actions.md#deploycontractaction
-[`FunctionCallAction`]: ./Actions.md#functioncallaction
 
 ## High level overview
 

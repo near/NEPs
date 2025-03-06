@@ -146,7 +146,7 @@ Iterates over all key-values such that keys are between `start` and `end`, where
 
 Note, this definition allows for `start` or `end` keys to not actually exist on the given trie.
 
-###### Panics:
+###### Panics
 
 - If `start_len + start_ptr` or `end_len + end_ptr` exceeds the memory container or points to an unused register it panics with `MemoryAccessViolation`;
 

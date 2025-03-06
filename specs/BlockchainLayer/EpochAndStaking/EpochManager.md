@@ -63,9 +63,11 @@ necessarily validators of `T+1`, but are kept in slashing sets due to the rule d
 2. `Unstaked`: accounts that remove their stake in epoch `T`, if their stake is non-zero for epoch `T+1`
 3. `NotEnoughBlocks/NotEnoughChunks`: For each validator compute the ratio of blocks produced to expected blocks produced (same with chunks produced/expected).
   If the percentage is below `block_producer_kickout_threshold` (`chunk_producer_kickout_threshold`), the validator is kicked out.
-  - Exception: If all validators of `T` are either in `kickout[T+1]` or to be kicked out, we don't kick out the
+
+- Exception: If all validators of `T` are either in `kickout[T+1]` or to be kicked out, we don't kick out the
     validator with the maximum number of blocks produced. If there are multiple, we choose the one with
     lowest validator id in the epoch.
+
 4. `NotEnoughStake`: computed after validator selection. Accounts who have stake in epoch `T+1`, but don't meet stake threshold for epoch `T+2`.
 5. `DidNotGetASeat`: computed after validator selection. Accounts who have stake in epoch `T+1`, meet stake threshold for epoch `T+2`, but didn't get any seats.
 

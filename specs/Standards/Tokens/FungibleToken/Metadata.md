@@ -5,7 +5,6 @@
 Version `1.0.0`
 
 ## Summary
-[summary]: #summary
 
 An interface for a fungible token's metadata. The goal is to keep the metadata future-proof as well as lightweight. This will be important to dApps needing additional information about an FT's properties, and broadly compatible with other tokens standards such that the [NEAR Rainbow Bridge](https://near.org/blog/eth-near-rainbow-bridge/) can move tokens between chains.
 
