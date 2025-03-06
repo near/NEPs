@@ -33,7 +33,7 @@ Metadata applies at both the class level (`MTBaseTokenMetadata`) and the specifi
 
 type MTContractMetadata = {
   spec: string, // required, essentially a version like "mt-1.0.0"
-  name: string, // required Zoink's Digitial Sword Collection
+  name: string, // required Zoink's Digital Sword Collection
 }
 
 type MTBaseTokenMetadata = {

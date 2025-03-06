@@ -38,7 +38,7 @@ The former is a protocol change and the latter only affects validators' internal
 ### Protocol Change
 Sharding config for an epoch will be encapsulated in a struct `ShardLayout`, which not only contains the number of shards, but also layout information to decide which account ids should be mapped to which shards. 
 The `ShardLayout` information will be stored as part of `EpochConfig`. 
-Right now, `EpochConfig` is stored in `EpochManager` and remains static accross epochs. 
+Right now, `EpochConfig` is stored in `EpochManager` and remains static across epochs. 
 That will be changed in the new implementation so that `EpochConfig` can be changed according to protocol versions, similar to how `RuntimeConfig` is implemented right now.
 
 The switch to Simple Nightshade will be implemented as a protocol upgrade.
@@ -57,9 +57,9 @@ We will discuss how the sharding transition will be managed in the next section.
 ### State Change
 In epoch T-1, the validators need to maintain two versions of states for all shards, one for the current epoch, one that is split for the next epoch.
 Currently, shards are identified by their `shard_id`, which is a number ranging from `0` to `NUM_SHARDS-1`.`shard_id` is also used as part of the indexing keys by which trie nodes are stored in the database.
-However, when shards may change accross epochs, `shard_id` can no longer be used to uniquely identify states because new shards and old shards will share the same `shard_id`s under this representation.
+However, when shards may change across epochs, `shard_id` can no longer be used to uniquely identify states because new shards and old shards will share the same `shard_id`s under this representation.
 
-To solve this issue, the new proposal creates a new struct `ShardUId` as an unique identifier to reference shards accross epochs. 
+To solve this issue, the new proposal creates a new struct `ShardUId` as an unique identifier to reference shards across epochs. 
 `ShardUId` will only be used for storing and managing states, for example, in `Trie` related structures, 
 In most other places in the code, it is clear which epoch the referenced shard belongs, and `ShardId` is enough to identify the shard. 
 There will be no change in the protocol level since `ShardId` will continue to be used in protocol level specs.
@@ -72,7 +72,7 @@ pub struct ShardUId {
 }
 ```
 The version number is different between different shard layouts, to ensure `ShardUId`s for shards from different epochs are different.
-`EpochManager` will be responsible for managing shard versions and `ShardUId` accross epochs.
+`EpochManager` will be responsible for managing shard versions and `ShardUId` across epochs.
 
 ## Build New States
 Currently, when receiving the first block of every epoch, validators start downloading states to prepare for the next epoch.
@@ -140,11 +140,11 @@ maps account id to shard id given a shard layout
 #### `ShardLayoutV0`
 ```rust
 pub struct ShardLayoutV0 {
-    /// map accounts evenly accross all shards
+    /// map accounts evenly across all shards
     num_shards: NumShards,
 }
 ```
-A shard layout that maps accounts evenly accross all shards -- by calculate the hash of account id and mod number of shards. This is added to capture the current `account_id_to_shard_id` algorithm, to keep backward compatibility for some existing tests. `parent_shards` for `ShardLayoutV1` is always `None` and `version`is always `0`.
+A shard layout that maps accounts evenly across all shards -- by calculate the hash of account id and mod number of shards. This is added to capture the current `account_id_to_shard_id` algorithm, to keep backward compatibility for some existing tests. `parent_shards` for `ShardLayoutV1` is always `None` and `version`is always `0`.
 
 #### `ShardLayoutV1`
 ```rust
@@ -189,7 +189,7 @@ pub fn for_protocol_version(&self, protocol_version: ProtocolVersion) -> &Arc<Ep
 returns `EpochConfig` according to the given protocol version. `EpochManager` will call this function for every new epoch.
 
 ### `EpochManager`
-`EpochManager` will be responsible for managing `ShardLayout` accross epochs. As we mentioned, `EpochManager` stores an instance of `AllEpochConfig`, so it can returns the `ShardLayout` for each epoch. 
+`EpochManager` will be responsible for managing `ShardLayout` across epochs. As we mentioned, `EpochManager` stores an instance of `AllEpochConfig`, so it can returns the `ShardLayout` for each epoch. 
 
 ####  `get_shard_layout`
 ```rust
@@ -216,7 +216,7 @@ The following database columns are stored with `ShardId` as part of the database
 - ColTrieChanges
 
 #### `TrieCachingStorage`
-Trie storage will contruct database key from `ShardUId` and hash of the trie node.
+Trie storage will construct database key from `ShardUId` and hash of the trie node.
 ##### `get_shard_uid_and_hash_from_key`
 ```rust
 fn get_shard_uid_and_hash_from_key(key: &[u8]) -> Result<(ShardUId, CryptoHash), std::io::Error>
@@ -353,7 +353,7 @@ However, the implementation of those approaches are overly complicated and does 
 - What parts of the design do you expect to resolve through the implementation of this feature before stabilization?
   - There might be small changes in the detailed implementations or specifications of some of the functions described above, but the overall structure will not be changed.
 - What related issues do you consider out of scope for this NEP that could be addressed in the future independently of the solution that comes out of this NEP?
-  - One issue that is related to this NEP but will be resolved indepdently is how trie nodes are stored in the database.
+  - One issue that is related to this NEP but will be resolved independently is how trie nodes are stored in the database.
     Right now, it is a combination of `shard_id` and the node hash.
     Part of the change proposed in this NEP regarding `ShardId` is because of this.
     Plans on how to only store the node hash as keys are being discussed [here](https://github.com/near/nearcore/issues/4527), but it will happen after the Simple Nightshade migration since completely solving the issue will take some careful design and we want to prioritize launching Simple Nightshade for now.
