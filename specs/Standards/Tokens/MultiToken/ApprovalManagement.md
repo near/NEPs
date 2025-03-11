@@ -62,25 +62,30 @@ Alice approves Bob to transfer her tokens.
 
 1. Alice calls `mt::mt_approve({ "token_ids": ["1","2"], amounts:["1","100"], "account_id": "bob" })`. She attaches 1 yoctoⓃ, (.000000000000000000000001Ⓝ). Using [NEAR CLI](https://docs.near.org/tools/near-cli) to make this call, the command would be:
 
-```bash
-near call mt mt_approve \
-    '\{ "token_ids": ["1","2"], amounts: ["1","100"], "account_id": "bob" }' \
-    --accountId alice --amount .000000000000000000000001
-```
+    ```bash
+    near call mt mt_approve \
+        '\{ "token_ids": ["1","2"], amounts: ["1","100"], "account_id": "bob" }' \
+        --accountId alice --amount .000000000000000000000001
+    ```
 
-   The response:
+    The response:
 
-       ''
+    ```bash
+    ''
+    ```
+
 2. Alice calls view method `mt_is_approved`:
 
-```bash
-near view mt mt_is_approved \
-    '\{ "token_ids": ["1", "2"], amounts:["1","100"], "approved_account_id": "bob" }'
-```
+    ```bash
+    near view mt mt_is_approved \
+        '\{ "token_ids": ["1", "2"], amounts:["1","100"], "approved_account_id": "bob" }'
+    ```
 
-   The response:
+    The response:
 
-       true
+    ```bash
+    true
+    ```
 
 ### 2. Approval with cross-contract call
 
@@ -96,28 +101,28 @@ Alice approves Market to transfer some of her tokens and passes `msg` so that MT
 
 1. Using near-cli:
 
-```bash
-near call mt mt_approve '\{
-    "token_ids": ["1","2"],
-    "amounts": ["1", "100"],
-    "account_id": "market",
-    "msg": "\{\"action\": \"list\", \"price\": [\"100\",\"50\"],\"token\": \"nDAI\" }"
-}' --accountId alice --amount .000000000000000000000001
-```
+    ```bash
+    near call mt mt_approve '\{
+        "token_ids": ["1","2"],
+        "amounts": ["1", "100"],
+        "account_id": "market",
+        "msg": "\{\"action\": \"list\", \"price\": [\"100\",\"50\"],\"token\": \"nDAI\" }"
+    }' --accountId alice --amount .000000000000000000000001
+    ```
 
-   At this point, near-cli will hang until the cross-contract call chain fully resolves, which would also be true if Alice used a Market frontend using [near-api](https://docs.near.org/tools/near-api). Alice's part is done, though. The rest happens behind the scenes.
+    At this point, near-cli will hang until the cross-contract call chain fully resolves, which would also be true if Alice used a Market frontend using [near-api](https://docs.near.org/tools/near-api). Alice's part is done, though. The rest happens behind the scenes.
 
 2. `mt` schedules a call to `mt_on_approve` on `market`. Using near-cli notation for easy cross-reference with the above, this would look like:
 
-```bash
-near call market mt_on_approve '\{
-    "token_ids": ["1","2"],
-    "amounts": ["1","100"],
-    "owner_id": "alice",
-    "approval_ids": ["4","5"],
-    "msg": "\{\"action\": \"list\", \"price\": [\"100\",\"50\"], \"token\": \"nDAI\" }"
-}' --accountId mt
-```
+    ```bash
+    near call market mt_on_approve '\{
+        "token_ids": ["1","2"],
+        "amounts": ["1","100"],
+        "owner_id": "alice",
+        "approval_ids": ["4","5"],
+        "msg": "\{\"action\": \"list\", \"price\": [\"100\",\"50\"], \"token\": \"nDAI\" }"
+    }' --accountId mt
+    ```
 
 3. `market` now knows that it can sell Alice's tokens for 100 [nDAI](https://explorer.mainnet.near.org/accounts/6b175474e89094c44da98b954eedeac495271d0f.factory.bridge.near) and 50 [nDAI](https://explorer.mainnet.near.org/accounts/6b175474e89094c44da98b954eedeac495271d0f.factory.bridge.near), and that when it transfers it to a buyer using `mt_batch_transfer`, it can pass along the given `approval_ids` to ensure that Alice hasn't changed her mind. It can schedule any further cross-contract calls it wants, and if it returns these promises correctly, Alice's initial near-cli call will resolve with the outcome from the final step in the chain. If Alice actually made this call from a Market frontend, the frontend can use this return value for something useful.
 
@@ -138,39 +143,41 @@ Not to worry, though, she checks `mt_is_approved` and sees that she did successf
 
 1. Using near-cli:
 
-```bash
-near call mt mt_approve '\{
-    "token_ids": ["1"],
-    "amounts: ["1000"],
-    "account_id": "bazaar",
-    "msg": "\{\"action\": \"list\", \"price\": \"100\", \"token\": \"nDAI\" }"
-}' --accountId alice --amount .000000000000000000000001
-```
+    ```bash
+    near call mt mt_approve '\{
+        "token_ids": ["1"],
+        "amounts: ["1000"],
+        "account_id": "bazaar",
+        "msg": "\{\"action\": \"list\", \"price\": \"100\", \"token\": \"nDAI\" }"
+    }' --accountId alice --amount .000000000000000000000001
+    ```
 
 2. `mt` schedules a call to `mt_on_approve` on `market`. Using near-cli notation for easy cross-reference with the above, this would look like:
 
-```bash
-near call bazaar mt_on_approve '\{
-    "token_ids": ["1"],
-    "amounts": ["1000"],
-    "owner_id": "alice",
-    "approval_ids": [3],
-    "msg": "\{\"action\": \"list\", \"price\": \"100\", \"token\": \"nDAI\" }"
-}' --accountId mt
-```
+    ```bash
+    near call bazaar mt_on_approve '\{
+        "token_ids": ["1"],
+        "amounts": ["1000"],
+        "owner_id": "alice",
+        "approval_ids": [3],
+        "msg": "\{\"action\": \"list\", \"price\": \"100\", \"token\": \"nDAI\" }"
+    }' --accountId mt
+    ```
 
 3. 💥 `bazaar` doesn't implement this method, so the call results in an error. Alice sees this error in the output from near-cli.
 
 4. Alice checks if the approval itself worked, despite the error on the cross-contract call:
 
-```bash
-near view mt mt_is_approved \
-    '{ "token_ids": ["1","2"], "amounts":["1","100"], "approved_account_id": "bazaar" }'
-```
+    ```bash
+    near view mt mt_is_approved \
+        '{ "token_ids": ["1","2"], "amounts":["1","100"], "approved_account_id": "bazaar" }'
+    ```
 
-   The response:
+    The response:
 
-       true
+    ```bash
+    true
+    ```
 
 ### 4. Approval IDs
 
@@ -184,14 +191,14 @@ Bob buys Alice's token via Market. Bob probably does this via Market's frontend,
 
 Using near-cli notation for consistency:
 
-```bash
-near call mt mt_transfer '{
-    "receiver_id": "bob",
-    "token_id": "1",
-    "amount": "1",
-    "approval_id": 2,
-}' --accountId market --amount .000000000000000000000001
-```
+    ```bash
+    near call mt mt_transfer '{
+        "receiver_id": "bob",
+        "token_id": "1",
+        "amount": "1",
+        "approval_id": 2,
+    }' --accountId market --amount .000000000000000000000001
+    ```
 
 ### 5. Approval IDs, edge case
 

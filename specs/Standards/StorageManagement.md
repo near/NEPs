@@ -69,34 +69,37 @@ Let's follow two users, Alice with account `alice` and Bob with account `bob`, a
 
 1. Alice queries a view-only method to determine if she already has storage on this contract with `ft::storage_balance_of({"account_id": "alice"})`. Using [NEAR CLI](https://docs.near.org/tools/near-cli) to make this view call, the command would be:
 
-```bash
-near view ft storage_balance_of '\{"account_id": "alice"}'
-```
+    ```bash
+    near view ft storage_balance_of '\{"account_id": "alice"}'
+    ```
 
-   The response:
+    The response:
 
-       null
+    ```bash
+    null
+    ```
 
 2. Alice uses [NEAR CLI](https://docs.near.org/docs/tools/near-cli) to make a view call.
 
-```bash
-near view ft storage_balance_bounds
-```
+    ```bash
+    near view ft storage_balance_bounds
+    ```
 
-   As mentioned above, this will show that both `min` and `max` are both 2350000000000000000000 yoctoⓃ.
-
+  As mentioned above, this will show that both `min` and `max` are both 2350000000000000000000 yoctoⓃ.
 3. Alice converts this yoctoⓃ amount to 0.00235 Ⓝ, then calls `ft::storage_deposit` with this attached deposit. Using NEAR CLI:
 
-       near call ft storage_deposit '' \
-         --accountId alice --amount 0.00235
+    ```bash
+    near call ft storage_deposit '' --accountId alice --amount 0.00235
+    ```
 
-   The result:
+    The response:
 
-       \{
-         total: "2350000000000000000000",
-         available: "0"
-       }
-
+    ```json
+    {
+      total: "2350000000000000000000",
+      available: "0"
+    }
+    ```
 
 #### 2. Account pays for another account's storage
 
@@ -110,33 +113,37 @@ Alice issues a transaction to deposit Ⓝ for Bob's account.
 
 Alice calls `ft::storage_deposit({"account_id": "bob"})` with the attached deposit of '0.00235'. Using NEAR CLI the command would be:
 
-```bash
+    ```bash
     near call ft storage_deposit '\{"account_id": "bob"}' \
-      --accountId alice --amount 0.00235
-```
+        --accountId alice --amount 0.00235
+    ```
 
-The result:
+    The response:
 
-    \{
+    ```json
+    {
       total: "2350000000000000000000",
       available: "0"
     }
+    ```
 
 #### 3. Unnecessary attempt to register already-registered account
 
 Alice accidentally makes the same call again, and even misses a leading zero in her deposit amount.
 
-```bash
-    near call ft storage_deposit '\{"account_id": "bob"}' \
-      --accountId alice --amount 0.0235
-```
+    ```bash
+        near call ft storage_deposit '\{"account_id": "bob"}' \
+          --accountId alice --amount 0.0235
+    ```
 
-The result:
+    The response:
 
-    \{
+    ```json
+    {
       total: "2350000000000000000000",
       available: "0"
     }
+    ```
 
 Additionally, Alice will be refunded the 0.0235Ⓝ she attached, because the `storage_deposit_bounds.max` specifies that Bob's account cannot have a total balance larger than 0.00235Ⓝ.
 
@@ -152,14 +159,16 @@ Alice issues a transaction to unregister her account and recover the Ⓝ from he
 
 Alice calls `ft::storage_unregister({"force": true})` with a 1 yoctoⓃ deposit. Using NEAR CLI the command would be:
 
-```bash
+    ```bash
     near call ft storage_unregister '\{ "force": true }' \
-      --accountId alice --depositYocto 1
-```
+        --accountId alice --depositYocto 1
+    ```
 
-The result:
+    The response:
 
-    true
+    ```bash
+      true
+    ```
 
 #### 5. Account gracefully closes registration
 
@@ -175,10 +184,9 @@ Bob wants to close his account, but has a non-zero balance of `ft` tokens.
 
 1. Bob calls `ft::storage_unregister()` with a 1 yoctoⓃ deposit. Using NEAR CLI the command would be:
 
-```bash
-    near call ft storage_unregister '' \
-        --accountId bob --depositYocto 1
-```
+    ```bash
+    near call ft storage_unregister '' --accountId bob --depositYocto 1
+    ```
 
    It fails with a message like "Cannot gracefully close account with positive remaining balance; bob has balance N"
 
@@ -216,16 +224,18 @@ Alice issues a transaction to deposit Ⓝ for her account. While the `storage_ba
 
 Using NEAR CLI:
 
-```bash
+    ```bash
     near call social storage_deposit '' --accountId alice --amount 0.1
-```
+    ```
 
-The result:
+    The response:
 
-    \{
+    ```json
+    {
       total: '100000000000000000000000',
       available: '97650000000000000000000'
     }
+    ```
 
 Here we see that she has deposited 0.1Ⓝ and that 0.00235 of it has been used to register her account, and is therefore locked by the contract. The rest is available to facilitate interaction with the contract, but could also be withdrawn by Alice by using `storage_withdraw`.
 
@@ -239,16 +249,18 @@ Alice can't remember if she already registered and re-sends the call, using the 
 
 Using NEAR CLI:
 
-```bash
+    ```bash
     near call social storage_deposit '\{"registration_only": true}' --accountId alice --amount 0.1
-```
+    ```
 
-The result:
+    The response:
 
-    \{
+    ```json
+    {
       total: '100000000000000000000000',
       available: '97650000000000000000000'
     }
+    ```
 
 Additionally, Alice will be refunded the extra 0.1Ⓝ that she just attached. This makes it easy for other contracts to always attempt to register users while performing batch transactions without worrying about errors or lost deposits.
 
@@ -272,16 +284,18 @@ Note that applications will probably want to avoid this situation in the first p
 
 2. Alice deposits the proper amount in a transaction by calling `social::storage_deposit` with the attached deposit of '0.1'. Using NEAR CLI:
 
-```bash
+    ```bash
     near call social storage_deposit '' --accountId alice --amount 0.1
-```
+    ```
 
-   The result:
+    The response:
 
-       \{
-         total: '200000000000000000000000',
-         available: '100100000000000000000000'
-       }
+    ```json
+    {
+      total: '200000000000000000000000',
+      available: '100100000000000000000000'
+    }
+    ```
 
 3. Alice tries the initial `near call social post` call again. It works.
 
@@ -298,31 +312,35 @@ Assumption: Alice has more deposited than she is using.
 
 1. Alice queries `social::storage_balance_of({ "account_id": "alice" })`. With NEAR CLI:
 
-```bash
+    ```bash
     near view social storage_balance_of '{"account_id": "alice"}'
-```
+    ```
 
-   Response:
+    The response:
 
-       \{
-         total: '200000000000000000000000',
-         available: '100100000000000000000000'
-       }
+    ```json
+    {
+      total: '200000000000000000000000',
+      available: '100100000000000000000000'
+    }
+    ```
 
 2. Alice calls `storage_withdraw` with a 1 yoctoⓃ deposit. NEAR CLI command:
 
-```bash
+    ```bash
     near call social storage_withdraw \
         '\{"amount": "100100000000000000000000"}' \
         --accountId alice --depositYocto 1
-```
+    ```
 
-   Result:
+    The response:
 
-       \{
-         total: '200000000000000000000000',
-         available: '0'
-       }
+    ```json
+    {
+      total: '200000000000000000000000',
+      available: '0'
+    }
+    ```
 
 ## Reference-level explanation
 
