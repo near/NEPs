@@ -154,6 +154,7 @@ EVENT_JSON:{
 ## Events for Other NFT Methods
 
 Note that the example events above cover two different kinds of events:
+
 1. Events that do not have a dedicated trigger function in the NFT Standard (`nft_mint`, `nft_burn`, `contract_metadata_update`)
 2. An event that has a relevant trigger function [NFT Core Standard](Core.md#nft-interface) (`nft_transfer`)
 

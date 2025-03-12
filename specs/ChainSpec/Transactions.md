@@ -39,8 +39,9 @@ This is done to quickly filter out transactions that have an invalid signature o
 ### Before adding to a chunk
 
 A chunk producer has to create a chunk with valid and ordered transactions limited by two criteria:
- - the maximum number of transactions for a chunk. 
- - the total gas burnt for transactions within a chunk.
+
+- the maximum number of transactions for a chunk. 
+- the total gas burnt for transactions within a chunk.
 
 To order and filter transactions, the chunk producer gets a pool iterator and passes it to the runtime adapter.
 The runtime adapter pulls transactions one by one.
@@ -74,7 +75,7 @@ while let Some(group_iter) = pool_iter.next() {
 valid_transactions
 ```
 
-### Transaction ordering example using pool iterator.
+### Transaction ordering example using pool iterator
 
 Let's say:
 

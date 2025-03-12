@@ -14,8 +14,7 @@ portions of this book is maintained. The non-normative portions of this document
 as such.
 
 [function calls]: ./FunctionCall.md
-[`DeployContractAction`]: ./Actions.md#DeployContractAction
-[`FunctionCallAction`]: ./Actions.md#FunctionCallAction
+[`DeployContractAction`]: ./Actions.md#deploycontractaction
 
 ## High level overview
 
