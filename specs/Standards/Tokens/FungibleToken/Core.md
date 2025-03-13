@@ -139,7 +139,7 @@ Alice wants to swap 5 wrapped NEAR (wNEAR) for BNNA tokens at current market rat
 
 ##### High-level explanation
 
-Alice needs to issue one transaction to wNEAR contract to transfer 5 tokens (multiplied by precision) to `amm`, specifying her desired action (swap), her destination token (BNNA) & maximum slippage (<2%) in `msg`.
+Alice needs to issue one transaction to wNEAR contract to transfer 5 tokens (multiplied by precision) to `amm`, specifying her desired action (swap), her destination token (BNNA) & maximum slippage (\<2%) in `msg`.
 
 Alice will probably make this call via a UI that knows how to construct `msg` in a way the `amm` contract will understand. However, it's possible that the `amm` contract itself may provide view functions which take desired action, destination token, & slippage as input and return data ready to pass to `msg` for `ft_transfer_call`. For the sake of this example, let's say `amm` implements a view function called `ft_data_to_msg`.
 

@@ -28,6 +28,7 @@ Prior art:
 - [ERC-1155]
 - [NEAR Fungible Token Standard][FT], which first pioneered the "transfer and call" technique
 - [NEAR Non-Fungible Token Standard][NFT]
+
 ## Rationale
 
 Why have another standard, aren't fungible and non-fungible tokens enough?  The current fungible token and non-fungible token standards, do not provide support for representing many FT tokens in a single contract, as well as the flexibility to define different token types with different behavior in a single contract. This is something that makes it difficult to be interoperable with other major blockchain networks, that implement standards that allow for representation of many different FT tokens in a single contract such as Ethereum.
@@ -47,6 +48,7 @@ To recap, we choose to create this standard, to improve interoperability, develo
 ## Reference-level explanation
 
 **NOTES**:
+
 - All amounts, balances and allowance are limited by `U128` (max value `2**128 - 1`).
 - Token standard uses JSON for serialization of arguments and results.
 - Amounts in arguments and results are serialized as Base-10 strings, e.g. `"100"`. This is done to avoid JSON limitation of max integer value of `2**53`.

@@ -27,11 +27,11 @@ Prior art:
 
 Let's consider some examples. Our cast of characters & apps:
 
-* Alice: has account `alice` with no contract deployed to it
-* Bob: has account `bob` with no contract deployed to it
-* NFT: a contract with account `nft`, implementing only the [Core NFT standard](Core.md) with this Approval Management extension
-* Market: a contract with account `market` which sells tokens from `nft` as well as other NFT contracts
-* Bazaar: similar to Market, but implemented differently (spoiler alert: has no `nft_on_approve` function!), has account `bazaar`
+- Alice: has account `alice` with no contract deployed to it
+- Bob: has account `bob` with no contract deployed to it
+- NFT: a contract with account `nft`, implementing only the [Core NFT standard](Core.md) with this Approval Management extension
+- Market: a contract with account `market` which sells tokens from `nft` as well as other NFT contracts
+- Bazaar: similar to Market, but implemented differently (spoiler alert: has no `nft_on_approve` function!), has account `bazaar`
 
 Alice and Bob are already [registered](../../StorageManagement.md) with NFT, Market, and Bazaar, and Alice owns a token on the NFT contract with ID=`"1"`.
 
@@ -49,13 +49,13 @@ Let's examine the technical calls through the following scenarios:
 
 Alice approves Bob to transfer her token.
 
-**High-level explanation**
+#### High-level explanation
 
 1. Alice approves Bob
 2. Alice queries the token to verify
 3. Alice verifies a different way
 
-**Technical calls**
+#### Technical calls
 
 1. Alice calls `nft::nft_approve({ "token_id": "1", "account_id": "bob" })`. She attaches 1 yoctoⓃ, (.000000000000000000000001Ⓝ). Using [NEAR CLI](https://docs.near.org/tools/near-cli) to make this call, the command would be:
 
@@ -103,13 +103,13 @@ Alice approves Bob to transfer her token.
 
 Alice approves Market to transfer one of her tokens and passes `msg` so that NFT will call `nft_on_approve` on Market's contract. She probably does this via Market's frontend app which would know how to construct `msg` in a useful way.
 
-**High-level explanation**
+#### High-level explanation
 
 1. Alice calls `nft_approve` to approve `market` to transfer her token, and passes a `msg`
 2. Since `msg` is included, `nft` will schedule a cross-contract call to `market`
 3. Market can do whatever it wants with this info, such as listing the token for sale at a given price. The result of this operation is returned as the promise outcome to the original `nft_approve` call.
 
-**Technical calls**
+#### Technical calls
 
 1. Using near-cli:
 
@@ -121,7 +121,7 @@ Alice approves Market to transfer one of her tokens and passes `msg` so that NFT
        }' --accountId alice --depositYocto 1
       ```
 
-   At this point, near-cli will hang until the cross-contract call chain fully resolves, which would also be true if Alice used a Market frontend using [near-api-js](https://docs.near.org/tools/near-api-js/quick-reference). Alice's part is done, though. The rest happens behind the scenes.
+   At this point, near-cli will hang until the cross-contract call chain fully resolves, which would also be true if Alice used a Market frontend using [near-api](https://docs.near.org/tools/near-api). Alice's part is done, though. The rest happens behind the scenes.
 
 2. `nft` schedules a call to `nft_on_approve` on `market`. Using near-cli notation for easy cross-reference with the above, this would look like:
 
@@ -142,14 +142,14 @@ Alice approves Bazaar and passes `msg` again. Maybe she actually does this via n
 
 Not to worry, though, she checks `nft_is_approved` and sees that she did successfully approve Bazaar, despite the error. She will have to find a new way to list her token for sale in Bazaar, rather than using the same `msg` shortcut that worked for Market.
 
-**High-level explanation**
+#### High-level explanation
 
 1. Alice calls `nft_approve` to approve `bazaar` to transfer her token, and passes a `msg`.
 2. Since `msg` is included, `nft` will schedule a cross-contract call to `bazaar`.
 3. Bazaar doesn't implement `nft_on_approve`, so this call results in an error. The approval still worked, but Alice sees an error in her near-cli output.
 4. Alice checks if `bazaar` is approved, and sees that it is, despite the error.
 
-**Technical calls**
+#### Technical calls
 
 1. Using near-cli:
 
@@ -189,11 +189,11 @@ Not to worry, though, she checks `nft_is_approved` and sees that she did success
 
 Bob buys Alice's token via Market. Bob probably does this via Market's frontend, which will probably initiate the transfer via a call to `ft_transfer_call` on the nDAI contract to transfer 100 nDAI to `market`. Like the NFT standard's "transfer and call" function, [Fungible Token](../FungibleToken/Core.md)'s `ft_transfer_call` takes a `msg` which `market` can use to pass along information it will need to pay Alice and actually transfer the NFT. The actual transfer of the NFT is the only part we care about here.
 
-**High-level explanation**
+#### High-level explanation
 
 1. Bob signs some transaction which results in the `market` contract calling `nft_transfer` on the `nft` contract, as described above. To be trustworthy and pass security audits, `market` needs to pass along `approval_id` so that it knows it has up-to-date information.
 
-**Technical calls**
+#### Technical calls
 
 Using near-cli notation for consistency:
 
@@ -209,11 +209,11 @@ Using near-cli notation for consistency:
 
 Bob transfers same token back to Alice, Alice re-approves Market & Bazaar, listing her token at a higher price than before. Bazaar is somehow unaware of these changes, and still stores `approval_id: 3` internally along with Alice's old price. Bob tries to buy from Bazaar at the old price. Like the previous example, this probably starts with a call to a different contract, which eventually results in a call to `nft_transfer` on `bazaar`. Let's consider a possible scenario from that point.
 
-**High-level explanation**
+#### High-level explanation
 
 Bob signs some transaction which results in the `bazaar` contract calling `nft_transfer` on the `nft` contract, as described above. To be trustworthy and pass security audits, `bazaar` needs to pass along `approval_id` so that it knows it has up-to-date information. It does not have up-to-date information, so the call fails. If the initial `nft_transfer` call is part of a call chain originating from a call to `ft_transfer_call` on a fungible token, Bob's payment will be refunded and no assets will change hands.
 
-**Technical calls**
+#### Technical calls
 
 Using near-cli notation for consistency:
 
@@ -229,7 +229,7 @@ Using near-cli notation for consistency:
 
 Alice revokes Market's approval for this token.
 
-**Technical calls**
+#### Technical calls
 
 Using near-cli:
 
@@ -246,7 +246,7 @@ Note that `market` will not get a cross-contract call in this case. The implemen
 
 Alice revokes all approval for this token.
 
-**Technical calls**
+#### Technical calls
 
 Using near-cli:
 
@@ -284,6 +284,7 @@ Example token data:
 ```
 
 In Rust, the standard library `HashMap` is the recommended type for the `approvals` field, though any `map` may be used.
+
 ```diff
  pub struct Token = {
    pub id: String,
@@ -482,4 +483,4 @@ NFT contracts should be implemented in a way to avoid extra gas fees for seriali
 
 ## Errata
 
-* **2022-02-03**: updated `Token` struct field names. `id` was changed to `token_id` and `approvals` was changed to `approved_account_ids`. This is to be consistent with current implementations of the standard and the rust SDK docs.
+- **2022-02-03**: updated `Token` struct field names. `id` was changed to `token_id` and `approvals` was changed to `approved_account_ids`. This is to be consistent with current implementations of the standard and the rust SDK docs.

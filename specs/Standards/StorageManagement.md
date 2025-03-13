@@ -59,76 +59,91 @@ Let's follow two users, Alice with account `alice` and Bob with account `bob`, a
 
 #### 1. Account pays own registration fee
 
-**High-level explanation**
+##### High-level explanation
 
 1. Alice checks if she is registered with the `ft` contract.
 2. Alice determines the needed registration fee to register with the `ft` contract.
 3. Alice issues a transaction to deposit Ⓝ for her account.
 
-**Technical calls**
+##### Technical calls
 
 1. Alice queries a view-only method to determine if she already has storage on this contract with `ft::storage_balance_of({"account_id": "alice"})`. Using [NEAR CLI](https://docs.near.org/tools/near-cli) to make this view call, the command would be:
 
-       near view ft storage_balance_of '{"account_id": "alice"}'
+    ```bash
+    near view ft storage_balance_of '\{"account_id": "alice"}'
+    ```
 
-   The response:
+    The response:
 
-       null
+    ```bash
+    null
+    ```
 
 2. Alice uses [NEAR CLI](https://docs.near.org/docs/tools/near-cli) to make a view call.
 
-       near view ft storage_balance_bounds
+    ```bash
+    near view ft storage_balance_bounds
+    ```
 
-   As mentioned above, this will show that both `min` and `max` are both 2350000000000000000000 yoctoⓃ.
-
+  As mentioned above, this will show that both `min` and `max` are both 2350000000000000000000 yoctoⓃ.
 3. Alice converts this yoctoⓃ amount to 0.00235 Ⓝ, then calls `ft::storage_deposit` with this attached deposit. Using NEAR CLI:
 
-       near call ft storage_deposit '' \
-         --accountId alice --amount 0.00235
+    ```bash
+    near call ft storage_deposit '' --accountId alice --amount 0.00235
+    ```
 
-   The result:
+    The response:
 
-       {
-         total: "2350000000000000000000",
-         available: "0"
-       }
-
+    ```json
+    {
+      total: "2350000000000000000000",
+      available: "0"
+    }
+    ```
 
 #### 2. Account pays for another account's storage
 
 Alice wishes to eventually send `ft` tokens to Bob who is not registered. She decides to pay for Bob's storage.
 
-**High-level explanation**
+##### High-level explanation
 
 Alice issues a transaction to deposit Ⓝ for Bob's account.
 
-**Technical calls**
+##### Technical calls
 
 Alice calls `ft::storage_deposit({"account_id": "bob"})` with the attached deposit of '0.00235'. Using NEAR CLI the command would be:
 
-    near call ft storage_deposit '{"account_id": "bob"}' \
-      --accountId alice --amount 0.00235
+    ```bash
+    near call ft storage_deposit '\{"account_id": "bob"}' \
+        --accountId alice --amount 0.00235
+    ```
 
-The result:
+    The response:
 
+    ```json
     {
       total: "2350000000000000000000",
       available: "0"
     }
+    ```
 
 #### 3. Unnecessary attempt to register already-registered account
 
 Alice accidentally makes the same call again, and even misses a leading zero in her deposit amount.
 
-    near call ft storage_deposit '{"account_id": "bob"}' \
-      --accountId alice --amount 0.0235
+    ```bash
+        near call ft storage_deposit '\{"account_id": "bob"}' \
+          --accountId alice --amount 0.0235
+    ```
 
-The result:
+    The response:
 
+    ```json
     {
       total: "2350000000000000000000",
       available: "0"
     }
+    ```
 
 Additionally, Alice will be refunded the 0.0235Ⓝ she attached, because the `storage_deposit_bounds.max` specifies that Bob's account cannot have a total balance larger than 0.00235Ⓝ.
 
@@ -136,37 +151,42 @@ Additionally, Alice will be refunded the 0.0235Ⓝ she attached, because the `st
 
 Alice decides she doesn't care about her `ft` tokens and wants to forcibly recover her registration fee. If the contract permits this operation, her remaining `ft` tokens will either be burned or transferred to another account, which she may or may not have the ability to specify prior to force-closing.
 
-**High-level explanation**
+##### High-level explanation
 
 Alice issues a transaction to unregister her account and recover the Ⓝ from her registration fee. She must attach 1 yoctoⓃ, expressed in Ⓝ as `.000000000000000000000001`.
 
-**Technical calls**
+##### Technical calls
 
 Alice calls `ft::storage_unregister({"force": true})` with a 1 yoctoⓃ deposit. Using NEAR CLI the command would be:
 
-    near call ft storage_unregister '{ "force": true }' \
-      --accountId alice --depositYocto 1
+    ```bash
+    near call ft storage_unregister '\{ "force": true }' \
+        --accountId alice --depositYocto 1
+    ```
 
-The result:
+    The response:
 
-    true
+    ```bash
+      true
+    ```
 
 #### 5. Account gracefully closes registration
 
 Bob wants to close his account, but has a non-zero balance of `ft` tokens.
 
-**High-level explanation**
+##### High-level explanation
 
 1. Bob tries to gracefully close his account, calling `storage_unregister()` without specifying `force=true`. This results in an intelligible error that tells him why his account can't yet be unregistered gracefully.
 2. Bob sends all of his `ft` tokens to a friend.
 3. Bob retries to gracefully close his account. It works.
 
-**Technical calls**
+##### Technical calls
 
 1. Bob calls `ft::storage_unregister()` with a 1 yoctoⓃ deposit. Using NEAR CLI the command would be:
 
-       near call ft storage_unregister '' \
-         --accountId bob --depositYocto 1
+    ```bash
+    near call ft storage_unregister '' --accountId bob --depositYocto 1
+    ```
 
    It fails with a message like "Cannot gracefully close account with positive remaining balance; bob has balance N"
 
@@ -196,45 +216,51 @@ Let's follow a user, Alice with account `alice`, as she interacts with `social` 
 
 #### 1. Account registers with `social`
 
-**High-level explanation**
+##### High-level explanation
 
 Alice issues a transaction to deposit Ⓝ for her account. While the `storage_balance_bounds.min` for this contract is 0.00235Ⓝ, the frontend she uses suggests adding 0.1Ⓝ, so that she can immediately start adding data to the app, rather than *only* registering.
 
-**Technical calls**
+##### Technical calls
 
 Using NEAR CLI:
 
-    near call social storage_deposit '' \
-      --accountId alice --amount 0.1
+    ```bash
+    near call social storage_deposit '' --accountId alice --amount 0.1
+    ```
 
-The result:
+    The response:
 
+    ```json
     {
       total: '100000000000000000000000',
       available: '97650000000000000000000'
     }
+    ```
 
 Here we see that she has deposited 0.1Ⓝ and that 0.00235 of it has been used to register her account, and is therefore locked by the contract. The rest is available to facilitate interaction with the contract, but could also be withdrawn by Alice by using `storage_withdraw`.
 
 #### 2. Unnecessary attempt to re-register using `registration_only` param
 
-**High-level explanation**
+##### High-level explanation
 
 Alice can't remember if she already registered and re-sends the call, using the `registration_only` param to ensure she doesn't attach another 0.1Ⓝ.
 
-**Technical calls**
+##### Technical calls
 
 Using NEAR CLI:
 
-    near call social storage_deposit '{"registration_only": true}' \
-      --accountId alice --amount 0.1
+    ```bash
+    near call social storage_deposit '\{"registration_only": true}' --accountId alice --amount 0.1
+    ```
 
-The result:
+    The response:
 
+    ```json
     {
       total: '100000000000000000000000',
       available: '97650000000000000000000'
     }
+    ```
 
 Additionally, Alice will be refunded the extra 0.1Ⓝ that she just attached. This makes it easy for other contracts to always attempt to register users while performing batch transactions without worrying about errors or lost deposits.
 
@@ -246,27 +272,30 @@ Assumption: `social` has a `post` function which allows creating a new post with
 
 Note that applications will probably want to avoid this situation in the first place by prompting users to top up storage deposits sufficiently before available balance runs out.
 
-**High-level explanation**
+##### High-level explanation
 
 1. Alice issues a transaction, let's say `social.post`, and it fails with an intelligible error message to tell her that she has an insufficient storage balance to cover the cost of the operation
 2. Alice issues a transaction to increase her storage balance
 3. Alice retries the initial transaction and it succeeds
 
-**Technical calls**
+##### Technical calls
 
 1. This is outside the scope of this spec, but let's say Alice calls `near call social post '{ "text": "very long message" }'`, and that this fails with a message saying something like "Insufficient storage deposit for transaction. Please call `storage_deposit` and attach at least 0.1 NEAR, then try again."
 
 2. Alice deposits the proper amount in a transaction by calling `social::storage_deposit` with the attached deposit of '0.1'. Using NEAR CLI:
 
-       near call social storage_deposit '' \
-         --accountId alice --amount 0.1
+    ```bash
+    near call social storage_deposit '' --accountId alice --amount 0.1
+    ```
 
-   The result:
+    The response:
 
-       {
-         total: '200000000000000000000000',
-         available: '100100000000000000000000'
-       }
+    ```json
+    {
+      total: '200000000000000000000000',
+      available: '100100000000000000000000'
+    }
+    ```
 
 3. Alice tries the initial `near call social post` call again. It works.
 
@@ -274,47 +303,55 @@ Note that applications will probably want to avoid this situation in the first p
 
 Assumption: Alice has more deposited than she is using.
 
-**High-level explanation**
+##### High-level explanation
 
 1. Alice views her storage balance and sees that she has extra.
 2. Alice withdraws her excess deposit.
 
-**Technical calls**
+##### Technical calls
 
 1. Alice queries `social::storage_balance_of({ "account_id": "alice" })`. With NEAR CLI:
 
-       near view social storage_balance_of '{"account_id": "alice"}'
+    ```bash
+    near view social storage_balance_of '{"account_id": "alice"}'
+    ```
 
-   Response:
+    The response:
 
-       {
-         total: '200000000000000000000000',
-         available: '100100000000000000000000'
-       }
+    ```json
+    {
+      total: '200000000000000000000000',
+      available: '100100000000000000000000'
+    }
+    ```
 
 2. Alice calls `storage_withdraw` with a 1 yoctoⓃ deposit. NEAR CLI command:
 
-       near call social storage_withdraw \
-         '{"amount": "100100000000000000000000"}' \
-         --accountId alice --depositYocto 1
+    ```bash
+    near call social storage_withdraw \
+        '\{"amount": "100100000000000000000000"}' \
+        --accountId alice --depositYocto 1
+    ```
 
-   Result:
+    The response:
 
-       {
-         total: '200000000000000000000000',
-         available: '0'
-       }
+    ```json
+    {
+      total: '200000000000000000000000',
+      available: '0'
+    }
+    ```
 
 ## Reference-level explanation
 
-**NOTES**:
+#### NOTES
 
 - All amounts, balances and allowance are limited by `U128` (max value 2<sup>128</sup> - 1).
 - This storage standard uses JSON for serialization of arguments and results.
 - Amounts in arguments and results are serialized as Base-10 strings, e.g. `"100"`. This is done to avoid JSON limitation of max integer value of 2<sup>53</sup>.
 - To prevent the deployed contract from being modified or deleted, it should not have any access keys on its account.
 
-**Interface**:
+##### Interface
 
 ```ts
 // The structure that will be returned for the methods:
