@@ -31,20 +31,11 @@ Regex for a full account ID, without checking for length:
 | Name | Value |
 | - | - |
 | REGISTRAR_ACCOUNT_ID | `registrar` |
-| MIN_ALLOWED_TOP_LEVEL_ACCOUNT_LENGTH | 32 |
 
 Top level account names (TLAs) are very valuable as they provide root of trust and discoverability for companies, applications and users.
-To allow for fair access to them, the top level account names that are shorter than `MIN_ALLOWED_TOP_LEVEL_ACCOUNT_LENGTH` characters going to be auctioned off.
+To allow for fair access to them, the top level account names are going to be auctioned off.
 
-Specifically, only `REGISTRAR_ACCOUNT_ID` account can create new top level accounts that are shorter than `MIN_ALLOWED_TOP_LEVEL_ACCOUNT_LENGTH` characters. `REGISTRAR_ACCOUNT_ID` implements standard Account Naming (link TODO) interface to allow create new accounts.
-
-```python
-def action_create_account(predecessor_id, account_id):
-    """Called on CreateAccount action in receipt."""
-    if len(account_id) < MIN_ALLOWED_TOP_LEVEL_ACCOUNT_LENGTH and predecessor_id != REGISTRAR_ACCOUNT_ID:
-        raise CreateAccountOnlyByRegistrar(account_id, REGISTRAR_ACCOUNT_ID, predecessor_id)
-    # Otherwise, create account with given `account_id`.
-```
+Specifically, only `REGISTRAR_ACCOUNT_ID` account can create new top level accounts (other than [implicit accounts](#implicit-accounts)). `REGISTRAR_ACCOUNT_ID` implements standard Account Naming (link TODO) interface to allow create new accounts.
 
 *Note: we are not going to deploy `registrar` auction at launch, instead allow to deploy it by Foundation after initial launch. The link to details of the auction will be added here in the next spec release post MainNet.*
 
