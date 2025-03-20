@@ -4,19 +4,16 @@
 - Issue(s): [near/NEPs#225](https://github.com/near/NEPs/issues/225) [near/nearcore#4419](https://github.com/near/nearcore/issues/4419)
 
 # Summary
-[summary]: #summary
 
 This proposal proposes a way to split each shard in the blockchain into multiple shards.
 
 Currently, the near blockchain only has one shard and it needs to be split into eight shards for Simple Nightshade.
 
 # Motivation
-[motivation]: #motivation
 
 To enable sharding, specifically, phase 0 of Simple Nightshade, we need to find a way to split the current one shard state into eight shards.
 
 # Guide-level explanation 
-[guide-level-explanation]: #guide-level-explanation
 
 The proposal assumes that all validators track all shards and that challenges are not enabled.
 
@@ -31,11 +28,13 @@ At the beginning of epoch T, the new validators start to build blocks based on t
 The change involves three parts.
 
 ## Dynamic Shards
+
 The first issue to address in splitting shards is the assumption that the current implementation of chain and runtime makes that the number of shards never changes.
 This in turn involves two parts, how the validators know when and how sharding changes happen and how they store states of shards from different epochs during the transition.
 The former is a protocol change and the latter only affects validators' internal states.
 
 ### Protocol Change
+
 Sharding config for an epoch will be encapsulated in a struct `ShardLayout`, which not only contains the number of shards, but also layout information to decide which account ids should be mapped to which shards. 
 The `ShardLayout` information will be stored as part of `EpochConfig`. 
 Right now, `EpochConfig` is stored in `EpochManager` and remains static accross epochs. 
@@ -55,6 +54,7 @@ To completely solve this issue will be a hard problem by itself, thus we do not 
 We will discuss how the sharding transition will be managed in the next section.
 
 ### State Change
+
 In epoch T-1, the validators need to maintain two versions of states for all shards, one for the current epoch, one that is split for the next epoch.
 Currently, shards are identified by their `shard_id`, which is a number ranging from `0` to `NUM_SHARDS-1`.`shard_id` is also used as part of the indexing keys by which trie nodes are stored in the database.
 However, when shards may change accross epochs, `shard_id` can no longer be used to uniquely identify states because new shards and old shards will share the same `shard_id`s under this representation.
@@ -65,21 +65,25 @@ In most other places in the code, it is clear which epoch the referenced shard b
 There will be no change in the protocol level since `ShardId` will continue to be used in protocol level specs.
 
 `ShardUId` contains a version number and the corresponding `shard_id`.
+
 ```rust
 pub struct ShardUId {
     version: u32,
     shard_id: u32,
 }
 ```
+
 The version number is different between different shard layouts, to ensure `ShardUId`s for shards from different epochs are different.
 `EpochManager` will be responsible for managing shard versions and `ShardUId` accross epochs.
 
 ## Build New States
+
 Currently, when receiving the first block of every epoch, validators start downloading states to prepare for the next epoch.
 We can modify this existing process to make the validators build states for the new shards after they finish downloading states for the existing shards.
 To build the new states, the validator iterates through all accounts in the current states and adds them to the new states one by one.
 
 ## Update States
+
 Similar to how validators usually catch up for the next epoch, the new states are updated as new blocks are processed.
 The difference is that in epoch T-1, chunks are still sharded by the current sharding assignment, but the validators need to perform updates on the new states.
 We cannot simply split transactions and receipts to the new shards and process updates on each new shard separately.
@@ -103,22 +107,28 @@ Therefore, the validators must still process transactions and receipts based on 
 After the processing is finished, they can take the generated state changes to apply to the new states.
 
 # Reference-level explanation
-[reference-level-explanation]: #reference-level-explanation
+
 ## Protocol-Level Shard Representation
+
 ### `ShardLayout`
+
 ```rust
 pub enum ShardLayout {
     V0(ShardLayoutV0),
     V1(ShardLayoutV1),
 }
 ```
+
 ShardLayout is a versioned struct that contains all information needed to decide which accounts belong to which shards. Note that `ShardLayout` only contains information at the protocol level, so it uses `ShardOrd` instead of `ShardId`. 
 
 The API contains the following two functions.
+
 #### `get_split_shards`
+
 ```
 pub fn get_split_shards(&self, parent_shard_id: ShardId) -> Option<&Vec<ShardId>>
 ```
+
 returns the children shards of shard `parent_shard_id` (we will explain parent-children shards shortly). Note that `parent_shard_id` is a shard from the last ShardLayout, not from `self`. The returned `ShardId` represents shard in the current shard layout.
 This information is needed for constructing states for the new shards.
 
@@ -126,27 +136,34 @@ We only allow adding new shards that are split from the existing shards. If shar
 For example, if epoch T-1 has a shard layout `shardlayout0` with two shards with `shard_ord` 0 and 1 and each of them will be split to two shards in `shardlayout1` in epoch T, then `shard_layout1.get_split_shards(0)` returns `[0,1]` and `shard_layout.get_split_shards(1)` returns `[2,3]`.
     
 #### `version`
+
 ```rust
 pub fn version(&self) -> ShardVersion
 ```
+
 returns the version number of this shard layout. This version number is used to create `ShardUId` for shards in this `ShardLayout`. The version numbers must be different for all shard layouts used in the blockchain.
 
 #### `account_id_to_shard_id`
+
 ```rust
 pub fn account_id_to_shard_id(account_id: &AccountId, shard_layout: ShardLayout) -> ShardId
 ```
+
 maps account id to shard id given a shard layout
 
 #### `ShardLayoutV0`
+
 ```rust
 pub struct ShardLayoutV0 {
     /// map accounts evenly accross all shards
     num_shards: NumShards,
 }
 ```
+
 A shard layout that maps accounts evenly accross all shards -- by calculate the hash of account id and mod number of shards. This is added to capture the current `account_id_to_shard_id` algorithm, to keep backward compatibility for some existing tests. `parent_shards` for `ShardLayoutV1` is always `None` and `version`is always `0`.
 
 #### `ShardLayoutV1`
+
 ```rust
 pub struct ShardLayoutV1 {
     /// num_shards = fixed_shards.len() + boundary_accounts.len() + 1
@@ -161,9 +178,11 @@ pub struct ShardLayoutV1 {
     version: ShardVersion,
 }
 ```
+
 A shard layout that consists some fixed shards each of which is mapped to a fixed account and other shards which are mapped to ranges of accounts. This will be the ShardLayout used by Simple Nightshade.
 
 ### `EpochConfig`
+
 `EpochConfig` will contain the shard layout for the given epoch.
 
 ```rust
@@ -173,7 +192,9 @@ pub struct EpochConfig {
     /// Shard layout of this epoch, may change from epoch to epoch
     pub shard_layout: ShardLayout,
 ```
+
 ### `AllEpochConfig`
+
 `AllEpochConfig` stores a mapping from protocol versions to `EpochConfig`s. `EpochConfig` for a particular epoch can be retrieved from `AllEpochConfig`, given the protocol version of the epoch. For SimpleNightshade migration, it only needs to contain two configs. `AllEpochConfig` will be stored inside `EpochManager` to be used to construct `EpochConfig` for different epochs.
 
 ```rust
@@ -182,22 +203,29 @@ pub struct AllEpochConfig {
     simple_nightshade_epoch_config: Arc<EpochConfig>,
 }
 ```
+
 #### `for_protocol_version`
+
 ```rust
 pub fn for_protocol_version(&self, protocol_version: ProtocolVersion) -> &Arc<EpochConfig>
 ```
+
 returns `EpochConfig` according to the given protocol version. `EpochManager` will call this function for every new epoch.
 
 ### `EpochManager`
+
 `EpochManager` will be responsible for managing `ShardLayout` accross epochs. As we mentioned, `EpochManager` stores an instance of `AllEpochConfig`, so it can returns the `ShardLayout` for each epoch. 
 
-####  `get_shard_layout`
+#### `get_shard_layout`
+
 ```rust
 pub fn get_shard_layout(&mut self, epoch_id: &EpochId) -> Result<&ShardLayout, EpochError> 
 ```
 
 ## Internal Shard Representation in Validators' State
+
 ### `ShardUId`
+
 `ShardUId` is a unique identifier that a validator uses internally to identify shards from all epochs. It only exists inside a validator's internal state and can be different among validators, thus it should never be exposed to outside APIs.
 
 ```rust
@@ -210,34 +238,45 @@ pub struct ShardUId {
 `version` in `ShardUId` comes from the version of `ShardLayout` that this shard belongs. This way, different shards from different shard layout will have different `ShardUId`s.
 
 ### Database storage
+
 The following database columns are stored with `ShardId` as part of the database key, it will be replaced by `ShardUId`
+
 - ColState
 - ColChunkExtra
 - ColTrieChanges
 
 #### `TrieCachingStorage`
+
 Trie storage will contruct database key from `ShardUId` and hash of the trie node.
+
 ##### `get_shard_uid_and_hash_from_key`
+
 ```rust
 fn get_shard_uid_and_hash_from_key(key: &[u8]) -> Result<(ShardUId, CryptoHash), std::io::Error>
 ```
+
 ##### `get_key_from_shard_uid_and_hash`
+
 ```rust
 fn get_key_from_shard_uid_and_hash(shard_uid: ShardUId, hash: &CryptoHash) -> [u8; 40]
 ```
 
 
 ## Build New States
+
 The following method in `Chain` will be added or modified to split a shard's current state into multiple states.
 
 ### `build_state_for_split_shards`
+
 ```rust
 pub fn build_state_for_split_shards(&mut self, sync_hash: &CryptoHash, shard_id: ShardId) -> Result<(), Error>
 ```
+
 builds states for the new shards that the shard `shard_id` will be split to.
 After this function is finished, the states for the new shards should be ready in `ShardTries` to be accessed.
 
 ### `run_catchup`
+
 ```rust
 pub fn run_catchup(...) {
     ...
@@ -268,16 +307,21 @@ pub fn run_catchup(...) {
 ```
 
 ## Update States
+
 ### `split_state_changes`
+
 ```rust
 split_state_changes(shard_id: ShardId, state_changes: &Vec<RawStateChangesWithTrieKey>) -> HashMap<ShardId, Vec<RawStateChangesWithTrieKey>>
 ```
+
 splits state changes to be made to a current shard to changes that should be applid to the new shards. Note that this function call can take a long time. To avoid blocking the client actor from processing and producing blocks for the current epoch, it should be called from a separate thread. Unfortunately, as of now, catching up states and catching up blocks are both run in client actor. They should be moved to a separate actor. However, that can be a separate project, although this NEP will depend on that project. In fact, the issue has already been discussed in [#3201](https://github.com/near/nearcore/issues/3201).
 
 ### `apply_chunks`
+
 `apply_chunks` will be modified so that states of the new shards will be updated when processing chunks.
  In `apply_chunks`, after processing each chunk, the state changes in `apply_results` are sorted into changes to new shards.
 At the end, we apply these changes to the new shards.
+
 ```rust
 fn apply_chunks(...) -> Result<(), Error> {
     ...
@@ -324,18 +368,18 @@ fn apply_chunks(...) -> Result<(), Error> {
 ```
 
 ## Garbage Collection
+
 The old states need to be garbage collected after the resharding finishes. The garbage collection algorithm today won't automatically handle that. (#TODO: why?)
 
 Although we need to handle garbage collection eventually, it is not a pressing issue. Thus, we leave the discussion from this NEP for now and will add a detailed plan later.
 
 # Drawbacks
-[drawbacks]: #drawbacks
 
 The drawback of this approach is that it will not work when challenges are enabled since challenges to the transition to the new states will be too large to construct or verify.
 Thus, most of the change will likely be a one time use that only works for the Simple Nightshade transition, although part of the change involving `ShardId` may be reused in the future.
 
 # Rationale and alternatives
-[rationale-and-alternatives]: #rationale-and-alternatives
+
 - Why is this design the best in the space of possible designs?
   - It is the best because its implementation is the simplest.
     Considering we want to launch Simple Nightshade as soon as possible by Q4 2021 and we will not enable challenges any time soon, this is the best option we have.
@@ -346,7 +390,7 @@ However, the implementation of those approaches are overly complicated and does 
   - The impact will be the delay of launching Simple Nightshade, or no launch at all.
 
 # Unresolved questions
-[unresolved-questions]: #unresolved-questions
+
 - What parts of the design do you expect to resolve through the NEP process before this gets merged?
   - Garbage collection
   - State Sync?
@@ -361,12 +405,17 @@ However, the implementation of those approaches are overly complicated and does 
   - Lastly, we should also build a better mechanism to deal with changing protocol config. The current way of putting changing protocol config in the genesis config and changing how the genesis config file is parsed is not a long term solution.
 
 # Future possibilities
-[future-possibilities]: #future-possibilities
+
 ## Extension
+
 In the future, when challenges are enabled, resharding and state upgrade should be implemented on-chain.
+
 ## Affected Projects
+
 - 
+
 ## Pre-mortem
+
 - Building and catching up new states takes longer than one epoch to finish.
 - Protocol version switched back to pre simple nightshade
 - Validators cannot track shards properly after resharding
