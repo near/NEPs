@@ -1,5 +1,7 @@
 # Promises API
 
+#### promise_create
+
 ```rust
 promise_create(account_id_len: u64,
                account_id_ptr: u64,
@@ -25,6 +27,8 @@ Creates a promise that will execute a method on account with given arguments and
 - Index of the new promise that uniquely identifies it within the current execution of the method.
 
 ---
+
+##### promise_then
 
 ```rust
 promise_then(promise_idx: u64,
@@ -53,6 +57,8 @@ Attaches the callback that is executed after promise pointed by `promise_idx` is
 
 ---
 
+#### promise_and
+
 ```rust
 promise_and(promise_idx_ptr: u64, promise_idx_count: u64) -> u64
 ```
@@ -72,6 +78,8 @@ The array contains indices of promises that need to be waited on jointly.
 - Index of the new promise that uniquely identifies it within the current execution of the method.
 
 ---
+
+#### promise_results_count
 
 ```rust
 promise_results_count() -> u64
@@ -93,6 +101,8 @@ Note, we are only going to have incomplete callbacks once we have `promise_or` c
 - If called in a view function panics with `ProhibitedInView`.
 
 ---
+
+#### promise_result
 
 ```rust
 promise_result(result_idx: u64, register_id: u64) -> u64
@@ -124,6 +134,8 @@ caused the callback. This function returns the result in blob format and places 
 
 ---
 
+#### promise_return
+
 ```rust
 promise_return(promise_idx: u64)
 ```
@@ -137,6 +149,8 @@ When promise `promise_idx` finishes executing its result is considered to be the
 ###### Current bugs
 
 - The current name `return_promise` is inconsistent with the naming convention of Promise API.
+
+#### promise_batch_create
 
 ```rust
 promise_batch_create(account_id_len: u64, account_id_ptr: u64) -> u64
@@ -154,6 +168,8 @@ Creates a new promise towards given `account_id` without any actions attached to
 - Index of the new promise that uniquely identifies it within the current execution of the method.
 
 ---
+
+#### promise_batch_then
 
 ```rust
 promise_batch_then(promise_idx: u64, account_id_len: u64, account_id_ptr: u64) -> u64
@@ -173,6 +189,8 @@ Attaches a new empty promise that is executed after promise pointed by `promise_
 
 ---
 
+#### promise_batch_action_create_account
+
 ```rust
 promise_batch_action_create_account(promise_idx: u64)
 ```
@@ -187,6 +205,8 @@ Details for the action: https://github.com/nearprotocol/NEPs/pull/8/files#diff-1
 - If called in a view function panics with `ProhibitedInView`.
 
 ---
+
+#### promise_batch_action_deploy_contract
 
 ```rust
 promise_batch_action_deploy_contract(promise_idx: u64, code_len: u64, code_ptr: u64)
@@ -203,6 +223,8 @@ Details for the action: https://github.com/nearprotocol/NEPs/pull/8/files#diff-1
 - If called in a view function panics with `ProhibitedInView`.
 
 ---
+
+#### promise_batch_action_function_call
 
 ```rust
 promise_batch_action_function_call(promise_idx: u64,
@@ -229,6 +251,8 @@ _NOTE: Calling `promise_batch_create` and then `promise_batch_action_function_ca
 
 ---
 
+#### promise_batch_action_transfer
+
 ```rust
 promise_batch_action_transfer(promise_idx: u64, amount_ptr: u64)
 ```
@@ -244,6 +268,8 @@ Details for the action: https://github.com/nearprotocol/NEPs/pull/8/files#diff-1
 - If called in a view function panics with `ProhibitedInView`.
 
 ---
+
+#### promise_batch_action_stake
 
 ```rust
 promise_batch_action_stake(promise_idx: u64,
@@ -265,6 +291,8 @@ Details for the action: https://github.com/nearprotocol/NEPs/pull/8/files#diff-1
 
 ---
 
+#### promise_batch_action_add_key_with_full_access
+
 ```rust
 promise_batch_action_add_key_with_full_access(promise_idx: u64,
                                               public_key_len: u64,
@@ -285,6 +313,8 @@ The access key will have `FullAccess` permission, details: [/Proposals/0005-acce
 - If called in a view function panics with `ProhibitedInView`.
 
 ---
+
+#### promise_batch_action_add_key_with_function_call
 
 ```rust
 promise_batch_action_add_key_with_function_call(promise_idx: u64,
@@ -317,6 +347,8 @@ The access key will have `FunctionCall` permission, details: [/Proposals/0005-ac
 
 ---
 
+#### promise_batch_action_delete_key
+
 ```rust
 promise_batch_action_delete_key(promise_idx: u64,
                                 public_key_len: u64,
@@ -335,6 +367,8 @@ Details for the action: https://github.com/nearprotocol/NEPs/pull/8/files#diff-1
 - If called in a view function panics with `ProhibitedInView`.
 
 ---
+
+#### promise_batch_action_delete_account
 
 ```rust
 promise_batch_action_delete_account(promise_idx: u64,

@@ -1,57 +1,59 @@
 // @ts-check
 // Note: type annotations allow type checking and IDEs autocompletion
 
-const lightCodeTheme = require('prism-react-renderer/themes/github');
-const darkCodeTheme = require('prism-react-renderer/themes/dracula');
+const { themes } = require("prism-react-renderer");
+const lightTheme = themes.github;
+const darkTheme = themes.dracula;
 
-const math = require('remark-math');
-const katex = require('rehype-katex');
+const math = require("remark-math");
+const katex = require("rehype-katex");
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: 'NEAR Protocol Specification',
-  tagline: 'NEAR Protocol Specification',
-  url: 'https://nomicon.io',
-  baseUrl: '/',
-  onBrokenLinks: 'throw',
-  onBrokenMarkdownLinks: 'warn',
-  favicon: 'img/favicon.ico',
-  organizationName: 'near', // Usually your GitHub org/user name.
-  projectName: 'NEPs', // Usually your repo name.
+  title: "NEAR Protocol Specification",
+  tagline: "NEAR Protocol Specification",
+  url: "https://nomicon.io",
+  baseUrl: "/",
+  onBrokenLinks: "throw",
+  onBrokenMarkdownLinks: "warn",
+  favicon: "img/favicon.ico",
+  organizationName: "near", // Usually your GitHub org/user name.
+  projectName: "NEPs", // Usually your repo name.
   plugins: [],
   stylesheets: [
     {
-      href: 'https://cdn.jsdelivr.net/npm/katex@0.13.24/dist/katex.min.css',
-      type: 'text/css',
-      integrity: 'sha384-odtC+0UGzzFL/6PNoE8rX/SPcQDXBJ+uRepguP4QkPCm2LBxH3FA3y+fKSiJ+AmM',
-      crossorigin: 'anonymous',
+      href: "https://cdn.jsdelivr.net/npm/katex@0.13.24/dist/katex.min.css",
+      type: "text/css",
+      integrity:
+        "sha384-odtC+0UGzzFL/6PNoE8rX/SPcQDXBJ+uRepguP4QkPCm2LBxH3FA3y+fKSiJ+AmM",
+      crossorigin: "anonymous",
     },
   ],
   presets: [
     [
-      'classic',
+      "classic",
       /** @type {import('@docusaurus/preset-classic').Options} */
       ({
         docs: {
-          sidebarPath: require.resolve('./sidebars.js'),
+          sidebarPath: require.resolve("./sidebars.js"),
           // Please change this to your repo.
-          "editUrl": "https://github.com/near/NEPs/edit/master/website",
+          editUrl: "https://github.com/near/NEPs/edit/master/website",
           remarkPlugins: [math],
           rehypePlugins: [katex],
-          "showLastUpdateAuthor": true,
-          "showLastUpdateTime": true,
-          "path": "../specs",
-          "routeBasePath": '/',
+          showLastUpdateAuthor: true,
+          showLastUpdateTime: true,
+          path: "../specs",
+          routeBasePath: "/",
         },
         theme: {
-          customCss: require.resolve('./src/css/custom.css'),
+          customCss: require.resolve("./src/css/custom.css"),
         },
         sitemap: {
-          changefreq: 'weekly',
+          changefreq: "weekly",
           priority: 0.5,
         },
         gtag: {
-          trackingID: 'G-G8LCVP41F0',
+          trackingID: "G-G8LCVP41F0",
           anonymizeIP: true,
         },
       }),
@@ -61,85 +63,85 @@ const config = {
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
       colorMode: {
-        respectPrefersColorScheme: true
+        respectPrefersColorScheme: true,
       },
       navbar: {
-        title: 'Nomicon',
+        title: "Nomicon",
         logo: {
-          alt: 'NEAR Logo',
-          src: 'img/near_logo.svg',
-          srcDark: 'img/near_logo_white.svg',
+          alt: "NEAR Logo",
+          src: "img/near_logo.svg",
+          srcDark: "img/near_logo_white.svg",
         },
         items: [
           {
-            to: '/',
-            label: 'Specification',
-            position: 'left'
+            to: "/",
+            label: "Specification",
+            position: "left",
           },
           {
-            href: 'https://docs.near.org/',
-            label: 'Dev Docs',
-            position: 'left',
+            href: "https://docs.near.org/",
+            label: "Dev Docs",
+            position: "left",
           },
           {
-            href: 'https://wiki.near.org/',
-            label: 'Wiki',
-            position: 'left',
+            href: "https://dev.near.org/",
+            label: "Dev Portal",
+            position: "left",
           },
           {
-            href: 'https://github.com/near/NEPs',
-            label: 'GitHub',
-            position: 'right',
+            href: "https://github.com/near/NEPs",
+            label: "GitHub",
+            position: "right",
           },
         ],
       },
       footer: {
-        style: 'dark',
+        style: "dark",
         links: [
           {
-            title: 'Docs',
+            title: "Docs",
             items: [
               {
-                label: 'Specification',
-                to: '/',
+                label: "Specification",
+                to: "/",
               },
               {
-                label: 'Dev Docs',
-                to: 'https://docs.near.org',
+                label: "Dev Docs",
+                to: "https://docs.near.org",
               },
               {
-                label: 'Wiki',
-                to: 'https://wiki.near.org',
+                label: "Dev Portal",
+                to: "https://dev.near.org",
               },
             ],
           },
           {
-            title: 'Community',
+            title: "Community",
             items: [
               {
-                label: 'Stack Overflow',
-                href: 'https://stackoverflow.com/questions/tagged/nearprotocol',
+                label: "Stack Overflow",
+                href: "https://stackoverflow.com/questions/tagged/nearprotocol",
               },
               {
-                label: 'Discord',
-                href: 'https://near.chat',
+                label: "Discord",
+                href: "https://near.chat",
               },
               {
-                label: 'Twitter',
-                href: 'https://twitter.com/NEARProtocol',
+                label: "Twitter",
+                href: "https://twitter.com/NEARProtocol",
               },
             ],
           },
           {
-            title: 'More',
+            title: "More",
             items: [
               {
-                label: 'SDK Docs',
-                to: 'https://near-sdk.io/',
+                label: "SDK Docs",
+                to: "https://near-sdk.io/",
               },
               {
-                label: 'GitHub',
-                href: 'https://github.com/near/NEPs',
+                label: "GitHub",
+                href: "https://github.com/near/NEPs",
               },
             ],
           },
@@ -165,11 +167,9 @@ const config = {
         placeholder: "Search the Docs...",
       },
       prism: {
-        theme: lightCodeTheme,
-        darkTheme: darkCodeTheme,
-        "additionalLanguages": [
-          "rust", "java", "python", "ruby", "go", "toml"
-        ]
+        theme: lightTheme,
+        darkTheme: darkTheme,
+        additionalLanguages: ["rust", "java", "python", "ruby", "go", "toml"],
       },
     }),
 };

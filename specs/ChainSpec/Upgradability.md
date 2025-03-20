@@ -3,6 +3,7 @@
 This part of specification describes specifics of upgrading the protocol, and touches on few different parts of the system.
 
 Three different levels of upgradability are:
+
 1. Updating without any changes to underlying data structures or protocol;
 2. Updating when underlying data structures changed (config, database or something else internal to the node and probably client specific);
 3. Updating with protocol changes that all validating nodes must adjust to.
@@ -10,6 +11,7 @@ Three different levels of upgradability are:
 ## Versioning
 
 There are 2 different important versions:
+
 - Version of binary defines it's internal data structures / database and configs. This version is client specific and doesn't need to be matching between nodes.
 - Version of the protocol, defining the "language" nodes are speaking.
 
@@ -22,9 +24,10 @@ type ProtocolVersion = u32;
 
 Clients should follow [semantic versioning](https://semver.org/).
 Specifically:
- - MAJOR version defines protocol releases.
- - MINOR version defines changes that are client specific but require database migration, change of config or something similar. This includes client-specific features. Client should execute migrations on start, by detecting that information on disk is produced by previous version and auto-migrate it to new one.
-  - PATCH version defines when bug fixes, which should not require migrations or protocol changes.
+
+- MAJOR version defines protocol releases.
+- MINOR version defines changes that are client specific but require database migration, change of config or something similar. This includes client-specific features. Client should execute migrations on start, by detecting that information on disk is produced by previous version and auto-migrate it to new one.
+- PATCH version defines when bug fixes, which should not require migrations or protocol changes.
 
 Clients can define how current version of data is stored and migrations applied.
 General recommendation is to store version in the database and on binary start, check version of database and perform required migrations.

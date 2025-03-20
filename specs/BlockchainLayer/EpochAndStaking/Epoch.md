@@ -23,7 +23,7 @@ Since every final block must have two more blocks on top of it, it means that th
 
 Note that an epoch only ends when there is a final block above a certain height. If there are no final blocks, the epoch will be stretched until the required final block appears. An epoch can potentially be longer than `epoch_length`.
 
-![Diagram of epoch end](epoch_end_diagram.png)
+![Diagram of epoch end](../EpochManager/epoch_end_diagram.png)
 
 ### EpochHeight
 
@@ -41,7 +41,7 @@ Epoch id is defined as
 
 - For special genesis block epoch it's `0`
 - For epoch with height `0` it's `0` (NOTE: the first two epochs use the same epoch id)
-- For epoch with height `1` it's the hash of genesis block 
+- For epoch with height `1` it's the hash of genesis block
 - For epoch with height `T+2` it's the hash of the last block in epoch `T`
 
 ### Epoch end

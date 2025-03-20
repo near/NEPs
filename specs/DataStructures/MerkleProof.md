@@ -2,6 +2,7 @@
 
 Many components of NEAR Protocol rely on Merkle root and Merkle proofs. For an array of sha256 hashes, we define its
 merkle root as:
+
 ```python
 CRYPTOHASH_DEFAULT = [0] * 32
 def combine_hash(hash1, hash2):
@@ -21,12 +22,14 @@ def merkle_root(hashes):
 ```
 
 Generally, for an array of borsh-serializable object, its merkle root is defined as
+
 ```python
 def arr_merkle_root(arr):
     return merkle_root(list(map(lambda x: sha256(borsh(x)), arr)))
 ```
 
 A Merkle proof is defined by:
+
 ```rust
 pub struct MerklePathItem {
     pub hash: MerkleHash,
@@ -42,6 +45,7 @@ pub type MerkleProof = Vec<MerklePathItem>;
 ```
 
 The verification of a hash `h` against a proclaimed merkle root `r` with proof `p` is defined by:
+
 ```python
 def compute_root(h, p):
     res = h
