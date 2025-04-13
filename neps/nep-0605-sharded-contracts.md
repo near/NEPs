@@ -35,9 +35,7 @@ The contract consists of state where all the user' account balances are stored i
 - Then the receipt is routed to the shard where the FT contract lives.
 - Once it arrives on the FT contract's shard, the receipt is executed, the function call is performed, and the transfer is performed.
 
-In the lucky case, the sender's account resides on the same shard as the FT contract.  In this case, depending on the load on the network, the transaction may be converted into a receipt and the receipt is executed in the same block.  Assuming a uniform distribution of user accounts across the network, such cases will only happen for every `N`th transaction where `N` is the number of shards on the network.  In other cases, the minimum latency is 2 blocks.  In the first block, the transaction is converted into a receipt and transferred to the receiver's shard.  And in the second block, the receipt is processed.
-
-Additionally, note that each FT transfer requires exactly one function call.
+The minimum latency of doing a single transaction is 2 blocks.  In the first block, the transaction is converted to a receipt and if needed the receipt is routed to another shard.  Then in the second block, the receipt executes on the FT contract.  Additionally, note that each FT transfer requires exactly one function call.
 
 ### Limitations
 
