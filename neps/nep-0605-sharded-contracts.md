@@ -185,6 +185,12 @@ pub struct ReceiptV2 {
 
 Whenever a contract calls another contract, that causes a new receipt to be created.  This receipt needs to contain information about the caller's contract code type.
 
+The other relevant bit of data that needs to be updated is the `AccountContractType::GlobalByAccount::times_upgraded` field, which denotes how many times the global contract has been upgraded.  This information cannot be updated when a global contract is actually upgraded as that would require storing a list of all the accounts that are using a global contract and further it could be prohibitively expensive to update that information proactively.  Instead, this field probably needs to be updated when an account that is using a global contract is actually accessed.
+
+TODO: maybe the global contract NEP needs to be updated to help track `times_upgraded` field.
+
+TODO: discuss the gas implications of making the receipts bigger.
+
 ### Protecting contract storage
 
 The sharded contract is storing its state locally on the users' account.  This can allow a malicious user to tamper with the storage in undesirable ways.  In the FT example able, a user could do the following:
@@ -225,9 +231,13 @@ Our proposal is similar.  Each contract code that is deployed on an account gets
 
 As seen above, each type of code deployment gets its own unique prefix that is added to the key which creates a separate namespace for them that is not accessible to other code deployments.
 
+TODO: discuss how to get access to `AccountContractType` when calling `create_storage_key()`.
+
 ### Enabling multiple contract codes on a single account
 
-TODO
+A big issue with the proposal above is that currently a account can only have a single contract deployed on it.  In the FT example, this would imply that a single account can only hold a single type of token and if a user wants to hold multiple different tokens, then the user will have to create multiple accounts which would not be a good user experience as they would have to manage multiple private keys, etc.  Ideally, a single account can still host multiple FT contracts.
+
+TODO: how to solve this problem.
 
 ### Upgrading a sharded contract
 
@@ -240,7 +250,7 @@ For normal contracts, the upgraded contract code contains sufficient logic to up
 
 In the sharded contract scenario, upgrading the contract code is straight forward if we use the `AccountId` mode of global contract but upgrading the contract state is no longer as straight forward.  The actual state is fully distributed on all the user accounts of the contract.  Further, the contract owner may not even have a list of all the user accounts that are using an instance of the sharded contract.  So the only entities that can actually upgrade the state are the users themselves and they would only upgrade the state the next time they choose to use the contract.
 
-Therefore, there is no guarantee for when a user's contract state has been upgraded.  And more problematically, it is possible that the owner of the contract has to issue another contract upgrade before all the users have finished the existing upgrade.
+Therefore, there is no guarantee for when a user's contract state has been upgraded, which means that it is possible that the owner of the contract can issue another contract upgrade before all the users have finished the existing upgrade.
 
 This means that in the worst case, the owner of the contract has to include, in each version of the contract code, an ability for the user to upgrade their state from all past versions to the current version.  More concretely,
 
