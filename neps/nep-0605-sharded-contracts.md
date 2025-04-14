@@ -50,7 +50,7 @@ First we show the pseudocode of how a sharded FT contract might look like.
 ```rust
 /// This enum is similar to the one declared in nearcore.  It shows what type of
 /// contract code is deployed on an account.
-pub enum AccountContract {
+pub enum AccountContractType {
     None,
     Local(CryptoHash),
     Global(CryptoHash),
@@ -60,43 +60,23 @@ pub enum AccountContract {
     GlobalByAccount {
         /// Account id of the global account where the contract code is deployed.
         account_id: AccountId,
-        /// Number of times the contract code has been upgraded.
+        /// A monotonically increasing counter that counts how many times the
+        /// global contract code has been upgraded.
         times_upgraded: u64,
     },
 }
 
-fn get_balance_key() -> String {
-    let my_account_contract: AccountContract = env::current_account_contract();
-    let global_account_id: AccountId = match my_account_contract {
-        AccountContract::GlobalByAccount { account_id, .. } => account_id,
-        _ => panic!(),
-    };
-    format!("{}-{}", global_account_id, "balance")
-}
-
-// This function initialises the contract state.  Ensuring that the balance
-// is set to 0 is important for ensuring that users do not maliciously mint
-// tokens.
-fn init() {
-    let balance_key = get_balance_key();
-    env::storage_write(key = balance_key, value = 0);
-    env::set_initialised();
-}
-
 fn send_tokens(amount: Balance, receiver: AccountId) {
-    // Will only return true if `env::set_initialised()` was called before
-    assert!(env::is_initialised());
     // Only the owner of this account is allowed to transfer funds out of it.
     let my_account_id: AccountId = env::current_account_id();
     let msg_sender: AccountId = env::signer_account_id();
     assert_eq!(my_account_id, msg_sender);
 
     // Update the account balance
-    let balance_key = get_balance_key();
-    let mut my_balance: Balance = storage_read(key = balance_key);
+    let mut my_balance: Balance = storage_read(key = "balance");
     assert!(my_balance >= amount);
     my_balance -= amount;
-    storage_write(key = balance_key, value = my_balance);
+    storage_write(key = "balance", value = my_balance);
 
     // Call the receiver's account to receive the tokens.
     cross_contract_call(destination = receiver, function = "receiver_tokens", args = [amount]);
@@ -108,9 +88,6 @@ fn send_tokens(amount: Balance, receiver: AccountId) {
 }
 
 fn receive_tokens(amount: Balance) {
-    // Will only return true if `env::set_initialised()` was called before
-    assert!(env::is_initialised());
-
     // The receiver can only accept tokens from the sender if the sender is
     // using the same global contract code.  Otherwise, a malicious actor might
     // trick the receiver into minting tokens.
@@ -121,15 +98,15 @@ fn receive_tokens(amount: Balance) {
     //
     // Then check that both the current account and the signer are using the
     // same global contract.
-    let my_account_contract: AccountContract = env::current_account_contract();
-    let signer_account_contract: AccountContract = env::signer_account_contract();
+    let my_account_contract: AccountContractType = env::current_account_contract();
+    let signer_account_contract: AccountContractType = env::signer_account_contract();
     match (my_account_contract, signer_account_contract) {
         (
-            AccountContract::GlobalByAccount {
+            AccountContractType::GlobalByAccount {
                 account_id: my_account_id,
                 times_upgraded: my_times_upgraded,
             },
-            AccountContract::GlobalByAccount {
+            AccountContractType::GlobalByAccount {
                 account_id: signer_account_id,
                 times_upgraded: signer_times_upgraded,
             },
@@ -137,23 +114,23 @@ fn receive_tokens(amount: Balance) {
             assert_eq!(my_account_id, signer_account_id);
             // It is possible that in between the signer sending the message and
             // the current account executing it, the global contract has been
-            // upgrading.  Which means that the version of the contract that
-            // sent the message is different than the version that is executing
-            // it.  This might potentially introduce some subtle malicious
-            // issues depending on the differences between the two versions.
-            // Hence, the receiver rejects any messages that are not sent from
-            // the same version as current.
+            // upgraded.  This means that the version of the contract that sent
+            // the message is different than the version that is executing it.
+            // This might potentially introduce some subtle malicious issues
+            // depending on the differences between the two versions. Hence, the
+            // receiver rejects any messages that are not sent from the same
+            // version as current.
             assert_eq!(my_times_upgraded, signer_times_upgraded);
         }
         _ => panic!(),
     }
 
     // Update the account balance
-    let balance_key = get_balance_key();
-    let mut my_balance: Balance = storage_read(key = balance_key);
+    let mut my_balance: Balance = storage_read(key = "balance");
     my_balance += amount;
-    storage_write(key = balance_key, value = my_balance);
+    storage_write(key = "balance", value = my_balance);
 }
+
 ```
 
 Each user that wants to use the sharded FT contract has to deploy the above global contract on their account.  The contract stores and manages the users' token balance locally.
@@ -162,7 +139,7 @@ Let's say that `alice.near` wants to send some FT tokens to `bob.near`.  The fol
 
 - Alice sends a transaction to their account to call `send_tokens()`.  The transaction is converted into a receipt and if there is enough capacity, then the receipt is executed in the same block.
 - Executing `send_tokens()` does not require any new host functions.  The function ensures that the signer of the message is also the owner of the account as only the owner of the account should be allowed to transfer tokens; it updates the `balance`; and sends a message to call `receive_tokens` on `bob.near` to receive the tokens.
-- Executing `receive_tokens()` requires two new host functions.  These host functions allow the smart contract to inspect what kind of contract code is deploy on the current account and on the account that called it.  This allows the smart contract to ensure that the caller and the current account are both using the same global contract code.  This convinces the receiver of the tokens that the sender has indeed decremented its `balance` appropriately and that there will be no malicious minting of tokens.  Finally, the receiver can increment its `balance` appropriately.
+- Executing `receive_tokens()` requires two new host functions.  These host functions allow the smart contract to inspect what kind of contract code is deploy on the current account and on the account that called it.  This allows the smart contract to ensure that the caller and the current account are both using the same global contract code,  which convinces the receiver that the sender has indeed decremented its `balance` appropriately and that there is no malicious minting of tokens.  Finally, the receiver increments its `balance` appropriately.
 
 Comparing this approach to the centralised approach, we note the following:
 
@@ -170,54 +147,87 @@ Comparing this approach to the centralised approach, we note the following:
 - Just like the centralised case, the minimum latency is 2 blocks.  Even if both the sender and the receiver accounts live on the same shard, a following cross contract receipt always executes the earliest in the next block.
 - In the centralised situation, all function calls took place on a single shard, assuming a uniform distribution of accounts across the network, the 2 function calls will be uniformly distributed across all the shards of the network.  This implies that the maximum TPS of this application scenario will be the sum of the TPS of all the shards on the network.
 
-In order to enable the above scenario, we need the following new primitives in the NEAR protocol:
+Note that this work builds on top of the ongoing work of enabling [Global contract code](https://github.com/near/NEPs/pull/591).
 
-- Global contract code: This is [ongoing work](https://github.com/near/NEPs/pull/591).
-- As seen in the `receive_tokens()` function above, we need to introduce new host functions that allow a smart contract to inspect the type of contract code that is deployed on the current account and on the signer's account.
+Below we discuss the additional primitives that are needed to support this work.
 
-An important consideration above is how can the sharded FT contract protect itself against malicious actors minting or stealing tokens.  The way this is happening is the following:
+### Host function calls to inspect contract code types
 
-- In the `send_tokens()` function, the contract ensures that only the owner is able to send tokens.
-- In the `receive_tokens()` function, the contract ensures that the caller has deployed the same version of the global contract.
-- Protecting storage accesses.  This is discussed in more detail in the section below.
+As seen in the `receive_tokens()` function above, in certain cases, the smart contract needs to be able to verify that it is communicating with another instance of itself.  
 
-### Protecting storage accesses
+Implementing the host function to inspect the contract code type of the local account should be fairly straightforward as this information is going to be stored locally on the account.
 
-A user can try to manipulate the balance that is stored on their account to maliciously mint tokens.  At a high level, we propose two ways of preventing this:
+In order to be able to inspect the contract code type of the signer account, we `Receipt` data structure has to be enhanced in roughly the following manner.
 
-#### set_initialised() function
+```rust
+pub enum Receipt {
+    V0(ReceiptV0),
+    V1(ReceiptV1),
+    V2(ReceiptV2),
+}
 
-We introduce two new host functions: `set_initialised()` and `is_initialised()`.  These functions help the contract ensure that the account storage is properly initialised.  As seen in the pseudocode above, the contract can use this functionality to initialise the `balance` to `0` regardless of whatever the state might have been set to before.  So a user cannot have maliciously initialised the `balance` before deploying the global contract to maliciously mint tokens.
+pub struct ReceiptV2 {
+    /// An issuer account_id of a particular receipt.
+    /// `predecessor_id` could be either `Transaction` `signer_id` or intermediate contract's `account_id`.
+    pub predecessor_id: AccountId,
+    /// `receiver_id` is a receipt destination.
+    pub receiver_id: AccountId,
+    /// An unique id for the receipt
+    pub receipt_id: CryptoHash,
+    /// A receipt type
+    pub receipt: ReceiptEnum,
+    /// Priority of a receipt
+    pub priority: u64,
+    /// What type of contract code is deployed on the predecessor
+    pub predecessor_account_contract_type: AccountContractType,
+}
+```
 
-#### Storage namespaces
+Whenever a contract calls another contract, that causes a new receipt to be created.  This receipt needs to contain information about the caller's contract code type.
 
-The second way to protect storage accesses.
+### Protecting contract storage
 
-The precise problem that we need to solve is the following:
+The sharded contract is storing its state locally on the users' account.  This can allow a malicious user to tamper with the storage in undesirable ways.  In the FT example able, a user could do the following:
 
-- When a sharded contract code is deployed on an account, it wants to be able to create some state on that account.
-- Only the sharded contract code should be able to make modifications to this state.
-- It should not be possible for the account to make modifications to this state.  Even after the account removes the sharded contract code.
-- Open question: can the account remove the state without being allowed to make modifications to the state?  In theory, we can allow this but then the owner of the sharded contract has to be aware of the impact of such changes.
+- Before deploying the FT contract on itself, the user could already create the `balance` key in its storage and set its value to be arbitrarily large to maliciously mint tokens.
+- Deploy a subaccount or use other methods to be able to maliciously modify the storage and change the `balance` in malicious ways.
 
-Turns out that the NEAR protocol is already solving a version of this problem.  State from all accounts is stored together in the same `Trie` data structure.  So in theory, if one account could figure out under what key another account has stored some value, it could issue a `storage_write` for that key and make unauthorised modifications to it.  To prevent this type of attack, when accounts issue a `storage_write`, the protocol prepends the `AccountId` of the account that is currently executing to the key.  This creates a unique namespace for each account that is inaccessible to all other accounts.
+To prevent such attacks, we propose that when a contract code is deployed on an account, its storage is walled off by using namespaces which prevents other contract codes access to it.  Note that this strategy is being used to create per account namespaces to ensure that one account cannot access another account's storage.  In particular, when a contract code tries to do a `storage_write()` or `storage_read()` for a key `foo`, the `AccountId` of the account the contract code is running on is prepended to the key.  This creates a separate namespace for each account on the network that cannot be accessed by other accounts.
 
-We propose a similar approach for sharded contracts as well.  Instead of using the `AccountId` namespace, when an account starts using a sharded contract code, the protocol can create a new `ShardedContractInstanceId` for it.  This id can then be prepended to all storage accesses and just like above, this creates an isolated namespace for that specific sharded contract that the account cannot access.
+Our proposal is similar.  Each contract code that is deployed on an account gets its own namespace.  The namespace can be constructed by updating the `RuntimeExt::create_storage_key` function that is currently used to add the prefix to something like below.
 
-If an account stops using a sharded contract code (e.g. by deploying another contract code on itself), then the associated `ShardedContractInstanceId` can be removed.
+```rust
+    pub fn create_storage_key(
+        &self,
+        contract_code_type: &AccountContractType,
+        key: &[u8],
+    ) -> TrieKey {
+        let account_id = self.account_id.clone();
+        match contract_code_type {
+            AccountContractType::None => unreachable!(),
+            // The current use case
+            AccountContractType::Local(_) => {
+                TrieKey::ContractData { account_id, key: key.to_vec() }
+            }
+            AccountContractType::Global(hash) => {
+                TrieKey::ContractDataGlobalContract { account_id, hash, key: key.to_vec() }
+            }
+            AccountContractType::GlobalByAccount(global_account_id) => {
+                TrieKey::ContractDataGlobalByAccount {
+                    global_account_id,
+                    account_id,
+                    key: key.to_vec(),
+                }
+            }
+        }
+    }
+```
 
-### Access control
+As seen above, each type of code deployment gets its own unique prefix that is added to the key which creates a separate namespace for them that is not accessible to other code deployments.
 
-Sticking with the FT contract example, there are two types of access control checks the contract has to perform.
+### Enabling multiple contract codes on a single account
 
-1. When a sender wants to initiate a transfer.
-2. And when a receiver called by the sender account to accept some funds.
-
-The first case is fairly straight forward to address.  Only the owner of the account should be allowed to initiate a transfer.  As such, when the initiate transfer function is called, the smart contract can perform a check to ensure that the caller of the function is the owner of the account.  If this is not the case, then the call can be rejected.
-
-The second case is trickier to address.  In order to ensure that no tokens are maliciously minted, when a receiver is executing the call to receive tokens, it needs a guarantee that the sender of the message is indeed another instance of the sharded contract and that it has indeed decremented its local balance appropriately.  The minimum amount of information that the receiver needs to check to get this guarantee is that the receiver needs to know that the sender of the cross contract call was an instance of the sharded contract.
-
-Currently, the receiver of a message can check the `AccountId` of the sender of the message.  In this case that is not sufficient as the receiver does not know if the sender is indeed using an instance of the sharded contract or not.  Therefore, we propose that when an instance of a sharded contract sends a cross contract receipt to another contract, on top of including the `AccountId` of the actual account, we also include the `AccountId` of the sharded contract code.  Then the receiver of the cross contract receipt can check this bit of information and convince itself that this is a legitimate token transfer.
+TODO
 
 ### Upgrading a sharded contract
 
@@ -249,7 +259,8 @@ TODO
 
 ## Alternatives
 
-TODO
+- Use `set_initialise` instead of storage namespaces
+- A single instance of the sharded contract per shard
 
 ## Future possibilities
 
