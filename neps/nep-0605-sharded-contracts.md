@@ -74,14 +74,18 @@ fn get_balance_key() -> String {
     format!("{}-{}", global_account_id, "balance")
 }
 
-// Can this function be guaranteed to be called before any other?  See
-// `protecting storage access` below for more details.
-fn near_init() {
+// This function initialises the contract state.  Ensuring that the balance
+// is set to 0 is important for ensuring that users do not maliciously mint
+// tokens.
+fn init() {
     let balance_key = get_balance_key();
-    storage_write(key = balance_key, value = 0);
+    env::storage_write(key = balance_key, value = 0);
+    env::set_initialised();
 }
 
 fn send_tokens(amount: Balance, receiver: AccountId) {
+    // Will only return true if `env::set_initialised()` was called before
+    assert!(env::is_initialised());
     // Only the owner of this account is allowed to transfer funds out of it.
     let my_account_id: AccountId = env::current_account_id();
     let msg_sender: AccountId = env::signer_account_id();
@@ -104,6 +108,9 @@ fn send_tokens(amount: Balance, receiver: AccountId) {
 }
 
 fn receive_tokens(amount: Balance) {
+    // Will only return true if `env::set_initialised()` was called before
+    assert!(env::is_initialised());
+
     // The receiver can only accept tokens from the sender if the sender is
     // using the same global contract code.  Otherwise, a malicious actor might
     // trick the receiver into minting tokens.
@@ -178,11 +185,9 @@ An important consideration above is how can the sharded FT contract protect itse
 
 A user can try to manipulate the balance that is stored on their account to maliciously mint tokens.  At a high level, we propose two ways of preventing this:
 
-#### Init function
+#### set_initialised() function
 
-If the contract code defines a special function called `near_init()`, then this function is guaranteed to be the first function called after deployment and before any other function is called.
-
-As seen in the pseudocode above, the contract can use this function to initialise the `balance` to `0` regardless of whatever the state might have been initialised to before.  So a user cannot have maliciously initialised the `balance` before deploying the global contract to maliciously mint tokens.
+We introduce two new host functions: `set_initialised()` and `is_initialised()`.  These functions help the contract ensure that the account storage is properly initialised.  As seen in the pseudocode above, the contract can use this functionality to initialise the `balance` to `0` regardless of whatever the state might have been set to before.  So a user cannot have maliciously initialised the `balance` before deploying the global contract to maliciously mint tokens.
 
 #### Storage namespaces
 
