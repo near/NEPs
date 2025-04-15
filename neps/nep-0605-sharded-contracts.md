@@ -237,7 +237,7 @@ TODO: discuss how to get access to `AccountContractType` when calling `create_st
 
 A big issue with the proposal above is that currently a account can only have a single contract deployed on it.  In the FT example, this would imply that a single account can only hold a single type of token and if a user wants to hold multiple different tokens, then the user will have to create multiple accounts which would not be a good user experience as they would have to manage multiple private keys, etc.  Ideally, a single account can still host multiple FT contracts.
 
-TODO: how to solve this problem.
+TODO: how to solve this problem.  Can we use subaccounts?  If not, then when sending a message to another account, we need to be able to specify the contract code on the destination account as well.
 
 ### Upgrading a sharded contract
 
