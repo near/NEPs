@@ -237,7 +237,13 @@ TODO: discuss how to get access to `AccountContractType` when calling `create_st
 
 A big issue with the proposal above is that currently a account can only have a single contract deployed on it.  In the FT example, this would imply that a single account can only hold a single type of token and if a user wants to hold multiple different tokens, then the user will have to create multiple accounts which would not be a good user experience as they would have to manage multiple private keys, etc.  Ideally, a single account can still host multiple FT contracts.
 
-TODO: Design for how to enable multiple codes on a single account.  We cannot use subaccounts.  Note that when sending a message to another account, we need to specify the contract code on the destination account as well as there can be multiple codes running there.
+TODO: detailed design for multiple contract codes on a single account.
+
+- Subaccounts do not work.
+- When sending a msg to another account, on the sending side, need to include which contract code sent the msg and the sending contract needs to specify which contract on destination should receive the msg.
+- Need to update `DeployContract` to allow it to overwrite an existing contract or create a new contract.
+- It probably doesn't make sense to be able to deploy the same global contract multiple times on the same account.  That will also make routing more complex.
+- `create_storage_key()` above needs to be updated to support multiple local contract codes.  This needs to be backwards compatible otherwise we need to migrate a lot of state.  Alternatively, we can say that we do not support multiple local contract codes on a single account.
 
 ### Upgrading a sharded contract
 
