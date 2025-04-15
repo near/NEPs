@@ -237,7 +237,7 @@ TODO: discuss how to get access to `AccountContractType` when calling `create_st
 
 A big issue with the proposal above is that currently a account can only have a single contract deployed on it.  In the FT example, this would imply that a single account can only hold a single type of token and if a user wants to hold multiple different tokens, then the user will have to create multiple accounts which would not be a good user experience as they would have to manage multiple private keys, etc.  Ideally, a single account can still host multiple FT contracts.
 
-TODO: how to solve this problem.  Can we use subaccounts?  If not, then when sending a message to another account, we need to be able to specify the contract code on the destination account as well.
+TODO: Design for how to enable multiple codes on a single account.  We cannot use subaccounts.  Note that when sending a message to another account, we need to specify the contract code on the destination account as well as there can be multiple codes running there.
 
 ### Upgrading a sharded contract
 
@@ -269,8 +269,9 @@ TODO
 
 ## Alternatives
 
-- Use `set_initialise` instead of storage namespaces
+- Use `set_initialise` instead of storage namespaces.  This does not work well as it will only allow one account to hold one FT type.
 - A single instance of the sharded contract per shard
+- Use subaccounts instead of enabling multiple contract codes on the same account.  This does not really solve the problem as each subaccount is controlled by different keys.
 
 ## Future possibilities
 
