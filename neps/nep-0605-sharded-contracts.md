@@ -22,64 +22,136 @@ Without any additional primitives at the protocol level, a single contract will 
 
 This NEP proposes solving this problem by introducing some new protocol level primitives which allow a single contract to scale to use the throughput capacity of not just one but all shards of the network.
 
-## Specification
+## Background
 
-### Background
-
-We will use the fungible tokens (FT) contract as an example contract to explain the specification.  The full contract is available [here](https://github.com/near-examples/FT) and this section briefly explains how this contract works on the network today.
+We will use the fungible tokens (FT) contract as an example contract to explain the limitations that the smart contracts face today.  The full contract is available [here](https://github.com/near-examples/FT) and this section briefly explains how this contract works on the network today.
 
 The contract consists of state where all the user' account balances are stored in a single HashMap data structure.  When a user wishes to transfer some FT to another user, the following steps take place:
 
 - The sender sends a transaction with a function call action to the contract to transfer the tokens from one account to another.
 - This transaction is routed to the shard where the user's account lives where it is converted to a receipt.
-- Then the receipt is routed to the shard where the FT contract lives.
+- Then, if the FT contracts lives on another shard, the receipt is routed to that shard.
 - Once it arrives on the FT contract's shard, the receipt is executed, the function call is performed, and the transfer is performed.
 
 The minimum latency of doing a single transaction is 2 blocks.  In the first block, the transaction is converted to a receipt and if needed the receipt is routed to another shard.  Then in the second block, the receipt executes on the FT contract.  Additionally, note that each FT transfer requires exactly one function call.
 
-#### Limitations
+### Limitations
 
 Since all the account balances are stored in a single contract, this one contract has to be invoked in order to make any transfers.  Therefore, the maximum TPS of this contract is the maximum TPS of the shard it is deployed on.  The only way to increase this capacity would be to increase the capacity of the shard.  Adding more shards does not help.
 
-### Sharded FT contract
+
+## Specification
 
 In the centralised FT contract above, all the state is stored in a single centralised location.  The opposite extreme of this approach would be to store all the state in as distributed a manner as possible i.e. the account balances of each user is stored locally on their accounts instead.  Below, we explain how this can be implemented.
 
-First we show the pseudocode of how a sharded FT contract might look like.
+### Pseudocode for a sharded FT contract
+
+We start by showing what a sharded version of the above FT contract would look like if it were using our proposed changes.
 
 ```rust
-/// This enum is similar to the one declared in nearcore.  It shows what type of
-/// contract code is deployed on an account.
-pub enum AccountContractType {
-    None,
-    Local(CryptoHash),
-    Global(CryptoHash),
-    /// The contract code is deployed on a single global account.
-    /// `times_upgraded` is a monotonically increasing counter that shows how
-    /// many times the contract has been upgraded.
-    GlobalByAccount {
-        /// Account id of the global account where the contract code is deployed.
-        account_id: AccountId,
-        /// A monotonically increasing counter that counts how many times the
-        /// global contract code has been upgraded.
-        times_upgraded: u64,
-    },
+// Pseudocode interface to various host functions
+impl HostFunctions {
+    // This host function already exists and returns the account id of the
+    // current account.
+    fn current_account_id() -> AccountId {
+        unimplemented!()
+    }
+
+    // This host function already exists and returns the account id of the
+    // signer (i.e. the message sender) account.
+    fn signer_account_id() -> AccountId {
+        unimplemented!()
+    }
+
+    // This is a simplification of the already existing storage read host
+    // function used to read contract state from the trie.
+    //
+    // If this is called during an execution of the new
+    // `ShardedFunctionCallAction`, then the data will be accessed from a
+    // separate namespace.  Details of the namespace are discussed below in the
+    // NEP.
+    fn storage_read(key: &str) -> Balance {
+        unimplemented!()
+    }
+
+    // This is a simplification of the already existing storage write host
+    // function used to write contract state to the trie.
+    //
+    // If this is called during an execution of the new
+    // `ShardedFunctionCallAction`, then the data will be written a separate
+    // namespace.  Details of the namespace are discussed below in the NEP.
+    fn storage_write(key: &str, amount: Balance) {
+        unimplemented!()
+    }
+
+    // A new host function that returns information about the sharded contract
+    // code that is being used by the current account.
+    //
+    // If the contract code was called using a `FunctionCallAction`, then this
+    // function panics.  If it was called using a new
+    // `ShardedFunctionCallAction` then returns information about which global
+    // contract code that is being used by the current account.
+    fn current_sharded_contract_info() -> ShardedContractInfo {
+        unimplemented!()
+    }
+
+    // A new host function that returns information about the sharded contract
+    // code that is being used by the signer (i.e. the message sender) account.
+    //
+    // If the signer (i.e. the message sender) called the current account using
+    // the new `ShardedFunctionCallAction` information about what type of global
+    // contract code the signer account is using.  Otherwise, the function
+    // panics.
+    fn signer_sharded_contract_info() -> ShardedContractInfo {
+        unimplemented!()
+    }
+
+    // A new host function that allows the current account to call another
+    // account using the new `ShardedFunctionCallAction` instead of
+    // `FunctionCallAction` account.
+    //
+    // This function will panic if the current account was not also called via
+    // `ShardedFunctionCallAction`.
+    fn call_sharded_contract(
+        destination_account_id: AccountId,
+        destination_sharded_contract_account_id: AccountId,
+        function: &str,
+        args: Balance,
+    ) {
+        unimplemented!()
+    }
+}
+
+struct ShardedContractInfo {
+    /// Account id of the account where the global contract code is
+    /// deployed.
+    account_id: AccountId,
+    /// A monotonically increasing counter that counts how many times the
+    /// global contract code has been upgraded.
+    times_upgraded: u64,
 }
 
 fn send_tokens(amount: Balance, receiver: AccountId) {
-    // Only the owner of this account is allowed to transfer funds out of it.
-    let my_account_id: AccountId = env::current_account_id();
-    let msg_sender: AccountId = env::signer_account_id();
+    // Since only the owner of this account is allowed to transfer funds out of
+    // it, ensure that the caller of this function is the owner of this account.
+    let my_account_id = HostFunctions::current_account_id();
+    let msg_sender = HostFunctions::signer_account_id();
     assert_eq!(my_account_id, msg_sender);
 
     // Update the account balance
-    let mut my_balance: Balance = storage_read(key = "balance");
+    let mut my_balance = HostFunctions::storage_read("balance");
     assert!(my_balance >= amount);
     my_balance -= amount;
-    storage_write(key = "balance", value = my_balance);
+    HostFunctions::storage_write("balance", my_balance);
 
     // Call the receiver's account to receive the tokens.
-    cross_contract_call(destination = receiver, function = "receiver_tokens", args = [amount]);
+    let my_sharded_contract_info = HostFunctions::current_sharded_contract_info();
+    HostFunctions::call_sharded_contract(
+        receiver,
+        my_sharded_contract_info.account_id,
+        "receive_tokens",
+        amount,
+    );
 
     // This pseudocode assumes that `receive_tokens()` always succeeds.  In a
     // more complete version, if `receive_tokens()` fails, then this function
@@ -98,48 +170,81 @@ fn receive_tokens(amount: Balance) {
     //
     // Then check that both the current account and the signer are using the
     // same global contract.
-    let my_account_contract: AccountContractType = env::current_account_contract();
-    let signer_account_contract: AccountContractType = env::signer_account_contract();
-    match (my_account_contract, signer_account_contract) {
-        (
-            AccountContractType::GlobalByAccount {
-                account_id: my_account_id,
-                times_upgraded: my_times_upgraded,
-            },
-            AccountContractType::GlobalByAccount {
-                account_id: signer_account_id,
-                times_upgraded: signer_times_upgraded,
-            },
-        ) => {
-            assert_eq!(my_account_id, signer_account_id);
-            // It is possible that in between the signer sending the message and
-            // the current account executing it, the global contract has been
-            // upgraded.  This means that the version of the contract that sent
-            // the message is different than the version that is executing it.
-            // This might potentially introduce some subtle malicious issues
-            // depending on the differences between the two versions. Hence, the
-            // receiver rejects any messages that are not sent from the same
-            // version as current.
-            assert_eq!(my_times_upgraded, signer_times_upgraded);
-        }
-        _ => panic!(),
-    }
+    let my_sharded_contract_info = HostFunctions::current_sharded_contract_info();
+    let signer_sharded_contract_info = HostFunctions::signer_sharded_contract_info();
+    assert_eq!(
+        my_sharded_contract_info.account_id,
+        signer_sharded_contract_info.account_id
+    );
+    // It is possible that in between the signer sending the message and
+    // the current account executing it, the global contract has been
+    // upgraded.  This means that the version of the contract that sent
+    // the message is different than the version that is executing it.
+    // This might potentially introduce some subtle malicious issues
+    // depending on the differences between the two versions. Hence, the
+    // receiver rejects any messages that are not sent from the same
+    // version as current.
+    assert_eq!(
+        my_sharded_contract_info.times_upgraded,
+        signer_sharded_contract_info.times_upgraded
+    );
 
     // Update the account balance
-    let mut my_balance: Balance = storage_read(key = "balance");
+    let mut my_balance = HostFunctions::storage_read("balance");
     my_balance += amount;
-    storage_write(key = "balance", value = my_balance);
+    HostFunctions::storage_write("balance", my_balance);
 }
-
 ```
 
-Each user that wants to use the sharded FT contract has to deploy the above global contract on their account.  The contract stores and manages the users' token balance locally.
+Additionally, we will need the following new receipt actions.
 
-Let's say that `alice.near` wants to send some FT tokens to `bob.near`.  The following steps will take place:
+```rust
+/// This action allows an account to start using a existing global contract code
+/// in the sharded mode.  When a contract code is being used by an account in
+/// the sharded mode, it can only be called via the new
+/// `ShardedFunctionCallAction`.
+///
+/// This action can be used to allow an account to use multiple different global
+/// contract codes in the sharded mode.
+struct UseShardedContractAction {
+    // Account id of the account where the global contract code is deployed.
+    account_id: AccountId,
+}
 
-- Alice sends a transaction to their account to call `send_tokens()`.  The transaction is converted into a receipt and if there is enough capacity, then the receipt is executed in the same block.
-- Executing `send_tokens()` does not require any new host functions.  The function ensures that the signer of the message is also the owner of the account as only the owner of the account should be allowed to transfer tokens; it updates the `balance`; and sends a message to call `receive_tokens` on `bob.near` to receive the tokens.
-- Executing `receive_tokens()` requires two new host functions.  These host functions allow the smart contract to inspect what kind of contract code is deploy on the current account and on the account that called it.  This allows the smart contract to ensure that the caller and the current account are both using the same global contract code,  which convinces the receiver that the sender has indeed decremented its `balance` appropriately and that there is no malicious minting of tokens.  Finally, the receiver increments its `balance` appropriately.
+/// This action allows an account to stop using an global contract code that is
+/// was previously using in the sharded mode.
+struct RemoveShardedContractAction {
+    // Account id of the account where the global contract code is deployed.
+    account_id: AccountId,
+}
+
+/// This is similar to the existing `FunctionCallAction`.  `FunctionCallAction`
+/// allows calling contract codes that are deployed using the
+/// `DeployContractAction` or the `UseGlobalContractAction` on an account.  This
+/// action allows calling contract codes that are deployed using the
+/// `UseShardedContractAction`.
+struct ShardedFunctionCallAction {
+    // An account can have multiple sharded contract codes deployed on it.  This
+    // identifies which one should be called.
+    receiver_sharded_contract_code_account_id: AccountId,
+    // An account can have multiple sharded contract codes deployed on it.  This
+    // identifies which contract code on the signer is sending the action.
+    signer_sharded_contract_code_account_id: AccountId,
+    // additionally arguments are identical to `FunctionCallAction`.
+}
+```
+
+
+With the above in place, following is the flow of how users would start using a sharded FT contract and then perform transfers.
+
+1. Each user that wants to use a sharded FT contract, will first deploy it on their account using the `UseShardedContractAction` action.
+2. When `alice.near` wants to transfer tokens to `bob.near`, Alice calls the `send_tokens()` function on the sharded FT contract on her account using the `ShardedFunctionCallAction` action.
+3. `send_tokens()` ensures that caller is Alice as only the owner of the account should be allowed to initiate transfers.
+4. Next, the contract decrements the balance.  We will discuss access control issues to storage in the namespace section below.
+5. Then, it calls `bob.near` using the `ShardedFunctionCallAction` action.
+6. `receive_tokens()` executes on `bob.near`.
+7. `receive_tokens()` ensures that the caller is an instance of the same sharded contract as itself otherwise it might be possible to mint tokens maliciously.
+8. `receive_tokens()` update the balance stored locally.
 
 Comparing this approach to the centralised approach, we note the following:
 
@@ -147,7 +252,33 @@ Comparing this approach to the centralised approach, we note the following:
 - Just like the centralised case, the minimum latency is 2 blocks.  Even if both the sender and the receiver accounts live on the same shard, a following cross contract receipt always executes the earliest in the next block.
 - In the centralised situation, all function calls took place on a single shard, assuming a uniform distribution of accounts across the network, the 2 function calls will be uniformly distributed across all the shards of the network.  This implies that the maximum TPS of this application scenario will be the sum of the TPS of all the shards on the network.
 
-Note that this work builds on top of the ongoing work of enabling [Global contract code](https://github.com/near/NEPs/pull/591).
+### Requirements
+
+We can now explain what the high level requirements are that the above proposal is trying to meet.  This provides the sufficient context to understand why the proposal is designed the way it is.
+
+#### Multiple contract codes
+
+It should be possible to use multiple sharded contract codes on a single account.  This is important because otherwise users will have to create new accounts for each type of FT they want to hold which means that the users will have to manage multiple keys, etc. degrading user experience.
+
+We considered the existing subaccount feature as well here.  That idea does not work because subaccounts only provide access control over account creation.  The keys for each subaccount still need to be managed individually.
+
+Another alternative we considered and discarded is implicitly deploying the sharded contract on the account when it is called with `ShardedFunctionCallAction` for the first time.  This is not ideal as it can allow one to maliciously create state on other accounts which lock up NEAR tokens to pay for the storage.
+
+#### Access control to sharded contract functions
+
+We identified that sharded contracts may want to have 2 types of access control to functions.
+
+First are functions that can only be called by the account owner (e.g. `send_tokens()`).  This scenario is covered by the existing set of host functions.
+
+Second are functions that can only be called by another instance of the same contract.  Here the `ShardedFunctionCallAction` action provides information about the signer.  The runtime can provide information about the current account.  And then as seen in `receive_tokens()`, the contract can perform the appropriate checks.
+
+#### Storage namespaces
+
+In the pseudocode, we see the contract is storing its state locally on the accounts.  Without additional primitives, malicious users could tamper with this state.  In the FT example above, a malicious user could have initialised the FT balance on its state to high value before deploying the sharded contract on the account which would allow it to malicious mint tokens.
+
+Further, if we have multiple contract codes running on the same account, they could accidentally overwrite or modify another contract code state.  E.g. if two different sharded FT contracts are deployed on a single account and they both want to make changes to the `balance` key.
+
+Hence, we need a way to enable storage namespaces which guarantees that whatever state a sharded contract code is storing on an account, it cannot be modified by another contract code on that account.
 
 Below we discuss the additional primitives that are needed to support this work.
 
@@ -157,93 +288,113 @@ As seen in the `receive_tokens()` function above, in certain cases, the smart co
 
 Implementing the host function to inspect the contract code type of the local account should be fairly straightforward as this information is going to be stored locally on the account.
 
-In order to be able to inspect the contract code type of the signer account, we `Receipt` data structure has to be enhanced in roughly the following manner.
+### Detailed specification
+
+With the high level requirements and the pseudocode presented, we can discuss the specification of the new primitives been proposed.
+
+#### `DeployShardedContractAction`
+
+This action is similar to the `DeployGlobalContractAction`.  Note that an account can have only a single sharded contract code deployed on it.  Processing this action will generate a `GlobalContractDistributionReceipt`.  We propose the following modifications to this receipt.
 
 ```rust
-pub enum Receipt {
-    V0(ReceiptV0),
-    V1(ReceiptV1),
-    V2(ReceiptV2),
+enum GlobalContractDistributionReceipt {
+    V2(GlobalContractDistributionReceiptV2),
 }
 
-pub struct ReceiptV2 {
-    /// An issuer account_id of a particular receipt.
-    /// `predecessor_id` could be either `Transaction` `signer_id` or intermediate contract's `account_id`.
-    pub predecessor_id: AccountId,
-    /// `receiver_id` is a receipt destination.
-    pub receiver_id: AccountId,
-    /// An unique id for the receipt
-    pub receipt_id: CryptoHash,
-    /// A receipt type
-    pub receipt: ReceiptEnum,
-    /// Priority of a receipt
-    pub priority: u64,
-    /// What type of contract code is deployed on the predecessor
-    pub predecessor_account_contract_type: AccountContractType,
+enum ShardedOrGlobalContract {
+    Global {
+        id: GlobalContractIdentifier,
+    },
+    Sharded {
+        // The account id on which the sharded contract code is deployed.
+        id: AccountId,
+        // number of times a sharded contract code has been deployed on this account.
+        version: u64,
+    },
+}
+
+struct GlobalContractDistributionReceiptV2 {
+    sharded_or_global: ShardedOrGlobalContract,
+    target_shard: ShardId,
+    already_delivered_shards: Vec<ShardId>,
+    code: Arc<[u8]>,
 }
 ```
 
-Whenever a contract calls another contract, that causes a new receipt to be created.  This receipt needs to contain information about the caller's contract code type.
+When processing the `GlobalContractDistributionReceiptV2`, if it has the `ShardedOrGlobalContract::Global` variant, the existing functionality is kept.  
 
-The other relevant bit of data that needs to be updated is the `AccountContractType::GlobalByAccount::times_upgraded` field, which denotes how many times the global contract has been upgraded.  This information cannot be updated when a global contract is actually upgraded as that would require storing a list of all the accounts that are using a global contract and further it could be prohibitively expensive to update that information proactively.  Instead, this field probably needs to be updated when an account that is using a global contract is actually accessed.
-
-TODO: maybe the global contract NEP needs to be updated to help track `times_upgraded` field.
-
-TODO: discuss the gas implications of making the receipts bigger.
-
-### Protecting contract storage
-
-The sharded contract is storing its state locally on the users' account.  This can allow a malicious user to tamper with the storage in undesirable ways.  In the FT example able, a user could do the following:
-
-- Before deploying the FT contract on itself, the user could already create the `balance` key in its storage and set its value to be arbitrarily large to maliciously mint tokens.
-- Deploy a subaccount or use other methods to be able to maliciously modify the storage and change the `balance` in malicious ways.
-
-To prevent such attacks, we propose that when a contract code is deployed on an account, its storage is walled off by using namespaces which prevents other contract codes access to it.  Note that this strategy is being used to create per account namespaces to ensure that one account cannot access another account's storage.  In particular, when a contract code tries to do a `storage_write()` or `storage_read()` for a key `foo`, the `AccountId` of the account the contract code is running on is prepended to the key.  This creates a separate namespace for each account on the network that cannot be accessed by other accounts.
-
-Our proposal is similar.  Each contract code that is deployed on an account gets its own namespace.  The namespace can be constructed by updating the `RuntimeExt::create_storage_key` function that is currently used to add the prefix to something like below.
+If it has the `ShardedOrGlobalContract::Sharded` variant, a new `TrieKey` variant is used:
 
 ```rust
-    pub fn create_storage_key(
-        &self,
-        contract_code_type: &AccountContractType,
-        key: &[u8],
-    ) -> TrieKey {
-        let account_id = self.account_id.clone();
-        match contract_code_type {
-            AccountContractType::None => unreachable!(),
-            // The current use case
-            AccountContractType::Local(_) => {
-                TrieKey::ContractData { account_id, key: key.to_vec() }
-            }
-            AccountContractType::Global(hash) => {
-                TrieKey::ContractDataGlobalContract { account_id, hash, key: key.to_vec() }
-            }
-            AccountContractType::GlobalByAccount(global_account_id) => {
-                TrieKey::ContractDataGlobalByAccount {
-                    global_account_id,
-                    account_id,
-                    key: key.to_vec(),
-                }
-            }
-        }
+enum TrieKey {
+    ShardedContractCode { identifier: AccountId, version: u64 },
+}
+```
+
+to create the entry in the trie of the shard.
+
+#### `UseShardedContractAction`
+
+This action is similar to the `UseGlobalContractAction`.  This action can be called multiple times to use multiple different sharded contract codes on the account.  To support this action, the `AccountContract` struct is updated as following:
+
+```rust
+struct ShardedEntry {
+    account_identifier: AccountId,
+    version: u64,
+}
+
+enum AccountContract {
+    ...
+    Sharded(BTreeSet<ShardedEntry>)
+}
+```
+
+#### `RemoveShardedContractAction`
+
+This action allows a user to stop using sharded contract code that it previously started using.  Note that this does not remove the storage that the sharded contract code may have created on the user account.  It just updates the `AccountContract` struct to remove the requested entry.
+
+#### `ShardedFunctionCallAction`
+
+This action is similar to the `FunctionCallAction`.  This action is used to call a sharded contract code instead of a local or global contract.  As an account can be using multiple sharded contract codes, we also specify which sharded contract code to call.
+
+#### Storage namespace
+
+Today when local or global contract code calls accesses the storage, the following function is used to create the trie key used:
+
+```rust
+fn create_storage_key(&self, key: &[u8]) -> TrieKey {
+    TrieKey::ContractData { account_id: self.account_id.clone(), key: key.to_vec() }
+}
+```
+
+By prepending the account id of the current account to the key, each account gets a separate namespace which ensures that no other account can access their data.
+
+We propose extending this namespace to support per sharded contract namespaces.
+
+```rust
+enum ContractType {
+    LocalOrGlobal,
+    // The account id refers to the account id
+    // where the sharded contract code is deployed.
+    Sharded(AccountId),
+}
+
+fn create_storage_key(&self, key: &[u8], contract_type: ContractType) -> TrieKey {
+    match contract_type {
+        ContractType::LocalOrGlobal => TrieKey::ContractData {
+            account_id: self.account_id.clone(),
+            key: key.to_vec(),
+        },
+        ContractType::Sharded(account_id) => TrieKey::ShardedContractData {
+            sharded_acount_id: account_id,
+            account_id: self.account_id.clone(),
+            key: key.to_vec(),
+        },
     }
+}
 ```
 
-As seen above, each type of code deployment gets its own unique prefix that is added to the key which creates a separate namespace for them that is not accessible to other code deployments.
-
-TODO: discuss how to get access to `AccountContractType` when calling `create_storage_key()`.
-
-### Enabling multiple contract codes on a single account
-
-A big issue with the proposal above is that currently a account can only have a single contract deployed on it.  In the FT example, this would imply that a single account can only hold a single type of token and if a user wants to hold multiple different tokens, then the user will have to create multiple accounts which would not be a good user experience as they would have to manage multiple private keys, etc.  Ideally, a single account can still host multiple FT contracts.
-
-TODO: detailed design for multiple contract codes on a single account.
-
-- Subaccounts do not work.
-- When sending a msg to another account, on the sending side, need to include which contract code sent the msg and the sending contract needs to specify which contract on destination should receive the msg.
-- Need to update `DeployContract` to allow it to overwrite an existing contract or create a new contract.
-- It probably doesn't make sense to be able to deploy the same global contract multiple times on the same account.  That will also make routing more complex.
-- `create_storage_key()` above needs to be updated to support multiple local contract codes.  This needs to be backwards compatible otherwise we need to migrate a lot of state.  Alternatively, we can say that we do not support multiple local contract codes on a single account.
+A new trie key variant is introduced to store state created by sharded contract codes and the account id of the sharded contract code is additionally prepended to create a per sharded contract namespace.
 
 ### Upgrading a sharded contract
 
