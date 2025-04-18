@@ -29,9 +29,15 @@ We will use the fungible tokens (FT) contract as an example contract to explain 
 The contract consists of state where all the user' account balances are stored in a single HashMap data structure.  When a user wishes to transfer some FT to another user, the following steps take place:
 
 - The sender sends a transaction with a function call action to the contract to transfer the tokens from one account to another.
-- This transaction is routed to the shard where the user's account lives where it is converted to a receipt.
+- This transaction is routed to the user account's shard.  Standard account access keys serve as authentication of the sender.  The transaction is converted to a receipt, with the user account id as predecessor id.
 - Then, if the FT contracts lives on another shard, the receipt is routed to that shard.
-- Once it arrives on the FT contract's shard, the receipt is executed, the function call is performed, and the transfer is performed.
+- Once it arrives on the FT contract's shard, the function call is performed.
+    - The FT contract code looks at the predecessor id and trusts it for authentication.
+    - The FT contract code checks that the sender has enough balance using the HashMap stored in contract state. 
+    - Subtract the transfer amount from the HashMap entry for one user and increases it for the other user.
+    - Emit a [Fungible Token Event](https://nomicon.io/Standards/Tokens/FungibleToken/Event) to the logs for off-chain observability.
+
+In this centralized architecture, the contract code has full visibility to all balances and may perform atomic actions on multiple account balances.  Furthermore, all emitted events are produced at a single contract, which e.g. an explorer can observe to track all FT activity in one place.
 
 The minimum latency of doing a single transaction is 2 blocks.  In the first block, the transaction is converted to a receipt and if needed the receipt is routed to another shard.  Then in the second block, the receipt executes on the FT contract.  Additionally, note that each FT transfer requires exactly one function call.
 
@@ -42,7 +48,11 @@ Since all the account balances are stored in a single contract, this one contrac
 
 ## Specification
 
-In the centralised FT contract above, all the state is stored in a single centralised location.  The opposite extreme of this approach would be to store all the state in as distributed a manner as possible i.e. the account balances of each user is stored locally on their accounts instead.  Below, we explain how this can be implemented.
+In the centralised FT contract above, all the state is stored in a single centralised location.  The opposite extreme of this approach would be to store all the state in as distributed a manner as possible i.e. the account balances of each user is stored locally on their accounts instead.  This distributes it across shards and allows for horizontal scaling.
+
+Of course, we cannot just put the state in normal user storage without a way to mitigate them manipulating their FT balance.  We need a way to ensure only the real FT contract code can modify this state.
+
+Below, we explain how this can be implemented.
 
 ### Pseudocode for a sharded FT contract
 
@@ -56,8 +66,8 @@ trait HostFunctions {
     fn current_account_id() -> AccountId;
 
     // This host function already exists and returns the account id of the
-    // signer (i.e. the message sender) account.
-    fn signer_account_id() -> AccountId;
+    // predecessor (i.e. the message sender) account.
+    fn predecessor_account_id() -> AccountId;
 
     // This is a simplification of the already existing storage read host
     // function used to read contract state from the trie.
@@ -83,16 +93,16 @@ trait HostFunctions {
     // function panics.  If it was called using a new
     // `ShardedFunctionCallAction` then returns information about which global
     // contract code that is being used by the current account.
-    fn current_sharded_contract_info() -> ShardedContractInfo;
+    fn current_sharded_contract_info() -> Option<ShardedContractInfo>;
 
     // A new host function that returns information about the sharded contract
-    // code that is being used by the signer (i.e. the message sender) account.
+    // code that is being used by the predecessor (i.e. the message sender) account.
     //
-    // If the signer (i.e. the message sender) called the current account using
+    // If the predecessor (i.e. the message sender) called the current account using
     // the new `ShardedFunctionCallAction` information about what type of global
-    // contract code the signer account is using.  Otherwise, the function
+    // contract code the predecessor account is using.  Otherwise, the function
     // panics.
-    fn signer_sharded_contract_info() -> ShardedContractInfo;
+    fn predecessor_sharded_contract_info() -> Option<ShardedContractInfo>;
 
     // A new host function that allows the current account to call another
     // account using the new `ShardedFunctionCallAction` action instead of the
@@ -119,12 +129,17 @@ trait HostFunctions {
     );
 }
 
-struct ShardedContractInfo {
-    /// Account id of the account where the sharded contract code is deployed.
-    account_id: AccountId,
-    /// How many times the the above account has deployed a sharded contract
-    // code on itself.
-    version: u64,
+enum ShardedContractInfo {
+    Immutable { 
+        code_hash: CryptoHash
+    },
+    Mutable {
+        /// Account id of the account where the sharded contract code is deployed.
+        account_id: AccountId,
+        /// How many times the the above account has deployed a sharded contract
+        // code on itself.
+        version: u64,
+    },
 }
 
 // A smart contract function that can be used to initiate a FT transfer.
@@ -132,7 +147,7 @@ fn send_tokens(amount: Balance, receiver: AccountId) {
     // Since only the owner of this account is allowed to transfer funds out of
     // it, ensure that the caller of this function is the owner of this account.
     let my_account_id = HostFunctions::current_account_id();
-    let msg_sender = HostFunctions::signer_account_id();
+    let msg_sender = HostFunctions::predecessor_account_id();
     assert_eq!(my_account_id, msg_sender);
 
     // Update the account balance
@@ -154,6 +169,8 @@ fn send_tokens(amount: Balance, receiver: AccountId) {
         amount,
     );
 
+    // TODO: Should we emit an ft_transfer events here?  Or at the receiver?  Both?
+
     // This pseudocode assumes that `receive_tokens()` always succeeds.  In a
     // more complete version, if `receive_tokens()` fails, then this function
     // should undo the balance decrement above to ensure that tokens are not
@@ -170,13 +187,13 @@ fn receive_tokens(amount: Balance) {
     // to look up what type of contract code is deployed on the current account
     // and on the message sender's account.
     //
-    // Then check that both the current account and the signer are using the
+    // Then check that both the current account and the predecessor are using the
     // same sharded contract code.
     let my_sharded_contract_info = HostFunctions::current_sharded_contract_info();
-    let signer_sharded_contract_info = HostFunctions::signer_sharded_contract_info();
+    let sender_sharded_contract_info = HostFunctions::predecessor_sharded_contract_info();
     assert_eq!(
         my_sharded_contract_info.account_id,
-        signer_sharded_contract_info.account_id
+        sender_sharded_contract_info.account_id
     );
     // It is possible that in between the signer sending the message and
     // the current account executing it, the sharded contract has been
@@ -188,7 +205,7 @@ fn receive_tokens(amount: Balance) {
     // version as current.
     assert_eq!(
         my_sharded_contract_info.version,
-        signer_sharded_contract_info.version
+        sender_sharded_contract_info.version
     );
 
     // Update the account balance
@@ -213,7 +230,7 @@ struct UseShardedContractAction {
     account_id: AccountId,
 }
 
-/// This action allows an account to stop using an sharded contract code that is
+/// This action allows an account to stop using a sharded contract code.
 struct RemoveShardedContractAction {
     // Account id of the account where the sharded contract code is deployed.
     account_id: AccountId,
@@ -229,8 +246,8 @@ struct ShardedFunctionCallAction {
     // identifies which one should be called.
     receiver_sharded_contract_code_account_id: AccountId,
     // An account can have multiple sharded contract codes deployed on it.  This
-    // identifies which contract code on the signer is sending the action.
-    signer_sharded_contract_code_account_id: AccountId,
+    // identifies which contract code on the predecessor is sending the action.
+    predecessor_sharded_contract_code_account_id: AccountId,
     // additionally arguments are identical to `FunctionCallAction`.
     ...
 }
@@ -268,9 +285,9 @@ We considered the existing subaccount feature as well here.  That idea does not 
 
 We identified that sharded contracts may want to have 2 types of access control on functions.
 
-First are functions that can only be called by the account owner (e.g. `send_tokens()`).  This scenario is covered by the existing set of host functions.
+First are functions that can only be called by the account owner (e.g. `send_tokens()`).  This scenario is covered by the existing set of host functions and access keys.
 
-Second are functions that can only be called by another instance of the same contract.  Here the `ShardedFunctionCallAction` action provides information about the signer and the runtime can provide information about the current account.  And then as seen in `receive_tokens()`, the contract can then perform the appropriate checks.
+Second are functions that can only be called by another instance of the same contract.  Here the `ShardedFunctionCallAction` action provides information about the predecessor and the runtime can provide information about the current account.  And then as seen in `receive_tokens()`, the contract can then perform the appropriate checks.
 
 #### Storage namespaces
 
@@ -286,7 +303,7 @@ With the high level requirements and the pseudocode presented, we can discuss th
 
 #### `DeployShardedContractAction`
 
-This action is similar to the `DeployGlobalContractAction`.  Note that an account can have only a single sharded contract code deployed on it.  Processing this action will generate a `GlobalContractDistributionReceipt`.  We propose the following modifications to this receipt.
+This action is similar to the `DeployGlobalContractAction`.  Note that an account can have only a single instance of any specific sharded contract code deployed on it.  Processing this action will generate a `GlobalContractDistributionReceipt`.  We propose the following modifications to this receipt.
 
 ```rust
 enum GlobalContractDistributionReceipt {
