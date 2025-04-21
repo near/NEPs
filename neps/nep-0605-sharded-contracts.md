@@ -1,7 +1,7 @@
 ---
 NEP: 0605
 Title: Sharded Contracts
-Authors: Akhi Singhania <akhi3030@gmail.com>
+Authors: Akhi Singhania <akhi3030@gmail.com>; Jakob Meier <jakob@nearone.org>
 Status: Draft
 DiscussionsTo: https://github.com/nearprotocol/neps/pull/0000
 Type: Protocol
