@@ -32,6 +32,7 @@ The contract consists of state where all the user' account balances are stored i
 - This transaction is routed to the user account's shard.  Standard account access keys serve as authentication of the sender.  The transaction is converted to a receipt, with the user account id as predecessor id.
 - Then, if the FT contracts lives on another shard, the receipt is routed to that shard.
 - Once it arrives on the FT contract's shard, the function call is performed.
+
     - The FT contract code looks at the predecessor id and trusts it for authentication.
     - The FT contract code checks that the sender has enough balance using the HashMap stored in contract state. 
     - Subtract the transfer amount from the HashMap entry for one user and increases it for the other user.
@@ -446,15 +447,15 @@ TODO
 
 ### Positive
 
-* p1
+- p1
 
 ### Neutral
 
-* n1
+- n1
 
 ### Negative
 
-* n1
+- n1
 
 ### Backwards Compatibility
 
@@ -475,8 +476,8 @@ None
 
 > List of benefits filled by the Subject Matter Experts while reviewing this version:
 
-* Benefit 1
-* Benefit 2
+- Benefit 1
+- Benefit 2
 
 #### Concerns
 
