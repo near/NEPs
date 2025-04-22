@@ -33,10 +33,10 @@ The contract consists of state where all the user' account balances are stored i
 - Then, if the FT contracts lives on another shard, the receipt is routed to that shard.
 - Once it arrives on the FT contract's shard, the function call is performed.
 
-    - The FT contract code looks at the predecessor id and trusts it for authentication.
-    - The FT contract code checks that the sender has enough balance using the HashMap stored in contract state. 
-    - Subtract the transfer amount from the HashMap entry for one user and increases it for the other user.
-    - Emit a [Fungible Token Event](https://nomicon.io/Standards/Tokens/FungibleToken/Event) to the logs for off-chain observability.
+  - The FT contract code looks at the predecessor id and trusts it for authentication.
+  - The FT contract code checks that the sender has enough balance using the HashMap stored in contract state. 
+  - Subtract the transfer amount from the HashMap entry for one user and increases it for the other user.
+  - Emit a [Fungible Token Event](https://nomicon.io/Standards/Tokens/FungibleToken/Event) to the logs for off-chain observability.
 
 In this centralized architecture, the contract code has full visibility to all balances and may perform atomic actions on multiple account balances.  Furthermore, all emitted events are produced at a single contract, which e.g. an explorer can observe to track all FT activity in one place.
 
