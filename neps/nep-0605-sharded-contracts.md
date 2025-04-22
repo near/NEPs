@@ -93,15 +93,14 @@ trait HostFunctions {
     // function panics.  If it was called using a new
     // `ShardedFunctionCallAction` then returns information about which global
     // contract code that is being used by the current account.
-    fn current_sharded_contract_info() -> Option<ShardedContractInfo>;
+    fn current_sharded_contract_info() -> ShardedContractInfo;
 
     // A new host function that returns information about the sharded contract
     // code that is being used by the predecessor (i.e. the message sender) account.
     //
     // If the predecessor (i.e. the message sender) called the current account using
     // the new `ShardedFunctionCallAction` information about what type of global
-    // contract code the predecessor account is using.  Otherwise, the function
-    // panics.
+    // contract code the predecessor account is using.
     fn predecessor_sharded_contract_info() -> Option<ShardedContractInfo>;
 
     // A new host function that allows the current account to call another
