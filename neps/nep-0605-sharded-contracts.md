@@ -63,8 +63,8 @@ We start by showing what a sharded version of the above FT contract would look l
 // Pseudocode interface to various host functions
 trait HostFunctions {
     /// Returns the account id of the parent account that created this sharded
-    /// subaccount.  If this function is called by an account that is not a
-    /// sharded subaccount, then it panics.
+    /// subordinate account.  If this function is called by an account that is
+    /// not a sharded subordinate account, then it panics.
     fn parent_account_id() -> AccountId;
 
     // This host function already exists and returns the account id of the
@@ -134,7 +134,7 @@ enum CallShardedContractReceiver {
         maximum_version: Option<u64>,
     },
     /// If an immutable sharded contract code is being called, just the code
-    /// hash is required and no versioning informaiton is needed either.
+    /// hash is required and no versioning information is needed either.
     Immutable { code_hash: CryptoHash },
 }
 
@@ -184,7 +184,7 @@ fn send_tokens(amount: Balance, receiver: AccountId) {
                 CallShardedContractReceiver::Mutable {
                     account_id,
                     // Require that the receiver is precisely at the same
-                    // version as the sender.  Otherwise, it is posisble that
+                    // version as the sender.  Otherwise, it is possible that
                     // due to version changes, some subtle bugs might be
                     // introduced.
                     minimum_version: Some(version),
@@ -246,65 +246,6 @@ fn receive_tokens(amount: Balance) {
 }
 ```
 
-Additionally, we will need the following new receipt actions.
-
-```rust
-enum ShardedContractType {
-    Immutable {
-        // code hash of the contract code.
-        code_hash: CryptoHash,
-    },
-    Mutable {
-        // Account id of the account where the sharded contract code is deployed.
-        account_id: AccountId,
-    },
-}
-
-/// This action allows an account to start using a existing sharded contract
-/// code. This contract code can only be called by using the new
-/// `ShardedFunctionCallAction` action.
-///
-/// This action can be called multiple times on the same account to allow it to
-/// use multiple sharded contract codes simultaneously.
-///
-/// This action is similar to creating a new account as it creates a sharded
-/// subaccount.
-struct UseShardedContractAction {
-    /// information about which sharded contract to use
-    sharded_contract: ShardedContractType,
-}
-
-/// This action allows an account to stop using a sharded contract code.
-///
-/// This action is similar to deleting an account as it deletes a sharded
-/// subaccount.
-struct RemoveShardedContractAction {
-    sharded_contract: ShardedContractType,
-    beneficiary_id: AccountId,
-}
-
-/// This is similar to the existing `FunctionCallAction`.  `FunctionCallAction`
-/// allows calling contract codes that are deployed using the
-/// `DeployContractAction` or the `UseGlobalContractAction` on an account.  This
-/// action allows calling contract codes that are deployed using the
-/// `UseShardedContractAction`.
-struct ShardedFunctionCallAction {
-    // An account can be using multiple sharded contract codes.  This identifies
-    // which one should be called.
-    receiver_sharded_contract: ShardedContractType,
-    // An account can be using multiple sharded contract codes.  This identifies
-    // which contract code on the predecessor is sending the action.
-    predecessor_sharded_contract: ShardedContractType,
-    // additionally arguments are identical to `FunctionCallAction`.
-}
-
-/// This is similar to DeployGlobalContractAction.
-struct DeployShardedContractAction {
-    deploy_mode: ShardedContractType,
-    code: Arc<[u8]>,
-}
-```
-
 With the above in place, following is the flow for how a sharded FT contract would be used.
 
 1. Each user that wants to use a sharded FT contract, will first start using it on their account using the `UseShardedContractAction` action.
@@ -324,19 +265,9 @@ Comparing this approach to the centralised approach, we note the following:
 
 ### Requirements
 
-We can now explain what the high level requirements are that the above proposal is trying to meet.  This provides the sufficient context to understand why the proposal is designed the way it is.
+One of the main high level requirements for this work is that users should not have to manage multiple sets of keys which would degrade the user experience.  In the FT example, it should be possible for a user to hold multiple FTs without having to manage multiple sets of keys.  This necessitates that multiple sharded contracts can be used by a single account.
 
-#### Multiple contract codes
-
-It should be possible to use multiple sharded contract codes on a single account.  This is important because otherwise users will have to create new accounts for each type of FT they want to hold which means that the users will have to manage multiple keys, etc. degrading user experience.
-
-#### Access control to sharded contract functions
-
-We identified that sharded contracts may want to have 2 types of access control on functions.
-
-First are functions that can only be called by the account owner (e.g. `send_tokens()`).
-
-Second are functions that can only be called by another instance of the same contract.  Here the `ShardedFunctionCallAction` action provides information about the predecessor and the runtime can provide information about the current account.  And then as seen in `receive_tokens()`, the contract can perform the appropriate checks.
+A follow on requirement of this is that if multiple contract codes are being used on a single account, then they need proper isolation to ensure that they cannot corrupt each other's state and it should be possible for the account owner to specify resource constraints on what the sharded contract codes can do.
 
 ### Detailed specification
 
@@ -344,9 +275,32 @@ With the high level requirements and the pseudocode presented, we can discuss th
 
 #### `DeployShardedContractAction`
 
-This is where things begin.  A smart contract developer who has built a smart contract will deploy their sharded contract to the network using this action.  This action is similar to the `DeployGlobalContractAction`.  The main difference is that processing this action generates a `GlobalContractDistributionReceipt` where `sharded_or_global` is set to support the appropriate sharded contract code deployment type.
+This is where things begin.  A smart contract developer who has built a smart contract will deploy their sharded contract to the network using this action.  This action is similar to the `DeployGlobalContractAction`.  We could not simply reuse `DeployGlobalContractAction` because it needs to generate a different type of receipt as seen below.
 
-Details of the receipt are below.  Note that at most one sharded contract can be deployed on an account.
+
+```rust
+/// This is similar to DeployGlobalContractAction.
+struct DeployShardedContractAction {
+    deploy_mode: ShardedContractType,
+    code: Arc<[u8]>,
+}
+
+enum ShardedContractType {
+    /// The sharded contract cannot be upgraded
+    Immutable {
+        // code hash of the contract code.
+        code_hash: CryptoHash,
+    },
+    /// The sharded contract can be upgraded
+    Mutable {
+        // Account id of the account where the sharded contract code is deployed.
+        account_id: AccountId,
+    },
+}
+```
+
+Processing this action generates a `GlobalContractDistributionReceiptV2` receipt where `sharded_or_global` is set to support the appropriate sharded contract code deployment type.  The main difference here compared to `GlobalContractDistributionReceiptV1` is the addition of the `version` field in `ShardedContractIdentifier::Mutable` variant.  This `version` tracks how many times a sharded contract has been deployed on an account which allows smart contracts to constrain which versions of the code they are talking to as seem in the FT example above.
+
 
 ```rust
 enum ShardedContractIdentifier {
@@ -369,7 +323,7 @@ enum GlobalContractDistributionReceipt {
 }
 
 enum ShardedOrGlobalContract {
-    // Same before
+    // Same as GlobalContractDistributionReceiptV1
     Global { id: GlobalContractIdentifier },
     // new variant to support sharded contract deployments
     Sharded(ShardedContractIdentifier),
@@ -383,9 +337,7 @@ struct GlobalContractDistributionReceiptV2 {
 }
 ```
 
-When processing the `GlobalContractDistributionReceiptV2`, if it has the `ShardedOrGlobalContract::Global` variant, the existing functionality is kept.  
-
-If it has the `ShardedOrGlobalContract::Sharded` variant, a new `TrieKey` variant is used:
+Finally, when processing the `GlobalContractDistributionReceiptV2`, if it has the `ShardedOrGlobalContract::Sharded` variant, a new `TrieKey` variant is used:
 
 ```rust
 enum TrieKey {
@@ -400,28 +352,171 @@ to store the sharded contract code on the shard.
 
 Now that the smart contract developer has deployed their sharded contract on the network, users can start using it.  Assuming that users already have an account, they will use the `UseShardedContractAction` to use the sharded contract code on their account.
 
-This action is similar to the `CreateAccountAction` action.  Further, this action can be called multiple times to use multiple different sharded contract codes on the same account.  To support this action, we propose that each time this action is issues, a new account is created that is subordinate to the account that created it.
+```rust
+/// This action allows an account to start using a existing sharded contract
+/// code. This contract code can only be called by using the new
+/// `ShardedFunctionCallAction` action.
+///
+/// This action can be called multiple times on the same account to allow it to
+/// use multiple sharded contract codes simultaneously.
+///
+/// This action is similar to creating a new account as it creates a sharded
+/// subordinate account.
+struct UseShardedContractAction {
+    /// information about which sharded contract to use
+    sharded_contract: ShardedContractType,
+}
+```
 
-By creating a new account, we get the necessary isolation that is important to ensure that no malicious or accidental tampering can happen.  In particular, we prevent the following potential attacks and possibly more:
-
-1. If an account has a contract code `C` deployed on it and it is using a sharded contract code `S`, it might be possible for them to access each other's state and corrupt it.
-2. Similarly, if an account is using multiple sharded contract codes `S1` and `S2`, then it is possible that they could access and corrupt each other's state.
-3. Sharded contract codes have unfettered access to the NEAR tokens on the account.  They could transfer it away or they could keep increasing the size of the state increasing the amount of NEAR tokens that are locked up.
-
-By creating a separate subordinate account for each sharded contract that an account wants to use, we ensure that the account is able to specify limits on how much resources the sharded contract can use.  We also ensure that the sharded contract is well isolated from the account and from other sharded contracts which might corrupt its state.
-
-XXX: Discuss the design further.  Some open questions
-
-- How is the account created?
-- what is the name for the account?
+This action is similar to the `CreateAccountAction` action.  Further, this action can be called multiple times to use multiple different sharded contract codes on the same account.  To support this action, we propose that each time this action is issued, a new subordinate account is created.  Details of subordinate accounts are discussed below.
 
 #### `ShardedFunctionCallAction`
 
-Once users are using a sharded contract code, they can call it using this action.  This action is similar to `FuctionCallAction`.  It contains additional information about what type of sharded contract to call on the receiver side.  Note that as seen in the example above, this action will also be used when a sharded contract code calls another one.
+Once an account is using a sharded contract code, the sharded contract code can be called using this action.  This action is similar to the `FunctionCallAction` action.  It contains additional information about what type of sharded contract to call on the account.  Note that as seen in the FT example above, this action will also be used when a sharded contract code calls another one.
+
+```rust
+/// This is similar to the existing `FunctionCallAction`.  `FunctionCallAction`
+/// allows calling contract codes that are deployed using the
+/// `DeployContractAction` or the `UseGlobalContractAction` on an account.  This
+/// action allows calling contract codes that are deployed using the
+/// `UseShardedContractAction`.
+struct ShardedFunctionCallAction {
+    // An account can be using multiple sharded contract codes.  This identifies
+    // which one should be called.
+    receiver_sharded_contract: ShardedContractType,
+    // An account can be using multiple sharded contract codes.  This identifies
+    // which contract code on the predecessor is sending the action.  If this is
+    // `None`, then the caller is not using sharded contract code.
+    predecessor_sharded_contract: Option<ShardedContractType>,
+    // additionally arguments are identical to `FunctionCallAction`.
+}
+```
 
 #### `RemoveShardedContractAction`
 
-This action allows a user to stop using sharded contract code that it previously started using.  This is similar to the `DeleteAccountAction`.  Note that this does not remove the storage that the sharded contract code may have created on the user account.  It just deletes the subordinate account that was created to support the sharded contract.
+This action allows a user to stop using sharded contract code that it previously started using.  This is similar to the `DeleteAccountAction` as it will delete the subordinate account.  More details of what precisely will be deleted will be discussed in the subordinate accounts section below.
+
+```rust
+
+/// This action allows an account to stop using a sharded contract code.
+///
+/// This action is similar to deleting an account as it deletes a sharded
+/// subordinate account.
+struct RemoveShardedContractAction {
+    // Which sharded contract code to delete
+    sharded_contract: ShardedContractType,
+    // which account should get the remaining NEAR tokens
+    beneficiary_id: AccountId,
+}
+
+```
+
+### Subordinate accounts
+
+As briefly mentioned above, when there are multiple sharded contract codes being used on a single account, there are two high level requirements that need to be met:
+
+- There should be sufficient isolation between the state that the contract codes are using to ensure that there is no accidental or malicious corruption of state
+- Because the sharded contract code can contain bugs, the account should be allowed to set resource constraints on what the sharded contract code is allowed to do
+
+To meet these goals, we propose subordinate accounts.  Subordinate accounts are like normal accounts but have additional constraints.  Below is a chart for these constraints and then we explain them in more details.
+
+
+Trie column | Content | Duplicated perSubordinate |  
+-- | -- | -- | --
+col::Account |   |   |  
+  | NEAR balance | No | No balance access by default
+  | NEAR locked for staking | No | No staking access by default
+  | NEAR locked for storage | No | No storage allowance above ZBA by default
+  | contract hash | No | Contract hash is stored in col::ShardedContract
+col::ContractCode | Full contract code | No | only global contract allowed
+col::ContractData | Smart contract state | Yes | isolate state
+col::AccessKey | Access keys | No | use same access keys as parent
+col::ShardedContract | Contract code and permissions | Yes | New column added for contract permissions
+
+#### Constraints
+
+In the MVP version of subordinate accounts, they will have the following constraints.
+
+Subordinate accounts cannot hold any NEAR tokens.  This will further imply that the maximum amount of state that they can use is limited to [770B](https://github.com/near/NEPs/blob/master/neps/nep-0448.md#specification).  The reason for this constraint is that if subordinate accounts can hold tokens, then they could send these tokens to other accounts in cross contract function calls which the parent account might want to restrict.  A bigger concern is that if the sharded contract was allowed to create arbitrarily large amounts of `ContractData`, then removing them might be difficult.  Today when an account is deleted, all of its `ContractData` is also deleted.  To ensure that deleting an account does not take too long, if an account has more than 10KiB of data, then it cannot be deleted.  To avoid these complications, in the MVP, we propose that subordinate accounts cannot hold tokens which ensures that they cannot accidentally / maliciously send tokens to other accounts and create arbitrarily large `ContractData`.
+
+Subordinate accounts are allowed to access only a restricted set of host functions.
+
+XXX: write down the exact list below.
+
+In particular, subordinate accounts are not allowed to create `FunctionCallAction` actions.  This is because, without further modifications to the protocol, the receiver of such actions would not be able to tell which contract code was calling it and it would allow a subordinate account to impersonate the parent account.
+
+#### Specification
+
+When `UseShardedContractAction` is called, a new subordinate account is created.  To support this, the `Account` struct is updated to the following:
+
+```rust
+pub enum Account {
+    V1(AccountV1),
+    V2(AccountV2),
+    V3(AccountV3),
+}
+
+enum ShardedContract {
+    Immutable(CryptoHash),
+    Mutable(AccountId),
+}
+
+struct SubordinateAccount {
+    /// This is guaranteed to not be higher than 770Bytes
+    storage_usage: StorageUsage,
+    contract: ShardedContract,
+}
+
+enum AccountV3 {
+    // Supports existing local and global types
+    Standard(AccountV2),
+    Subordinate(SubordinateAccount),
+}
+```
+
+Note that subordinate accounts do not have the ability to store tokens.  This means that they cannot send or receive tokens.  Further, the amount of state they can create is limited to 770 as per the zero balance accounts feature.
+
+Next, both `storage_write()` and `storage_read()` host functions use the `create_storage_key()` function to access storage.  To provide sufficient isolation for the state that subordinate accounts are creating, the following changes are proposed.
+
+```rust
+enum TrieKey {
+    ...
+    ShardedImmutableContractData {
+        account_id: AccountId,
+        code_hash: CryptoHash,
+        key: Vec<u8>,
+    },
+    ShardedMutableContractData {
+        account_id: AccountId,
+        code_account_id: AccountId,
+        key: Vec<u8>,
+    },
+}
+
+pub fn create_storage_key(&self, key: &[u8], account_type: &AccountV3) -> TrieKey {
+    match account_type {
+        AccountV3::Standard(_) => {
+            TrieKey::ContractData { account_id: self.account_id.clone(), key: key.to_vec() }
+        }
+        AccountV3::Subordinate(subordinate_account) => match subordinate_account.contract {
+            ShardedContract::Immutable(code_hash) => TrieKey::ShardedImmutableContractData {
+                account_id: self.account_id.clone(),
+                code_hash,
+                key: key.to_vec(),
+            },
+            ShardedContract::Mutable(code_account_id) => TrieKey::ShardedMutableContractData {
+                account_id: self.account_id.clone(),
+                code_account_id,
+                key: key.to_vec(),
+            },
+        },
+    }
+}
+```
+
+New variants are added to the `TrieKey` to help store the contract data from the subordinate accounts and `create_storage_key` is updated to create the appropriate trie key.  These changes ensure that each subordinate account has its own storage namespace that cannot be accessed or corrupted by others.
+
+Finally, as shown in the chart above, all subordinate accounts and the parent account share the same set of `AccessKey`s.
 
 ### Upgrading a sharded contract
 
