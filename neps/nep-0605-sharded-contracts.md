@@ -84,7 +84,7 @@ trait HostFunctions {
     //
     // If the contract code was called using a `FunctionCallAction`, then this
     // function panics.  If it was called using a new
-    // `ShardedFunctionCallAction` then returns information about which global
+    // `ShardedFunctionCallAction` then returns information about which sharded
     // contract code that is being used by the current account.
     fn current_sharded_contract_info() -> ShardedContractInfo;
 
@@ -94,7 +94,7 @@ trait HostFunctions {
     //
     // If the predecessor (i.e. the message sender) called the current account
     // using the new `ShardedFunctionCallAction` information about what type of
-    // global contract code the predecessor account is using.
+    // sharded contract code the predecessor account is using.
     //
     // Returns: `None` if the sender is not using a sharded contract code.
     fn predecessor_sharded_contract_info() -> Option<ShardedContractInfo>;
@@ -383,7 +383,7 @@ Once an account is using a sharded contract code, the sharded contract code can 
 struct ShardedFunctionCallAction {
     // An account can be using multiple sharded contract codes.  This identifies
     // which one should be called.
-    receiver_sharded_contract: ShardedContractType,
+    receiver_sharded_contract: CallShardedContractReceiver,
     // An account can be using multiple sharded contract codes.  This identifies
     // which contract code on the predecessor is sending the action.  If this is
     // `None`, then the caller is not using sharded contract code.
