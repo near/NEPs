@@ -126,12 +126,10 @@ enum CallShardedContractReceiver {
         /// deployed.
         account_id: AccountId,
         /// In between a sender sending the message and the receiver executing
-        /// it, the contract code could have been upgraded.  The two fields
-        /// below allow the sender to specify which versions the receiver can be
-        /// in when called.  If the receiver's version is outside the specified
-        /// range, then the call is rejected.
-        minimum_version: Option<u64>,
-        maximum_version: Option<u64>,
+        /// it, the contract code could have been upgraded.  The field can be
+        /// used to ensure that the receiver is using the desired version of
+        /// the code.
+        expected_code_hash: Option<CryptoHash>,
     },
     /// If an immutable sharded contract code is being called, just the code
     /// hash is required and no versioning information is needed either.
@@ -147,9 +145,8 @@ enum ShardedContractInfo {
     Mutable {
         /// Account id of the account where the sharded contract code is deployed.
         account_id: AccountId,
-        /// How many times the the above account has deployed a sharded contract
-        // code on itself.
-        version: u64,
+        /// Hash of the sharded contract code.
+        code_hash: CryptoHash,
     },
 }
 
@@ -178,17 +175,15 @@ fn send_tokens(amount: Balance, receiver: AccountId) {
             amount,
         ),
 
-        ShardedContractInfo::Mutable { account_id, version } => {
+        ShardedContractInfo::Mutable { account_id, code_hash } => {
             HostFunctions::call_sharded_contract(
                 receiver,
                 CallShardedContractReceiver::Mutable {
                     account_id,
-                    // Require that the receiver is precisely at the same
-                    // version as the sender.  Otherwise, it is possible that
-                    // due to version changes, some subtle bugs might be
-                    // introduced.
-                    minimum_version: Some(version),
-                    maximum_version: Some(version),
+                    // Ensure that the receiver is using the same version of
+                    // the contract code as the sender to ensure that there
+                    // are no subtle bugs introduced between upgrades.
+                    expected_code_hash: Some(code_hash),
                 },
                 "receive_tokens",
                 amount,
@@ -222,8 +217,8 @@ fn receive_tokens(amount: Balance) {
             ShardedContractInfo::Immutable { code_hash: sender_code_hash },
         ) => assert_eq!(my_code_hash, sender_code_hash),
         (
-            ShardedContractInfo::Mutable { account_id: my_account_id, version: my_version },
-            ShardedContractInfo::Mutable { account_id: sender_account_id, version: sender_version },
+            ShardedContractInfo::Mutable { account_id: my_account_id, code_hash: my_code_hash },
+            ShardedContractInfo::Mutable { account_id: sender_account_id, code_hash: sender_code_hash },
         ) => {
             assert_eq!(my_account_id, sender_account_id);
             // It is possible that in between the signer sending the message and
@@ -234,7 +229,7 @@ fn receive_tokens(amount: Balance) {
             // depending on the differences between the two versions. Hence, the
             // receiver rejects any messages that are not sent from the same
             // version as current.
-            assert_eq!(my_version, sender_version);
+            assert_eq!(my_code_hash, sender_code_hash);
         }
         _ => panic!(),
     }
@@ -273,18 +268,13 @@ A follow on requirement of this is that if multiple contract codes are being use
 
 With the high level requirements and the pseudocode presented, we can discuss the specification of the new primitives been proposed.
 
-#### `DeployShardedContractAction`
+We will reuse many of the mechanisms that are already built to deploy and distribute global contract code.  In particular, when a smart contract developer has built a sharded contract, they will use the `DeployGlobalContractAction` to deploy the code on their contract.  Note that this means that an account can use a global contract code in the sharded contract mode which may not have been the original intention of the smart contract developer.  We do not see any security concerns with allowing this.
 
-This is where things begin.  A smart contract developer who has built a smart contract will deploy their sharded contract to the network using this action.  This action is similar to the `DeployGlobalContractAction`.  We could not simply reuse `DeployGlobalContractAction` because it needs to generate a different type of receipt as seen below.
+#### `UseShardedContractAction`
 
+Now that the smart contract developer has deployed their sharded contract on the network, users can start using it.  Assuming that users already have an account, they will use the `UseShardedContractAction` to use the sharded contract code on their account.  This action is similar to `UseGlobalContractAction` action but differs in the following ways.
 
 ```rust
-/// This is similar to DeployGlobalContractAction.
-struct DeployShardedContractAction {
-    deploy_mode: ShardedContractType,
-    code: Arc<[u8]>,
-}
-
 enum ShardedContractType {
     /// The sharded contract cannot be upgraded
     Immutable {
@@ -297,62 +287,7 @@ enum ShardedContractType {
         account_id: AccountId,
     },
 }
-```
 
-Processing this action generates a `GlobalContractDistributionReceiptV2` receipt where `sharded_or_global` is set to support the appropriate sharded contract code deployment type.  The main difference here compared to `GlobalContractDistributionReceiptV1` is the addition of the `version` field in `ShardedContractIdentifier::Mutable` variant.  This `version` tracks how many times a sharded contract has been deployed on an account which allows smart contracts to constrain which versions of the code they are talking to as seem in the FT example above.
-
-
-```rust
-enum ShardedContractIdentifier {
-    /// This is similar to immutable global contracts.  Once deployed, the
-    /// contract code cannot be updated.
-    Immutable { code_hash: CryptoHash },
-    /// This is similar to mutable global contracts.  The contract code can be
-    /// upgraded after being deployed.
-    Mutable {
-        /// Account id of the account where the sharded contract code is deployed.
-        account_id: AccountId,
-        /// How many times the the above account has deployed a sharded contract
-        // code on itself.
-        version: u64,
-    },
-}
-
-enum GlobalContractDistributionReceipt {
-    V2(GlobalContractDistributionReceiptV2),
-}
-
-enum ShardedOrGlobalContract {
-    // Same as GlobalContractDistributionReceiptV1
-    Global { id: GlobalContractIdentifier },
-    // new variant to support sharded contract deployments
-    Sharded(ShardedContractIdentifier),
-}
-
-struct GlobalContractDistributionReceiptV2 {
-    sharded_or_global: ShardedOrGlobalContract,
-    target_shard: ShardId,
-    already_delivered_shards: Vec<ShardId>,
-    code: Arc<[u8]>,
-}
-```
-
-Finally, when processing the `GlobalContractDistributionReceiptV2`, if it has the `ShardedOrGlobalContract::Sharded` variant, a new `TrieKey` variant is used:
-
-```rust
-enum TrieKey {
-    ...
-    ShardedContractCode(ShardedContractCodeIdentifier),
-}
-```
-
-to store the sharded contract code on the shard.
-
-#### `UseShardedContractAction`
-
-Now that the smart contract developer has deployed their sharded contract on the network, users can start using it.  Assuming that users already have an account, they will use the `UseShardedContractAction` to use the sharded contract code on their account.
-
-```rust
 /// This action allows an account to start using a existing sharded contract
 /// code. This contract code can only be called by using the new
 /// `ShardedFunctionCallAction` action.
@@ -368,7 +303,9 @@ struct UseShardedContractAction {
 }
 ```
 
-This action is similar to the `CreateAccountAction` action.  Further, this action can be called multiple times to use multiple different sharded contract codes on the same account.  To support this action, we propose that each time this action is issued, a new subordinate account is created.  Details of subordinate accounts are discussed below.
+The action allows an account to use a global contract code that is already available on their shard in the sharded contract mode.
+
+This action is also similar to the `CreateAccountAction` action.  Further, this action can be called multiple times to use multiple different sharded contract codes on the same account.  To support this action, we propose that each time this action is issued, a new subordinate account is created.  Details of subordinate accounts are discussed below.
 
 #### `ShardedFunctionCallAction`
 
@@ -458,7 +395,10 @@ pub enum Account {
 
 enum ShardedContract {
     Immutable(CryptoHash),
-    Mutable(AccountId),
+    Mutable{
+        account_id: AccountId,
+        code_hash: CryptoHash,
+    },
 }
 
 struct SubordinateAccount {
