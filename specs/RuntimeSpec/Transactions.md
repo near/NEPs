@@ -146,7 +146,7 @@ error is returned.
 Whether the transaction nonce is greater than the existing nonce on the access key. If not, a
 
 ```rust
-/// Transaction nonce must be account[access_key].nonce + 1
+/// Transaction nonce must be strictly greater than `account[access_key].nonce`.
 InvalidNonce { tx_nonce: Nonce, ak_nonce: Nonce },
 ```
 
