@@ -231,7 +231,7 @@ One of the main high level requirements for this work is that users should not h
 A follow on requirement of this is that if multiple contract codes are being used on a single account, then they need proper isolation to ensure that they cannot corrupt each other's state and it should be possible for the account owner to specify resource constraints on what the sharded contract codes can do.
 
 
-#### Access control to sharded contract functions
+#### Access control on incoming calls
 
 We identified that sharded contracts may want to have 2 types of access control on functions.
 
@@ -245,25 +245,7 @@ For function calls on contracts, the `predecessor_id` is generally used to ident
 
 To prevent limited access keys to move assets, such as FTs, an extra authorization step often checks that a function call has non-zero NEAR balance attached, which only a full access key or a contract call can do.
 
-Sharded contracts can be used in two ways:
-
-- Full access: Outgoing function calls look just like they come from the main account, hence they can move assets held on other contracts.
-- Limited: No "normal" function calls are allowed, only sharded function calls are possible.
-
-Any receiver of sharded function calls must check the `predecessor_id` + `predecessor_sharded_contract_info` combination for authorization.  This only affects code deployed as sharded contracts.
-
-Already deployed code on chain today need no update if they do not use sharded contracts.
-
-If a limited sharded contracts needs to call a non-sharded contract, it always has to go through a full access sharded contract.  The full access contract used to relay has to be prepared on the user account, too.  It should be a trustworthy contract with permissions checks in place that only allows specific outgoing calls.
-
-#### Access control for balance
-
-Full access sharded contracts can directly access the account balance without limits.
-Deploying a sharded contract with this permission level should be seen equivalent to giving that code a full access key to the account.
-
-Limited access sharded contracts have no direct access to balance. They must go through a full access sharded contract.
-
-Incoming balance on function calls (sharded and non-sharded) are always deposited on the account's single balance. Limited access contracts can check how much balance has been sent but it cannot 
+The design of sharded contracts has to enable receivers to know whether they were called by a sharded contract on the predecessor, or by the owner of that account. This is especially tricky with existing code that is unaware of the existence of sharded contracts, hence they only look at the predecessor_id.
 
 #### Storage limits
 
@@ -276,12 +258,6 @@ Sharded contracts require storage for their meta data, as well as for the namesp
 Another consideration is that the user should be able to set a limit on the state used by the sharded contract, given that state can only be deleted by the contract's code. Without limits, a sharded contract could lock up all NEAR tokens held on the account with no way for the user to get it back.
 
 Lastly, contract develops should also have a way to ensure their contract can access enough state.  If users can remove all currently unreserved balance, a contract would fail to increase its storage even by just a byte.
-
-To cover all these requirements, the proposal is as follows.
-
-- For limited sharded contracts, the user sets an explicit limit in `SetShardedContractPermissionsAction`.
-- Full access sharded contracts have no limits.  They are treated just like the main contract code.
-- Each sharded contract, limited or not, has its own ZBA limit that's added on top of the 770 bytes of the main account.
 
 
 ### Detailed specification
@@ -425,23 +401,11 @@ impl GlobalContractCodeIdentifier {
 }
 ```
 
-### Access Keys
+#### Storage Limits
 
-All subordinate accounts and the parent account share the same set of `AccessKey`s.
-
-If a sharded contract needs to limit access further, it can do so in WASM code.
-
-
-
-
-
-
-
-
-
-
-
-### Storage Limits Detailed Specification
+- For limited sharded contracts, the user sets an explicit limit in `SetShardedContractPermissionsAction`.
+- Full access sharded contracts have no limits.  They are treated just like the main contract code.
+- Each sharded contract, limited or not, has its own ZBA limit that's added on top of the 770 bytes of the main account.
 
 #### ZBA Limits for Sharded Contracts
 
@@ -501,6 +465,44 @@ pub struct AccountV2 {
 ```
 
 Going over the limit will abort the sharded function call.  Users can reduce the limit any time but they can not go lower than the actual usage.
+
+
+
+### Access Control
+
+
+#### Access Keys
+
+All sharded contracts and the parent account share the same set of `AccessKey`s.
+
+If a sharded contract needs to limit access further, it can do so in WASM code, using the new host functions to check if incoming calls are from a sharded contract.
+
+
+#### Permissions on Function Calls
+
+
+#### Function Calls from Sharded Contracts
+
+Sharded contracts can be used in two ways:
+
+- Full access: Outgoing function calls look just like they come from the main account, hence they can move assets held on other contracts.
+- Limited: No "normal" function calls are allowed, only sharded function calls are possible.
+
+Any receiver of sharded function calls must check the `predecessor_id` + `predecessor_sharded_contract_info` combination for authorization.  This only affects code deployed as sharded contracts.
+
+Already deployed code on chain today need no update if they do not use sharded contracts.
+
+If a limited sharded contracts needs to call a non-sharded contract, it always has to go through a full access sharded contract.  The full access contract used to relay has to be prepared on the user account, too.  It should be a trustworthy contract with permissions checks in place that only allows specific outgoing calls.
+
+#### Access control for balance
+
+Full access sharded contracts can directly access the account balance without limits.
+Deploying a sharded contract with this permission level should be seen equivalent to giving that code a full access key to the account.
+
+Limited access sharded contracts have no direct access to balance. They must go through a full access sharded contract.
+
+Incoming balance on function calls (sharded and non-sharded) are always deposited on the account's single balance. Limited access contracts can check how much balance has been sent but it cannot 
+
 
 ### Upgrading a sharded contract
 
