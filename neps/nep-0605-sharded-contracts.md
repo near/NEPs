@@ -263,7 +263,7 @@ We identified that sharded contracts may want to have 2 types of access control 
 
 First are functions that can only be called by the account owner (e.g. `send_tokens()`).  This scenario is covered by the existing set of host functions and access keys.
 
-Second are functions that can only be called by another instance of the same contract.  Here the runtime can provide information about the current context, as well as predecessor context.  And then, as seen in `receive_tokens()`, the contract can then perform the appropriate checks.
+Second are functions that can only be called by another instance of the same contract.  Here the runtime can provide information about the current context, as well as predecessor context.  And then, as seen in `receive_tokens()`, the contract can perform the appropriate checks.
 
 
 #### Access control for outgoing function calls
