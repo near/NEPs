@@ -46,6 +46,8 @@ Changes to the protocol specification and standards are called NEAR Enhancement 
 | [0539](https://github.com/near/NEPs/blob/master/neps/nep-0539.md) | Cross-Shard Congestion Control                                    | @wacban @jakmeier                                 | Final      |
 | [0568](https://github.com/near/NEPs/blob/master/neps/nep-0569.md) | Resharding V3                                   | @staffik @Longarithm @Trisfald @marcelo-gonzalez @shreyan-gupta @wacban                                 | Final      |
 | [0584](https://github.com/near/NEPs/blob/master/neps/nep-0584.md) | Cross-shard bandwidth scheduler                                   | @jancionear                                       | Final      |
+| [0591](https://github.com/near/NEPs/blob/master/neps/nep-0591.md) | Global Contracts                                                  | @bowenwang1996 @pugachag @stedfn                  | Final      |
+
 
 ## Specification
 
