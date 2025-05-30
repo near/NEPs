@@ -64,11 +64,6 @@ We start by showing what a sharded version of the above FT contract would look l
 ```rust
 // Pseudocode interface to various host functions
 trait HostFunctions {
-    /// Returns the account id of the parent account that created this sharded
-    /// subordinate account.  If this function is called by an account that is
-    /// not a sharded subordinate account, then it panics.
-    fn parent_account_id() -> AccountId;
-
     // This host function already exists and returns the account id of the
     // predecessor (i.e. the message sender) account.
     fn predecessor_account_id() -> AccountId;
@@ -159,11 +154,10 @@ fn send_tokens(amount: Balance, receiver: AccountId) {
     near_sdk::assert_one_yocto();
 
     // Only the actual owner of the tokens should be allowed to call this
-    // function.  To ensure this, the function checks if the caller of the
-    // function is the same as the parent account that created it.
-    let parent_account_id = HostFunctions::parent_account_id();
+    // function.
+    let my_account_id = HostFunctions::current_account_id();
     let msg_sender = HostFunctions::predecessor_account_id();
-    assert_eq!(parent_account_id, msg_sender);
+    assert_eq!(my_account_id, msg_sender);
 
 
     // Update the account balance
@@ -272,7 +266,7 @@ For cross contract calls, the `predecessor_id` authenticates the caller and is u
 
 Calls from a sharded contract will use the same `predecessor_id`.  But not all sharded contracts should have the ability to make cross contract calls in the account owner's name.
 
-We solve this with a permission system that can use a sharded contract but give it limited access.  Sharded contracts that need it can also be deployed with full access, it's the user's choice.
+We solve this with a permission system that can use a sharded contract but give it limited access.  Sharded contracts that need it can also be deployed with full access, it's the user's choice.  But even then, callee's can always read `predecessor_context` to check if the cross contract call originates from a sharded contract's context.
 
 
 #### Requirements on balance
