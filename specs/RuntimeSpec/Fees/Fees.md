@@ -103,7 +103,7 @@ Then each `ActionReceipt` is passed to `Runtime::apply_action_receipt` where gas
   - `gas_burnt`: **send** fee for **new** `ActionReceipt` creation + complex **send** fee for `Transfer` to beneficiary account
   - `gas_used`: `gas_burnt` + **exec** fee for created `ActionReceipt` + complex **exec** fee for `Transfer`
 - all computed `ActionResult`s are merged into one, where all gas values are summed up;
-- unused gas is refunded in `generate_refund_receipts`.
+- unused gas is refunded in `generate_refund_receipts`, after subtracting the gas refund fee, see [Refunds](../Refunds.md).
 
 Inside `VMLogic`, the fees are tracked in the `GasCounter` struct. 
 The VM itself is called in the `action_function_call` inside `Runtime`. When all actions are processed, the result is returned as a `VMOutcome`, which is later merged with `ActionResult`.
