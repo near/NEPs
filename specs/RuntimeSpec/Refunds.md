@@ -22,6 +22,8 @@ Deposit refunds have the following fields in the `ActionReceipt`:
 - `signer_id` is `system`
 - `signer_public_key` is ED25519 key with data equal to 32 bytes of `0`.
 
+Deposit refunds are free for the user and incur no refund fee.
+
 ## Gas Refunds
 
 Gas refunds are generated when a receipt used the amount of gas lower than the attached amount of gas.
@@ -33,7 +35,11 @@ If the receipt execution failed, the gas amount is equal to `prepaid_gas + execu
 The difference between `burnt_gas` and `used_gas` is the `used_gas` also includes the fees and the prepaid gas of
 newly generated receipts, e.g. from cross-contract calls in function calls actions.
 
-Then the gas amount is converted to tokens by multiplying by the gas price at which the original transaction was generated.
+From this unspent gas amount, the netowrk charges a gas refund fee, starting with protcol version 78. The exact fee is calculated as `max(gas_refund_penalty * unspent_gas, min_gas_refund_penalty)`. As of version 78, `gas_refund_penalty` is 5% and `min_gas_refund_penalty` 1 Tgas.
+
+Should the gas refund fee be euqal or larger than the unspent gas, no refund will be produced.
+
+If there is gas to refund left, the gas amount is converted to tokens by multiplying by the gas price at which the original transaction was generated.
 
 Gas refunds have the following fields in the `ActionReceipt`:
 
