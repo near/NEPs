@@ -221,6 +221,7 @@ With the above in place, following is the flow for how a sharded FT contract wou
     - `SwitchContextAction(Sharded("ft.near"))`
     - `FunctionCallAction("send_tokens", balance=1, ...)`
 4. `send_tokens()` ensures that caller is `alice.near` and has 1 yocto NEAR attached, as full access to `alice.near` is required to initiate transfers.
+    - Note that this 1 yocto NEAR is sent from `alice.near` to `alice.near`, so it never changes account. The call to `bob.near` has no balance attached.
 5. Next, the contract decrements the balance.  We will discuss access control issues to storage in the namespace section below.
 6. Then, it sends a sharded cross contract call from `alice.near` to `bob.near`
     - (`receiver_id="bob.near"`)
@@ -615,11 +616,21 @@ pub fn send_tokens(amount: Balance, receiver: AccountId, version: MethodVersion)
 
 ## Reference Implementation
 
-TODO
+Sharded FT contract: https://github.com/jakmeier/near-sdk-rs/tree/wip-sharded-ft/near-contract-standards/src/sharded_fungible_token
+
+Protocol changes: TODO
 
 ## Security Implications
 
-TODO
+- Contract rewards removed: Today, 30% of gas costs of any function call goes to the account holding the contract. This amount, paid in NEAR native tokens, would no longer be given to FT contracts. since their central contract is no longer involved in transactions. Although the amount per call is small, the sum can be a significant income for contracts that they lose with a sharded contract as proposed in this NEP.
+
+- Contract rewards added to user themselves: The 30% of gas costs lost by the contract owner is instead split between the sender and receiver accounts. This opens new faucet draining attacks. For example, if an application offers to sponsor FT transfers for free, a user can spam lossless ft transfers between accounts. Each call will slightly increase the NEAR token balance, on the account controlled by the user.
+
+- Generally bigger attack surface:
+    - Any function call that needs to modify the state stored on two different accounts has to be split in two asynchronous calls. For example, an FT transfers needs to be split in withdraw and deposit that happen in two sequential steps. This makes writing secure sharded contracts harder than non-sharded contracts.
+    - Attackers can try to make certain receipts of a transaction fail, potentially creating inconsistent state. For example, in `sft_transfer_call`, once the deposit has been added to the receiver, there must be no condition to make the rest of the transaction fail, or otherwise the sender gets a refund and duplicates the funds.
+
+TODO: complement this list
 
 ## Alternatives
 
