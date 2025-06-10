@@ -215,9 +215,7 @@ With the above in place, following is the flow for how a sharded FT contract wou
 1. The owner of `ft.near` uses `DeployGlobalContractAction` to deploy the code under the `ft.near` name.
 2. Before `alice.near` can use the sharded FT contract `ft.near`, she has to enable it on her account.
     - (`receiver_id="alice.near"`)
-    - `SwitchContextAction(Sharded("ft.near"))`
-    - `UseGlobalContractAction("ft.near")`
-    - `SetContextPermissionsAction(Limited { reserved_balance: 0 })`
+    - `SetContextPermissionsAction{ context: Sharded("ft.near"), permission: Limited { reserved_balance: 0 } }`
 3. When `alice.near` wants to transfer tokens to `bob.near`, Alice calls the `send_tokens()` function on the sharded FT contract on her account using
     - (`receiver_id="alice.near"`)
     - `SwitchContextAction(Sharded("ft.near"))`
@@ -333,8 +331,8 @@ The rules for using `SwitchContextAction` are:
 
 The rules inside a sharded context are:
 
-- Inside a `ContractContext::Sharded` context, the only allowed actions are `UseGlobalContractAction`, `FunctionCallAction`, `SwitchContextAction`, and `SetContextPermissionsAction`.
-- Inside a `ContractContext::Sharded` context, `UseGlobalContractAction` is only valid if the global account identifier is exactly the same as the context target.
+- Inside a `ContractContext::Sharded` context, the only allowed actions are `FunctionCallAction`, `SwitchContextAction`.
+- Inside a `ContractContext::Sharded` context, `SwitchContextAction` can only target a `Root` context if it has full access permissions. (This is to prevent calling context-unaware contracts from a sharded context. Those contracts only check predecessor_id and generally assume the caller has full access on that account.)
 
 
 #### Storage namespace
@@ -473,6 +471,7 @@ For limited sharded contracts, the user sets an explicit limit in `SetContextPer
 
 ```rust
 SetContextPermissionsAction {
+    context: ContractContext,
     permissions: ContextPermissions::Limited {
         reserved_balance: 1 * 10u128.pow(24),
     },
