@@ -7,275 +7,112 @@ DiscussionsTo: https://github.com/nearprotocol/neps/pull/0000
 Type: Protocol
 Version: 0.0.0
 Created: 2025-04-07
-LastUpdated: 2025-05-28
+LastUpdated: 2025-06-25
 ---
 
 ## Summary
 
-Today, a single contract is limited to the transactions per second throughput (TPS) of a single a shard, ergo a contract already at the TPS limit of a single shard cannot benefit from increase in TPS made possible by increasing the number of shards.  This NEP builds on top of the global contracts NEPs to enable sharded contracts.  Sharded contracts will be able to seamlessly scale to use the entire TPS capacity of the network.
+Today, a single contract is limited to the transactions per second throughput (TPS) of a single a shard, ergo a contract already at the TPS limit of a single shard cannot benefit from increase in TPS made possible by increasing the number of shards.  This NEP builds on top of the global contracts NEP-591 and adds the necessary tools to enable sharded contracts.
+
+A sharded contract spreads its state across all user accounts, rather than storing it all in one place.  This becomes possible to implement securely once users can have multiple isolated subcontracts in one account that are guaranteed to run the same sharded contract code.
+
+With that, sharded contracts will be able to seamlessly scale to use the entire TPS capacity of the network.
+
 
 ## Motivation
 
 As a single contract is deployed on a single shard, the maximum TPS that it can have is the maximum TPS of the single shard.  Horizontally scaling (i.e. increasing the number of shards) a blockchain is easier than vertically scaling (i.e. increasing the TPS of a single shard).  Once, all the software bottlenecks are addressed, the only way to vertically scale a shard is by requiring the validators to use faster machines.  Faster machines are more expensive and thereby hurts decentralisation.
 
-Without any additional primitives at the protocol level, a single contract will therefore remain bound by the TPS throughput of a single shard regardless of how many shards are added to the network.
+Without spreading the contract across multiple accounts, a single contract will therefore remain bound by the TPS throughput of a single shard regardless of how many shards are added to the network.  But with today's protocol, the options to spread state across multiple accounts are very limited.
 
-This NEP proposes solving this problem by introducing some new protocol level primitives which allow a single contract to scale to use the throughput capacity of not just one but all shards of the network.
+1. One could deploy multiple worker contracts on different accounts to benefit from multi-shard throughput.  In that case, developers need an off-chain load-balancing solution to distribute users among the workers.  Workers among themselves need to communicate with cross-contract function calls to execute any operation that involves user state from two different user groups.
+2. State could also be stored on every user account, which needs to run the shared contract code.  Global contracts NEP-591 makes this economically feasible.  However, this means one account can only use one contract.  For example, if the accounts holds an FT that's sharded in this way, the user cannot buy an NFT and hold it on the same account.
 
-## Background
+Neither of these architectures is deemed satisfying.
 
-We will use the fungible tokens (FT) contract as an example contract to explain the limitations that the smart contracts face today.  The full contract is available [here](https://github.com/near-examples/FT) and this section briefly explains how this contract works on the network today.
+This NEP proposes solving this problem by introducing new protocol level primitives which are necessary to get around these limitations.
 
-The contract consists of state where all the user' account balances are stored in a single HashMap data structure.  When a user wishes to transfer some FT to another user, the following steps take place:
+Discussion https://github.com/near/NEPs/issues/614 has a concrete example of how to implement a sharded FT contract using the proposed changes.
 
-- The sender sends a transaction with a function call action to the contract to transfer the tokens from one account to another.
-- This transaction is routed to the user account's shard.  Standard account access keys serve as authentication of the sender.  The transaction is converted to a receipt, with the user account id as predecessor id.
-- Then, if the FT contracts lives on another shard, the receipt is routed to that shard.
-- Once it arrives on the FT contract's shard, the function call is performed.
-
-  - The FT contract code looks at the predecessor id and trusts it for authentication.
-  - The FT contract code checks that the sender has enough balance using the HashMap stored in contract state. 
-  - Subtract the transfer amount from the HashMap entry for one user and increases it for the other user.
-  - Emit a [Fungible Token Event](https://nomicon.io/Standards/Tokens/FungibleToken/Event) to the logs for off-chain observability.
-
-In this centralized architecture, the contract code has full visibility to all balances and may perform atomic actions on multiple account balances.  Furthermore, all emitted events are produced at a single contract, which e.g. an explorer can observe to track all FT activity in one place.
-
-The minimum latency of doing a single transaction is 2 blocks.  In the first block, the transaction is converted to a receipt and if needed the receipt is routed to another shard.  Then in the second block, the receipt executes on the FT contract.  Additionally, note that each FT transfer requires exactly one function call.
-
-### Limitations
-
-Since all the account balances are stored in a single contract, this one contract has to be invoked in order to make any transfers.  Therefore, the maximum TPS of this contract is the maximum TPS of the shard it is deployed on.  The only way to increase this capacity would be to increase the capacity of the shard.  Adding more shards does not help.
-
-
-## High-level explanation
-
-In the centralised FT contract above, all the state is stored in a single centralised location.  The opposite extreme of this approach would be to store all the state in as distributed a manner as possible i.e. the account balances of each user is stored locally on their accounts instead.  This distributes it across shards and allows for horizontal scaling.
-
-Of course, we cannot just put the state in normal user storage without a way to mitigate them manipulating their FT balance.  We need a way to ensure only the real FT contract code can modify this state.
-
-To enable this isolation, we introduce a new action `SwitchContextAction`.  Within a receipt, all actions that follow a context switch are executed in a different context that has a separate storage namespace.
-
-Contexts can also have different permissions than the main account.  We introduce another new action called `SetContextPermissionsAction` to manage those permissions.
-
-### Pseudocode for a sharded FT contract
-
-We start by showing what a sharded version of the above FT contract would look like if it were using our proposed changes.
-
-```rust
-// Pseudocode interface to various host functions
-trait HostFunctions {
-    // This host function already exists and returns the account id of the
-    // predecessor (i.e. the message sender) account.
-    fn predecessor_account_id() -> AccountId;
-
-    // This is a simplification of the already existing storage read host
-    // function used to read contract state from the trie.
-    fn storage_read(key: &str) -> Balance;
-
-    // This is a simplification of the already existing storage write host
-    // function used to write contract state to the trie.
-    fn storage_write(key: &str, amount: Balance);
-
-    // A new host function that returns information about the context in which
-    // the contract is running.
-    fn current_context() -> ContractContext;
-
-    // A new host function that returns information about the sharded contract
-    // code that is being used by the predecessor (i.e. the message sender)
-    // account.
-    fn predecessor_context() -> ContractContext;
-
-    // A new host function that allows outgoing actions to execute in a sharded
-    // context on the receiver.
-    fn promise_batch_action_switch_context(
-        context: ContractContext,
-    );
-
-    // A new host function to enable / disable contexts or generally manage the
-    // permissions of a context.
-    fn promise_batch_action_set_context_permissions(
-        permissions: ContextPermissions,
-    );
-}
-
-/// New enum to define the account context.
-#[non_exhaustive]
-enum ContractContext {
-    /// The root context is the default context, used when running in the main
-    /// namespace of an account.
-    Root,
-    /// Running under a sharded contract context, defined by a globally deployed code.
-    Sharded {
-        code_id: GlobalContractCodeIdentifier,
-    },
-}
-
-/// Existing enum used for global contract deployments
-enum GlobalContractCodeIdentifier {
-    CodeHash(CryptoHash),
-    AccountId(AccountId),
-}
-
-/// New enum to set permission level for a used sharded contract.
-#[non_exhaustive]
-enum ContextPermissions {
-    /// Code in this sharded contract has a namespaced state but otherwise behaves
-    /// exactly like the non-sharded contract on the same account.
-    ///
-    /// All actions are allowed, including NEAR transfers, deploying contract code,
-    /// and normal function calls.  The predecessor_id for function calls is the
-    /// account_id, without any way for the receiver to differentiate between a call
-    /// from the full access sharded contract vs a non-sharded cross-contract call.
-    FullAccess,
-    /// Code inside the sharded contract has access to namespaced state up to the
-    /// storage balance limit and it can call other sharded contracts.
-    ///
-    /// All other actions are not allowed: Normal function calls, sending NEAR,
-    /// creating accounts, staking, yield-resume, changing access keys, ...
-    Limited {
-        /// This much balance is reserved for the limited module for storage and
-        /// cannot be transferred out of the account in any way.
-        /// Can be set to 0 to unreserve the balance.
-        /// Reducing it below actual storage usage will fail.
-        reserved_balance: Balance,
-    },
-    /// The user has blocked all usage of the context.
-    ///
-    /// The state inside the context might still be stored.
-    /// Set a different permission to unblock again.
-    Blocked,
-}
-
-// A smart contract function that can be used to initiate a FT transfer.
-fn send_tokens(amount: Balance, receiver: AccountId) {
-    // Avoid function call access keys from calling this method by requiring
-    // one yocto near as attached balance.
-    // This also stops limited sharded contracts from using this method.
-    near_sdk::assert_one_yocto();
-
-    // Only the actual owner of the tokens should be allowed to call this
-    // function.
-    let my_account_id = HostFunctions::current_account_id();
-    let msg_sender = HostFunctions::predecessor_account_id();
-    assert_eq!(my_account_id, msg_sender);
-
-
-    // Update the account balance
-    let mut my_balance = HostFunctions::storage_read("balance");
-    assert!(my_balance >= amount);
-    my_balance -= amount;
-    HostFunctions::storage_write("balance", my_balance);
-
-    // Call the receiver's account to receive the tokens.
-    let sharded_context = HostFunctions::current_context();
-    match sharded_context {
-        ContractContext::Root => panic!("sharded contract should not run in root"),
-        ContractContext::Sharded { .. } => {
-            near_sdk::Promise::new(receiver)
-                .switch_context(sharded_context)
-                .function_call("receive_tokens", amount, 0, 5 * TGAS);
-        }
-    }
-
-    // This pseudocode assumes that `receive_tokens()` always succeeds.  In a
-    // more complete version, if `receive_tokens()` fails, then this function
-    // should undo the balance decrement above to ensure that tokens are not
-    // lost.
-}
-
-// A smart contract function used to receive FT from a transfer.
-fn receive_tokens(amount: Balance) {
-    // The receiver can only accept tokens from the sender if the sender is
-    // using the same sharded contract code.  Otherwise, a malicious actor might
-    // trick the receiver into minting tokens.
-    //
-    // To implement this check, the receiver has to make sure that the caller of
-    // the function is an instance of the same sharded contract code.
-    let my_context = HostFunctions::current_context();
-    // the unwrap here allows ensures that this function is only called by a sharded contract code.
-    let sender_context = HostFunctions::predecessor_context().unwrap();
-
-    assert_eq!(
-        my_context,
-        sender_context,
-        "Predecessor must be the same sharded contract"
-    );
-
-    // Update the account balance
-    let mut my_balance = HostFunctions::storage_read("balance");
-    my_balance += amount;
-    HostFunctions::storage_write("balance", my_balance);
-
-    // A complete implementation would also emit JSON events here.
-}
-```
-
-With the above in place, following is the flow for how a sharded FT contract would be used.
-
-1. The owner of `ft.near` uses `DeployGlobalContractAction` to deploy the code under the `ft.near` name.
-2. Before `alice.near` can use the sharded FT contract `ft.near`, she has to enable it on her account.
-    - (`receiver_id="alice.near"`)
-    - `SetContextPermissionsAction{ context: Sharded("ft.near"), permission: Limited { reserved_balance: 0 } }`
-3. When `alice.near` wants to transfer tokens to `bob.near`, Alice calls the `send_tokens()` function on the sharded FT contract on her account using
-    - (`receiver_id="alice.near"`)
-    - `SwitchContextAction(Sharded("ft.near"))`
-    - `FunctionCallAction("send_tokens", balance=1, ...)`
-4. `send_tokens()` ensures that caller is `alice.near` and has 1 yocto NEAR attached, as full access to `alice.near` is required to initiate transfers.
-    - Note that this 1 yocto NEAR is sent from `alice.near` to `alice.near`, so it never changes account. The call to `bob.near` has no balance attached.
-5. Next, the contract decrements the balance.  We will discuss access control issues to storage in the namespace section below.
-6. Then, it sends a sharded cross contract call from `alice.near` to `bob.near`
-    - (`receiver_id="bob.near"`)
-    - `SwitchContextAction(Sharded("ft.near"))`
-    - `FunctionCallAction("receive_tokens", ...)`
-7. `receive_tokens()` executes on `bob.near` in the `GlobalContractCodeIdentifier::AccountId("ft.near")` context.
-8. `receive_tokens()` ensures that the caller is an instance of the same sharded contract as itself otherwise it might be possible to mint tokens maliciously.
-9. `receive_tokens()` updates the balance stored locally.
-
-Comparing this approach to the centralised approach, we note the following:
-
-- Instead of 1 function call, this approach always requires 2 function calls.  One on the sender's account and one on the receiver's account.
-- Just like the centralised case, the minimum latency is 2 blocks.  Even if both the sender and the receiver accounts live on the same shard, a following cross contract receipt always executes the earliest in the next block.
-- In the centralised situation, all function calls took place on a single shard, assuming a uniform distribution of accounts across the network, the 2 function calls will be uniformly distributed across all the shards of the network.  This implies that the maximum TPS of this application scenario will be the sum of the TPS of all the shards on the network.
-
-Next, we discuss the requirements on context isolation for sharded contracts to work as intended.
-
-### Requirements
-
-#### Multiple contract modules per account
-
-One of the main high level requirements for this work is that users should not have to manage multiple sets of keys which would degrade the user experience.  In the FT example, it should be possible for a user to hold multiple FTs without having to manage multiple sets of keys.  This necessitates that multiple sharded contracts can be used by a single account.  Using a context switching action allows to select a different contract code within the same account.
-
-A follow on requirement of this is that contexts must have proper isolation to ensure that they cannot corrupt each other's state.  Thus, each context has its own namespaced storage, which cannot be written from outside the context.  Even deleting the namespaced storage is only allowed from code inside the same context.
-
-The last piece for isolation of a sharded contract is who can deploy code inside the context.  We define that inside a sharded context identified by `ft.near`, only code globally deployed by `ft.near` can be used.
-
-
-#### Access control on incoming calls
-
-We identified that sharded contracts may want to have 2 types of access control on functions.
-
-First are functions that can only be called by the account owner (e.g. `send_tokens()`).  This scenario is covered by the existing set of host functions and access keys.
-
-Second are functions that can only be called by another instance of the same contract.  Here the runtime can provide information about the current context, as well as predecessor context.  And then, as seen in `receive_tokens()`, the contract can perform the appropriate checks.
-
-
-#### Access control for outgoing function calls
-
-For cross contract calls, the `predecessor_id` authenticates the caller and is used for authorization in the receiver's code.
-
-Calls from a sharded contract will use the same `predecessor_id`.  But not all sharded contracts should have the ability to make cross contract calls in the account owner's name.
-
-We solve this with a permission system that can use a sharded contract but give it limited access.  Sharded contracts that need it can also be deployed with full access, it's the user's choice.  But even then, callee's can always read `predecessor_context` to check if the cross contract call originates from a sharded contract's context.
-
-
-#### Requirements on balance
-
-We did not find conclusive requirements on whether a context within an account needs an isolated balance or not.  The only requirement is that a limited context can not access the main balance of the account.
-
-As described in specification below, we decided to give no balance access at all to limited contexts.
-
-
-#### Storage limits
+
+## Specification
+
+
+### Subcontracts
+
+A *subcontract* is an isolated module inside an account.  Aside from the main contract, an account can have up to `N` subcontracts deployed, each with separate code and state.
+
+
+### Contract Context
+
+Every subcontract is created inside a certain *context*.  Contexts are defined by a pair of an account id and a contract context.  The main contract uses the root context, while subcontracts have to use a different context.
+
+This NEP introduces three contexts:
+
+- `Root` - Runs the code deployed directly on the account. Reserved is for the main contract, which is technically not a *subcontract*.
+- `ShardedByAccountId { account_id: AccountId }` - Runs code deployed globally under the given account id.
+- `ShardedByCodeHash { code_hash: CryptoHash }` - Runs code deployed globally under the given code hash.
+
+For sharded contexts, the code is implicitly defined by the context fields.  An account can use any global contract code in this way  Even if this is against the original intention of the smart contract developer.  We do not see any security concerns with allowing this.
+
+While not necessary for sharded contracts, this design leaves the door open to add more contexts in the future.  A future proposal could add a way to deploy multiple local modules without the need to deploy the code globally first.  For example, using a context like `LocalSubcontract { module_name: String }`.  The code for such a subcontract could be deployed using `DeployContractAction` inside the context.
+
+
+### Isolation Requirements
+
+This proposal allows holding multiple subcontracts in the same account.  But if every subcontract has the same tools available as the main contract, this makes building secure sharded contracts difficult if not impossible.
+
+A bit of necessary background.  Code running inside the main contract has full access on the account.  It can, among other things, send all tokens to an arbitrary address, delete itself, or even redeploy its own code.  The limitations are only set by the source code of the contract.  This makes sense if users only deploy code to their account that they have either written themselves or vetted thoroughly.
+
+With the introduction of sharded contracts, users will deploy **untrusted** subcontracts on their account on a regular basis.  For example, receiving an FT requires installing the corresponding subcontract on the user account.  It is not feasible to assume users vet the code of every meme coin they get airdropped.  Therefore, the first isolation requirement is that the permissions of subcontracts can be limited.
+
+On the flip side, contract developers will store critical state inside the subcontracts context, such as the user's own balance of a token, or their liabilities.  Therefore this state must be tamper-proof.  Not even a full access key to the account should allow modifying this state.  This includes the ability to delete the subcontract state, which also must be limited.
+
+The next sections explain different isolation requirements in more detail.
+
+
+#### Basic state isolation
+
+Each (sub)contract context has its own namespaced storage.  Only code running in the exact same context can access this state.
+
+This protects different subcontracts and the main contract from each other.
+
+Further, this means the limits of what can be done to a subcontract's state is defined in the source code of the subcontract.  With the sharded contexts, this code is controlled by the developer who deploys the code globally.  Hence, the state is protected from the user tampering with the state. too.  (The case of deletion is discussed later in this document.)
+
+
+#### Subcontract Permissions
+
+Most subcontracts only need to access their own state and make calls to other subcontracts on other users.  However, it would be too limiting to disallow all other actions entirely.  We propose a binary permission system, akin to how access keys in NEAR Protocol work today.
+
+- `FullAccess` - A subcontract with this permission has the same capabilities as the main contract.
+- `Limited` - A subcontract with this permission is forbidden to use most actions in outgoing receipts.  Only function calls to non-root contexts are allowed.  No NEAR balance can be attached to outgoing calls.
+
+The idea is that `FullAccess` subcontracts are only deployed when users have either written the code themselves or it comes from a highly trusted source.  `Limited` subcontracts, on the other hand, can be deployed even from untrusted sources, without security concerns.
+
+Note that regardless of the permissions, basic state isolation still holds.
+
+
+#### Cross-Contract Call Authorization
+
+Today, for cross contract calls, the `predecessor_id` is used for authorization in the receiver's code.
+
+With this proposal, subcontracts making cross-contract calls will have the same `predecessor_id` as calls from the main contract on the same account.  However, this should not allow to act on behalf of the main account on other contracts.  The perfect example is an existing FT contract.  A limited subcontract must be prevented from calling `ft_transfer` on a `usdt.tether-token.near`, for example.
+
+For new code that is aware of subcontracts, we propose a new host function `predecessor_context()`.  (Exact definition in the detailed specification section.)  If this is not the root context, the call comes from a subcontract and should not have access to NEP-141 fungible tokens.
+
+Crucially, however, contracts deployed prior to the introduction of contract contexts did not check the predecessor's context.  Therefore, the proposal disallows calling root contracts from a limited permission subcontract.  Allowing to call non-root is considered save since they can only be deployed after the introduction of contexts.
+
+In combination with `current_context()`, contracts can also check if the call came from a subcontract using the same global code.  This is useful for calls withing a sharded contract across different users.
+
+
+#### Balance Isolation
+
+We did not find conclusive requirements on whether a subcontract needs an isolated balance or not.  The only requirement is that a limited context can not access the main balance of the account.
+
+As described in specification below, we decided to forbid all balance access to limited-access subcontract, while giving access to the main account balance to any subcontract with full access.
+
+
+#### Isolation of Storage limits
 
 An account must always hold a certain amount in NEAR balance to cover its storage cost.  Except, below 770 bytes, this limit is not applied to allow small zero-balance accounts. 
 
@@ -285,21 +122,86 @@ Sharded contracts require storage for their context meta data, as well as for th
 
 Another consideration is that the user should be able to set a limit on the state used by the sharded contract, given that state can only be deleted by the contract's code.  Without limits, a sharded contract could lock up all NEAR tokens held on the account with no way for the user to get it back.
 
-Lastly, there should be a way to reserve storage space for a context.  Otherwise, users may accidentally move too many tokens out of their account, which could make deployed sharded contracts fail to allocate extra bytes they need.
+Lastly, there should be a way to reserve storage space for a context.  Otherwise, users may accidentally or maliciously, move too many tokens out of their account, which could lead to unusable subcontracts.
 
-To satisfy all these needs, we decided to set the storage limit per context when setting the permissions.
-
-
-## Specification
-
-With the high level requirements and the pseudocode presented, we can discuss the specification of the new primitives been proposed.
-
-We will reuse many of the mechanisms that are already built to deploy and distribute global contract code.  In particular, when a smart contract developer has built a sharded contract, they will use the `DeployGlobalContractAction` to deploy the code on their contract.  Note that this means that an account can use a global contract code in the sharded contract mode which may not have been the original intention of the smart contract developer.  We do not see any security concerns with allowing this.
-
-To use a globally deployed code in sharded-contract mode, users need to switch to the `ContractContext::Sharded` context and execute `UseGlobalContractAction` in the same receipt.
+To satisfy all these needs, we decided to give every limited subcontract an explicit storage limit that's paid for upfront.
 
 
-#### Contract context switching
+### Practical Considerations
+
+Aside from the isolation requirements described above, there are a couple additional things needed to make sharded contracts work smoothly.
+
+
+#### Guaranteeing the Existence of the Receiver
+
+We propose that any subcontract to subcontract call can opt-in to pay for the subcontract creation (with limited access) if the receiver account exists but the subcontract has not been created, yet.
+
+Without this, imagine a user wants to transfer an amount of FT from a centralized exchange to their self-custody near account.  This user would have to manually enable the token on their account, after they created the account.  This is not intuitive and not how FT's work today. Not on NEAR Protocol, nor on other popular chains.
+
+With the proposed opt-in lazy subcontract creation, an exchange can first try sending tokens the cheap way (no lazy creation)  If that fails they can repeat the same call but opt-in this time and pay the increased gas cost to cover the subcontract creation.
+
+
+#### The Deletion Problem
+
+Fundamentally, users should remain in full control of their account.  This includes the ability to delete their account.
+
+Deleting an account also deleted the subcontract state.  This is a form of tampering with subcontract state that the proposal aims to prevent.
+
+Taking away the ability to delete subcontracts is also bad.  Especially if anyone can create subcontracts on anybody's account.
+
+Instead, we propose users *can* delete subcontracts but when they do it will trigger the execution of `on_delete_hook` on the subcontract.  Contract developers may use this to clean up state and make cross contract calls to preserve necessary state.  This makes it a controlled deletion, which no longer qualifies as problematic state tampering.
+
+
+### Detailed Specification
+
+With the high level motivation and requirements above, we can describe the exact code changes.
+
+
+#### Setting Context Permissions
+
+The `SetSubcontractPermissionAction` action is used to create a subcontract and to change what an installed sharded contract can do on a user's account.
+
+Calling this action will insert or update the permission on the user's state trie for the specific subcontract.
+
+
+```rust
+struct SetSubcontractPermissionAction {
+    pub context: ContractContext,
+    pub permission: SubcontractPermission,
+}
+
+enum ContractContext {
+    /// The root context is the default context, used when running in the main
+    /// namespace of an account.
+    Root,
+    /// Running under a sharded contract context, defined by a globally deployed
+    /// code by account id.
+    ShardedByAccountId { account_id: AccountId },
+    /// Running under a sharded contract context, defined by a globally deployed
+    /// code by code hash.
+    ShardedByCodeHash { code_hash: CryptoHash },
+}
+
+enum SubcontractPermission {
+    FullAccess,
+    Limited { reserved_balance: Balance },
+}
+```
+
+#### Context Permission Rules
+
+
+The rules for permissions are:
+
+- A contract deployed with `FullAccess` permissions can do anything the main account can do.  This include all actions, without additional limits.
+- A contract deployed with `Limited` access can only produce outgoing receipts with `FunctionCallAction` and `SwitchContextAction`.
+- Any `FunctionCallAction` must be in a non-root context.
+- A contract deployed with `Limited` access cannot attach deposits to a `FunctionCallAction`.
+- Any attempt to create invalid outgoing receipts will abort the receipt execution with a `SubcontractNoPermission` error.
+- `SetSubcontractPermissionAction`  can only be called by the account owner.
+
+
+#### Contract Context Switching
 
 Switching contract context is done with `SwitchContextAction`.  All actions within the same receipt but before the next `SwitchContextAction` will execute in the set context.
 
@@ -310,131 +212,124 @@ struct SwitchContextAction {
 }
 ```
 
-To enable sharded contracts, we introduce `ContractContext::Sharded`, which can select a global contract by account id or code hash as the context identifier.  All contracts deployed outside a context implicitly use the `ContractContext::Root` context.
+For example, the combined actions below make a call to the subcontract running `ft.near`'s global code inside `alice.near`'s account.
+
 
 ```rust
-#[non_exhaustive]
-enum ContractContext {
-    Root,
-    Sharded {
-        code_id: GlobalContractCodeIdentifier,
-    },
-}
+// receipt receiver = "alice.near"
+[
+    SwitchContextAction {
+        caller: ContractContext::Root,
+        target: ContractContext::ShardedByAccountId { account_id: "ft.near" },
+        create_missing_subcontract: false,
+    }
+    FunctionCallAction { ... }
+] 
 ```
 
-The called contract can use the `current_context()` host function to read the own contract context (`target`) and the `predecessor_context()` host function to read the calling contract's context (`caller`). 
+The called contract can use the `current_context()` host function to read the own contract context (`target`) and the `predecessor_context()` host function to read the calling contract's context (`caller`).  The only reason why `caller` exists on `SwitchContextAction` is to enable this host functions.  Outgoing receipt validation must ensure the caller is correct.
 
 The rules for using `SwitchContextAction` are:
 
 - Receipts created from a transaction must always set `caller = ContractContext::Root`.
-- Receipts created from a sharded contract must always set `caller = ContractContext::Sharded` with their respective code id.
+- Receipts created from a sharded contract must always set `caller = ContractContext::ShardedBy*` with their respective code id.
 
 
 The rules inside a sharded context are:
 
-- Inside a `ContractContext::Sharded` context, the only allowed actions are `FunctionCallAction`, `SwitchContextAction`.
-- Inside a `ContractContext::Sharded` context, `SwitchContextAction` can only target a `Root` context if it has full access permissions. (This is to prevent calling context-unaware contracts from a sharded context. Those contracts only check predecessor_id and generally assume the caller has full access on that account.)
+- Inside a `ContractContext::ShardedBy*` context with limited permissions, the only allowed actions are `FunctionCallAction`, `SwitchContextAction`.
+- Inside a `ContractContext::ShardedBy*` context with limited permissions, `SwitchContextAction` cannot target a `Root` context.  (This is to prevent calling context-unaware contracts from a sharded context. Those contracts only check predecessor_id and generally assume the caller has full access on that account.)
+- No limitations apply inside a `ContractContext::ShardedBy*` context with `FullAccess` permission.
+
+
+#### Implicit Subcontract Creation
+
+Using `SwitchContextAction` with `create_missing_subcontract: true` will create the subcontract if it does not exist.
+
+The initial permissions are `Limited { reserved_balance: 0 }`.  Only the account owner can change it using `SetSubcontractPermissionAction`.
+
+The gas cost for `SwitchContextAction` with `create_missing_subcontract: true` will be significantly higher.  Even if the subcontract already existed, the extra cost will not be refunded.
+
+
+#### Trie Changes
+
+We add two new trie columns.
+
+```rust
+enum TrieKey{
+    //...
+
+    /// Stores permissions and other meta data for subcontracts.
+    /// Values are of type `Subcontract`.
+    Subcontract {
+        account_id: AccountId,
+        context: ContractContext,
+    },
+
+    /// Like `ContractData` but for subcontracts.
+    /// Stores a key-value record `Vec<u8>` within a subcontract deployed on a
+    /// given `AccountId`, `ContractContext`, and a given key.
+    SubcontractData {
+        account_id: AccountId,
+        context: ContractContext,
+        key: Vec<u8>,
+    },
+}
+```
+
+The first stores the meta data per subcontract in a `Subcontract` struct.
+
+```rust
+enum Subcontract {
+    V1(SubcontractV1),
+}
+
+struct SubcontractV1 {
+    /// Defines what a subcontract can do on the account in which it has been deployed.
+    pub permission: SubcontractPermission,
+    /// Number of bytes used in the trie for storing this subcontract.
+    pub storage_usage: StorageUsage,
+}
+```
+
+The other holds key value pairs, just like `ContractData` does but in a different namespace.
 
 
 #### Storage namespace
 
-Entering a context changes how `storage_write()` and `storage_read()` construct a trie key.  A new trie key variant is added.
+Entering a context changes how `storage_write()` and `storage_read()` construct a trie key.
+
+Before:
 
 ```rust
-enum TrieKey {
-    ...
-    // new variant in TrieKey stores user values just like `TrieKey::ContractData`
-    TrieKey::ShardedContractData { 
-        account_id: AccountId,
-        sharded_contract_id: GlobalContractCodeIdentifier,
-        key: Vec<u8>,
+    pub fn create_storage_key(&self, key: &[u8]) -> TrieKey {
+        TrieKey::ContractData { account_id: self.account_id.clone(), key: key.to_vec() }
     }
-}
-
-fn create_storage_key(&self, key: &[u8], contract_context: ContractContext) -> TrieKey {
-    match contract_context {
-        ContractContext::Root => TrieKey::ContractData {
-            account_id: self.account_id.clone(),
-            key: key.to_vec(),
-        },
-        ContractContext::Sharded(sharded_contract_id) => {
-            TrieKey::ShardedContractData {
-                account_id: self.account_id.clone(),
-                sharded_contract_id,
-                key: key.to_vec(),
-            }
-        },
-    }
-}
 ```
 
-For serialization, we reuse the existing trie key representation of `GlobalContractCodeIdentifier`.
+After:
 
 ```rust
-impl GlobalContractCodeIdentifier {
-    pub fn len(&self) -> usize {
-        1 + match self {
-            Self::CodeHash(hash) => hash.as_bytes().len(),
-            Self::AccountId(account_id) => {
-                // Corresponds to String repr in borsh spec
-                size_of::<u32>() + account_id.len()
+    pub fn create_storage_key(&self, key: &[u8]) -> TrieKey {
+        match &self.contract_context {
+            ContractContext::Root => {
+                TrieKey::ContractData { account_id: self.account_id.clone(), key: key.to_vec() }
             }
+            other_context => TrieKey::SubcontractData {
+                account_id: self.account_id.clone(),
+                context: other_context.clone(),
+                key: key.to_vec(),
+            },
         }
     }
-
-    pub fn append_into(&self, buf: &mut Vec<u8>) {
-        buf.extend(borsh::to_vec(self).unwrap());
-    }
-}
 ```
-
-
-#### Setting context permissions
-
-
-The `SetContextPermissionsAction` action can change what an installed sharded contract can do on a user's account.
-
-
-```rust
-struct SetContextPermissionsAction {
-    permissions: ContextPermissions,
-}
-
-#[non_exhaustive]
-enum ContextPermissions {
-    FullAccess,
-    Limited {
-        reserved_balance: Balance,
-    },
-    Blocked,
-}
-```
-
-Calling this action will insert or update the permission on the user's state trie for the specific sharded contract.
-
-```rust
-// new variant in TrieKey stores values of type `ContextPermissions`
-TrieKey::ContextPermissions { 
-    identifier: GlobalContractCodeIdentifier,
-}
-```
-
-The rules are:
-
-- A contract deployed with `FullAccess` permissions can do anything the main account can do.  This include all actions, without additional limits.
-- A contract deployed with `Limited` access cannot produce outgoing receipts with actions in the `ContractContext::Root` context (except for `SwitchContractAction` to enter a sharded context).
-    - Together with the rules defined on sharded contexts, this means a sharded contract can only produce two kinds of actions. One, function calls to other sharded functions. Two, start using a global contract in a sharded context with matching global account identifier.
-- A contract deployed with `Limited` access cannot attach deposits to a `FunctionCallAction`.
-- Calling `SwitchContext` with a context with `Blocked` permissions always fails.
-- Going in and out of `Blocked` permissions does not affect the existing contract state.
-
 
 #### Storage Limits
 
 The storage limit remains to be enforced on the account level, comparing the total bytes used of an account with the token balance at the end of each receipt.  Additional rules are introduced as follows.
 
 - Full access sharded contracts have no additional limits.  They are treated just like the main contract code.
-- For limited sharded contracts, the user sets an explicit limit in `SetContextPermissionsAction`.
+- For limited sharded contracts, the user sets an explicit limit in `SetSubcontractPermissionAction`.
 - Each sharded contract, limited or not, has its own ZBA limit, below which the storage usage is not counted towards the account storage usage.
 
 More details follow now.
@@ -453,7 +348,7 @@ Unlike the zero-balancelimit on accounts, even when a sharded contract goes over
 The exact size for the zero-balance limit has not been fully decided, yet.  A rough estimate says we need at least 217 bytes.
 
 - `TrieKey::ShardedContractData` requires 1 + 2 * (4 + 64) = 137 bytes  
-- `ContextPermissions` requires 1 + 16 = 17 bytes
+- `SubcontractPermission` requires 1 + 16 = 17 bytes
 - Storing a `u128` on `balance` requires 16 bytes for the value, 7 bytes for the key, and 40 bytes for `storage_num_extra_bytes_record` = 63 bytes
 
 We could also use 770 bytes, like the existing zero-balance limit on accounts.  However, most of that was meant for access keys, which are not relevant here.
@@ -468,12 +363,12 @@ From the state usage of a full access sharded contract, the runtime subtracts th
 
 #### Storage Limits for Limited Sharded Contracts
 
-For limited sharded contracts, the user sets an explicit limit in `SetContextPermissionsAction`.
+For limited sharded contracts, the user sets an explicit limit in `SetSubcontractPermissionAction`.
 
 ```rust
-SetContextPermissionsAction {
+SetSubcontractPermissionAction {
     context: ContractContext,
-    permissions: ContextPermissions::Limited {
+    permissions: SubcontractPermission::Limited {
         reserved_balance: 1 * 10u128.pow(24),
     },
 }
@@ -501,14 +396,20 @@ Going over the limit will abort the sharded function call.  Users can reduce the
 Just like with full access contracts, bytes below the zero-balance limit are not counted towards the usage limit.
 
 
-### Deleting an Account with Sharded Contracts
+###3 Deleting an Account with Sharded Contracts
 
-Deleting a contract with sharded contracts is not allowed.
+*WIP: This section is still work in progress and may change.*
 
-This restriction can be lifted by future proposals, if the need for it arises.  The assumption is, however, that deleting accounts is rarely done today and remains like that for the foreseeable future.
+Deleting a contract with sharded contracts is not allowed.  All subcontracts must first be deleted separately.
+
+To delete a subcontract, the `SetSubcontractPermissionAction` can be used with permission set to `Deleted`.
+
+Deleting triggers a function call to `on_delete_hook` with 10 Tgas attached.  (Optional: All costs for this have already been paid for when the subcontract was created.)
+
+Afterwards, the subcontract is deleted.  Even if `on_delete_hook` failed, the deletion goes through.
 
 
-### Limit on contracts per account
+#### Limit on contracts per account
 
 We allow at most 100 contracts per account, to avoid the state of a single account to grow larger than what a single shard can maintain.  (We assume all contracts under the same account will always stay on the same shard.)
 
@@ -529,6 +430,147 @@ To track this, we add a field to the account structure in the state trie.
 +     subcontracts_count: u32,
   }
 ```
+
+#### New Host Functions
+
+```rust
+    /// Saves the current sharded contract context into the register.
+    ///
+    /// Returns a `u64` indicating the type of context.
+    ///
+    /// 0: ContractContext::Root
+    /// 1: ContractContext::ShardedByAccountId, the register contains an `AccountId`
+    /// 2: ContractContext::ShardedByCodeHash, the register contain a `CryptoHash`
+    ///
+    /// # Errors
+    ///
+    /// If the registers exceed the memory limit returns `MemoryAccessViolation`.
+    ///
+    /// # Cost
+    ///
+    /// `base + write_register_base + write_register_byte * num_bytes`
+    pub fn current_sharded_context(&mut self, register_id: u64) -> Result<u64> {
+        self.result_state.gas_counter.pay_base(base)?;
+
+        self.read_sharded_context_into_register(&self.context.current_contract_context, register_id)
+    }
+
+    /// Saves the predecessor sharded contract context into the register.
+    ///
+    /// Returns a `u64` indicating the type of context.
+    ///
+    /// 0: ContractContext::Root
+    /// 1: ContractContext::ShardedByAccountId, the register contains an `AccountId`
+    /// 2: ContractContext::ShardedByCodeHash, the register contain a `CryptoHash`
+    ///
+    /// # Errors
+    ///
+    /// If the registers exceed the memory limit returns `MemoryAccessViolation`.
+    ///
+    /// # Cost
+    ///
+    /// `base + write_register_base + write_register_byte * num_bytes`
+    pub fn predecessor_sharded_context(&mut self, register_id: u64) -> Result<u64> {
+        self.result_state.gas_counter.pay_base(base)?;
+
+        self.read_sharded_context_into_register(
+            &self.context.predecessor_contract_context,
+            register_id,
+        )
+    }
+
+
+    /// Appends `SwitchContext` action to the batch of actions for the given
+    /// promise pointed by `promise_idx`.
+    ///
+    /// `target_context_type` is a `u64` indicating the type of context that's
+    /// represented by the data pointed to by `target_context_len` and
+    /// `target_context_ptr`.
+    ///
+    /// 0: ContractContext::Root
+    /// 1: ContractContext::ShardedByAccountId, the register contains an `AccountId`
+    /// 2: ContractContext::ShardedByCodeHash, the register contain a `CryptoHash`
+    ///
+    /// Unless the type is `Root`, the last two fields point to the data.
+    /// This can be in memory, or in a register.
+    ///
+    /// If the data is in memory, set `target_context_len` to data length
+    /// measured in bytes and `target_context_ptr` to the raw pointer in guest
+    /// memory space of the data.
+    ///
+    /// If the data is in a register, set `target_context_len = u64::MAX` and
+    /// `target_context_ptr = register_id`.
+    ///
+    /// If `create_missing_subcontract` is set to true, the subcontract will be
+    /// initialized on the target account with limited access permissions, if it
+    /// doesn't already exist. This increases the gas cost of the action to cover
+    /// the module creation, storage, and deletion cost.
+    ///
+    /// # Errors
+    ///
+    /// * If `promise_idx` does not correspond to an existing promise returns
+    ///   `InvalidPromiseIndex`.
+    /// * If the promise pointed by the `promise_idx` is an ephemeral promise
+    ///   created by `promise_and` returns `CannotAppendActionToJointPromise`.
+    /// * If `target_context_type` is not 0, 1, or 2 returns
+    ///   `InvalidContractContext`.
+    /// * If `target_context_type` is 1 and the data at `target_context_ptr` +
+    ///   `target_context_len` does not parse as `AccountId` , returns
+    ///   `InvalidAccountId`.
+    /// * If `target_context_type` is 2 and the data at `target_context_ptr` +
+    ///   `target_context_len` is not  , returns
+    ///   `InvalidAccountId`.
+    /// * If called as view function returns `ProhibitedInView`.
+    ///
+    /// # Cost
+    ///
+    /// TODO: Define exact costs
+    pub fn promise_batch_action_switch_context(
+        &mut self,
+        promise_idx: u64,
+        target_context_type: u64,
+        target_context_len: u64,
+        target_context_ptr: u64,
+        create_missing_subcontract: bool,
+    ) -> Result<()> {}
+
+
+    // TODO: defined exact semantics
+    pub fn promise_batch_action_set_root_subcontract_permission(
+        &mut self,
+        promise_idx: u64,
+        context_type: u64,
+        context_len: u64,
+        context_ptr: u64,
+    ) -> Result<()> {}
+
+    // TODO: defined exact semantics
+    pub fn promise_batch_action_set_limited_subcontract_permission(
+        &mut self,
+        promise_idx: u64,
+        context_type: u64,
+        context_len: u64,
+        context_ptr: u64,
+        reserved_balance: u64,
+    ) -> Result<()> {}
+
+    // TODO: defined exact semantics
+    pub fn promise_batch_action_delete_subcontract(
+        &mut self,
+        promise_idx: u64,
+        context_type: u64,
+        context_len: u64,
+        context_ptr: u64,
+    ) -> Result<()> {}
+```
+
+
+#### Change to Existing Host Functions
+
+- `storage_usage()` in any subcontract will return the storage usage of just subcontract, without the main account.
+- `storage_usage()` in the main account will include the storage usage of all subcontracts usage above their respective ZBA limit.
+- `account_balance()` in a limited access subcontract will always return 0.
+- `account_locked_balance()` in a limited access subcontract will always return 0.
 
 
 ## Usage Guide
@@ -616,9 +658,10 @@ pub fn send_tokens(amount: Balance, receiver: AccountId, version: MethodVersion)
 
 ## Reference Implementation
 
+Protocol changes: https://github.com/near/nearcore/compare/master...jakmeier:nearcore:sharded-contracts?expand=1
+
 Sharded FT contract: https://github.com/jakmeier/near-sdk-rs/tree/wip-sharded-ft/near-contract-standards/src/sharded_fungible_token
 
-Protocol changes: TODO
 
 ## Security Implications
 
@@ -631,6 +674,7 @@ Protocol changes: TODO
     - Attackers can try to make certain receipts of a transaction fail, potentially creating inconsistent state. For example, in `sft_transfer_call`, once the deposit has been added to the receiver, there must be no condition to make the rest of the transaction fail, or otherwise the sender gets a refund and duplicates the funds.
 
 TODO: complement this list
+
 
 ## Alternatives
 
