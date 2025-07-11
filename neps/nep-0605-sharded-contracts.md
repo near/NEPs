@@ -7,7 +7,7 @@ DiscussionsTo: https://github.com/nearprotocol/neps/pull/0000
 Type: Protocol
 Version: 0.0.0
 Created: 2025-04-07
-LastUpdated: 2025-06-25
+LastUpdated: 2025-07-11
 ---
 
 ## Summary
@@ -77,7 +77,9 @@ Each (sub)contract context has its own namespaced storage.  Only code running in
 
 This protects different subcontracts and the main contract from each other.
 
-Further, this means the limits of what can be done to a subcontract's state is defined in the source code of the subcontract.  With the sharded contexts, this code is controlled by the developer who deploys the code globally.  Hence, the state is protected from the user tampering with the state. too.  (The case of deletion is discussed later in this document.)
+Further, this means the limits of what can be done to a subcontract's state is defined in the source code of the subcontract.  With the sharded contexts, this code is controlled by the developer who deploys the code globally.  Hence, the state is protected from the user tampering with the state, too.
+
+Deleting subcontracts is forbidden, to completely shut off state tampering.
 
 
 #### Subcontract Permissions
@@ -114,17 +116,13 @@ As described in specification below, we decided to forbid all balance access to 
 
 #### Isolation of Storage limits
 
-An account must always hold a certain amount in NEAR balance to cover its storage cost.  Except, below 770 bytes, this limit is not applied to allow small zero-balance accounts. 
+Subcontracts require storage for their context meta data, as well as for the namespaced state modified by WASM code.  How exactly this is paid for is not essential for the core functionality of sharded contracts.  After considering different options, we propose to use a non-refundable storage model, where tokens to cover storage are permanently burnt.
 
-Accounts with zero balance are important for the creation of sponsored accounts.  It prevents the incentive to claim and delete as many accounts as possible from a sponsor, since deleting a zero-balance account gives no financial gain.  Ideally, we can also add sharded contracts to an account while keeping its balance at 0.
+This is in contracts to existing (main) accounts.  They initially did not burn anything. Instead, they must always hold a certain amount in NEAR balance to cover their storage cost.  However, this came with the problem of refund attacks on sponsored account creation.  Therefore, a zero-balance account (ZBA) limit of 770 bytes per account was introduced in #448.  This makes every account burn enough tokens to cover 770 bytes upon creation.  The refundable storage model is only applied to accounts that use more than that limit.
 
-Sharded contracts require storage for their context meta data, as well as for the namespaced state modified by WASM code.  Since sharded contracts do no have a separate balance, the storage usage should be added to the total account storage usage. The ZBA limit of 770 bytes is likely too small for many use cases.
+The theoretical benefit of the refundable storage model is that upon deletion of the account, the user can get a refund of the tokens that were locked for storage.  However, in practice, deleting accounts is rarely done and the absolute value per account is often too low to justify any effort to collect the refund.
 
-Another consideration is that the user should be able to set a limit on the state used by the sharded contract, given that state can only be deleted by the contract's code.  Without limits, a sharded contract could lock up all NEAR tokens held on the account with no way for the user to get it back.
-
-Lastly, there should be a way to reserve storage space for a context.  Otherwise, users may accidentally or maliciously, move too many tokens out of their account, which could lead to unusable subcontracts.
-
-To satisfy all these needs, we decided to give every limited subcontract an explicit storage limit that's paid for upfront.
+The way subcontracts work, all storage uses the non-refundable model.  Unlike the ZBA limit, the exact amount is dynamic.  Anyone interacting with the subcontract can also fund it with more storage capacity, permanently increasing the allowance of a specific subcontract.  Usage and allowance is tracked for each subcontract individually.
 
 
 ### Practical Considerations
@@ -141,28 +139,18 @@ Without this, imagine a user wants to transfer an amount of FT from a centralize
 With the proposed opt-in lazy subcontract creation, an exchange can first try sending tokens the cheap way (no lazy creation)  If that fails they can repeat the same call but opt-in this time and pay the increased gas cost to cover the subcontract creation.
 
 
-#### The Deletion Problem
-
-Fundamentally, users should remain in full control of their account.  This includes the ability to delete their account.
-
-Deleting an account also deleted the subcontract state.  This is a form of tampering with subcontract state that the proposal aims to prevent.
-
-Taking away the ability to delete subcontracts is also bad.  Especially if anyone can create subcontracts on anybody's account.
-
-Instead, we propose users *can* delete subcontracts but when they do it will trigger the execution of `on_delete_hook` on the subcontract.  Contract developers may use this to clean up state and make cross contract calls to preserve necessary state.  This makes it a controlled deletion, which no longer qualifies as problematic state tampering.
-
-
 ### Detailed Specification
 
 With the high level motivation and requirements above, we can describe the exact code changes.
 
 
-#### Setting Context Permissions
+#### Context Permission Details
 
-The `SetSubcontractPermissionAction` action is used to create a subcontract and to change what an installed sharded contract can do on a user's account.
+The `SetSubcontractPermissionAction` action is used to set and update the permissions.  It will insert or update the permission on the user's state trie for the specific subcontract.
 
-Calling this action will insert or update the permission on the user's state trie for the specific subcontract.
+Only the account owner can set permissions.  Specifically, `SetSubcontractPermissionAction` execution will fail if the `predecessor_id` is not equal to `current_id` or if it does not execute in the Root context.
 
+A successful `SetSubcontractPermissionAction` execution on a subcontract that does not exist will create the subcontract implicitly and pay for exactly as many bytes of storages as necessary.
 
 ```rust
 struct SetSubcontractPermissionAction {
@@ -184,21 +172,20 @@ enum ContractContext {
 
 enum SubcontractPermission {
     FullAccess,
-    Limited { reserved_balance: Balance },
+    Limited,
 }
 ```
 
-#### Context Permission Rules
+The detailed rules for permissions are:
 
-
-The rules for permissions are:
-
-- A contract deployed with `FullAccess` permissions can do anything the main account can do.  This include all actions, without additional limits.
+- A contract deployed with `FullAccess` permissions can do anything the main account can do.  This includes all actions, without additional limits.  Tokens attached to a function call or in a `TransferAction` are taken from the main account's balance.
 - A contract deployed with `Limited` access can only produce outgoing receipts with `FunctionCallAction` and `SwitchContextAction`.
-- Any `FunctionCallAction` must be in a non-root context.
+    - Any `FunctionCallAction` must be in a non-root context.
 - A contract deployed with `Limited` access cannot attach deposits to a `FunctionCallAction`.
 - Any attempt to create invalid outgoing receipts will abort the receipt execution with a `SubcontractNoPermission` error.
-- `SetSubcontractPermissionAction`  can only be called by the account owner.
+- `SetSubcontractPermissionAction` can only be called by the account owner.  (Must be in `Root` context)
+- Storage limits are isolated regardless of the permissions.
+- Storage access is isolated regardless of the permissions.
 
 
 #### Contract Context Switching
@@ -209,6 +196,8 @@ Switching contract context is done with `SwitchContextAction`.  All actions with
 struct SwitchContextAction {
     caller: ContractContext,
     target: ContractContext,
+    create_missing_subcontract: bool,
+    added_storage_balance: Balance,
 }
 ```
 
@@ -222,6 +211,7 @@ For example, the combined actions below make a call to the subcontract running `
         caller: ContractContext::Root,
         target: ContractContext::ShardedByAccountId { account_id: "ft.near" },
         create_missing_subcontract: false,
+        added_storage_balance: 0,
     }
     FunctionCallAction { ... }
 ] 
@@ -233,6 +223,9 @@ The rules for using `SwitchContextAction` are:
 
 - Receipts created from a transaction must always set `caller = ContractContext::Root`.
 - Receipts created from a sharded contract must always set `caller = ContractContext::ShardedBy*` with their respective code id.
+- Any context can be entered without special permissions.
+- Anyone can create any subcontract on any account by setting `create_missing_subcontract` to true.  (See [Implicit Subcontract Creation](#implicit-subcontract-creation))
+- `SwitchContextAction` will fail if the subcontract does not exist and `create_missing_subcontract` is set to false.
 
 
 The rules inside a sharded context are:
@@ -244,11 +237,15 @@ The rules inside a sharded context are:
 
 #### Implicit Subcontract Creation
 
-Using `SwitchContextAction` with `create_missing_subcontract: true` will create the subcontract if it does not exist.
+There is no explicit action to create a subcontract.  Instead, there are two ways of creating them implicitly.
 
-The initial permissions are `Limited { reserved_balance: 0 }`.  Only the account owner can change it using `SetSubcontractPermissionAction`.
+Setting the permissions of a subcontract using `SetSubcontractPermissionAction` will also create the subcontract and burn NEAR token of the main account to cover for the storage requirements of the created subcontract.  This works by first creating the subcontract and then burning the required balance to increase the allowance to exactly the usage.  If the balance is not enough, the receipt fails with a `LackBalanceForState` error and reverts the subcontract creation.
 
-The gas cost for `SwitchContextAction` with `create_missing_subcontract: true` will be significantly higher.  Even if the subcontract already existed, the extra cost will not be refunded.
+The other option is to use `SwitchContextAction` with `create_missing_subcontract: true`.  In this case, the `added_storage_balance` amount needs to be estimated to a value high enough that it will cover the storage.  The entire cost for gas and storage allowance will be paid when the action is created on the caller side.
+
+The initial permissions for accounts created with `SwitchContextAction` are `Limited`.  Only the account owner can change it using `SetSubcontractPermissionAction`.
+
+The gas cost for `SwitchContextAction` with `create_missing_subcontract: true` will be higher than when it is set to false.  The more significant cost, however, comes from `added_storage_balance`.  Even if the subcontract already existed, the extra cost will not be refunded.
 
 
 #### Trie Changes
@@ -289,6 +286,8 @@ struct SubcontractV1 {
     pub permission: SubcontractPermission,
     /// Number of bytes used in the trie for storing this subcontract.
     pub storage_usage: StorageUsage,
+    /// Amount of NEAR tokens that have been burnt for storage of this subcontract.
+    pub storage_allowance: Balance,
 }
 ```
 
@@ -326,87 +325,28 @@ After:
 
 #### Storage Limits
 
-The storage limit remains to be enforced on the account level, comparing the total bytes used of an account with the token balance at the end of each receipt.  Additional rules are introduced as follows.
+The storage limit is enforced individually for each subcontract, regardless of the permission level.  The subcontract storage does not change the main account storage usage nor the amount locked for storage staking.
 
-- Full access sharded contracts have no additional limits.  They are treated just like the main contract code.
-- For limited sharded contracts, the user sets an explicit limit in `SetSubcontractPermissionAction`.
-- Each sharded contract, limited or not, has its own ZBA limit, below which the storage usage is not counted towards the account storage usage.
+To enforce the limit, both the current usage and the allowance are tracked in the new trie column `Subcontract` (see [Trie Changes](#Trie-Changes)).
 
-More details follow now.
+The allowance can only be increased, never decreased or reset.  Adding is done through the `SwitchContextAction` with the `added_storage_balance` field.  The caller pays the balance, which is burnt on the receiver to permanently increase the `storage_allowance` of the subcontract.
 
-
-#### ZBA Limits for Sharded Contracts
-
-Each sharded contract, limited or not, has its own zero-balance limit that's added on top of the 770 bytes of the main account.  The gas cost of `UseGlobalContract` inside a sharded context is increased from its compute cost to pay for this limit in the same way the 770 bytes per account are paid for in the account creation.
-
-The limit per sharded contract must be enough to store its permissions and a small number of contract state key-value pairs. (e.g. `"balance" -> u128`)
-
-Unlike the zero-balancelimit on accounts, even when a sharded contract goes over the ZBA limit, it will only need to maintain balance for the part over the zero-balance limit.  (For accounts, once a contract is no longer in the ZBA limit, it has to hold Near for all bytes. This made migration easier when introducing ZBAs. Migration is not an issue here.)
-
-*Discussion:*
-
-The exact size for the zero-balance limit has not been fully decided, yet.  A rough estimate says we need at least 217 bytes.
-
-- `TrieKey::ShardedContractData` requires 1 + 2 * (4 + 64) = 137 bytes  
-- `SubcontractPermission` requires 1 + 16 = 17 bytes
-- Storing a `u128` on `balance` requires 16 bytes for the value, 7 bytes for the key, and 40 bytes for `storage_num_extra_bytes_record` = 63 bytes
-
-We could also use 770 bytes, like the existing zero-balance limit on accounts.  However, most of that was meant for access keys, which are not relevant here.
-
-
-#### Storage Limits for Full Access Sharded Contracts
-
-The usage of the full access contract is not limited beyond the account storage limit.
-
-From the state usage of a full access sharded contract, the runtime subtracts the zero-balance limit.  If the result is positive, it is added to the account's storage usage.
-
-
-#### Storage Limits for Limited Sharded Contracts
-
-For limited sharded contracts, the user sets an explicit limit in `SetSubcontractPermissionAction`.
+The maximum allowed storage in bytes is calculated as:
 
 ```rust
-SetSubcontractPermissionAction {
-    context: ContractContext,
-    permissions: SubcontractPermission::Limited {
-        reserved_balance: 1 * 10u128.pow(24),
-    },
-}
+let max_bytes = storage_allowance / nonrefundable_storage_amount_per_byte;
 ```
 
-This limit, even if unused, is counted as locked storage on the account.
+We define `nonrefundable_storage_amount_per_byte = 10e18`.  This is 10x less than `storage_amount_per_byte` and is the same number that was used for zero balance accounts ([See here](https://github.com/near/NEPs/blob/a43e4e461dfaa4d24962a043c15e66f5f459e887/neps/nep-0448.md?plain=1#L53-L58)).
 
-```diff
-pub struct AccountV2 {
-    /// The total not locked tokens.
-    amount: Balance,
-    /// The amount locked due to staking.
-    locked: Balance,
-    /// Storage used by the given account, includes account id, this struct, access keys and other data.
-+    ///
-+    /// This now also includes the sum of storage limits of all sharded contracts
-    storage_usage: StorageUsage,
-    /// Type of contract deployed to this account, if any.
-    contract: AccountContract,
-}
-```
+The minimal bytes required to store a subcontract depends on the account id in the context.  
 
-Going over the limit will abort the sharded function call.  Users can reduce the limit any time but they can not go lower than the actual usage.
-
-Just like with full access contracts, bytes below the zero-balance limit are not counted towards the usage limit.
+Going over the limit will abort the sharded function call.
 
 
-###3 Deleting an Account with Sharded Contracts
+#### Deleting an Account with Sharded Contracts
 
-*WIP: This section is still work in progress and may change.*
-
-Deleting a contract with sharded contracts is not allowed.  All subcontracts must first be deleted separately.
-
-To delete a subcontract, the `SetSubcontractPermissionAction` can be used with permission set to `Deleted`.
-
-Deleting triggers a function call to `on_delete_hook` with 10 Tgas attached.  (Optional: All costs for this have already been paid for when the subcontract was created.)
-
-Afterwards, the subcontract is deleted.  Even if `on_delete_hook` failed, the deletion goes through.
+Deleting an account with at least one sharded contracts is not allowed.  This proposal adds no way to remove sharded contracts from an account.
 
 
 #### Limit on contracts per account
@@ -449,11 +389,7 @@ To track this, we add a field to the account structure in the state trie.
     /// # Cost
     ///
     /// `base + write_register_base + write_register_byte * num_bytes`
-    pub fn current_sharded_context(&mut self, register_id: u64) -> Result<u64> {
-        self.result_state.gas_counter.pay_base(base)?;
-
-        self.read_sharded_context_into_register(&self.context.current_contract_context, register_id)
-    }
+    pub fn current_sharded_context(&mut self, register_id: u64) -> Result<u64>;
 
     /// Saves the predecessor sharded contract context into the register.
     ///
@@ -470,15 +406,7 @@ To track this, we add a field to the account structure in the state trie.
     /// # Cost
     ///
     /// `base + write_register_base + write_register_byte * num_bytes`
-    pub fn predecessor_sharded_context(&mut self, register_id: u64) -> Result<u64> {
-        self.result_state.gas_counter.pay_base(base)?;
-
-        self.read_sharded_context_into_register(
-            &self.context.predecessor_contract_context,
-            register_id,
-        )
-    }
-
+    pub fn predecessor_sharded_context(&mut self, register_id: u64) -> Result<u64>;
 
     /// Appends `SwitchContext` action to the batch of actions for the given
     /// promise pointed by `promise_idx`.
@@ -491,8 +419,8 @@ To track this, we add a field to the account structure in the state trie.
     /// 1: ContractContext::ShardedByAccountId, the register contains an `AccountId`
     /// 2: ContractContext::ShardedByCodeHash, the register contain a `CryptoHash`
     ///
-    /// Unless the type is `Root`, the last two fields point to the data.
-    /// This can be in memory, or in a register.
+    /// Unless the type is `Root`, the last two fields point to the data. This
+    /// can be in memory, or in a register.
     ///
     /// If the data is in memory, set `target_context_len` to data length
     /// measured in bytes and `target_context_ptr` to the raw pointer in guest
@@ -503,9 +431,13 @@ To track this, we add a field to the account structure in the state trie.
     ///
     /// If `create_missing_subcontract` is set to true, the subcontract will be
     /// initialized on the target account with limited access permissions, if it
-    /// doesn't already exist. This increases the gas cost of the action to cover
-    /// the module creation, storage, and deletion cost.
+    /// doesn't already exist. This increases the gas cost of the action to
+    /// cover the module creation, storage, and deletion cost.
     ///
+    /// The amount specified in `added_storage_balance` gets added to the
+    /// receiving subcontract's storage allowance.  It must be 0 if the target
+    /// context is Root.
+    /// 
     /// # Errors
     ///
     /// * If `promise_idx` does not correspond to an existing promise returns
@@ -518,8 +450,10 @@ To track this, we add a field to the account structure in the state trie.
     ///   `target_context_len` does not parse as `AccountId` , returns
     ///   `InvalidAccountId`.
     /// * If `target_context_type` is 2 and the data at `target_context_ptr` +
-    ///   `target_context_len` is not  , returns
-    ///   `InvalidAccountId`.
+    ///   `target_context_len` is not a valid `CryptoHash`, returns
+    ///   `ContractCodeHashMalformed`.
+    /// * If `target_context_type` is 0 (Root) and `added_storage_balance` is
+    ///   not 0, returns `CannotAddStorageToRoot`.
     /// * If called as view function returns `ProhibitedInView`.
     ///
     /// # Cost
@@ -532,40 +466,60 @@ To track this, we add a field to the account structure in the state trie.
         target_context_len: u64,
         target_context_ptr: u64,
         create_missing_subcontract: bool,
-    ) -> Result<()> {}
+        added_storage_balance: u128,
+    ) -> Result<()>;
 
 
-    // TODO: defined exact semantics
-    pub fn promise_batch_action_set_root_subcontract_permission(
+    /// Appends `SetSubcontractPermissionAction` to the batch of actions for the
+    /// given promise pointed by `promise_idx`.
+    ///
+    /// `permission` can be set to 0 for full access, or 1 for limited access.
+    /// 
+    /// `context_type` is a `u64` indicating the type of context that's
+    /// represented by the data pointed to by `context_len` and `context_ptr`.
+    ///
+    /// 0: ContractContext::Root
+    /// 1: ContractContext::ShardedByAccountId, the register contains an `AccountId`
+    /// 2: ContractContext::ShardedByCodeHash, the register contain a `CryptoHash`
+    ///
+    /// Unless the type is `Root`, the last two fields point to the data. This
+    /// can be in memory, or in a register.
+    ///
+    /// If the data is in memory, set `context_len` to data length measured in
+    /// bytes and `context_ptr` to the raw pointer in guest memory space of the
+    /// data.
+    ///
+    /// If the data is in a register, set `context_len = u64::MAX` and
+    /// `context_ptr = register_id`.
+    ///
+    /// # Errors
+    ///
+    /// * If `promise_idx` does not correspond to an existing promise returns
+    ///   `InvalidPromiseIndex`.
+    /// * If the promise pointed by the `promise_idx` is an ephemeral promise
+    ///   created by `promise_and` returns `CannotAppendActionToJointPromise`.
+    /// * If `context_type` is not 0, 1, or 2 returns `InvalidContractContext`.
+    /// * If `context_type` is 1 and the data at `context_ptr` + `context_len`
+    ///   does not parse as `AccountId`, returns `InvalidAccountId`.
+    /// * If `context_type` is 2 and the data at `context_ptr` + `context_len`
+    ///   is not a valid `CryptoHash`, returns `ContractCodeHashMalformed`.
+    /// * If called as view function returns `ProhibitedInView`.
+    ///
+    /// # Cost
+    ///
+    /// TODO: Define exact costs
+    pub fn promise_batch_action_set_subcontract_permission(
         &mut self,
         promise_idx: u64,
+        permission: u64,
         context_type: u64,
         context_len: u64,
         context_ptr: u64,
-    ) -> Result<()> {}
-
-    // TODO: defined exact semantics
-    pub fn promise_batch_action_set_limited_subcontract_permission(
-        &mut self,
-        promise_idx: u64,
-        context_type: u64,
-        context_len: u64,
-        context_ptr: u64,
-        reserved_balance: u64,
-    ) -> Result<()> {}
-
-    // TODO: defined exact semantics
-    pub fn promise_batch_action_delete_subcontract(
-        &mut self,
-        promise_idx: u64,
-        context_type: u64,
-        context_len: u64,
-        context_ptr: u64,
-    ) -> Result<()> {}
+    ) -> Result<()>;
 ```
 
 
-#### Change to Existing Host Functions
+#### Changes to Existing Host Functions
 
 - `storage_usage()` in any subcontract will return the storage usage of just subcontract, without the main account.
 - `storage_usage()` in the main account will include the storage usage of all subcontracts usage above their respective ZBA limit.
@@ -578,6 +532,74 @@ To track this, we add a field to the account structure in the state trie.
 Below are additional explanations on how sharded contracts can be built using the changes proposed in this NEP.
 
 
+### Basic Usage
+
+#### Create a Limited Access subcontract
+
+Creating a limited access submodule can be done in on of two ways.  Both examples below will use the global contract code deployed by `ft.near` and give it limited permissions.
+
+```rust
+// receipt predecessor = "alice.near"
+// receipt receiver = "alice.near"
+[
+    SetSubcontractPermissionAction {
+        context: ContractContext::ShardedByAccountId { account_id: "ft.near" },
+        permission: SubcontractPermission::Limited,
+    }
+] 
+```
+
+```rust
+// receipt predecessor = *
+// receipt receiver = "alice.near"
+[
+    SwitchContextAction {
+        caller: ContractContext::Root,
+        target: ContractContext::ShardedByAccountId { account_id: "ft.near" },
+        create_missing_subcontract: true,
+        // pick a number that's high enough to cover the initial storage cost
+        added_storage_balance: 300,
+    }
+] 
+```
+
+#### Create a Full Access subcontract
+
+Deploying a subcontract with full access must be done by the contract owner with `SetSubcontractPermissionAction`.
+
+```rust
+// receipt predecessor = "alice.near"
+// receipt receiver = "alice.near"
+[
+    SetSubcontractPermissionAction {
+        context: ContractContext::ShardedByAccountId { account_id: "ft.near" },
+        permission: SubcontractPermission::Limited,
+    }
+] 
+```
+
+For completeness: Deploying as limited access contract first and upgrading permissions later is also possible.
+
+
+#### Call a subcontract method
+
+Calling a method on subcontract requires the combination of `SwitchContextAction` with a `FunctionCallAction`.
+
+```rust
+// receipt predecessor = *
+// receipt receiver = "alice.near"
+[
+    SwitchContextAction {
+        caller: ContractContext::Root,
+        target: ContractContext::ShardedByAccountId { account_id: "ft.near" },
+        create_missing_subcontract: false,
+        added_storage_balance: 0,
+    }
+    FunctionCallAction { ... }
+] 
+```
+
+
 ### Access Control
 
 
@@ -588,14 +610,11 @@ All sharded contracts and the parent account share the same set of `AccessKey`s.
 If a sharded contract needs to limit access further, it can do so in WASM code, using the new host functions to check if incoming calls are from a sharded contract.
 
 
-#### Permissions on Function Calls
-
-
 #### Function Calls from Sharded Contracts
 
 Sharded contracts can be used in two ways:
 
-- Full access: Outgoing function calls look just like they come from the main account, hence they can move assets held on other contracts.
+- Full access: Outgoing function calls can look just like they come from the main account, hence they can move assets held on other contracts.
 - Limited: No "normal" function calls are allowed, only sharded function calls are possible.
 
 Any receiver of sharded function calls must check the `predecessor_id` + `predecessor_context` combination for authorization.  This only affects code deployed as sharded contracts.
@@ -604,14 +623,15 @@ Already deployed code on chain today need no update if they do not use sharded c
 
 If a limited sharded contracts needs to call a non-sharded contract, it always has to go through a full access sharded contract.  The full access contract used to relay has to be prepared on the user account, too.  It should be a trustworthy contract with permissions checks in place that only allows specific outgoing calls.
 
+
 #### Access control for balance
 
 Full access sharded contracts can directly access the account balance without limits.
 Deploying a sharded contract with this permission level should be seen equivalent to giving that code a full access key to the account.
 
-Limited access sharded contracts have no direct access to balance. They must go through a full access sharded contract.
+Limited access sharded contracts have no direct access to balance.  They must go through a full access sharded contract.
 
-Incoming balance on function calls (sharded and non-sharded) are always deposited on the account's single balance. Limited access contracts can check how much balance has been sent but it cannot 
+Incoming balance on function calls (sharded and non-sharded) are always deposited on the account's single balance.  Limited access contracts can check how much balance has been sent but it cannot forward it to another account.
 
 
 ### Upgrading a sharded contract
@@ -665,7 +685,7 @@ Sharded FT contract: https://github.com/jakmeier/near-sdk-rs/tree/wip-sharded-ft
 
 ## Security Implications
 
-- Contract rewards removed: Today, 30% of gas costs of any function call goes to the account holding the contract. This amount, paid in NEAR native tokens, would no longer be given to FT contracts. since their central contract is no longer involved in transactions. Although the amount per call is small, the sum can be a significant income for contracts that they lose with a sharded contract as proposed in this NEP.
+- Contract rewards removed: Today, 30% of gas costs of any function call goes to the account holding the contract. This amount, paid in NEAR native tokens, would no longer be given to FT contracts since their central contract is no longer involved in transactions. Although the amount per call is small, the sum can be a significant income for contracts that they lose with a sharded contract as proposed in this NEP.
 
 - Contract rewards added to user themselves: The 30% of gas costs lost by the contract owner is instead split between the sender and receiver accounts. This opens new faucet draining attacks. For example, if an application offers to sponsor FT transfers for free, a user can spam lossless ft transfers between accounts. Each call will slightly increase the NEAR token balance, on the account controlled by the user.
 
@@ -673,19 +693,36 @@ Sharded FT contract: https://github.com/jakmeier/near-sdk-rs/tree/wip-sharded-ft
     - Any function call that needs to modify the state stored on two different accounts has to be split in two asynchronous calls. For example, an FT transfers needs to be split in withdraw and deposit that happen in two sequential steps. This makes writing secure sharded contracts harder than non-sharded contracts.
     - Attackers can try to make certain receipts of a transaction fail, potentially creating inconsistent state. For example, in `sft_transfer_call`, once the deposit has been added to the receiver, there must be no condition to make the rest of the transaction fail, or otherwise the sender gets a refund and duplicates the funds.
 
-TODO: complement this list
+- User may not understand the difference between a full access subcontract and a limited access subcontract.  Wallets signing such requests should clearly state that deploying a full access module is equivalent to adding a full access key to the account.
+
+
+### The Deletion Problem
+
+The proposal makes deleting accounts impossible as soon as a subcontract is deployed on it
+
+Fundamentally, users should remain in full control of their account.  This includes the ability to delete their account.
+
+Deleting an account also deletes the subcontract state.  This is a form of tampering with subcontract state that the proposal aims to prevent.
+
+Taking away the ability to delete subcontracts is suboptimal.  Especially if anyone can create subcontracts on anybody's account.  Anyone can stop any other account to be deleted, by creating even just one subcontract on their account.
+
+However, the next best alternative we could come up with requires a complicated mechanism around what happens during deletion.  The sharded contract owner must have a way to clean up the state, while the user must have a way to enforce deletion.
+
+Considering how rare account deletions are today, the trade-off to not support account deletions seems overall justified.
 
 
 ## Alternatives
 
 - Instead of explicit limited access / full-access permissions, we could say the sharded contract `ft.near` on `ft.near` implicitly has full access, while `ft.near` on any other account has only limited access.  This would mean anytime full access is required, we have to go through the central `ft.near@ft.near` account.
-- Instead of a ZBA limit per sharded contract, we could add a general way to burn tokens or gas for non-refundable storage on an account.  This would be its own NEP and limit what sharded contracts can do until that other NEP is also designed, approved and implemented.
 - Instead of `SwitchContext`, we could use `ShardedFunctionCall`.  This would be less flexible and require duplicating any action we want to allow targeting sharded contracts, e.g. `ShardedTransfer`, `ShardedDeployContract`, `ShardedAddAccessKey` and so on.
 - Instead of adding separate `caller` and `target` fields on `SwitchContext`, it could only have the `target` field. The caller info still needs to be sent with the receipt, though, for the callee to check who is calling. We could add the caller info as an extra field on every action receipt. This would increase the size of every action receipt by `sizeof(ContractContext)` and force us to add a new `ActionReceipt` version if we change `ContractContext` in the future. Putting it inside the action seems like the better choice.
-- Instead of limiting storage with permissions, we could give separate balance to each sharded contract and treat them as separate storage entities.  This can be awkward for users, who now have to maintain many balances per account.  This makes the wallet view presented to users more complex than desired.
-
+- Instead of limiting storage by non-refundable allowance, we could give separate balance to each sharded contract and treat them as separate storage entities.  This can be awkward for users, who now have to maintain many balances per account.  This makes the wallet view presented to users more complex than desired.  And it opens up the door to refund attacks.
+- Another option to manage storage would be a separate ZBA limit per sharded contract.  This is far less flexible than the chosen solution.
+- We could allow subcontract deletion in one of several ways.  All of the discussed solutions make it significantly harder to implement sharded contracts, since subcontracts can vanish at any moment.
 
 ## Future possibilities
+
+### Synchronous execution and more subcontract types
 
 The proposal has been written with the possibility of synchronous execution of function calls between contracts on the same account.
 
@@ -694,30 +731,43 @@ The proposal has been written with the possibility of synchronous execution of f
 - If synchronous execution is enabled, we should also allow deploying multiple contracts per account without making them global.  We can add an enum variant to `ContractContext`, perhaps called `ContractContext::AccountExtension`.  When switching to a context of that type, `DeployContractAction` would be allowed to create a subcontract that's not deployed globally.  Since all outgoing receipts will have the caller set to a non-sharded context, it will not interfere with the access control of sharded contracts.  The user would remain in full control of the code, which could be re-deployed or even deleted.
 - Note that inside a `ContractContext::AccountExtension` context, we can still use `UseGlobalContractAction` to make use of cheap code sharing but without interfering with sharded contracts.  In this case, the context name can be chosen freely and does not need to be linked to the global code identifier.
 
+### Extend interoperability with non-sharded contracts
+
+We could add support for sharded contracts to call non-sharded contracts later.  Possible ways to keep this secure are:
+
+- The non-sharded contract has to somehow flag that is accepts sharded calls.  For example, with an explicit host function like `enable_contract_feature(sharded_to_nonsharded)`, or even just by enabling it as soon as a contract has called `predecessor_contract_context`.
+- We could make any sharded to non-sharded contract call fail if there is no host function call to `predecessor_contract_context`.
+- We could make calls to `predecessor_id` fail in sharded to non-sharded contract calls and provide a `predecessor_id_and_context` host method to use instead.
+
+All these options are a bit hacky and are not currently part of the MVP proposal.  But if the limitation on sharded to nonsharded contracts becomes an issue, these solutions can be added on top the proposed design without backwards compatibility issues.
+
 
 ## Consequences
 
-TODO
-
 ### Positive
 
-- p1
+- Contracts on NEAR can scale beyond the transaction execution bandwidth of one shard.
+- If this gets adopted by high-usage contracts, it will more evenly distribute the load across the network and avoid congestion on busy shards.
 
 ### Neutral
 
-- n1
+- Sharded contracts can interoperate with any existing contract but need to go through a full access subcontract to do so.
 
 ### Negative
 
-- n1
+- Malicious actors gain the ability to prevent the deletion of any Near account by using permissionless subcontract deployment on the account.
+- Getting rid of the assumption that subcontracts are never delete will be tricky to do in a backwards-compatible way.
+- Permission checks inside sharded contracts need to take the calling context into consideration, on top of existing authorization practices.
 
 ### Backwards Compatibility
 
-None
+- Sharded contracts can interoperate with any existing contract but need to go through a full access subcontract to do so.
+- Smart contract code that runs in a contract today will work the same in a subcontract. (modulo permissions)
 
 ## Unresolved Issues (Optional)
 
-- it is not possible for an account to remove the storage that a sharded contract created without the help of the sharded contract itself.
+- it is not possible for an account to remove the storage that a sharded contract created without the help of the sharded contract itself
+- deleting an account is completely impossible once a subcontract is deployed on it
 - upgrading contracts is left to sharded contract developers to resolve
 
 
