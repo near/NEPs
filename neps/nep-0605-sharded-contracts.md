@@ -180,7 +180,7 @@ The detailed rules for permissions are:
 
 - A contract deployed with `FullAccess` permissions can do anything the main account can do.  This includes all actions, without additional limits.  Tokens attached to a function call or in a `TransferAction` are taken from the main account's balance.
 - A contract deployed with `Limited` access can only produce outgoing receipts with `FunctionCallAction` and `SwitchContextAction`.
-    - Any `FunctionCallAction` must be in a non-root context.
+  - Any `FunctionCallAction` must be in a non-root context.
 - A contract deployed with `Limited` access cannot attach deposits to a `FunctionCallAction`.
 - Any attempt to create invalid outgoing receipts will abort the receipt execution with a `SubcontractNoPermission` error.
 - `SetSubcontractPermissionAction` can only be called by the account owner.  (Must be in `Root` context)
@@ -327,7 +327,7 @@ After:
 
 The storage limit is enforced individually for each subcontract, regardless of the permission level.  The subcontract storage does not change the main account storage usage nor the amount locked for storage staking.
 
-To enforce the limit, both the current usage and the allowance are tracked in the new trie column `Subcontract` (see [Trie Changes](#Trie-Changes)).
+To enforce the limit, both the current usage and the allowance are tracked in the new trie column `Subcontract` (see [Trie Changes](#trie-changes)).
 
 The allowance can only be increased, never decreased or reset.  Adding is done through the `SwitchContextAction` with the `added_storage_balance` field.  The caller pays the balance, which is burnt on the receiver to permanently increase the `storage_allowance` of the subcontract.
 
@@ -690,8 +690,8 @@ Sharded FT contract: https://github.com/jakmeier/near-sdk-rs/tree/wip-sharded-ft
 - Contract rewards added to user themselves: The 30% of gas costs lost by the contract owner is instead split between the sender and receiver accounts. This opens new faucet draining attacks. For example, if an application offers to sponsor FT transfers for free, a user can spam lossless ft transfers between accounts. Each call will slightly increase the NEAR token balance, on the account controlled by the user.
 
 - Generally bigger attack surface:
-    - Any function call that needs to modify the state stored on two different accounts has to be split in two asynchronous calls. For example, an FT transfers needs to be split in withdraw and deposit that happen in two sequential steps. This makes writing secure sharded contracts harder than non-sharded contracts.
-    - Attackers can try to make certain receipts of a transaction fail, potentially creating inconsistent state. For example, in `sft_transfer_call`, once the deposit has been added to the receiver, there must be no condition to make the rest of the transaction fail, or otherwise the sender gets a refund and duplicates the funds.
+  - Any function call that needs to modify the state stored on two different accounts has to be split in two asynchronous calls. For example, an FT transfers needs to be split in withdraw and deposit that happen in two sequential steps. This makes writing secure sharded contracts harder than non-sharded contracts.
+  - Attackers can try to make certain receipts of a transaction fail, potentially creating inconsistent state. For example, in `sft_transfer_call`, once the deposit has been added to the receiver, there must be no condition to make the rest of the transaction fail, or otherwise the sender gets a refund and duplicates the funds.
 
 - User may not understand the difference between a full access subcontract and a limited access subcontract.  Wallets signing such requests should clearly state that deploying a full access module is equivalent to adding a full access key to the account.
 
