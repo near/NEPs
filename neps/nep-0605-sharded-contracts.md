@@ -187,6 +187,19 @@ The detailed rules for permissions are:
 - Storage limits are isolated regardless of the permissions.
 - Storage access is isolated regardless of the permissions.
 
+The gas costs for `SetSubcontractPermissionAction` are defined as follows.
+
+```yaml
+action_set_subcontract_permission
+- send_sir:           30_000_000_000
+- send_not_sir:       30_000_000_000
+- execution:         200_000_000_000
+```
+
+Reasoning: The main work performed for the action is an update to the subcontract's meta data in the state trie.  The estimated compute work for updating a trie value from WASM is currently [200 GGas](https://github.com/near/nearcore/blob/7a86486f290f997030b04bebd4028e120c59a1d5/core/parameters/res/runtime_configs/parameters.snap#L115).  The suggestion is to use the same value for the execution cost of `SetSubcontractPermissionAction`.
+
+The send cost is almost negligible in terms of computational work required.  However, there is bandwidth cost of 70 bytes (69 bytes for `ContractContext::ShardedByAccountId` and 1 byte for `SubcontractPermission`).  Other per-byte send costs are between [1.9 MGas](https://github.com/near/nearcore/blob/7a86486f290f997030b04bebd4028e120c59a1d5/core/parameters/res/runtime_configs/parameters.snap#L74) and [47.6 MGas](https://github.com/near/nearcore/blob/7a86486f290f997030b04bebd4028e120c59a1d5/core/parameters/res/runtime_configs/parameters.snap#L31).  Taking the upper end, the send gas cost for a `SetSubcontractPermissionAction` should be around 3.3 GGas.  To allow increases in `ContractContext` enum variant sizes, we propose to use around 10 times this minimum value.  That's why we propose a send cost of 30 GGas.
+
 
 #### Contract Context Switching
 
@@ -233,6 +246,25 @@ The rules inside a sharded context are:
 - Inside a `ContractContext::ShardedBy*` context with limited permissions, the only allowed actions are `FunctionCallAction`, `SwitchContextAction`.
 - Inside a `ContractContext::ShardedBy*` context with limited permissions, `SwitchContextAction` cannot target a `Root` context.  (This is to prevent calling context-unaware contracts from a sharded context. Those contracts only check predecessor_id and generally assume the caller has full access on that account.)
 - No limitations apply inside a `ContractContext::ShardedBy*` context with `FullAccess` permission.
+
+The gas costs for `SwitchContextAction` are defined as follows.
+
+```yaml
+action_switch_context
+- send_sir:           70_000_000_000
+- send_not_sir:       70_000_000_000
+- execution:         200_000_000_000
+```
+
+The costs following a similar reasoning to `SetSubcontractPermissionAction`'s costs.
+
+For execution, again the cost is dominated by the reading and potentially updating of a trie value.  When `create_missing_subcontract` is `false` and `added_storage_balance` is zero, then there might not be an update caused by this action directly.  But the following function calls can update the storage usage, which will cause a write to the subcontract metadata.  Therefore, the action always charges for an update, which is currently estimated at [200 GGas](https://github.com/near/nearcore/blob/7a86486f290f997030b04bebd4028e120c59a1d5/core/parameters/res/runtime_configs/parameters.snap#L115).
+
+The sender cost is again dominated by the bandwidth requirement.  The size of a `SwitchContextAction` is 2x `size_of(ContractContext)` + `size_of(bool)` + `size_of(u128)`.  `ContractContext`'s largest variant is `ContractContext::ShardedByAccountId` which is 69 bytes in borsh encoding.  In total that makes 2 x 69 + 1 + 16 = 155 bytes.  Keeping the same per-byte cost used in `SetSubcontractPermissionAction`, we get out a sender cost of 70 GGas.
+
+In total, a sharded contract call costs 0.27 TGas extra compared to a non-sharded call.  The base cost for a function call today is about 1.2 TGas.  This makes a sharded call 22.5% more expensive to initiate, while the dynamic WASM execution costs stay the same.
+
+Note that this does not include storage costs that callers can choose to add.  Those are paid in Near native tokens, not in gas.  But for example, to cover for 200 bytes of storage, an extra cost of 0.0002 Near has to be paid, which is 2 Tgas at the gas floor price.
 
 
 #### Implicit Subcontract Creation
@@ -337,7 +369,7 @@ The maximum allowed storage in bytes is calculated as:
 let max_bytes = storage_allowance / nonrefundable_storage_amount_per_byte;
 ```
 
-We define `nonrefundable_storage_amount_per_byte = 10e18`.  This is 10x less than `storage_amount_per_byte` and is the same number that was used for zero balance accounts ([See here](https://github.com/near/NEPs/blob/a43e4e461dfaa4d24962a043c15e66f5f459e887/neps/nep-0448.md?plain=1#L53-L58)).
+We define `nonrefundable_storage_amount_per_byte = 10e18`.  This is 10x less than `storage_amount_per_byte` and is the same number that was used for zero balance accounts ([See here](https://github.com/near/NEPs/blob/a43e4e461dfaa4d24962a043c15e66f5f459e887/neps/nep-0448.md?plain=1#L53-L58)).  It means 1 Near can purchase 1 MB of permanent storage.
 
 The minimal bytes required to store a subcontract depends on the account id in the context.  
 
@@ -458,7 +490,13 @@ To track this, we add a field to the account structure in the state trie.
     ///
     /// # Cost
     ///
-    /// TODO: Define exact costs
+    /// `burnt_gas :=
+    ///      base 
+    ///      + send action base fee 
+    ///      + cost of reading and parsing context from memory or register
+    ///      + cost of reading `u128` from memory
+    ///      + cost of reading `bool` from memory
+    /// `used_gas := burnt_gas + exec action base fee
     pub fn promise_batch_action_switch_context(
         &mut self,
         promise_idx: u64,
@@ -507,7 +545,8 @@ To track this, we add a field to the account structure in the state trie.
     ///
     /// # Cost
     ///
-    /// TODO: Define exact costs
+    /// `burnt_gas := base + send action base fee + cost of reading and parsing context from memory or register
+    /// `used_gas := burnt_gas + exec action base fee
     pub fn promise_batch_action_set_subcontract_permission(
         &mut self,
         promise_idx: u64,
