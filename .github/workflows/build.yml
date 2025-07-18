@@ -1,16 +1,14 @@
 name: CI
-on: [push]
+on: [push, pull_request]
 jobs:
   build-check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v4
         with:
-          node-version: '16'
+          node-version: "18"
       - name: Build Docusaurus docs
         run: |
-          cd website && npm install
-          npm run build
-        env:
-          CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}
+          cd website && yarn
+          yarn run build

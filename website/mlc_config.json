@@ -5,6 +5,12 @@
     },
     {
       "pattern": "^https://codepen.io"
+    },
+    {
+      "pattern": "^https://stackoverflow.com"
+    },
+    {
+      "pattern": "^https://pages.near.org/papers/the-official-near-white-paper/"
     }
   ],
   "timeout": "20s",

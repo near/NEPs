@@ -19,7 +19,7 @@ ActionReceipt {
 ### `input_data_ids` to `PromiseResult`s
 
 `ActionReceipt.input_data_ids` must be satisfied before execution (see
-[Receipt Matching](#receipt-matching)). Each of `ActionReceipt.input_data_ids` will be converted to
+[Receipt Matching](/RuntimeSpec/Receipts#receipt-matching)). Each of `ActionReceipt.input_data_ids` will be converted to
 the `PromiseResult::Successful(Vec<u8>)` if `data_id.data` is `Some(Vec<u8>)` otherwise if
 `data_id.data` is `None` promise will be `PromiseResult::Failed`.
 
@@ -27,7 +27,7 @@ the `PromiseResult::Successful(Vec<u8>)` if `data_id.data` is `Some(Vec<u8>)` ot
 
 The `FunctionCall` executes in the `receiver_id` account environment.
 
-- a vector of [Promise Results](#promise-results) which can be accessed by a `promise_result`
+- a vector of [Promise Results](#input_data_ids-to-promiseresults) which can be accessed by a `promise_result`
   import [PromisesAPI](Components/BindingsSpec/PromisesAPI.md) `promise_result`)
 - the original Transaction `signer_id`, `signer_public_key` data from the ActionReceipt (e.g.
   `method_name`, `args`, `predecessor_id`, `deposit`, `prepaid_gas` (which is `gas` in
@@ -53,7 +53,7 @@ In order to implement this action, the runtime will:
   that specified in the `FunctionCall.method_name` field.
 
 Note that some of these steps may be executed during the
-[`DeployContractAction`](./Actions.md#DeployContractAction) instead. This is largely an
+[`DeployContractAction`](./Actions.md#deploycontractaction) instead. This is largely an
 optimization of the `FunctionCall` gas fee, and must not result in an observable behavioral
 difference of the `FunctionCall` action.
 
@@ -78,7 +78,7 @@ The output of the `FunctionCall`:
 - `logs` - during contract execution, utf8/16 string log records could be created. Logs are not
   persistent currently.
 - `new_receipts` - new `ActionReceipts` created during the execution. These receipts are going to
-  be sent to the respective `receiver_id`s (see [Receipt Matching explanation](#receipt-matching))
+  be sent to the respective `receiver_id`s (see [Receipt Matching explanation](/RuntimeSpec/Receipts#receipt-matching))
 - result could be either [`ReturnData::Value(Vec<u8>)`](#value-result) or
   [`ReturnData::ReceiptIndex(u64)`](#receiptindex-result)`
 
@@ -92,7 +92,7 @@ returned value. Eventually, these `DataReceipt` will be delivered to the corresp
 ### ReceiptIndex Result
 
 Successful result could not return any Value, but generates a bunch of new ActionReceipts instead.
-One example could be a callback. In this case, we assume the the new Receipt will send its Value
+One example could be a callback. In this case, we assume the new Receipt will send its Value
 Result to the [`output_data_receivers`](Receipts.md#output_data_receivers) of the current
 `ActionReceipt`.
 
@@ -104,26 +104,32 @@ error.
 #### Validation Error
 
 - If there is zero gas attached to the function call, a
+
   ```rust
   /// The attached amount of gas in a FunctionCall action has to be a positive number.
   FunctionCallZeroAttachedGas,
   ```
+
   error will be returned
 
 - If the length of the method name to be called exceeds `max_length_method_name`, a genesis
   parameter whose current value is `256`, a
+
   ```rust
   /// The length of the method name exceeded the limit in a Function Call action.
   FunctionCallMethodNameLengthExceeded { length: u64, limit: u64 }
   ```
+
   error is returned.
 
 - If the length of the argument to the function call exceeds `max_arguments_length`, a genesis
   parameter whose current value is `4194304` (4MB), a
+
   ```rust
   /// The length of the arguments exceeded the limit in a Function Call action.
   FunctionCallArgumentsLengthExceeded { length: u64, limit: u64 }
   ```
+
   error is returned.
 
 #### Execution Error
@@ -131,9 +137,10 @@ error.
 There are three types of errors which may occur when applying a function call action:
 `FunctionCallError`, `ExternalError`, and `StorageError`.
 
-* `FunctionCallError` includes everything from around the execution of the wasm binary,
+- `FunctionCallError` includes everything from around the execution of the wasm binary,
 from compiling wasm to native to traps occurred while executing the compiled native binary. More specifically,
 it includes the following errors:
+
   ```rust
   pub enum FunctionCallError {
       /// Wasm compilation error
@@ -150,10 +157,12 @@ it includes the following errors:
       HostError(HostError),
   }
   ```
+
 - `CompilationError` includes errors that can occur during the compilation of wasm binary.
 - `LinkError` is returned when wasmer runtime is unable to link the wasm module with provided imports.
 - `MethodResolveError` occurs when the method in the action cannot be found in the contract code.
 - `WasmTrap` error happens when a trap occurs during the execution of the binary. Traps here include
+
   ```rust
   pub enum WasmTrap {
       /// An `unreachable` opcode was executed.
@@ -176,6 +185,7 @@ it includes the following errors:
       GenericTrap,
   }
   ```
+
 - `WasmUnknownError` occurs when something inside wasmer goes wrong
 - `HostError` includes errors that might be returned during the execution of a host function. Those errors are
 
@@ -244,7 +254,7 @@ it includes the following errors:
   }
   ```
 
-* `ExternalError` includes errors that occur during the execution inside `External`, which is an interface between runtime
+- `ExternalError` includes errors that occur during the execution inside `External`, which is an interface between runtime
 and the rest of the system. The possible errors are:
 
   ```rust
@@ -257,4 +267,4 @@ and the rest of the system. The possible errors are:
   }
   ```
 
-* `StorageError` occurs when state or storage is corrupted.
+- `StorageError` occurs when state or storage is corrupted.

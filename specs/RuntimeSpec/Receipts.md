@@ -100,7 +100,7 @@ If smart contract finishes its execution with some value (not Promise), runtime 
 
 - **`type`**: `CryptoHash`
 
-An a unique `DataReceipt` identifier.
+A unique `DataReceipt` identifier.
 
 #### data
 
@@ -108,11 +108,11 @@ An a unique `DataReceipt` identifier.
 
 Associated data in bytes. `None` indicates an error during execution.
 
-# Creating Receipt
+## Creating Receipt
 
-Receipts can be generated during the execution of a [SignedTransaction](./Transactions.md#SignedTransaction) (see [example](./Scenarios/FinancialTransaction.md)) or during application of some `ActionReceipt` which contains a [`FunctionCall`](#actions) action. The result of the `FunctionCall` could be either another `ActionReceipt` or a `DataReceipt` (returned data).
+Receipts can be generated during the execution of a [SignedTransaction](/RuntimeSpec/Transactions#signed-transaction) (see [example](./Scenarios/FinancialTransaction.md)) or during application of some `ActionReceipt` which contains a [`FunctionCall`](#actions) action. The result of the `FunctionCall` could be either another `ActionReceipt` or a `DataReceipt` (returned data).
 
-# Receipt Matching
+## Receipt Matching
 
 Runtime doesn't require that Receipts come in a particular order. Each Receipt is processed individually. The goal of the `Receipt Matching` process is to match all [`ActionReceipt`s](#actionreceipt) to the corresponding [`DataReceipt`s](#datareceipt).
 
@@ -127,11 +127,11 @@ A Receipt which runtime stores until all the designated [`DataReceipt`s](#datare
 - **`key`** = `account_id`,`receipt_id`
 - **`value`** = `[u8]`
 
-_Where `account_id` is [`Receipt.receiver_id`](#receiver_id), `receipt_id` is [`Receipt.receipt_id`](#receipt_id) and value is a serialized [`Receipt`](#receipt) (which [type](#type) must be [ActionReceipt](#actionreceipt))._
+_Where `account_id` is [`Receipt.receiver_id`](#receiver_id), `receipt_id` is [`Receipt.receipt_id`](#receipt_id) and value is a serialized [`Receipt`](#receipt-1) (which type must be [ActionReceipt](#actionreceipt))._
 
 #### Pending DataReceipt Count
 
-A counter which counts pending [`DataReceipt`s](#DataReceipt) for a [Postponed Receipt](#postponed-receipt) initially set to the length of missing [`input_data_ids`](#input_data_ids) of the incoming `ActionReceipt`. It's decrementing with every new received [`DataReceipt`](#datareceipt):
+A counter which counts pending [`DataReceipt`s](#datareceipt) for a [Postponed Receipt](#postponed-actionreceipt) initially set to the length of missing [`input_data_ids`](#input_data_ids) of the incoming `ActionReceipt`. It's decrementing with every new received [`DataReceipt`](#datareceipt):
 
 - **`key`** = `account_id`,`receipt_id`
 - **`value`** = `u32`
@@ -140,7 +140,7 @@ _Where `account_id` is AccountId, `receipt_id` is CryptoHash and value is an int
 
 #### Pending DataReceipt for Postponed ActionReceipt
 
-We index each pending `DataReceipt` so when a new [`DataReceipt`](#datareceipt) arrives we connect it to the [Postponed Receipt](#postponed-receipt) it belongs to.
+We index each pending `DataReceipt` so when a new [`DataReceipt`](#datareceipt) arrives we connect it to the [Postponed Receipt](#postponed-actionreceipt) it belongs to.
 
 - **`key`** = `account_id`,`data_id`
 - **`value`** = `receipt_id`
@@ -156,12 +156,12 @@ First of all, runtime saves the incoming `DataReceipt` to the storage as:
 
 _Where `account_id` is [`Receipt.receiver_id`](#receiver_id), `data_id` is [`DataReceipt.data_id`](#data_id) and value is a [`DataReceipt.data`](#data) (which is typically a serialized result of the call to a particular contract)._
 
-Next, runtime checks if there are any [`Postponed ActionReceipt`](#postponed-actionreceipt) waiting for this `DataReceipt` by querying [`Pending DataReceipt` to the Postponed Receipt](#pending-datareceipt-for-postponed-actionReceipt). If there is no postponed `receipt_id` yet, we do nothing else. If there is a postponed `receipt_id`, we do the following:
+Next, runtime checks if there are any [`Postponed ActionReceipt`](#postponed-actionreceipt) waiting for this `DataReceipt` by querying [`Pending DataReceipt` to the Postponed Receipt](#pending-datareceipt-for-postponed-actionreceipt). If there is no postponed `receipt_id` yet, we do nothing else. If there is a postponed `receipt_id`, we do the following:
 
 - decrement [`Pending Data Count`](#pending-datareceipt-count) for the postponed `receipt_id`
 - remove found [`Pending DataReceipt` to the `Postponed ActionReceipt`](#pending-datareceipt-for-postponed-actionreceipt)
 
-If [`Pending DataReceipt Count`](#pending-datareceipt-count) is now 0 that means all the [`Receipt.input_data_ids`](#input_data_ids) are in storage and runtime can safely apply the [Postponed Receipt](#postponed-receipt) and remove it from the store.
+If [`Pending DataReceipt Count`](#pending-datareceipt-count) is now 0 that means all the [`Receipt.input_data_ids`](#input_data_ids) are in storage and runtime can safely apply the [Postponed Receipt](#postponed-actionreceipt) and remove it from the store.
 
 ## Case 1: Call to multiple contracts and await responses
 
@@ -269,19 +269,25 @@ apply_receipt(postponed_receipt)
 ## Receipt Validation Error
 
 Some postprocessing validation is done after an action receipt is applied. The validation includes:
-* Whether the generated receipts are valid. A generated receipt can be invalid, if, for example, a function call
+
+- Whether the generated receipts are valid. A generated receipt can be invalid, if, for example, a function call
 generates a receipt to call another function on some other contract, but the contract name is invalid. Here there are
 mainly two types of errors:
+
 - account id is invalid. If the receiver id of the receipt is invalid, a
+
 ```rust
 /// The `receiver_id` of a Receipt is not valid.
 InvalidReceiverId { account_id: AccountId },
 ``` 
+
 error is returned.
+
 - some action is invalid. The errors returned here are the same as the validation errors mentioned in [actions](Actions.md).
-* Whether the account still has enough balance to pay for storage. If, for example, the execution of one function call
+- Whether the account still has enough balance to pay for storage. If, for example, the execution of one function call
 action leads to some receipts that require transfer to be generated as a result, the account may no longer have enough
 balance after the transferred amount is deducted. In this case, a
+
 ```rust
 /// ActionReceipt can't be completed, because the remaining balance will not be enough to cover storage.
 LackBalanceForState {

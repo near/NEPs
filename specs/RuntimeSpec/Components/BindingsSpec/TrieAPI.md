@@ -5,6 +5,8 @@ not follow the specification are considered to be bugs that need to be fixed.
 
 ---
 
+#### storage_write
+
 ```rust
 storage_write(key_len: u64, key_ptr: u64, value_len: u64, value_ptr: u64, register_id: u64) -> u64
 ```
@@ -37,6 +39,8 @@ Writes key-value into storage.
 
 ---
 
+#### storage_read
+
 ```rust
 storage_read(key_len: u64, key_ptr: u64, register_id: u64) -> u64
 ```
@@ -63,6 +67,8 @@ Reads the value stored under the given key.
 - This function currently does not exist.
 
 ---
+
+#### storage_remove
 
 ```rust
 storage_remove(key_len: u64, key_ptr: u64, register_id: u64) -> u64
@@ -94,6 +100,8 @@ Very similar to `storage_read`:
 
 ---
 
+#### storage_has_key
+
 ```rust
 storage_has_key(key_len: u64, key_ptr: u64) -> u64
 ```
@@ -111,11 +119,13 @@ Checks if there is a key-value pair.
 
 ---
 
+#### storage_iter_prefix
+
 ```rust
 storage_iter_prefix(prefix_len: u64, prefix_ptr: u64) -> u64
 ```
 
-DEPRECATED, calling it will result result in `HostError::Deprecated` error.
+DEPRECATED, calling it will result in `HostError::Deprecated` error.
 Creates an iterator object inside the host.
 Returns the identifier that uniquely differentiates the given iterator from other iterators that can be simultaneously
 created.
@@ -131,11 +141,13 @@ created.
 
 ---
 
+#### storage_iter_range
+
 ```rust
 storage_iter_range(start_len: u64, start_ptr: u64, end_len: u64, end_ptr: u64) -> u64
 ```
 
-DEPRECATED, calling it will result result in `HostError::Deprecated` error.
+DEPRECATED, calling it will result in `HostError::Deprecated` error.
 Similarly to `storage_iter_prefix`
 creates an iterator object inside the host.
 
@@ -146,17 +158,19 @@ Iterates over all key-values such that keys are between `start` and `end`, where
 
 Note, this definition allows for `start` or `end` keys to not actually exist on the given trie.
 
-###### Panics:
+###### Panics
 
 - If `start_len + start_ptr` or `end_len + end_ptr` exceeds the memory container or points to an unused register it panics with `MemoryAccessViolation`;
 
 ---
 
+#### storage_iter_next
+
 ```rust
 storage_iter_next(iterator_id: u64, key_register_id: u64, value_register_id: u64) -> u64
 ```
 
-DEPRECATED, calling it will result result in `HostError::Deprecated` error.
+DEPRECATED, calling it will result in `HostError::Deprecated` error.
 Advances iterator and saves the next key and value in the register.
 
 ###### Normal operation

@@ -16,9 +16,9 @@ It is expected that a node periodically requests a list of peers from its neighb
 
 ### Handshakes
 
-To establish a new connections between pair of nodes, they will follow the following protocol. Node A open a connection with node B and sends a [Handshake](Messages.md#Handshake) to it. If handshake is valid (see reasons to [decline the handshake](#Decline-handshake)) then node B will proceed to send [Handshake](Messages.md#Handshake) to node A. After each node accept a handshake it will mark the other node as an active connection, until one of them stop the connection.
+To establish a new connections between pair of nodes, they will follow the following protocol. Node A open a connection with node B and sends a [Handshake](Messages.md#handshake) to it. If handshake is valid (see reasons to [decline the handshake](#decline-handshake)) then node B will proceed to send [Handshake](Messages.md#handshake) to node A. After each node accept a handshake it will mark the other node as an active connection, until one of them stop the connection.
 
-[Handshake](Messages.md#Handshake) contains relevant information about the node, the current chain and information to create a new edge between both nodes.
+[Handshake](Messages.md#handshake) contains relevant information about the node, the current chain and information to create a new edge between both nodes.
 
 #### Decline handshake
 
@@ -29,7 +29,7 @@ When a node receives a handshake from other node it will decline this connection
 
 #### Edge
 
-Edges are used to let other nodes in the network know that there is currently an active connection between a pair of nodes. See the definition of [this data structure](Messages.md#Edge).
+Edges are used to let other nodes in the network know that there is currently an active connection between a pair of nodes. See the definition of [this data structure](Messages.md#edge).
 
 If the nonce of the edge is odd, it denotes an `Added` edge, otherwise it denotes a `Removed` edge. Each node should keep track of the nonce used for edges between every pair of nodes. Peer C believes that the peers A and B are currently connected if and only if the edge with the highest nonce known to C for them has an odd nonce.
 
@@ -124,7 +124,7 @@ def on_announce_accounts_received(self, announcements):
 
 When a node needs to send a message to another peer, it checks in the routing table if it is connected to that peer, possibly not directly but through several hops. Then it select one of the shortest path to the target peer and sends a [`RoutedMessage`](Messages.md#routedmessage) to the first peer in the path.
 
-When it receives a [`RoutedMessage`](Messages.md#routedmessage), it check if it is the target, in that case consume the body of the message, otherwise it finds a route to the target following described approach and sends the message again. Is is important that before routing a message each peer check signature from original author of the message, passing a message with invalid signature can result in ban for the sender. It is not required however checking the content of the message itself.
+When it receives a [`RoutedMessage`](Messages.md#routedmessage), it check if it is the target, in that case consume the body of the message, otherwise it finds a route to the target following described approach and sends the message again. It is important that before routing a message each peer check signature from original author of the message, passing a message with invalid signature can result in ban for the sender. It is not required however checking the content of the message itself.
 
 Each [`RoutedMessage`](Messages.md#routedmessage) is equipped with a time-to-live integer. If this message is not for the node processing it, it decrement the field by one before routing it; if the value is 0, the node drops the message instead of routing it.
 
