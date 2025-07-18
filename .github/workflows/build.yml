@@ -1,0 +1,14 @@
+name: CI
+on: [push, pull_request]
+jobs:
+  build-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+      - name: Build Docusaurus docs
+        run: |
+          cd website && yarn
+          yarn run build

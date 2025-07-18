@@ -7,7 +7,7 @@ The state of the light client is defined by:
 
 The `epoch_id` refers to the epoch to which the block that is the current known head belongs, and `next_epoch_id` is the epoch that will follow.
 
-Light clients operate by periodically fetching instances of `LightClientBlockView` via particular RPC end-point described [below](#rpc-end-point).
+Light clients operate by periodically fetching instances of `LightClientBlockView` via particular RPC end-point described [below](#rpc-end-points).
 
 Light client doesn't need to receive `LightClientBlockView` for all the blocks. Having the `LightClientBlockView` for block `B` is sufficient to be able to verify any statement about state or outcomes in any block in the ancestry of `B` (including `B` itself). In particular, having the `LightClientBlockView` for the head is sufficient to locally verify any statement about state or outcomes in any block on the canonical chain.
 
@@ -167,17 +167,20 @@ The signatures in the `LightClientBlockView::approvals_after_next` are signature
 
 ## Proof Verification
 
-[Transaction Outcome Proof]: #transaction-outcome-proofs
+
 ### Transaction Outcome Proofs
 
 To verify that a transaction or receipt happens on chain, a light client can request a proof through rpc by providing `id`, which is of type
+
 ```rust
 pub enum TransactionOrReceiptId {
     Transaction { hash: CryptoHash, sender: AccountId },
     Receipt { id: CryptoHash, receiver: AccountId },
 }
 ```
+
 and the block hash of light client head. The rpc will return the following struct
+
 ```rust
 pub struct RpcLightClientExecutionProofResponse {
     /// Proof of execution outcome
@@ -191,8 +194,10 @@ pub struct RpcLightClientExecutionProofResponse {
     pub block_proof: MerklePath,
 }
 ```
+
 which includes everything that a light client needs to prove the execution outcome of the given transaction or receipt.
 Here `ExecutionOutcomeWithIdView` is
+
 ```rust
 pub struct ExecutionOutcomeWithIdView {
     /// Proof of the execution outcome
@@ -210,9 +215,11 @@ The proof verification can be broken down into two steps, execution outcome root
 verification.
 
 #### Execution Outcome Root Verification
+
 If the outcome root of the transaction or receipt is included in block `H`, then `outcome_proof` includes the block hash
 of `H`, as well as the merkle proof of the execution outcome in its given shard. The outcome root in `H` can be
 reconstructed by
+
 ```python
 shard_outcome_root = compute_root(sha256(borsh(execution_outcome)), outcome_proof.proof)
 block_outcome_root = compute_root(sha256(borsh(shard_outcome_root)), outcome_root_proof)
@@ -223,6 +230,7 @@ This outcome root must match the outcome root in `block_header_lite.inner_lite`.
 #### Block Merkle Root Verification
 
 Recall that block hash can be computed from `LightClientBlockLiteView` by
+
 ```rust
 sha256(concat(
     sha256(concat(
@@ -234,10 +242,12 @@ sha256(concat(
 ```
 
 The expected block merkle root can be computed by
+
 ```python
 block_hash = compute_block_hash(block_header_lite)
 block_merkle_root = compute_root(block_hash, block_proof)
 ```
+
 which must match the block merkle root in the light client block of the light client head.
 
 ## RPC end-points

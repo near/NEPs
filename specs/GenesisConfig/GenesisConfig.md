@@ -2,80 +2,87 @@
 
 ## protocol_version
 
-_type: u32_
+`type: u32`
 
 Protocol version that this genesis works with.
 
 ## genesis_time
 
-_type: DateTime_
+`type: DateTime`
 
 Official time of blockchain start.
 
+## genesis_height
+
+`type: u64`
+
+Height of the genesis block. Note that genesis height is not necessarily 0.
+For example, mainnet genesis height is `9820210`.
+
 ## chain_id
 
-_type: String_
+`type: String`
 
 ID of the blockchain. This must be unique for every blockchain.
 If your testnet blockchains do not have unique chain IDs, you will have a bad time.
 
 ## num_block_producers
 
-_type: u32_
+`type: u32`
 
 Number of block producer seats at genesis.
 
 ## block_producers_per_shard
 
-_type: [ValidatorId]_
+`type: [ValidatorId]`
 
 Defines number of shards and number of validators per each shard at genesis.
 
 ## avg_fisherman_per_shard
 
-_type: [ValidatorId]_
+`type: [ValidatorId]`
 
 Expected number of fisherman per shard.
 
 ## dynamic_resharding
 
-_type: bool_
+`type: bool`
 
 Enable dynamic re-sharding.
 
 ## epoch_length
 
-_type: BlockIndex,_
+`type: BlockIndex`
 
 Epoch length counted in blocks.
 
 ## gas_limit
 
-_type: Gas,_
+`type: Gas`
 
 Initial gas limit for a block
 
 ## gas_price
 
-_type: Balance,_
+`type: Balance`
 
 Initial gas price
 
 ## block_producer_kickout_threshold
 
-_type: u8_
+`type: u8`
 
 Criterion for kicking out block producers (this is a number between 0 and 100)
 
 ## chunk_producer_kickout_threshold
 
-_type: u8_
+`type: u8`
 
 Criterion for kicking out chunk producers (this is a number between 0 and 100)
 
 ## gas_price_adjustment_rate
 
-_type: Fraction_
+`type: Fraction`
 
 Gas price adjustment rate
 
@@ -87,7 +94,7 @@ Runtime configuration (mostly economics constants).
 
 ## validators
 
-_type: [AccountInfo]_
+`type: [AccountInfo]`
 
 List of initial validators.
 
@@ -99,47 +106,46 @@ Records in storage at genesis (get split into shards at genesis creation).
 
 ## transaction_validity_period
 
-_type: u64_
+`type: u64`
 
 Number of blocks for which a given transaction is valid
 
 ## developer_reward_percentage
 
-_type: Fraction_
+`type: Fraction`
 
 Developer reward percentage.
 
 ## protocol_reward_percentage
 
-_type: Fraction_
+`type: Fraction`
 
 Protocol treasury percentage.
 
 ## max_inflation_rate
 
-_type: Fraction_
+`type: Fraction`
 
 Maximum inflation on the total supply every epoch.
 
 ## total_supply
 
-_type: Balance_
+`type: Balance`
 
 Total supply of tokens at genesis.
 
 ## num_blocks_per_year
 
-_type: u64_
+`type: u64`
 
 Expected number of blocks per year
 
 ## protocol_treasury_account
 
-_type: AccountId_
+`type: AccountId`
 
 Protocol treasury account
 
 ## protocol economics
 
-> For the specific economic specs, refer to [Economics Section](../Economics/README.md).
-
+> For the specific economic specs, refer to [Economics Section](../Economics/Economic.md).
