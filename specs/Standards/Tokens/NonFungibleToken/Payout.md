@@ -21,11 +21,13 @@ Therefore, the core goal of this standard is to define a set of methods for fina
 ## Specification
 
 This Payout extension standard adds two methods to NFT contracts:
+
 - a view method: `nft_payout`, accepting a `token_id` and some `balance`, returning the `Payout` mapping for the given token.
 - a call method: `nft_transfer_payout`, accepting all the arguments of`nft_transfer`, plus a field for some `Balance` that calculates the `Payout`, calls `nft_transfer`, and returns the `Payout` mapping.
 
 Financial contracts MUST validate several invariants on the returned
 `Payout`:
+
 1. The returned `Payout` MUST be no longer than the given maximum length (`max_len_payout` parameter) if provided. Payouts of excessive length can become prohibitively gas-expensive. Financial contracts can specify the maximum length of payout the contract is willing to respect with the `max_len_payout` field on `nft_transfer_payout`.
 2. The balances MUST add up to less than or equal to the `balance` argument in `nft_transfer_payout`. If the balance adds up to less than the `balance` argument, the financial contract MAY claim the remainder for itself.
 3. The sum of the balances MUST NOT overflow. This is technically identical to 2, but financial contracts should be expected to handle this possibility.
@@ -38,6 +40,7 @@ If the Payout contains any addresses that do not exist, the financial contract M
 Financial contracts MAY take a cut of the NFT sale price as commission, subtracting their cut from the total token sale price, and calling `nft_transfer_payout` with the remainder.
 
 ## Example Flow
+
 ```
  ┌─────────────────────────────────────────────────┐
  │Token Owner approves marketplace for token_id "0"│
@@ -111,7 +114,7 @@ NFT and financial contracts vary in implementation. This means that some extra C
 
 ## Drawbacks
 
-There is an introduction of trust that the contract calling `nft_transfer_payout` will indeed pay out to all intended parties. However, since the calling contract will typically be something like a marketplace used by end users, malicious actors might be found out more easily and might have less incentive.  
+There is an introduction of trust that the contract calling `nft_transfer_payout` will indeed pay out to all intended parties. However, since the calling contract will typically be something like a marketplace used by end users, malicious actors might be found out more easily and might have less incentive.
 There is an assumption that NFT contracts will understand the limits of gas and not allow for a number of payouts that cannot be achieved.
 
 ## Future possibilities
@@ -124,6 +127,5 @@ In the future, the NFT contract itself may be able to place an NFT transfer is a
 - Version `2.0.0` contains the intended `approval_id` of `u64` instead of the stringified `U64` version. This was an oversight, but since the standard was live for a few months before noticing, the team thought it best to bump the major version.
 
 ## Copyright
-[copyright]: #copyright
 
 Copyright and related rights waived via [CC0](https://creativecommons.org/publicdomain/zero/1.0/).
