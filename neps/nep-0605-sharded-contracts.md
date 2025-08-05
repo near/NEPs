@@ -12,23 +12,23 @@ LastUpdated: 2025-07-11
 
 ## Summary
 
-Today, a single contract is limited to the transactions per second throughput (TPS) of a single a shard, ergo a contract already at the TPS limit of a single shard cannot benefit from increase in TPS made possible by increasing the number of shards.  This NEP builds on top of the global contracts NEP-591 and adds the necessary tools to enable sharded contracts.
+Today, a single contract is limited to the transactions per second throughput (TPS) of a single a shard, therefore a contract already at the TPS limit of a single shard cannot benefit from increase in TPS made possible by increasing the number of shards.  This NEP builds on top of the global contracts NEP-591 and adds the necessary tools to enable sharded contracts.
 
-A sharded contract spreads its state across all user accounts, rather than storing it all in one place.  This becomes possible to implement securely once users can have multiple isolated subcontracts in one account that are guaranteed to run the same sharded contract code.
+A sharded contract spreads its state across shards of accounts that use it, rather than storing the entire state in a single shard. This becomes possible to implement securely once users can have multiple isolated subcontracts in one account that are guaranteed to run the same sharded contract code.
 
-With that, sharded contracts will be able to seamlessly scale to use the entire TPS capacity of the network.
+With that, sharded contracts are able to seamlessly scale to use the entire TPS capacity of the network.
 
 
 ## Motivation
 
 As a single contract is deployed on a single shard, the maximum TPS that it can have is the maximum TPS of the single shard.  Horizontally scaling (i.e. increasing the number of shards) a blockchain is easier than vertically scaling (i.e. increasing the TPS of a single shard).  Once, all the software bottlenecks are addressed, the only way to vertically scale a shard is by requiring the validators to use faster machines.  Faster machines are more expensive and thereby hurts decentralisation.
 
-Without spreading the contract across multiple accounts, a single contract will therefore remain bound by the TPS throughput of a single shard regardless of how many shards are added to the network.  But with today's protocol, the options to spread state across multiple accounts are very limited.
+Vertical scaling opportunities are limited, imposing a hard upper limit on the throughput of a single-shard contract. This limit remains an issue for the contract regardless of how many shards are added to the network. This is especially true with today's protocol; options to spread state across multiple shards (i.e. to scale horizontally) are very limited.
 
 1. One could deploy multiple worker contracts on different accounts to benefit from multi-shard throughput.  In that case, developers need an off-chain load-balancing solution to distribute users among the workers.  Workers among themselves need to communicate with cross-contract function calls to execute any operation that involves user state from two different user groups.
 2. State could also be stored on every user account, which needs to run the shared contract code.  Global contracts NEP-591 makes this economically feasible.  However, this means one account can only use one contract.  For example, if the accounts holds an FT that's sharded in this way, the user cannot buy an NFT and hold it on the same account.
 
-Neither of these architectures is deemed satisfying.
+Neither of these architectures is satisfying.
 
 This NEP proposes solving this problem by introducing new protocol level primitives which are necessary to get around these limitations.
 
@@ -53,7 +53,7 @@ This NEP introduces three contexts:
 - `ShardedByAccountId { account_id: AccountId }` - Runs code deployed globally under the given account id.
 - `ShardedByCodeHash { code_hash: CryptoHash }` - Runs code deployed globally under the given code hash.
 
-For sharded contexts, the code is implicitly defined by the context fields.  An account can use any global contract code in this way  Even if this is against the original intention of the smart contract developer.  We do not see any security concerns with allowing this.
+For sharded contexts, the code is implicitly defined by the context fields. An account can use any global contract as a sharded contract, even if doing so was not intended by the smart contract developer.  We do not see any security concerns with allowing this.
 
 While not necessary for sharded contracts, this design leaves the door open to add more contexts in the future.  A future proposal could add a way to deploy multiple local modules without the need to deploy the code globally first.  For example, using a context like `LocalSubcontract { module_name: String }`.  The code for such a subcontract could be deployed using `DeployContractAction` inside the context.
 
@@ -102,7 +102,7 @@ With this proposal, subcontracts making cross-contract calls will have the same 
 
 For new code that is aware of subcontracts, we propose a new host function `predecessor_context()`.  (Exact definition in the detailed specification section.)  If this is not the root context, the call comes from a subcontract and should not have access to NEP-141 fungible tokens.
 
-Crucially, however, contracts deployed prior to the introduction of contract contexts did not check the predecessor's context.  Therefore, the proposal disallows calling root contracts from a limited permission subcontract.  Allowing to call non-root is considered save since they can only be deployed after the introduction of contexts.
+Crucially, however, contracts deployed prior to the introduction of contract contexts did not check the predecessor's context.  Therefore, the proposal disallows calling root contracts from a limited permission subcontract. Restricting calls to non-root contexts is considered safe because they can only be deployed after the introduction of contexts.
 
 In combination with `current_context()`, contracts can also check if the call came from a subcontract using the same global code.  This is useful for calls withing a sharded contract across different users.
 
