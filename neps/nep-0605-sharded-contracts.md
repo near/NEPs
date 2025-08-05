@@ -7,7 +7,7 @@ DiscussionsTo: https://github.com/nearprotocol/neps/pull/0000
 Type: Protocol
 Version: 0.0.0
 Created: 2025-04-07
-LastUpdated: 2025-07-11
+LastUpdated: 2025-08-05
 ---
 
 ## Summary
@@ -30,9 +30,7 @@ Vertical scaling opportunities are limited, imposing a hard upper limit on the t
 
 Neither of these architectures is satisfying.
 
-This NEP proposes solving this problem by introducing new protocol level primitives which are necessary to get around these limitations.
-
-Discussion https://github.com/near/NEPs/issues/614 has a concrete example of how to implement a sharded FT contract using the proposed changes.
+This NEP proposes a horizontal scaling solution by introducing new protocol level primitives which enable a new architecture of on-chain applications.
 
 
 ## Specification
@@ -40,12 +38,12 @@ Discussion https://github.com/near/NEPs/issues/614 has a concrete example of how
 
 ### Subcontracts
 
-A *subcontract* is an isolated module inside an account.  Aside from the main contract, an account can have up to `N` subcontracts deployed, each with separate code and state.
+A *subcontract* is an [isolated module](#isolation-requirements) inside an account.  Aside from the main contract, an account can have up to `N` subcontracts deployed, each with separate code and state. See [Limit on contracts per account](#limit-on-contracts-per-account) for what `N` is and why it must be limited.
 
 
 ### Contract Context
 
-Every subcontract is created inside a certain *context*.  Contexts are defined by a pair of an account id and a contract context.  The main contract uses the root context, while subcontracts have to use a different context.
+Every subcontract is created inside a certain *context*.  Contexts are orthogonal to account ids.  The pair of an account id and a context reference a deployed contract.  The main contract uses the root context, while subcontracts have to use a different context.
 
 This NEP introduces three contexts:
 
@@ -60,11 +58,11 @@ While not necessary for sharded contracts, this design leaves the door open to a
 
 ### Isolation Requirements
 
-This proposal allows holding multiple subcontracts in the same account.  But if every subcontract has the same tools available as the main contract, this makes building secure sharded contracts difficult if not impossible.
+This proposal allows deploying multiple subcontracts in the same account.  But if every subcontract has the same tools available as the main contract, this makes building secure sharded contracts difficult if not impossible.
 
 A bit of necessary background.  Code running inside the main contract has full access on the account.  It can, among other things, send all tokens to an arbitrary address, delete itself, or even redeploy its own code.  The limitations are only set by the source code of the contract.  This makes sense if users only deploy code to their account that they have either written themselves or vetted thoroughly.
 
-With the introduction of sharded contracts, users will deploy **untrusted** subcontracts on their account on a regular basis.  For example, receiving an FT requires installing the corresponding subcontract on the user account.  It is not feasible to assume users vet the code of every meme coin they get airdropped.  Therefore, the first isolation requirement is that the permissions of subcontracts can be limited.
+With the introduction of sharded contracts, users will deploy **untrusted** subcontracts on their account on a regular basis.  For example, receiving an FT requires deploying the corresponding subcontract on the user account.  It is not feasible to assume users vet the code of every meme coin they get airdropped.  Therefore, the first isolation requirement is that the permissions of subcontracts can be limited.
 
 On the flip side, contract developers will store critical state inside the subcontracts context, such as the user's own balance of a token, or their liabilities.  Therefore this state must be tamper-proof.  Not even a full access key to the account should allow modifying this state.  This includes the ability to delete the subcontract state, which also must be limited.
 
@@ -87,7 +85,7 @@ Deleting subcontracts is forbidden, to completely shut off state tampering.
 Most subcontracts only need to access their own state and make calls to other subcontracts on other users.  However, it would be too limiting to disallow all other actions entirely.  We propose a binary permission system, akin to how access keys in NEAR Protocol work today.
 
 - `FullAccess` - A subcontract with this permission has the same capabilities as the main contract.
-- `Limited` - A subcontract with this permission is forbidden to use most actions in outgoing receipts.  Only function calls to non-root contexts are allowed.  No NEAR balance can be attached to outgoing calls.
+- `Limited` - A subcontract with this permission is forbidden to use most actions in outgoing receipts.  Only function calls to non-root contexts are allowed.  No NEAR balance can be attached to outgoing calls.  (See [Cross-Contract Call Authorization](#cross-contract-call-authorization) for the motivation.)
 
 The idea is that `FullAccess` subcontracts are only deployed when users have either written the code themselves or it comes from a highly trusted source.  `Limited` subcontracts, on the other hand, can be deployed even from untrusted sources, without security concerns.
 
@@ -118,11 +116,9 @@ As described in specification below, we decided to forbid all balance access to 
 
 Subcontracts require storage for their context meta data, as well as for the namespaced state modified by WASM code.  How exactly this is paid for is not essential for the core functionality of sharded contracts.  After considering different options, we propose to use a non-refundable storage model, where tokens to cover storage are permanently burnt.
 
-This is in contracts to existing (main) accounts.  They initially did not burn anything. Instead, they must always hold a certain amount in NEAR balance to cover their storage cost.  However, this came with the problem of refund attacks on sponsored account creation.  Therefore, a zero-balance account (ZBA) limit of 770 bytes per account was introduced in #448.  This makes every account burn enough tokens to cover 770 bytes upon creation.  The refundable storage model is only applied to accounts that use more than that limit.
-
 The theoretical benefit of the refundable storage model is that upon deletion of the account, the user can get a refund of the tokens that were locked for storage.  However, in practice, deleting accounts is rarely done and the absolute value per account is often too low to justify any effort to collect the refund.
 
-The way subcontracts work, all storage uses the non-refundable model.  Unlike the ZBA limit, the exact amount is dynamic.  Anyone interacting with the subcontract can also fund it with more storage capacity, permanently increasing the allowance of a specific subcontract.  Usage and allowance is tracked for each subcontract individually.
+The way subcontracts work, all storage uses the non-refundable model.  Unlike the zero-balance account (ZBA) limit, the exact amount is dynamic.  Anyone interacting with the subcontract can also fund it with more storage capacity, permanently increasing the allowance of a specific subcontract.  Usage and allowance is tracked for each subcontract individually.
 
 
 ### Practical Considerations
@@ -136,7 +132,7 @@ We propose that any subcontract to subcontract call can opt-in to pay for the su
 
 Without this, imagine a user wants to transfer an amount of FT from a centralized exchange to their self-custody near account.  This user would have to manually enable the token on their account, after they created the account.  This is not intuitive and not how FT's work today. Not on NEAR Protocol, nor on other popular chains.
 
-With the proposed opt-in lazy subcontract creation, an exchange can first try sending tokens the cheap way (no lazy creation)  If that fails they can repeat the same call but opt-in this time and pay the increased gas cost to cover the subcontract creation.
+With the proposed opt-in lazy subcontract creation, an exchange can first try sending tokens the cheap way (no lazy creation).  If that fails they can repeat the same call but opt-in this time and pay the increased gas cost to cover the subcontract creation.
 
 
 ### Detailed Specification
@@ -236,7 +232,7 @@ The rules for using `SwitchContextAction` are:
 
 - Receipts created from a transaction must always set `caller = ContractContext::Root`.
 - Receipts created from a sharded contract must always set `caller = ContractContext::ShardedBy*` with their respective code id.
-- Any context can be entered without special permissions.
+- Any non-root context can be entered without special permissions.
 - Anyone can create any subcontract on any account by setting `create_missing_subcontract` to true.  (See [Implicit Subcontract Creation](#implicit-subcontract-creation))
 - `SwitchContextAction` will fail if the subcontract does not exist and `create_missing_subcontract` is set to false.
 
@@ -561,12 +557,14 @@ To track this, we add a field to the account structure in the state trie.
 #### Changes to Existing Host Functions
 
 - `storage_usage()` in any subcontract will return the storage usage of just subcontract, without the main account.
-- `storage_usage()` in the main account will include the storage usage of all subcontracts usage above their respective ZBA limit.
+- `storage_usage()` in the main account will remain unchanged, not include the storage usage of subcontracts.
 - `account_balance()` in a limited access subcontract will always return 0.
-- `account_locked_balance()` in a limited access subcontract will always return 0.
+- `account_locked_balance()` remains unchanged in all contexts, returning the balance locked due to staking by the account.
 
 
 ## Usage Guide
+
+Discussion https://github.com/near/NEPs/issues/614 has a concrete example of how to implement a sharded FT contract using the proposed changes.
 
 Below are additional explanations on how sharded contracts can be built using the changes proposed in this NEP.
 
