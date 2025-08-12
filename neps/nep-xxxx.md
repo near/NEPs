@@ -263,7 +263,17 @@ We are still working hard on writting test case to test our example implementati
 
 ## Security Implications
 
-[Explicitly outline any security concerns in relation to the NEP, and potential ways to resolve or mitigate them. At the very least, well-known relevant threats must be covered, e.g. person-in-the-middle, double-spend, XSS, CSRF, etc.]
+### Exchange Rate Manipulation
+Vaults allow dynamic exchange rates between shares and assets, calculated by dividing total vault assets by total issued shares. If the vault has a permissionless donation mechanism, it creates vulnerability to inflation attacks where attackers manipulate the rate by donating assets to inflate share values, potentially stealing funds from subsequent depositors. Vault deployers can protect against this attack by making an initial deposit of a non-trivial amount of the asset, such that price manipulation becomes infeasible.
+
+### Cross-contract Calls
+Redeem and withdraw functions perform cross-contract calls to transfer fungible tokens, creating opportunities for reentrancy attacks and state manipulation during asynchronous execution. Vaults should implement reentrancy protection through proper state management, proper callback security, and rollback mechanisms for failed operations.
+
+### Rounding Direction Security
+Vault calculations must consistently round in favor of the vault to prevent exploitation. When issuing shares for deposits or transferring assets for redemptions, round down; when calculating required shares or assets for specific amounts, round up. This asymmetric rounding prevents users from extracting value through repeated micro-transactions that exploit rounding errors and protects existing shareholders from value dilution.
+
+### Oracle and External Price Dependencies
+Vaults that rely on external price oracles or cross-contract calls for exchange rate updates face additional security risks in Near's asynchronous environment. Oracle updates create temporal windows where vaults operate with stale pricing data, potentially allowing exploitation. Implementations should include staleness checks, prevent operations during oracle updates, implement proper callback security, and consider fallback pricing mechanisms for oracle failures.
 
 ## Alternatives
 
@@ -271,7 +281,14 @@ We are still working hard on writting test case to test our example implementati
 
 ## Future possibilities
 
-[Describe any natural extensions and evolutions to the NEP proposal, and how they would impact the project. Use this section as a tool to help fully consider all possible interactions with the project in your proposal. This is also a good place to "dump ideas"; if they are out of scope for the NEP but otherwise related. Note that having something written down in the future-possibilities section is not a reason to accept the current or a future NEP. Such notes should be in the section on motivation or rationale in this or subsequent NEPs. The section merely provides additional information.]
+### NEP-245 Multi Token Support
+Future vault implementations could extend this standard to support NEP-245 Multi Token contracts as underlying asset.
+
+### Multi-Asset Vault Extensions
+Future extensions could allow vaults to accept multiple assets for deposit and withdrawal. This would enable the standardization of LP vaults.
+
+### Asynchronous Vault Operations
+Future vault standards could introduce asynchronous deposit and withdrawal patterns through `request_deposit` and `request_withdraw` functions. This would enable integration with cross-chain protocols and real-world asset protocols.
 
 ## Consequences
 
