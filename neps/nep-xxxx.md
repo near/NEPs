@@ -255,16 +255,12 @@ pub struct VaultWithdraw {
 
 ## Reference Implementation
 
-We have created an example implementation. [ [Github Link](https://github.com/Meteor-Wallet/near-erc4626-vault) ]
-
-Besides that, we have also written a Rust Trait and Events that we wish to be merge with the near-contract-standards repo. [ [Contract Standards](https://github.com/Meteor-Wallet/near-erc4626-vault/tree/main/src/contract_standards) ]
-
-We are still working hard on writting test case to test our example implementation
+Example implementation can be found [here](https://github.com/Meteor-Wallet/tokenized-vault-nep-implementation). 
 
 ## Security Implications
 
 ### Exchange Rate Manipulation
-Vaults allow dynamic exchange rates between shares and assets, calculated by dividing total vault assets by total issued shares. If the vault has a permissionless donation mechanism, it creates vulnerability to inflation attacks where attackers manipulate the rate by donating assets to inflate share values, potentially stealing funds from subsequent depositors. Vault deployers can protect against this attack by making an initial deposit of a non-trivial amount of the asset, such that price manipulation becomes infeasible.
+Vaults allow dynamic exchange rates between shares and assets, calculated by dividing total vault assets by total issued shares. If the vault has a permissionless donation mechanism, it creates vulnerability to inflation attacks where attackers manipulate the rate by donating assets to inflate share values, potentially stealing funds from subsequent depositors. Vault deployers can protect against this attack by making an initial deposit of a non-trivial amount of the asset, such that price manipulation becomes infeasible. The sample implementation doesn't allow donations to the vault, but if future implementations do, they should implement a mechanism to prevent inflation attacks.
 
 ### Cross-contract Calls
 Redeem and withdraw functions perform cross-contract calls to transfer fungible tokens, creating opportunities for reentrancy attacks and state manipulation during asynchronous execution. Vaults should implement reentrancy protection through proper state management, proper callback security, and rollback mechanisms for failed operations.
@@ -277,12 +273,16 @@ Vaults that rely on external price oracles or cross-contract calls for exchange 
 
 ## Alternatives
 
-[Explain any alternative designs that were considered and the rationale for not choosing them. Why your design is superior?]
+1. **Custom Per-Protocol Vault Implementations**  
+   - While possible, this leads to fragmentation, increases integration costs, and reduces composability between protocols.
+2. **Direct ERC-4626 clone Without NEAR Adjustments**  
+   - Rejected because NEAR’s asynchronous execution model makes a one-to-one ERC-4626 clone inefficient. This proposal integrates share and vault logic in a single contract to avoid unnecessary cross-contract calls.
+
 
 ## Future possibilities
 
 ### NEP-245 Multi Token Support
-Future vault implementations could extend this standard to support NEP-245 Multi Token contracts as underlying asset.
+Future vault implementations could extend this standard to support NEP-245 Multi Token contracts as underlying asset. We have also created a minimal implementation of this [here](https://github.com/Meteor-Wallet/tokenized-vault-mt-nep-implementation).
 
 ### Multi-Asset Vault Extensions
 Future extensions could allow vaults to accept multiple assets for deposit and withdrawal. This would enable the standardization of LP vaults.
@@ -292,23 +292,24 @@ Future vault standards could introduce asynchronous deposit and withdrawal patte
 
 ## Consequences
 
-[This section describes the consequences, after applying the decision. All consequences should be summarized here, not just the "positive" ones. Record any concerns raised throughout the NEP discussion.]
-
 ### Positive
-
--   p1
+- Enables a unified, predictable vault interface.
+- Simplifies integration for wallets, DEXs, and aggregators.
+- Improves security through consistent design and accounting.
+- Encourages reuse of tooling, libraries, and audits.
 
 ### Neutral
-
--   n1
+- Standard defines interface, not yield strategy — implementation remains flexible.
+- Protocols may implement only relevant parts of the interface initially.
 
 ### Negative
+- Migration overhead for existing vault implementations to become compliant.
 
--   n1
 
 ### Backwards Compatibility
+- No breaking changes to NEP-141 itself, but existing vault-like contracts that don’t conform will need to add or rename methods to comply.
+- Share tokens must be NEP-141 compliant, meaning non-NEP-141 share implementations require migration.
 
-[All NEPs that introduce backwards incompatibilities must include a section describing these incompatibilities and their severity. Author must explain a proposes to deal with these incompatibilities. Submissions without a sufficient backwards compatibility treatise may be rejected outright.]
 
 ## Unresolved Issues (Optional)
 
@@ -319,8 +320,6 @@ Future vault standards could introduce asynchronous deposit and withdrawal patte
 -   What related issues do you consider out of scope for this NEP that could be addressed in the future independently of the solution that comes out of this NEP?]
 
 ## Changelog
-
-[The changelog section provides historical context for how the NEP developed over time. Initial NEP submission should start with version 1.0.0, and all subsequent NEP extensions must follow [Semantic Versioning](https://semver.org/). Every version should have the benefits and concerns raised during the review. The author does not need to fill out this section for the initial draft. Instead, the assigned reviewers (Subject Matter Experts) should create the first version during the first technical review. After the final public call, the author should then finalize the last version of the decision context.]
 
 ### 1.0.0 - Initial Version
 
