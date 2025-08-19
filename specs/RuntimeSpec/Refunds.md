@@ -35,9 +35,9 @@ If the receipt execution failed, the gas amount is equal to `prepaid_gas + execu
 The difference between `burnt_gas` and `used_gas` is the `used_gas` also includes the fees and the prepaid gas of
 newly generated receipts, e.g. from cross-contract calls in function calls actions.
 
-From this unspent gas amount, the network charges a gas refund fee, starting with protocol version 78. The exact fee is calculated as `max(gas_refund_penalty * unspent_gas, min_gas_refund_penalty)`. As of version 78, `gas_refund_penalty` is 5% and `min_gas_refund_penalty` 1 Tgas.
+From this unspent gas amount, the network charges a gas refund fee, starting with protocol version 78. The exact fee is calculated as `max(gas_refund_penalty * unspent_gas, min_gas_refund_penalty)`. As of version 78, `gas_refund_penalty` is 0% and `min_gas_refund_penalty` 0 Tgas, always resulting in a zero-cost fee. This is only a stepping stone to give projects time to adapt before the fee is taking effect. The plan is to increase this to 5% and 1 Tgas, as specified in [NEP-536](https://github.com/near/NEPs/blob/master/neps/nep-0536.md). There is no fixed timeline available for this.
 
-Should the gas refund fee be euqal or larger than the unspent gas, no refund will be produced.
+Should the gas refund fee be equal or larger than the unspent gas, no refund will be produced.
 
 If there is gas to refund left, the gas amount is converted to tokens by multiplying by the gas price at which the original transaction was generated.
 
