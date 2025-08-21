@@ -9,34 +9,37 @@ Please refer to [this section](../DataStructures/Block.md) for details about blo
 ## Validity of Block Header
 
 A block header is invalid if any of the following holds:
- - `timestamp` is invalid due to one of the following:
-   - It is more than 120s ahead of the local time of the machine.
-   - It is smaller than the timestamp of the previous block.
- - Its signature is not valid, i.e, verifying the signature using the public key of the block producer fails
- - `epoch_id` is invalid, i.e, it does not match the epoch id of the block computed locally.
- - `next_bp_hash` is invalid. This could mean one of the following:
-   - `epoch_id == prev_block.epoch_id && next_bp_hash != prev_block.next_bp_hash`
-   - `epoch_id != prev_block.epoch_id && next_bp_hash != compute_bp_hash(next_epoch_id, prev_hash)` where `compute_bp_hash` computes the hash of next epoch's validators.
- - `chunk_mask` does not match the size of the chunk mask is not the same as the number of shards
- - Approval or finality information is invalid. See [consensus](Consensus.md) for more details.
+
+- `timestamp` is invalid due to one of the following:
+  - It is more than 120s ahead of the local time of the machine.
+  - It is smaller than the timestamp of the previous block.
+- Its signature is not valid, i.e, verifying the signature using the public key of the block producer fails
+- `epoch_id` is invalid, i.e, it does not match the epoch id of the block computed locally.
+- `next_bp_hash` is invalid. This could mean one of the following:
+  - `epoch_id == prev_block.epoch_id && next_bp_hash != prev_block.next_bp_hash`
+  - `epoch_id != prev_block.epoch_id && next_bp_hash != compute_bp_hash(next_epoch_id, prev_hash)` where `compute_bp_hash` computes the hash of next epoch's validators.
+- `chunk_mask` does not match the size of the chunk mask is not the same as the number of shards
+- Approval or finality information is invalid. See [consensus](Consensus.md) for more details.
 
 
 ## Validity of Block
 
 A block is invalid if any of the following holds:
- - Any of the chunk headers included in the block has an invalid signature.
- - State root computed from chunk headers does not match `state_root` in the header.
- - Receipts root computed from chunk headers does not match `chunk_receipts_root` in the header.
- - Chunk headers root computed from chunk headers does not match `chunk_headers_root` in the header.
- - Transactions root computed from chunk headers does not match `chunk_tx_root` in the header.
- - For some index `i`, `chunk_mask[i]` does not match whether a new chunk from shard `i` is included in the block.
- - Its vrf output is invalid
- - Its gas price is invalid, i.e, gas priced computed from previous gas price and gas usage from chunks included in the block according to the formula described in [economoics](../Economics/README.md) does not match the gas price in the header.
- - Its `validator_proposals` is not valid, which means that it does not match the concatenation of validator proposals from the chunk headers included in the block. 
+
+- Any of the chunk headers included in the block has an invalid signature.
+- State root computed from chunk headers does not match `state_root` in the header.
+- Receipts root computed from chunk headers does not match `chunk_receipts_root` in the header.
+- Chunk headers root computed from chunk headers does not match `chunk_headers_root` in the header.
+- Transactions root computed from chunk headers does not match `chunk_tx_root` in the header.
+- For some index `i`, `chunk_mask[i]` does not match whether a new chunk from shard `i` is included in the block.
+- Its vrf output is invalid
+- Its gas price is invalid, i.e, gas priced computed from previous gas price and gas usage from chunks included in the block according to the formula described in [economoics](../Economics/README.md) does not match the gas price in the header.
+- Its `validator_proposals` is not valid, which means that it does not match the concatenation of validator proposals from the chunk headers included in the block. 
 
 ## Process a new block
 
 When a new block `B` is received from the network, the node first check whether it is ready to be processed:
+
 - Its parent has already been processed.
 - Header and the block itself are valid
 - All the chunk parts are received. More specifically, this means
