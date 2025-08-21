@@ -100,7 +100,8 @@ Here `CryptoHash` is a 32-byte hash and `EpochId` is a 32-byte identifier.
 
 ## Block Hash
 
-The hash of a block is computed by 
+The hash of a block is computed by
+
 ```rust
 sha256(concat(
     sha256(concat(
@@ -169,6 +170,7 @@ pub struct ShardChunkHeaderInner {
 ## Chunk Hash
 
 Chunk hash is computed by
+
 ```rust
 sha256(
     concat(
