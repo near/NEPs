@@ -28,8 +28,10 @@ Changes to the protocol specification and standards are called NEAR Enhancement 
 | [0330](https://github.com/near/NEPs/blob/master/neps/nep-0330.md) | Source Metadata                                                   | @BenKurrek                                        | Final      |
 | [0364](https://github.com/near/NEPs/blob/master/neps/nep-0364.md) | Efficient signature verification and hashing precompile functions | @blasrodri                                        | Final      |
 | [0366](https://github.com/near/NEPs/blob/master/neps/nep-0366.md) | Meta Transactions                                                 | @ilblackdragon @e-uleyskiy @fadeevab              | Final      |
+| [0368](https://github.com/near/NEPs/blob/master/neps/nep-0368.md) | Bridge Wallets                  | @lewis-sqa                             | Final      |
 | [0393](https://github.com/near/NEPs/blob/master/neps/nep-0393.md) | Sould Bound Token (SBT)                                           | @robert-zaremba                                   | Final      |
 | [0399](https://github.com/near/NEPs/blob/master/neps/nep-0399.md) | Flat Storage                                                      | @Longarithm @mzhangmzz                            | Final      |
+| [0408](https://github.com/near/NEPs/blob/master/neps/nep-0408.md) | Injected Wallet API                  | @MaximusHaximus @lewis-sqa                             | Final      |
 | [0413](https://github.com/near/NEPs/blob/master/neps/nep-0413.md) | Near Wallet API - support for signMessage method                  | @gagdiez @gutsyphilip                             | Final      |
 | [0418](https://github.com/near/NEPs/blob/master/neps/nep-0418.md) | Remove attached_deposit view panic                                | @austinabell                                      | Final      |
 | [0448](https://github.com/near/NEPs/blob/master/neps/nep-0448.md) | Zero-balance Accounts                                             | @bowenwang1996                                    | Final      |
