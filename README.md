@@ -26,6 +26,7 @@ Changes to the protocol specification and standards are called NEAR Enhancement 
 | [0256](https://github.com/near/NEPs/blob/master/neps/nep-0256.md) | Non-Fungible Token Events                                         | @telezhnaya                                       | Final      |
 | [0264](https://github.com/near/NEPs/blob/master/neps/nep-0264.md) | Promise Gas Weights                                               | @austinabell                                      | Final      |
 | [0297](https://github.com/near/NEPs/blob/master/neps/nep-0297.md) | Events Standard                                                   | @telezhnaya                                       | Final      |
+| [0300](https://github.com/near/NEPs/blob/master/neps/nep-0300.md) | Fungible Token Events                                         | @telezhnaya                                       | Final      |
 | [0330](https://github.com/near/NEPs/blob/master/neps/nep-0330.md) | Source Metadata                                                   | @BenKurrek                                        | Final      |
 | [0364](https://github.com/near/NEPs/blob/master/neps/nep-0364.md) | Efficient signature verification and hashing precompile functions | @blasrodri                                        | Final      |
 | [0366](https://github.com/near/NEPs/blob/master/neps/nep-0366.md) | Meta Transactions                                                 | @ilblackdragon @e-uleyskiy @fadeevab              | Final      |
