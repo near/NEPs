@@ -12,4 +12,4 @@
 |[0178](https://github.com/near/NEPs/blob/master/neps/nep-0178.md)   | Non Fungible Token Approval Management | @chadoh @thor314 | Final |
 |[0181](https://github.com/near/NEPs/blob/master/neps/nep-0181.md)   | Non Fungible Token Enumeration | @chadoh @thor314 | Final |
 |[0199](https://github.com/near/NEPs/blob/master/neps/nep-0199.md)   | Non Fungible Token Royalties and Payouts | @thor314 @mattlockyer | Final |
-|[0297](https://github.com/near/NEPs/blob/master/neps/nep-0297.md)   | Non Fungible Token Royalties and Payouts | @telezhnaya | Final |
+|[0297](https://github.com/near/NEPs/blob/master/neps/nep-0297.md)   | Events Format | @telezhnaya | Final |
