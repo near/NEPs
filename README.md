@@ -84,14 +84,6 @@ Spec changes are ultimately done via pull requests to this repository (formalize
    - Create a Pull request, using [nep-0000-template.md](nep-0000-template.md) to describe motivation and details of the new Contract or Protocol specification. In the document header, ensure the `Status` is marked as `Draft`, and any relevant discussion links are added to the `DiscussionsTo` section.
      Use the pull request number padded with zeroes. For instance, the pull request `219` should be created as `neps/nep-0219.md`.
    - Add your Draft standard to the `NEPs` section of this README.md. This helps advertise your standard via github.
-   - Update Docusaurus documentation under the `specs/Standards` to describe the contract standard at a high level, how to integrate it into a Dapp, and a link to the standard document (ie. `neps/nep-0123.md`). This helps advertise your standard via [nomicon](https://nomicon.io/). Any related nomicon sections should be prefixed and styled using the following snippet:
-
-   ```text
-   :::caution
-   This is part of proposed spec [NEP-123](https://github.com/near/NEPs/blob/master/neps/nep-0123.md) and subject to change.
-   :::
-   ```
-
    - Once complete, submit the pull request for editor review.
 
    - The formalization dance begins:
@@ -102,37 +94,3 @@ Spec changes are ultimately done via pull requests to this repository (formalize
 
 Tip: build consensus and integrate feedback. NEPs that have broad support are much more likely to make progress than those that don't receive any comments. Feel free to reach out to the NEP assignee in particular to get help identify stakeholders and obstacles.
 
-### Running Docusaurus
-
-This repository uses [Docusaurus](https://docusaurus.io/) for the [Nomicon website](https://nomicon.io).
-
-1. Move into the `/website` folder where you will run the following commands:
-
-   - Make sure all the dependencies for the website are installed:
-
-     ```sh
-     # Install dependencies
-     yarn
-     ```
-
-   - Run the local docs development server
-
-     ```sh
-     # Start the site
-     yarn start
-     ```
-
-     _Expected Output_
-
-     ```sh
-     # Website with live reload is started
-     Docusaurus server started on port 3000
-     ```
-
-     The website for docs will open your browser locally to port `3000`
-
-2. Make changes to the docs
-
-3. Observe those changes reflected in the local docs
-
-4. Submit a pull request with your changes

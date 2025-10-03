@@ -18,7 +18,7 @@ A system for allowing a set of users or contracts to transfer specific tokens on
 
 People familiar with [ERC-721] may expect to need an approval management system for basic transfers, where a simple transfer from Alice to Bob requires that Alice first _approve_ Bob to spend one of her tokens, after which Bob can call `transfer_from` to actually transfer the token to himself.
 
-NEAR's [core Multi Token standard](README.md) includes good support for safe atomic transfers without such complexity. It even provides "transfer and call" functionality (`mt_transfer_call`) which allows  specific tokens to be "attached" to a call to a separate contract. For many token workflows, these options may circumvent the need for a full-blown Approval Management system.
+NEAR's [core Multi Token standard](https://github.com/near/NEPs/blob/master/neps/nep-0245.md) includes good support for safe atomic transfers without such complexity. It even provides "transfer and call" functionality (`mt_transfer_call`) which allows  specific tokens to be "attached" to a call to a separate contract. For many token workflows, these options may circumvent the need for a full-blown Approval Management system.
 
 However, some Multi Token developers, marketplaces, dApps, or artists may require greater control. This standard provides a uniform interface allowing token owners to approve other NEAR accounts, whether individuals or contracts, to transfer specific tokens on the owner's behalf.
 
@@ -33,11 +33,11 @@ Let's consider some examples. Our cast of characters & apps:
 
 - Alice: has account `alice` with no contract deployed to it
 - Bob: has account `bob` with no contract deployed to it
-- MT: a contract with account `mt`, implementing only the [Multi Token Standard](Core.md) with this Approval Management extension
+- MT: a contract with account `mt`, implementing only the [Multi Token Standard](https://github.com/near/NEPs/blob/master/neps/nep-0245.md) with this Approval Management extension
 - Market: a contract with account `market` which sells tokens from `mt` as well as other token contracts
 - Bazaar: similar to Market, but implemented differently (spoiler alert: has no `mt_on_approve` function!), has account `bazaar`
 
-Alice and Bob are already [registered](../../StorageManagement.md) with MT, Market, and Bazaar, and Alice owns a token on the MT contract with ID=`"1"` and a fungible style token with ID =`"2"` and AMOUNT =`"100"`.
+Alice and Bob are already [registered](https://github.com/near/NEPs/blob/master/neps/nep-0145.md) with MT, Market, and Bazaar, and Alice owns a token on the MT contract with ID=`"1"` and a fungible style token with ID =`"2"` and AMOUNT =`"100"`.
 
 Let's examine the technical calls through the following scenarios:
 
@@ -181,7 +181,7 @@ Not to worry, though, she checks `mt_is_approved` and sees that she did successf
 
 ### 4. Approval IDs
 
-Bob buys Alice's token via Market. Bob probably does this via Market's frontend, which will probably initiate the transfer via a call to `ft_transfer_call` on the nDAI contract to transfer 100 nDAI to `market`. Like the MT standard's "transfer and call" function, [Fungible Token](../FungibleToken/Core.md)'s `ft_transfer_call` takes a `msg` which `market` can use to pass along information it will need to pay Alice and actually transfer the MT. The actual transfer of the MT is the only part we care about here.
+Bob buys Alice's token via Market. Bob probably does this via Market's frontend, which will probably initiate the transfer via a call to `ft_transfer_call` on the nDAI contract to transfer 100 nDAI to `market`. Like the MT standard's "transfer and call" function, [Fungible Token](https://github.com/near/NEPs/blob/master/neps/nep-0141.md)'s `ft_transfer_call` takes a `msg` which `market` can use to pass along information it will need to pay Alice and actually transfer the MT. The actual transfer of the MT is the only part we care about here.
 
 #### High-level explanation
 

@@ -19,7 +19,7 @@ While some Multi Token contracts may forego this extension to save [storage] cos
 Prior art:
 
 - [ERC-721]'s enumeration extension
-- [Non Fungible Token Standard's](../NonFungibleToken/Enumeration.md) enumeration extension
+- [Non Fungible Token Standard's](https://github.com/near/NEPs/blob/master/neps/nep-0181.md) enumeration extension
 
 ## Interface
 
@@ -78,7 +78,7 @@ function mt_tokens_base_metadata_all(
 
 ## Notes
 
-At the time of this writing, the specialized collections in the `near-sdk` Rust crate are iterable, but not all of them have implemented an `iter_from` solution. There may be efficiency gains for large collections and contract developers are encouraged to test their data structures with a large amount of entries. 
+At the time of this writing, the specialized collections in the `near-sdk` Rust crate are iterable, but not all of them have implemented an `iter_from` solution. There may be efficiency gains for large collections and contract developers are encouraged to test their data structures with a large amount of entries.
 
   [ERC-721]: https://eips.ethereum.org/EIPS/eip-721
   [storage]: https://docs.near.org/concepts/storage/storage-staking

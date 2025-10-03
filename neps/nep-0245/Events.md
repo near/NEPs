@@ -9,7 +9,7 @@ Version `1.0.0`
 ## Summary
 
 Standard interfaces for Multi Token Contract actions.
-Extension of [NEP-297](../../EventsFormat.md)
+Extension of [NEP-297](https://github.com/near/NEPs/blob/master/neps/nep-0297.md)
 
 ## Motivation
 
@@ -36,11 +36,11 @@ interface MtEventLogData {
 ```
 
 ```ts
-// Minting event log. Emitted when a token is minted/created. 
+// Minting event log. Emitted when a token is minted/created.
 // Requirements
 // * Contract MUST emit event when minting a token
-// Fields 
-// * Contract token_ids and amounts MUST be the same length 
+// Fields
+// * Contract token_ids and amounts MUST be the same length
 // * `owner_id`: the account receiving the minted token
 // * `token_ids`: the tokens minted
 // * `amounts`: the number of tokens minted, wrapped in quotes and treated
@@ -54,11 +54,11 @@ interface MtMintLog {
     memo?: string
 }
 
-// Burning event log. Emitted when a token is burned.  
+// Burning event log. Emitted when a token is burned.
 // Requirements
 // * Contract MUST emit event when minting a token
-// Fields 
-// * Contract token_ids and amounts MUST be the same length 
+// Fields
+// * Contract token_ids and amounts MUST be the same length
 // * `owner_id`: the account whose token(s) are being burned
 // * `authorized_id`: approved account_id to burn, if applicable
 // * `token_ids`: the tokens being burned
@@ -74,14 +74,14 @@ interface MtBurnLog {
     memo?: string
 }
 
-// Transfer event log. Emitted when a token is transferred.  
+// Transfer event log. Emitted when a token is transferred.
 // Requirements
 // * Contract MUST emit event when transferring a token
-// Fields 
+// Fields
 // * `authorized_id`: approved account_id to transfer
 // * `old_owner_id`: the account sending the tokens "sender.near"
 // * `new_owner_id`: the account receiving the tokens "receiver.near"
-// * `token_ids`: the tokens to transfer 
+// * `token_ids`: the tokens to transfer
 // * `amounts`: the number of tokens to transfer, wrapped in quotes and treated
 //    like a string, although the numbers will be stored as an unsigned integer
 //    array with 128 bits.
@@ -175,7 +175,7 @@ EVENT_JSON:{
 Note that the example events covered above cover two different kinds of events:
 
 1. Events that are not specified in the MT Standard (`mt_mint`, `mt_burn`)
-2. An event that is covered in the [Multi Token Core Standard](Core.md). (`mt_transfer`)
+2. An event that is covered in the [Multi Token Core Standard](https://github.com/near/NEPs/blob/master/neps/nep-0245.md). (`mt_transfer`)
 
 This event standard also applies beyond the three events highlighted here, where future events follow the same convention of as the second type. For instance, if an MT contract uses the [approval management standard](ApprovalManagement.md), it may emit an event for `mt_approve` if that's deemed as important by the developer community.
 
