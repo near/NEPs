@@ -10,6 +10,9 @@
       "pattern": "^https://stackoverflow.com"
     },
     {
+      "pattern": "^https://www.researchgate.net"
+    },
+    {
       "pattern": "^https://pages.near.org/papers/the-official-near-white-paper/"
     }
   ],
