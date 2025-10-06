@@ -12,7 +12,7 @@ An interface for a multi token's metadata. The goal is to keep the metadata futu
 
 ## Motivation
 
-The primary value of tokens comes from their metadata. While the [core standard](Core.md) provides the minimum interface that can be considered a multi token, most artists, developers, and dApps will want to associate more data with each token, and will want a predictable way to interact with any MT's metadata.
+The primary value of tokens comes from their metadata. While the [core standard](https://github.com/near/NEPs/blob/master/neps/nep-0245.md) provides the minimum interface that can be considered a multi token, most artists, developers, and dApps will want to associate more data with each token, and will want a predictable way to interact with any MT's metadata.
 
 NEAR's unique [storage staking](https://docs.near.org/concepts/storage/storage-staking) approach makes it feasible to store more data on-chain than other blockchains. This standard leverages this strength for common metadata attributes, and provides a standard way to link to additional offchain data to support rapid community experimentation.
 
@@ -20,8 +20,8 @@ This standard also provides a `spec` version. This makes it easy for consumers o
 
 Prior art:
 
-- NEAR's [Fungible Token Metadata Standard](../FungibleToken/Metadata.md)
-- NEAR's [Non-Fungible Token Metadata Standard](../NonFungibleToken/Metadata.md)
+- NEAR's [Fungible Token Metadata Standard](https://github.com/near/NEPs/blob/master/neps/nep-0148.md)
+- NEAR's [Non-Fungible Token Metadata Standard](https://github.com/near/NEPs/blob/master/neps/nep-0177.md)
 - Discussion about NEAR's complete NFT standard: #171
 - Discussion about NEAR's complete Multi Token standard: #245
 
@@ -109,7 +109,7 @@ For `MTBaseTokenMetadata`:
 
 - `symbol`: the abbreviated symbol of the contract, like MOCHI or MV3
 - `icon`: a small image associated with this contract. Encouraged to be a [data URL](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/Data_URIs), to help consumers display it quickly while protecting user data. Recommendation: use [optimized SVG](https://codepen.io/tigt/post/optimizing-svgs-in-data-uris), which can result in high-resolution images with only 100s of bytes of [storage cost](https://docs.near.org/concepts/storage/storage-staking). (Note that these storage costs are incurred to the contract deployer, but that querying these icons is a very cheap & cacheable read operation for all consumers of the contract and the RPC nodes that serve the data.) Recommendation: create icons that will work well with both light-mode and dark-mode websites by either using middle-tone color schemes, or by [embedding `media` queries in the SVG](https://timkadlec.com/2013/04/media-queries-within-svg/).
-- `reference`: a link to a valid JSON file containing various keys offering supplementary details on the token. Example: "/ipfs/QmdmQXB2mzChmMeKY47C43LxUdg1NDJ5MWcKMKxDu7RgQm", etc. If the information given in this document conflicts with the on-chain attributes, the values in `reference` shall be considered the source of truth.
+- `reference`: a link to a valid JSON file containing various keys offering supplementary details on the token. Example: `/ipfs/QmdmQXB2mzChmMeKY47C43LxUdg1NDJ5MWcKMKxDu7RgQm`, etc. If the information given in this document conflicts with the on-chain attributes, the values in `reference` shall be considered the source of truth.
 - `reference_hash`: the base64-encoded sha256 hash of the JSON file contained in the `reference` field. This is to guard against off-chain tampering.
 - `copies`: The number of tokens with this set of metadata or `media` known to exist at time of minting. Supply is a more accurate current reflection.
 
