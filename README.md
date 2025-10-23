@@ -1,7 +1,6 @@
 # NEAR Protocol Specifications and Standards
 
 [![project chat](https://img.shields.io/badge/zulip-join_chat-brightgreen.svg)](https://near.zulipchat.com/#narrow/stream/320497-nep-standards)
-[![CI](https://github.com/near/NEPs/actions/workflows/build.yml/badge.svg)](https://github.com/near/NEPs/actions/workflows/build.yml)
 
 This repository hosts the current NEAR Protocol specification and standards.
 This includes the core protocol specification, APIs, contract standards, processes, and workflows.
