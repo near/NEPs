@@ -1,0 +1,24 @@
+{
+  "ignorePatterns": [
+    {
+      "pattern": "^/"
+    },
+    {
+      "pattern": "^https://codepen.io"
+    },
+    {
+      "pattern": "^https://stackoverflow.com"
+    },
+    {
+      "pattern": "^https://www.researchgate.net"
+    },
+    {
+      "pattern": "^https://pages.near.org/papers/the-official-near-white-paper/"
+    }
+  ],
+  "timeout": "20s",
+  "retryOn429": true,
+  "retryCount": 5,
+  "fallbackRetryDelay": "30s",
+  "aliveStatusCodes": [200, 206]
+}
