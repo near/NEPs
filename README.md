@@ -11,7 +11,7 @@ Changes to the protocol specification and standards are called NEAR Enhancement 
 
 | NEP #                                                             | Title                                                             | Author                                            | Status     |
 | ----------------------------------------------------------------- | ----------------------------------------------------------------- | ------------------------------------------------- | ---------- |
-| [0001](https://github.com/near/NEPs/blob/master/neps/nep-0001.md) | NEP Purpose and Guidelines                                        | @jlogelin                                         | Living     |
+| [0001](https://github.com/near/NEPs/blob/master/neps/nep-0001.md) | NEP Purpose and Guidelines                                        | @ori-near @bowenwang1996 @austinbaggio @frol      | Living     |
 | [0021](https://github.com/near/NEPs/blob/master/neps/nep-0021.md) | Fungible Token Standard (Deprecated)                              | @evgenykuzyakov                                   | Deprecated |
 | [0141](https://github.com/near/NEPs/blob/master/neps/nep-0141.md) | Fungible Token Standard                                           | @evgenykuzyakov @oysterpack, @robert-zaremba      | Final      |
 | [0145](https://github.com/near/NEPs/blob/master/neps/nep-0145.md) | Storage Management                                                | @evgenykuzyakov                                   | Final      |
@@ -44,6 +44,7 @@ Changes to the protocol specification and standards are called NEAR Enhancement 
 | [0508](https://github.com/near/NEPs/blob/master/neps/nep-0508.md) | Resharding v2                                                     | @wacban @shreyan-gupta @walnut-the-cat            | Final      |
 | [0509](https://github.com/near/NEPs/blob/master/neps/nep-0509.md) | Stateless validation Stage 0                                      | @robin-near @pugachAG @Longarithm @walnut-the-cat | Final      |
 | [0514](https://github.com/near/NEPs/blob/master/neps/nep-0514.md) | Fewer Block Producer Seats in `testnet`                           | @nikurt                                           | Final      |
+| [0518](https://github.com/near/NEPs/blob/master/neps/nep-0518.md) | Web3-Compatible Wallets Support                                   | @alexauroradev @birchmd                           | Final      |
 | [0519](https://github.com/near/NEPs/blob/master/neps/nep-0519.md) | Yield Execution                                                   | @akhi3030 @saketh-are                             | Final      |
 | [0536](https://github.com/near/NEPs/blob/master/neps/nep-0536.md) | Reduce the number of gas refunds                                  | @evgenykuzyakov @bowenwang1996                    | Final      |
 | [0539](https://github.com/near/NEPs/blob/master/neps/nep-0539.md) | Cross-Shard Congestion Control                                    | @wacban @jakmeier                                 | Final      |
