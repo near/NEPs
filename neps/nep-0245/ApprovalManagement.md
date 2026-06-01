@@ -60,7 +60,7 @@ Alice approves Bob to transfer her tokens.
 
 #### Technical calls
 
-1. Alice calls `mt::mt_approve({ "token_ids": ["1","2"], amounts:["1","100"], "account_id": "bob" })`. She attaches 1 yoctoⓃ, (.000000000000000000000001Ⓝ). Using [NEAR CLI](https://docs.near.org/tools/near-cli) to make this call, the command would be:
+1. Alice calls `mt::mt_approve({ "token_ids": ["1","2"], amounts:["1","100"], "account_id": "bob" })`. She attaches 1 yoctoⓃ, (.000000000000000000000001Ⓝ). Using [NEAR CLI](https://docs.near.org/tools/cli) to make this call, the command would be:
 
     ```bash
     near call mt mt_approve \
@@ -485,7 +485,7 @@ In the description of `mt_approve` above, it states:
 
 What does this mean?
 
-First, it's useful to understand what we mean by "single-block gas limit". This refers to the [hard cap on gas per block at the protocol layer](https://docs.near.org/docs/concepts/gas#thinking-in-gas). This number will increase over time.
+First, it's useful to understand what we mean by "single-block gas limit". This refers to the [hard cap on gas per block at the protocol layer](https://docs.near.org/protocol/transactions/gas). This number will increase over time.
 
 Removing data from a contract uses gas, so if an MT had a large enough number of approvals, `mt_revoke_all` would fail, because calling it would exceed the maximum gas.
 
@@ -527,7 +527,7 @@ function mt_on_approve(
 
 Note that the MT contract will fire-and-forget this call, ignoring any return values or errors generated. This means that even if the approved account does not have a contract or does not implement `mt_on_approve`, the approval will still work correctly from the point of view of the MT contract.
 
-Further note that there is no parallel `mt_on_revoke` when revoking either a single approval or when revoking all. This is partially because scheduling many `mt_on_revoke` calls when revoking all approvals could incur prohibitive [gas fees](https://docs.near.org/docs/concepts/gas). Apps and contracts which cache MT approvals can therefore not rely on having up-to-date information, and should periodically refresh their caches. Since this will be the necessary reality for dealing with `mt_revoke_all`, there is no reason to complicate `mt_revoke` with an `mt_on_revoke` call.
+Further note that there is no parallel `mt_on_revoke` when revoking either a single approval or when revoking all. This is partially because scheduling many `mt_on_revoke` calls when revoking all approvals could incur prohibitive [gas fees](https://docs.near.org/protocol/transactions/gas). Apps and contracts which cache MT approvals can therefore not rely on having up-to-date information, and should periodically refresh their caches. Since this will be the necessary reality for dealing with `mt_revoke_all`, there is no reason to complicate `mt_revoke` with an `mt_on_revoke` call.
 
 ### No incurred cost for core MT behavior
 
