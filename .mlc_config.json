@@ -14,6 +14,9 @@
     },
     {
       "pattern": "^https://pages.near.org/papers/the-official-near-white-paper/"
+    },
+    {
+      "pattern": "^https://www.w3.org/"
     }
   ],
   "timeout": "20s",
