@@ -51,6 +51,12 @@ Changes to the protocol specification and standards are called NEAR Enhancement 
 | [0568](https://github.com/near/NEPs/blob/master/neps/nep-0568.md) | Resharding V3                                   | @staffik @Longarithm @Trisfald @marcelo-gonzalez @shreyan-gupta @wacban                                 | Final      |
 | [0584](https://github.com/near/NEPs/blob/master/neps/nep-0584.md) | Cross-shard bandwidth scheduler                                   | @jancionear                                       | Final      |
 | [0591](https://github.com/near/NEPs/blob/master/neps/nep-0591.md) | Global Contracts                                                  | @bowenwang1996 @pugachag @stedfn                  | Final      |
+| [0611](https://github.com/near/NEPs/blob/master/neps/nep-0611.md) | Pending Transaction Queue and Gas Keys                            | @robin-near @darioush                             | Draft      |
+| [0616](https://github.com/near/NEPs/blob/master/neps/nep-0616.md) | Deterministic AccountIds                                          | @mitinarseny                                      | Approved   |
+| [0621](https://github.com/near/NEPs/blob/master/neps/nep-0621.md) | Vault NEP                                                         | @edwardchew97 @Elabar @Jolly-Walker @SteveKok     | Approved   |
+| [0635](https://github.com/near/NEPs/blob/master/neps/nep-0635.md) | P-256 ECDSA Signature Verification Host Function                  | @bowenwang1996                                    | Draft      |
+| [0638](https://github.com/near/NEPs/blob/master/neps/nep-0638.md) | `chain_id()` host function                                        | @mitinarseny                                      | Draft      |
+| [0639](https://github.com/near/NEPs/blob/master/neps/nep-0639.md) | Dynamic Resharding                                                | @Wiezzel                                          | Draft      |
 
 
 ## Specification
