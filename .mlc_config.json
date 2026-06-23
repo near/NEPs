@@ -19,7 +19,7 @@
       "pattern": "^https://www.w3.org/"
     },
     {
-      "pattern": "^https://eprint.iacr.org"
+      "pattern": "^https://eprint\\.iacr\\.org/"
     }
   ],
   "timeout": "20s",
