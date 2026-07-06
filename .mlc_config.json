@@ -23,6 +23,9 @@
     },
     {
       "pattern": "^https://www\\.iso\\.org/"
+    },
+    {
+      "pattern": "^https://www\\.rfc-editor\\.org/"
     }
   ],
   "timeout": "20s",
