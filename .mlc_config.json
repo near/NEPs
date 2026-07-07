@@ -20,6 +20,9 @@
     },
     {
       "pattern": "^https://eprint\\.iacr\\.org/"
+    },
+    {
+      "pattern": "^https://(www\\.)?iso\\.org/"
     }
   ],
   "timeout": "20s",
