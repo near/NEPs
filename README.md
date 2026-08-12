@@ -25,14 +25,14 @@ Changes to the protocol specification and standards are called NEAR Enhancement 
 | [0256](https://github.com/near/NEPs/blob/master/neps/nep-0256.md) | Non-Fungible Token Events                                         | @telezhnaya                                       | Final      |
 | [0264](https://github.com/near/NEPs/blob/master/neps/nep-0264.md) | Promise Gas Weights                                               | @austinabell                                      | Final      |
 | [0297](https://github.com/near/NEPs/blob/master/neps/nep-0297.md) | Events Standard                                                   | @telezhnaya                                       | Final      |
-| [0300](https://github.com/near/NEPs/blob/master/neps/nep-0300.md) | Fungible Token Events                                         | @telezhnaya                                       | Final      |
+| [0300](https://github.com/near/NEPs/blob/master/neps/nep-0300.md) | Fungible Token Events                                             | @telezhnaya                                       | Final      |
 | [0330](https://github.com/near/NEPs/blob/master/neps/nep-0330.md) | Source Metadata                                                   | @BenKurrek                                        | Final      |
 | [0364](https://github.com/near/NEPs/blob/master/neps/nep-0364.md) | Efficient signature verification and hashing precompile functions | @blasrodri                                        | Final      |
 | [0366](https://github.com/near/NEPs/blob/master/neps/nep-0366.md) | Meta Transactions                                                 | @ilblackdragon @e-uleyskiy @fadeevab              | Final      |
-| [0368](https://github.com/near/NEPs/blob/master/neps/nep-0368.md) | Bridge Wallets                  | @lewis-sqa                             | Final      |
+| [0368](https://github.com/near/NEPs/blob/master/neps/nep-0368.md) | Bridge Wallets                                                    | @lewis-sqa                                        | Final      |
 | [0393](https://github.com/near/NEPs/blob/master/neps/nep-0393.md) | Sould Bound Token (SBT)                                           | @robert-zaremba                                   | Final      |
 | [0399](https://github.com/near/NEPs/blob/master/neps/nep-0399.md) | Flat Storage                                                      | @Longarithm @mzhangmzz                            | Final      |
-| [0408](https://github.com/near/NEPs/blob/master/neps/nep-0408.md) | Injected Wallet API                  | @MaximusHaximus @lewis-sqa                             | Final      |
+| [0408](https://github.com/near/NEPs/blob/master/neps/nep-0408.md) | Injected Wallet API                                               | @MaximusHaximus @lewis-sqa                        | Final      |
 | [0413](https://github.com/near/NEPs/blob/master/neps/nep-0413.md) | Near Wallet API - support for signMessage method                  | @gagdiez @gutsyphilip                             | Final      |
 | [0418](https://github.com/near/NEPs/blob/master/neps/nep-0418.md) | Remove attached_deposit view panic                                | @austinabell                                      | Final      |
 | [0448](https://github.com/near/NEPs/blob/master/neps/nep-0448.md) | Zero-balance Accounts                                             | @bowenwang1996                                    | Final      |
@@ -48,15 +48,16 @@ Changes to the protocol specification and standards are called NEAR Enhancement 
 | [0519](https://github.com/near/NEPs/blob/master/neps/nep-0519.md) | Yield Execution                                                   | @akhi3030 @saketh-are                             | Final      |
 | [0536](https://github.com/near/NEPs/blob/master/neps/nep-0536.md) | Reduce the number of gas refunds                                  | @evgenykuzyakov @bowenwang1996                    | Final      |
 | [0539](https://github.com/near/NEPs/blob/master/neps/nep-0539.md) | Cross-Shard Congestion Control                                    | @wacban @jakmeier                                 | Final      |
-| [0568](https://github.com/near/NEPs/blob/master/neps/nep-0568.md) | Resharding V3                                   | @staffik @Longarithm @Trisfald @marcelo-gonzalez @shreyan-gupta @wacban                                 | Final      |
+| [0568](https://github.com/near/NEPs/blob/master/neps/nep-0568.md) | Resharding V3                                                     | @staffik @Longarithm @Trisfald @marcelo-gonzalez @shreyan-gupta @wacban | Final |
 | [0584](https://github.com/near/NEPs/blob/master/neps/nep-0584.md) | Cross-shard bandwidth scheduler                                   | @jancionear                                       | Final      |
 | [0591](https://github.com/near/NEPs/blob/master/neps/nep-0591.md) | Global Contracts                                                  | @bowenwang1996 @pugachag @stedfn                  | Final      |
-| [0611](https://github.com/near/NEPs/blob/master/neps/nep-0611.md) | Pending Transaction Queue and Gas Keys                            | @robin-near @darioush                             | Draft      |
-| [0616](https://github.com/near/NEPs/blob/master/neps/nep-0616.md) | Deterministic AccountIds                                          | @mitinarseny                                      | Approved   |
-| [0621](https://github.com/near/NEPs/blob/master/neps/nep-0621.md) | Vault NEP                                                         | @edwardchew97 @Elabar @Jolly-Walker @SteveKok     | Approved   |
-| [0635](https://github.com/near/NEPs/blob/master/neps/nep-0635.md) | P-256 ECDSA Signature Verification Host Function                  | @bowenwang1996                                    | Draft      |
-| [0638](https://github.com/near/NEPs/blob/master/neps/nep-0638.md) | `chain_id()` host function                                        | @mitinarseny                                      | Draft      |
-| [0639](https://github.com/near/NEPs/blob/master/neps/nep-0639.md) | Dynamic Resharding                                                | @Wiezzel                                          | Draft      |
+| [0611](https://github.com/near/NEPs/blob/master/neps/nep-0611.md) | Pending Transaction Queue and Gas Keys                            | @robin-near @darioush                             | Final      |
+| [0616](https://github.com/near/NEPs/blob/master/neps/nep-0616.md) | Deterministic AccountIds                                          | @mitinarseny                                      | Final      |
+| [0621](https://github.com/near/NEPs/blob/master/neps/nep-0621.md) | Vault NEP                                                         | @edwardchew97 @Elabar @Jolly-Walker @SteveKok     | Final      |
+| [0635](https://github.com/near/NEPs/blob/master/neps/nep-0635.md) | P-256 ECDSA Signature Verification Host Function                  | @bowenwang1996                                    | Final      |
+| [0638](https://github.com/near/NEPs/blob/master/neps/nep-0638.md) | `chain_id()` host function                                        | @mitinarseny                                      | Final      |
+| [0639](https://github.com/near/NEPs/blob/master/neps/nep-0639.md) | Dynamic Resharding                                                | @Wiezzel                                          | Final      |
+| [0641](https://github.com/near/NEPs/blob/master/neps/nep-0641.md) | Offchain Authorizations for Smart Contracts                       | @frol @ mitinarseny                               | Final      |
 
 
 ## Specification
